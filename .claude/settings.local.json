@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(npm install *)",
+      "Bash(npm audit *)",
+      "Bash(npm show *)",
+      "Bash(node -e \"const v=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\);console.log\\(v.slice\\(-5\\)\\)\")",
+      "Bash(node *)",
+      "Bash(npm list *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
