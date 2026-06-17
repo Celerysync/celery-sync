@@ -22,6 +22,7 @@ import Body from "./components/Body.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
 import ReminderSettings from "./components/ReminderSettings.jsx";
 import { useReminders } from "./hooks/useReminders.js";
+import WelcomeVoice from "./components/WelcomeVoice.jsx";
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -114,6 +115,7 @@ export default function App() {
   const [videoNotes, setVideoNotes] = useLocalStorage("cs_videoNotes", []);
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
   const { activeReminder, dismiss: dismissReminder, snooze: snoozeReminder } = useReminders();
   const { searchBooks } = useBooks(authUser);
 
@@ -341,6 +343,8 @@ export default function App() {
           })}
         </div>
       </div>
+
+      {showWelcome && <WelcomeVoice onDone={() => setShowWelcome(false)} />}
     </div>
   );
 }
