@@ -4,7 +4,7 @@ import { useVoice, ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { Btn } from "./ui.jsx";
-import { callClaude } from "../lib/api.js";
+import { streamClaude } from "../lib/api.js";
 import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useBooks } from "../hooks/useBooks.js";
@@ -179,23 +179,37 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
           }
         }
         const systemWithBooks = systemPromptRef.current + bookContext;
-        const reply = await callClaude({
+        let firstToken = true;
+        const reply = await streamClaude({
           system: systemWithBooks,
           messages: newMsgs,
           maxTokens: 1100,
+          onDelta: (delta) => {
+            if (firstToken) {
+              firstToken = false;
+              setLoading(false);
+              setMessages((m) => [...m, { role: "assistant", content: delta }]);
+            } else {
+              setMessages((m) => {
+                const last = m[m.length - 1];
+                if (!last || last.role !== "assistant") return m;
+                return [...m.slice(0, -1), { role: "assistant", content: last.content + delta }];
+              });
+            }
+          },
+          onDone: (full) => {
+            speak(full);
+            saveExchange(text, full);
+            systemPromptRef.current = buildSystemPrompt({
+              user,
+              bookNotes,
+              videoNotes,
+              healingProfile,
+              priorMessages: [...priorMessages, userMsg, { role: "assistant", content: full }],
+            });
+          },
         });
-        setMessages((m) => [...m, { role: "assistant", content: reply }]);
-        speak(reply);
-        // Save to Supabase in background
-        saveExchange(text, reply);
-        // Update system prompt with any new messages
-        systemPromptRef.current = buildSystemPrompt({
-          user,
-          bookNotes,
-          videoNotes,
-          healingProfile,
-          priorMessages: [...priorMessages, userMsg, { role: "assistant", content: reply }],
-        });
+        if (!reply) setLoading(false);
       } catch (err) {
         setMessages((m) => [
           ...m,
@@ -204,8 +218,8 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             content: `Connection error: ${err.message}. Please check your API key in .env and try again.`,
           },
         ]);
+        setLoading(false);
       }
-      setLoading(false);
     },
     [messages, loading, speak, saveExchange, user, bookNotes, videoNotes, healingProfile, priorMessages]
   );
