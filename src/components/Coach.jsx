@@ -30,7 +30,7 @@ function buildConditionsIndex() {
     .join("\n");
 }
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages }) {
+function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
   const conditionsIndex = buildConditionsIndex();
 
@@ -120,7 +120,9 @@ HOW TO RESPOND:
 • Never contradict a doctor or give conventional medical advice — say "alongside your doctor"
 • End every response with genuine encouragement — healing takes courage
 • You have access to 54 exact condition protocols — use them precisely when relevant
-• Many users are very unwell — keep responses clear and actionable, not overwhelming`;
+• Many users are very unwell — keep responses clear and actionable, not overwhelming
+• MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as physical conditions rooted in viral load and heavy metals — acknowledge this when users discuss mental health, never dismiss or pathologise
+${lang && lang !== "en" ? `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nLANGUAGE:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nIMPORTANT: This user's preferred language is "${lang}". Respond ENTIRELY in that language for all messages. Keep supplement names, book titles, and Anthony William's name in their original form.` : ""}`;
 }
 
 function parseNavCommand(text) {
@@ -141,6 +143,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     "cs_voiceName",
     "el:EXAVITQu4vr4xnSDxMaL"
   );
+  const [lang] = useLocalStorage("cs_lang", "en");
   const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening } =
     useVoice(selectedVoiceName);
   const { healingProfile, priorMessages, memoryLoading, loadMemory, saveExchange, clearMemory } =
@@ -175,6 +178,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       videoNotes,
       healingProfile,
       priorMessages,
+      lang,
     });
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
     const greeting = hasHistory
@@ -245,7 +249,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             speak(clean, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile,
+              user, bookNotes, videoNotes, healingProfile, lang,
               priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
             });
             if (nav && onNavigate) {

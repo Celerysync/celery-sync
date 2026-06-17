@@ -188,7 +188,7 @@ export default function App() {
 
     switch (tab) {
       case "home":
-        return <Home user={activeProfile} />;
+        return <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} />;
       case "journal":
@@ -228,7 +228,7 @@ export default function App() {
           </div>
         );
       default:
-        return <Home user={activeProfile} />;
+        return <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };
 

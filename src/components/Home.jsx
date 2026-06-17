@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
+import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { Tag, Card } from "./ui.jsx";
+import DailyCheckIn from "./DailyCheckIn.jsx";
+import HealingTrends from "./HealingTrends.jsx";
 
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
@@ -53,7 +56,7 @@ function getNowFood() {
   };
 }
 
-export default function Home({ user }) {
+export default function Home({ user, authUser, profileId }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
@@ -64,8 +67,17 @@ export default function Home({ user }) {
   const [lastSnack, setLastSnack] = useLocalStorage("cs_lastSnack", null);
   const [snackCount, setSnackCount] = useLocalStorage("cs_snackCount_" + TODAY, 0);
   const [now, setNow] = useState(Date.now());
+  const [savingCheckin, setSavingCheckin] = useState(false);
 
-  // Refresh the clock every minute to keep snack timer accurate
+  const {
+    todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
+    loadCheckins, saveCheckin,
+  } = useDailyCheckins(authUser, profileId);
+
+  useEffect(() => {
+    loadCheckins();
+  }, [authUser?.id, profileId]);
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
@@ -100,6 +112,12 @@ export default function Home({ user }) {
     return `${(minutesSinceSnack / 60).toFixed(1).replace(".0", "")} hr ago`;
   };
 
+  const handleSaveCheckin = async (data) => {
+    setSavingCheckin(true);
+    await saveCheckin(data);
+    setSavingCheckin(false);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -117,6 +135,11 @@ export default function Home({ user }) {
           {greeting}{user?.name ? ", " + user.name : ""} 🌿
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your healing journey continues</div>
+        {celeryStreak > 0 && (
+          <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
+            🥬 {celeryStreak}-day celery streak · {protocolDays} days checked in
+          </div>
+        )}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <button
             onClick={() => (speaking ? stopSpeaking() : speak(morningScript))}
@@ -136,6 +159,16 @@ export default function Home({ user }) {
           </button>
         </div>
       </div>
+
+      {/* Daily check-in */}
+      {authUser && (
+        <DailyCheckIn
+          todaysCheckin={todaysCheckin}
+          userSymptoms={user?.conditions || []}
+          onSave={handleSaveCheckin}
+          saving={savingCheckin}
+        />
+      )}
 
       {/* Adrenal snack reminder */}
       {isAwakeHours && (
@@ -281,6 +314,16 @@ export default function Home({ user }) {
           </div>
         )}
       </Card>
+
+      {/* Healing trends — shown once tracking has started */}
+      {authUser && (
+        <HealingTrends
+          last7={last7}
+          celeryStreak={celeryStreak}
+          protocolDays={protocolDays}
+          avgEnergy7={avgEnergy7}
+        />
+      )}
 
       {/* Include today */}
       <Card>

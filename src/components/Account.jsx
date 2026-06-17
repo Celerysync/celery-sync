@@ -1,6 +1,25 @@
 import { useState } from 'react'
 import C from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
+import { useLocalStorage } from '../hooks/useLocalStorage.js'
+
+const LANGUAGES = [
+  { code: "en", label: "English", native: "English" },
+  { code: "es", label: "Spanish", native: "Español" },
+  { code: "pt", label: "Portuguese", native: "Português" },
+  { code: "fr", label: "French", native: "Français" },
+  { code: "de", label: "German", native: "Deutsch" },
+  { code: "it", label: "Italian", native: "Italiano" },
+  { code: "nl", label: "Dutch", native: "Nederlands" },
+  { code: "pl", label: "Polish", native: "Polski" },
+  { code: "zh", label: "Chinese", native: "中文" },
+  { code: "ja", label: "Japanese", native: "日本語" },
+  { code: "ko", label: "Korean", native: "한국어" },
+  { code: "ar", label: "Arabic", native: "العربية" },
+  { code: "hi", label: "Hindi", native: "हिन्दी" },
+  { code: "ru", label: "Russian", native: "Русский" },
+  { code: "tr", label: "Turkish", native: "Türkçe" },
+];
 
 const FEATURES = [
   { emoji: '🎙', label: 'Voice AI Healing Guide', desc: 'Speak to it, it speaks back — personalised to you and your books' },
@@ -14,6 +33,7 @@ const FEATURES = [
 export default function Account({ authUser, isSubscribed, subData, subLoading, onSignOut, onReplayWelcome }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [lang, setLang] = useLocalStorage("cs_lang", "en")
 
   const subscribe = async () => {
     setLoading(true)
@@ -192,6 +212,36 @@ export default function Account({ authUser, isSubscribed, subData, subLoading, o
           </Card>
         </>
       )}
+
+      {/* Language */}
+      <Card>
+        <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
+          🌍 Language
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+          The AI Guide will respond in your chosen language. More languages available — ask the AI Guide to switch.
+        </div>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value)}
+          style={{
+            width: '100%', padding: '10px 14px', borderRadius: 10,
+            border: `1.5px solid ${C.border}`, fontFamily: 'Georgia,serif',
+            fontSize: 14, color: C.charcoal, background: C.white, outline: 'none',
+          }}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.native} — {l.label}
+            </option>
+          ))}
+        </select>
+        {lang !== 'en' && (
+          <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
+            ✓ AI Guide will respond in {LANGUAGES.find(l => l.code === lang)?.label}
+          </div>
+        )}
+      </Card>
 
       {/* Sign out — always visible */}
       <Card>
