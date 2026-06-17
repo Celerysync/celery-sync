@@ -1,6 +1,7 @@
 import C from "../lib/colors.js";
-import { Card } from "./ui.jsx";
+import { Card, Btn } from "./ui.jsx";
 import { useReminders } from "../hooks/useReminders.js";
+import { useWebPush } from "../hooks/useWebPush.js";
 
 function Toggle({ on, onChange, label, desc }) {
   return (
@@ -30,8 +31,9 @@ function Toggle({ on, onChange, label, desc }) {
   );
 }
 
-export default function ReminderSettings() {
+export default function ReminderSettings({ authUser }) {
   const { settings, updateSetting } = useReminders();
+  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe } = useWebPush(authUser);
 
   return (
     <Card>
@@ -58,8 +60,56 @@ export default function ReminderSettings() {
         desc="Coming soon — will remind you based on your specific condition protocols"
       />
 
-      <div style={{ marginTop: 10, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
-        Reminders appear as banners within the app. For background notifications when the app is closed, install CelerySync to your home screen (tap Share → Add to Home Screen on iPhone).
+      {/* Push notifications */}
+      <div style={{ paddingTop: 14, marginTop: 2 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 4 }}>
+          🔔 Background notifications
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+          Get healing reminders even when the app is closed — lemon water, celery juice, adrenal snacks, and evening wind-down. Works best when you add CelerySync to your home screen.
+        </div>
+
+        {!supported ? (
+          <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>
+            Push notifications aren't supported in this browser. Add to Home Screen on iPhone first (Share → Add to Home Screen).
+          </div>
+        ) : permission === "denied" ? (
+          <div style={{ fontSize: 12, color: C.terracotta, lineHeight: 1.5 }}>
+            Notifications are blocked. Open your browser settings and allow notifications for this site, then come back here.
+          </div>
+        ) : subscribed ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>
+              ✓ Background notifications active
+            </div>
+            <div style={{ fontSize: 11, color: C.muted }}>
+              You'll receive healing reminders at: 6am (lemon water), 7am (celery juice), 8am (HMDS), 10am / 12pm / 2pm / 4pm (snacks), 7pm (evening)
+            </div>
+            <button
+              onClick={unsubscribe}
+              disabled={loading}
+              style={{
+                background: "none", border: `1px solid ${C.border}`, borderRadius: 20,
+                padding: "6px 14px", fontSize: 12, color: C.muted, cursor: "pointer",
+                fontFamily: "Georgia,serif", width: "fit-content",
+              }}
+            >
+              {loading ? "Turning off…" : "Turn off background notifications"}
+            </button>
+          </div>
+        ) : (
+          <Btn full onClick={subscribe} color={C.sage} disabled={loading}>
+            {loading ? "Setting up…" : "🔔 Enable Background Notifications"}
+          </Btn>
+        )}
+
+        {error && (
+          <div style={{ marginTop: 8, fontSize: 12, color: C.terracotta }}>{error}</div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 12, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+        In-app reminders appear as banners when the app is open. Background notifications work when the app is closed — best installed as a home screen app.
       </div>
     </Card>
   );

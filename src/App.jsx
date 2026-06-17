@@ -216,7 +216,7 @@ export default function App() {
               onSignOut={signOut}
               onReplayWelcome={() => setShowWelcome(true)}
             />
-            <ReminderSettings />
+            <ReminderSettings authUser={authUser} />
             <ProfileManager
               profiles={profiles}
               activeProfileId={activeProfileId}
