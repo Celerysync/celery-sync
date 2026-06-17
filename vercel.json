@@ -4,5 +4,12 @@
       "source": "/api/(.*)",
       "destination": "https://celery-sync-production.up.railway.app/api/$1"
     }
-  ]
+  ],
+  "experimentalServices": {
+    "web": {
+      "routePrefix": "/",
+      "framework": "vite",
+      "buildCommand": "npm run build"
+    }
+  }
 }

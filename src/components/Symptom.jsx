@@ -259,7 +259,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always con
         disabled={loading || (!sel.length && !custom.trim())}
         color={C.plum}
       >
-        {loading ? "🌿 Looking up exact protocols…" : "Get Exact MM Protocol"}
+        {loading ? "🌿 Looking it up…" : "Understand & Heal This Symptom"}
       </Btn>
 
       {result && (
