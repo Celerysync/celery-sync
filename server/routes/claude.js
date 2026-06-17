@@ -4,13 +4,24 @@ import Anthropic from '@anthropic-ai/sdk'
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+// Model tiers — quick tasks use Haiku (~20x cheaper), coaching uses Sonnet
+const MODELS = {
+  quick:    'claude-haiku-4-5-20251001',  // insights, summaries, recipes
+  standard: process.env.AI_MODEL || 'claude-sonnet-4-6',  // coaching, symptoms
+  deep:     'claude-sonnet-4-6',          // protocol generation, complex reasoning
+}
+
+function resolveModel(tier) {
+  return MODELS[tier] || MODELS.standard
+}
+
 router.post('/', async (req, res) => {
-  const { system, messages, maxTokens = 900 } = req.body
+  const { system, messages, maxTokens = 900, tier = 'standard' } = req.body
   if (!messages?.length) return res.status(400).json({ error: 'messages required' })
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: resolveModel(tier),
       max_tokens: maxTokens,
       messages,
       ...(system ? { system } : {}),
@@ -22,7 +33,7 @@ router.post('/', async (req, res) => {
 })
 
 router.post('/stream', async (req, res) => {
-  const { system, messages, maxTokens = 900 } = req.body
+  const { system, messages, maxTokens = 900, tier = 'standard' } = req.body
   if (!messages?.length) return res.status(400).json({ error: 'messages required' })
 
   res.setHeader('Content-Type', 'text/event-stream')
@@ -33,7 +44,7 @@ router.post('/stream', async (req, res) => {
 
   try {
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: resolveModel(tier),
       max_tokens: maxTokens,
       messages,
       ...(system ? { system } : {}),

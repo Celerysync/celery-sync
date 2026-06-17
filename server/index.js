@@ -8,6 +8,7 @@ import elevenLabsRoutes from './routes/elevenlabs.js'
 import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
+import analyticsRoutes from './routes/analytics.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -26,6 +27,7 @@ app.use('/api/elevenlabs', elevenLabsRoutes)
 app.use('/api/books', booksRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/wearable', wearableRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 

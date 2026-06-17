@@ -1,6 +1,7 @@
 import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
+import { useAnalytics } from "../hooks/useAnalytics.js";
 
 const SLEEP_OPTS = [
   { val: 4, label: "4h" }, { val: 5, label: "5h" }, { val: 6, label: "6h" },
@@ -35,7 +36,8 @@ const COMMON_SYMPTOMS = [
   "Skin issues", "Heart palpitations", "Panic attacks", "Irritability",
 ];
 
-export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave, saving }) {
+export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave, saving, authUser }) {
+  const { track } = useAnalytics(authUser);
   const [energy, setEnergy] = useState(todaysCheckin?.energy ?? null);
   const [celeryOz, setCeleryOz] = useState(todaysCheckin?.celery_oz ?? null);
   const [morningProtocol, setMorningProtocol] = useState(todaysCheckin?.morning_protocol ?? false);
@@ -51,6 +53,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
     setSymptoms((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
 
   const handleSave = async () => {
+    track("checkin_saved", { energy, celery_oz: celeryOz ?? 0, has_sleep: !!sleepHours, has_hrv: !!hrv });
     await onSave({
       energy, celery_oz: celeryOz ?? 0, morning_protocol: morningProtocol, symptoms, notes,
       sleep_hours: sleepHours ?? null,

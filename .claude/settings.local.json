@@ -10,7 +10,23 @@
       "Bash(node *)",
       "Bash(npm list *)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(grep \"\\\\.env$\")",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(brew install *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://celery-sync-production.up.railway.app/api/books)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://celery-sync-production.up.railway.app/)",
+      "Bash(curl -s -I https://celery-sync-production.up.railway.app/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://celery-sync.vercel.app)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://celery-sync.vercel.app/api/health)",
+      "Bash(curl *)",
+      "Bash(railway --version)",
+      "Bash(vercel *)",
+      "Bash(pbcopy)"
     ]
   }
 }

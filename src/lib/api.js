@@ -1,8 +1,8 @@
-export async function callClaude({ system, messages, maxTokens = 900 }) {
+export async function callClaude({ system, messages, maxTokens = 900, tier = 'standard' }) {
   const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, messages, maxTokens }),
+    body: JSON.stringify({ system, messages, maxTokens, tier }),
   })
 
   if (!res.ok) {
@@ -14,11 +14,11 @@ export async function callClaude({ system, messages, maxTokens = 900 }) {
   return data.text ?? ''
 }
 
-export async function streamClaude({ system, messages, maxTokens = 900, onDelta, onDone }) {
+export async function streamClaude({ system, messages, maxTokens = 900, tier = 'standard', onDelta, onDone }) {
   const res = await fetch('/api/claude/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, messages, maxTokens }),
+    body: JSON.stringify({ system, messages, maxTokens, tier }),
   })
 
   if (!res.ok) {

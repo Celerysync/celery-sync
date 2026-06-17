@@ -26,6 +26,8 @@ import WelcomeVoice from "./components/WelcomeVoice.jsx";
 import CaregiverDashboard from "./components/CaregiverDashboard.jsx";
 import Community from "./components/Community.jsx";
 import PractitionerPortal from "./components/PractitionerPortal.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
+import { useAnalytics } from "./hooks/useAnalytics.js";
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -40,6 +42,7 @@ const TABS = [
   { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
   { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
   { id: "account",   label: "Account",    emoji: "👤", free: true  },
+  { id: "admin",     label: "Admin",      emoji: "📊", free: true, adminOnly: true },
 ];
 
 function LoadingScreen({ message = "Loading your healing journey…" }) {
@@ -123,6 +126,8 @@ export default function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
+  const { track } = useAnalytics(authUser);
+  const isAdmin = authUser?.email === "allij@live.com.au";
 
   const handleNavigate = (tabId, query) => {
     setNavQuery(query || null);
@@ -175,7 +180,7 @@ export default function App() {
 
   const handleTabClick = (t) => {
     if (!t.free && !isSubscribed && !subLoading) setTab("account");
-    else setTab(t.id);
+    else { setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
   const renderTab = () => {
@@ -218,6 +223,8 @@ export default function App() {
         return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
       case "aw":
         return <AW />;
+      case "admin":
+        return isAdmin ? <AdminDashboard authUser={authUser} /> : null;
       case "account":
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -324,7 +331,7 @@ export default function App() {
         paddingBottom: "env(safe-area-inset-bottom, 6px)",
       }}>
         <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" }}>
-          {TABS.filter(t => !t.practitionerOnly || isPractitioner).map((t) => {
+          {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
             const locked = !t.free && !isSubscribed && !subLoading;
             const active = tab === t.id;
             return (

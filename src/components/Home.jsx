@@ -167,6 +167,7 @@ export default function Home({ user, authUser, profileId }) {
           userSymptoms={user?.conditions || []}
           onSave={handleSaveCheckin}
           saving={savingCheckin}
+          authUser={authUser}
         />
       )}
 

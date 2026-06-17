@@ -114,6 +114,7 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
 
     callClaude({
       maxTokens: 200,
+      tier: 'quick',
       messages: [{
         role: "user",
         content: `You are a Medical Medium healing companion. Based on this user's 7-day check-in data: ${summary}.

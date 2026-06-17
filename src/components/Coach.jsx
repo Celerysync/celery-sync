@@ -8,6 +8,7 @@ import { streamClaude } from "../lib/api.js";
 import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useBooks } from "../hooks/useBooks.js";
+import { useAnalytics } from "../hooks/useAnalytics.js";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -166,6 +167,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const endRef = useRef(null);
   const systemPromptRef = useRef("");
   const voiceModeRef = useRef(false);
+  const { track } = useAnalytics(authUser);
 
   useEffect(() => {
     const load = () => setVoices(window.speechSynthesis.getVoices());
@@ -214,6 +216,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     async (text) => {
       if (!text.trim() || loading) return;
       if (hasCrisisWords(text)) setCrisisDetected(true);
+      track("ai_query", { chars: text.length });
       const userMsg = { role: "user", content: text };
       const newMsgs = [...messages, userMsg];
       setMessages(newMsgs);
