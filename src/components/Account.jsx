@@ -2,6 +2,7 @@ import { useState } from 'react'
 import C from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import WearableConnect from './WearableConnect.jsx'
 
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
@@ -26,6 +27,7 @@ const FEATURES = [
   { emoji: '🌿', label: 'Complete Cleanse Protocols', desc: 'Every day of every cleanse with audio read-aloud' },
   { emoji: '🔍', label: 'Symptom Checker', desc: 'Exact supplements, dosages & causes from Anthony William\'s books' },
   { emoji: '📖', label: 'My Books — Upload & Learn', desc: 'Upload your MM PDFs, save videos, the AI learns your personal journey' },
+  { emoji: '💓', label: 'Wearable Integration', desc: 'Connect Oura Ring for automatic sleep & HRV data — interpreted through Anthony William\'s teachings' },
   { emoji: '⏰', label: 'Adrenal Snack Reminders', desc: 'Never miss a 2-hour snack window — keeps blood sugar and adrenals stable' },
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
 ]
@@ -236,6 +238,9 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
           )}
         </>
       )}
+
+      {/* Wearable integration — subscribed users only */}
+      {isSubscribed && <WearableConnect authUser={authUser} />}
 
       {/* Caregiver mode */}
       <Card>

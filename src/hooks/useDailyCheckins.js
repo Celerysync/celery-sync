@@ -61,7 +61,16 @@ export function useDailyCheckins(authUser, profileId) {
       d.setDate(d.getDate() - i);
       const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const found = checkins.find((c) => c.check_date === ds);
-      days.push({ date: ds, day: dayLabel(ds), energy: found?.energy ?? 0, mood: found?.mood ?? 0, celery: found?.celery_oz ?? 0 });
+      days.push({
+        date: ds, day: dayLabel(ds),
+        energy: found?.energy ?? 0,
+        mood: found?.mood ?? 0,
+        celery: found?.celery_oz ?? 0,
+        sleep_quality: found?.sleep_quality ?? 0,
+        sleep_hours: found?.sleep_hours ?? 0,
+        hrv: found?.hrv ?? 0,
+        resting_hr: found?.resting_hr ?? 0,
+      });
     }
     return days;
   }, [checkins]);

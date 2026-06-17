@@ -7,6 +7,7 @@ import stripeRoutes from './routes/stripe.js'
 import elevenLabsRoutes from './routes/elevenlabs.js'
 import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
+import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -24,6 +25,7 @@ app.use('/api/stripe', stripeRoutes)
 app.use('/api/elevenlabs', elevenLabsRoutes)
 app.use('/api/books', booksRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/wearable', wearableRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
@@ -50,7 +52,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       }
     }
   });
-  console.log('🔔 Push notification scheduler active');
+  console.log('🔔 Push notification scheduler active')
+
+  // Sync Oura Ring data for all connected users at 6am local time
+  cron.schedule('30 6 * * *', async () => {
+    try { await syncAllOuraUsers(); } catch (err) { console.warn('Oura cron error:', err.message); }
+  });;
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

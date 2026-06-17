@@ -7,13 +7,14 @@ const W = 280, H = 72;
 const XS = [20, 60, 100, 140, 180, 220, 260];
 const YBOT = 64, YTOP = 8;
 
-function yPos(val, max) {
+function yPos(val, min, max) {
   if (!val) return null;
-  return YTOP + (1 - (val - 1) / (max - 1)) * (YBOT - YTOP);
+  const clamped = Math.min(Math.max(val, min), max);
+  return YTOP + (1 - (clamped - min) / (max - min)) * (YBOT - YTOP);
 }
 
-function Sparkline({ points, color, max = 10 }) {
-  const mapped = points.map((v) => yPos(v, max));
+function Sparkline({ points, color, min = 0, max = 10 }) {
+  const mapped = points.map((v) => yPos(v, min, max));
   const segs = [];
   let cur = [];
 
@@ -29,11 +30,9 @@ function Sparkline({ points, color, max = 10 }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }} preserveAspectRatio="none">
-      {/* Gridlines */}
       {[YTOP, (YTOP + YBOT) / 2, YBOT].map((y) => (
         <line key={y} x1={0} y1={y} x2={W} y2={y} stroke={C.border} strokeWidth={0.8} />
       ))}
-      {/* Line segments */}
       {segs.map((seg, si) => (
         <polyline
           key={si}
@@ -45,19 +44,55 @@ function Sparkline({ points, color, max = 10 }) {
           strokeLinecap="round"
         />
       ))}
-      {/* Dots */}
       {mapped.map((y, i) =>
         y !== null ? (
           <circle key={i} cx={XS[i]} cy={y} r={4} fill={color} stroke={C.white} strokeWidth={1.5} />
         ) : (
-          <circle key={i} cx={XS[i]} cy={YBOT / 2 + YTOP / 2} r={2.5} fill={C.border} opacity={0.5} />
+          <circle key={i} cx={XS[i]} cy={(YTOP + YBOT) / 2} r={2.5} fill={C.border} opacity={0.5} />
         )
       )}
     </svg>
   );
 }
 
+function ChartRow({ label, dot, points, min, max, days }) {
+  const hasData = points.some((v) => v > 0);
+  if (!hasData) return null;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        <div style={{ width: 10, height: 10, borderRadius: "50%", background: dot }} />
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.mid }}>{label}</div>
+      </div>
+      <Sparkline points={points} color={dot} min={min} max={max} />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+        {days.map((d) => (
+          <div key={d.date} style={{ fontSize: 9, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const INSIGHT_KEY = "cs_weekly_insight_";
+const VITALS_KEY = "cs_vitals_insight_";
+
+function mmHrvNote(avgHrv) {
+  if (!avgHrv) return null;
+  if (avgHrv < 30) return "Your HRV suggests your nervous system is under significant load — Anthony William links low HRV to heavy metal accumulation and active viral replication. Prioritise rest, zinc, and B12.";
+  if (avgHrv < 50) return "Your HRV is in a cautious range. According to Anthony William, this often reflects the vagus nerve under strain from EBV activity. Lemon balm and deep rest support recovery here.";
+  if (avgHrv < 75) return "Good HRV range — your nervous system resilience is building. Anthony William's HMDS and heavy metal detox protocols support continued improvement.";
+  return "Strong HRV — your nervous system is healing well. Anthony William attributes this kind of resilience to a clean, toxin-free body and consistent protocol adherence.";
+}
+
+function mmSleepNote(avgSleep, avgQuality) {
+  if (!avgSleep && !avgQuality) return null;
+  const parts = [];
+  if (avgSleep && avgSleep < 6.5) parts.push("Under 7 hours of sleep limits your liver's 1–3am detox window — Anthony William says this is the liver's most active cleansing period.");
+  if (avgQuality && avgQuality <= 2) parts.push("Poor sleep quality often reflects heavy metals disrupting brain chemistry and EBV activity — lemon balm and magnesium glycinate can support deeper sleep.");
+  if (avgSleep && avgSleep >= 8 && avgQuality && avgQuality >= 4) parts.push("Your sleep is supporting healing well — the liver is getting its full cleansing window each night.");
+  return parts.length > 0 ? parts[0] : null;
+}
 
 export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEnergy7 }) {
   const [insight, setInsight] = useState(null);
@@ -74,15 +109,15 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
 
     setLoadingInsight(true);
     const summary = last7.map((d) =>
-      `${d.day}: energy=${d.energy || "?"}/10, mood=${d.mood || "?"}/5, celery=${d.celery}oz`
+      `${d.day}: energy=${d.energy || "?"}/10, celery=${d.celery}oz, sleep=${d.sleep_hours || "?"}h (quality ${d.sleep_quality || "?"}/5), HRV=${d.hrv || "?"}`
     ).join(" | ");
 
     callClaude({
-      maxTokens: 180,
+      maxTokens: 200,
       messages: [{
         role: "user",
         content: `You are a Medical Medium healing companion. Based on this user's 7-day check-in data: ${summary}.
-Write a 2-sentence warm, encouraging healing insight. Mention any positive trend (or gentle encouragement if flat/declining). Reference Anthony William's teachings briefly. Keep it under 60 words. No headers, just the insight.`,
+Write a 2-3 sentence warm, encouraging healing insight. Mention any positive trend (energy, sleep, or celery streak) — or gentle encouragement if struggling. Reference Anthony William's teachings. Under 70 words. No headers, just the insight.`,
       }],
     }).then((text) => {
       localStorage.setItem(key, text);
@@ -90,10 +125,32 @@ Write a 2-sentence warm, encouraging healing insight. Mention any positive trend
     }).catch(() => {}).finally(() => setLoadingInsight(false));
   }, [daysWithData]);
 
-  const energyVals = last7.map((d) => d.energy);
-  const moodVals = last7.map((d) => d.mood);
-  const celeryVals = last7.map((d) => d.celery);
+  const energyVals = last7.map((d) => d.energy || 0);
+  const celeryVals = last7.map((d) => d.celery || 0);
+  const sleepQualVals = last7.map((d) => d.sleep_quality || 0);
+  const sleepHrVals = last7.map((d) => d.sleep_hours || 0);
+  const hrvVals = last7.map((d) => d.hrv || 0);
+
   const maxCelery = Math.max(...celeryVals, 16);
+
+  const hasSleep = sleepQualVals.some((v) => v > 0) || sleepHrVals.some((v) => v > 0);
+  const hasHrv = hrvVals.some((v) => v > 0);
+
+  const avgSleep = (() => {
+    const vals = sleepHrVals.filter((v) => v > 0);
+    return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
+  })();
+  const avgSleepQual = (() => {
+    const vals = sleepQualVals.filter((v) => v > 0);
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+  })();
+  const avgHrv = (() => {
+    const vals = hrvVals.filter((v) => v > 0);
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+  })();
+
+  const sleepNote = mmSleepNote(avgSleep ? parseFloat(avgSleep) : null, avgSleepQual);
+  const hrvNote = mmHrvNote(avgHrv);
 
   return (
     <Card>
@@ -108,85 +165,65 @@ Write a 2-sentence warm, encouraging healing insight. Mention any positive trend
       ) : (
         <>
           {/* Stats row */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
             {avgEnergy7 !== null && (
-              <div style={{
-                flex: 1, textAlign: "center", padding: "10px 6px",
-                background: C.sageLight, borderRadius: 12,
-              }}>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "Georgia,serif", color: C.leaf }}>{avgEnergy7}</div>
+              <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: C.sageLight, borderRadius: 12 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.leaf }}>{avgEnergy7}</div>
                 <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>avg energy</div>
               </div>
             )}
-            <div style={{
-              flex: 1, textAlign: "center", padding: "10px 6px",
-              background: "#f0fdf4", borderRadius: 12,
-            }}>
-              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{celeryStreak}</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🥬 day streak</div>
+            <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: "#f0fdf4", borderRadius: 12 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{celeryStreak}</div>
+              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🥬 streak</div>
             </div>
-            <div style={{
-              flex: 1, textAlign: "center", padding: "10px 6px",
-              background: C.plumLight, borderRadius: 12,
-            }}>
-              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "Georgia,serif", color: C.plum }}>{daysWithData}</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>days tracked</div>
-            </div>
+            {avgSleep && (
+              <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: C.plumLight, borderRadius: 12 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.plum }}>{avgSleep}h</div>
+                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>avg sleep</div>
+              </div>
+            )}
+            {avgHrv && (
+              <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: "#fef0f0", borderRadius: 12 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: "#e05252" }}>{avgHrv}</div>
+                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>HRV ms</div>
+              </div>
+            )}
           </div>
 
-          {/* Energy chart */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.leaf }} />
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.mid }}>Energy (1–10)</div>
-            </div>
-            <Sparkline points={energyVals} color={C.leaf} max={10} />
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-              {last7.map((d) => (
-                <div key={d.date} style={{ fontSize: 9, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
-              ))}
-            </div>
-          </div>
+          <ChartRow label="Energy (1–10)" dot={C.leaf} points={energyVals} min={0} max={10} days={last7} />
+          <ChartRow label="🥬 Celery Juice (oz)" dot={C.sage} points={celeryVals} min={0} max={maxCelery} days={last7} />
+          <ChartRow label="💤 Sleep quality (1–5)" dot={C.plum} points={sleepQualVals} min={0} max={5} days={last7} />
+          <ChartRow label="🌙 Sleep hours" dot="#7c6fcd" points={sleepHrVals} min={0} max={12} days={last7} />
+          <ChartRow label="💓 HRV (ms)" dot="#e05252" points={hrvVals} min={Math.max(0, (avgHrv || 40) - 30)} max={(avgHrv || 40) + 30} days={last7} />
 
-          {/* Mood chart */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.plum }} />
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.mid }}>Mood (1–5)</div>
-            </div>
-            <Sparkline points={moodVals} color={C.plum} max={5} />
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-              {last7.map((d) => (
-                <div key={d.date} style={{ fontSize: 9, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Celery chart */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.sage }} />
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.mid }}>🥬 Celery Juice (oz)</div>
-            </div>
-            <Sparkline points={celeryVals} color={C.sage} max={maxCelery} />
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-              {last7.map((d) => (
-                <div key={d.date} style={{ fontSize: 9, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI insight */}
+          {/* AI weekly insight */}
           {(insight || loadingInsight) && (
-            <div style={{
-              background: C.goldLight, border: `1px solid ${C.gold}40`,
-              borderRadius: 12, padding: "12px 14px",
-            }}>
+            <div style={{ background: C.goldLight, border: `1px solid ${C.gold}40`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 5 }}>✨ Weekly Insight</div>
               {loadingInsight
                 ? <div style={{ fontSize: 12, color: C.mid }}>Generating your insight…</div>
                 : <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, fontStyle: "italic" }}>{insight}</div>
               }
+            </div>
+          )}
+
+          {/* MM vitals interpretation */}
+          {sleepNote && (
+            <div style={{ background: C.plumLight, border: `1px solid ${C.plum}30`, borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.plum, marginBottom: 5 }}>🌙 Sleep & Liver Health</div>
+              <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.65 }}>{sleepNote}</div>
+            </div>
+          )}
+          {hrvNote && (
+            <div style={{ background: "#fff5f5", border: "1px solid #fca5a530", borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#e05252", marginBottom: 5 }}>💓 HRV & Nervous System</div>
+              <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.65 }}>{hrvNote}</div>
+            </div>
+          )}
+
+          {!hasSleep && !hasHrv && (
+            <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "8px 0" }}>
+              Add sleep & HRV to today's check-in to see nervous system trends
             </div>
           )}
         </>
