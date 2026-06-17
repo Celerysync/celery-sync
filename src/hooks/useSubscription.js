@@ -17,7 +17,7 @@ export function useSubscription(authUser) {
     setSubLoading(true)
     const { data } = await supabase
       .from('subscriptions')
-      .select('status, current_period_end, stripe_customer_id')
+      .select('status, current_period_end, stripe_customer_id, plan')
       .eq('user_id', authUser.id)
       .single()
 
@@ -31,5 +31,7 @@ export function useSubscription(authUser) {
     refetch()
   }, [refetch])
 
-  return { isSubscribed, subData, subLoading, refetch }
+  const isPractitioner = (subData?.status === 'active' || subData?.status === 'trialing') && subData?.plan === 'practitioner'
+
+  return { isSubscribed, isPractitioner, subData, subLoading, refetch }
 }

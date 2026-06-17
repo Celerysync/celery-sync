@@ -30,7 +30,7 @@ const FEATURES = [
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
 ]
 
-export default function Account({ authUser, isSubscribed, subData, subLoading, onSignOut, onReplayWelcome }) {
+export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, onSignOut, onReplayWelcome }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
@@ -211,6 +211,29 @@ export default function Account({ authUser, isSubscribed, subData, subLoading, o
               {loading ? '🌿 Opening…' : 'Manage Billing & Subscription'}
             </Btn>
           </Card>
+
+          {/* Practitioner upgrade */}
+          {!isPractitioner && (
+            <Card style={{ border: `1.5px solid ${C.gold}50`, background: C.goldLight }}>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
+                🏥 Are you a practitioner?
+              </div>
+              <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 14 }}>
+                Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $49/month and get a full client management portal — AI protocol generation, session notes, and printable healing plans.
+              </div>
+              <Btn full onClick={async () => {
+                setLoading(true)
+                try {
+                  const res = await fetch('/api/stripe/checkout/practitioner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: authUser.id, email: authUser.email }) })
+                  const data = await res.json()
+                  if (data.error) throw new Error(data.error)
+                  window.location.href = data.url
+                } catch (err) { setError(err.message); setLoading(false) }
+              }} color={C.gold} disabled={loading}>
+                {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $49/month →'}
+              </Btn>
+            </Card>
+          )}
         </>
       )}
 

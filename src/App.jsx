@@ -25,6 +25,7 @@ import { useReminders } from "./hooks/useReminders.js";
 import WelcomeVoice from "./components/WelcomeVoice.jsx";
 import CaregiverDashboard from "./components/CaregiverDashboard.jsx";
 import Community from "./components/Community.jsx";
+import PractitionerPortal from "./components/PractitionerPortal.jsx";
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -35,8 +36,9 @@ const TABS = [
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
   { id: "knowledge", label: "My Books",   emoji: "📖", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
-  { id: "community", label: "Circles",    emoji: "💚", free: false },
-  { id: "aw",        label: "Support AW", emoji: "💛", free: true  },
+  { id: "community",    label: "Circles",   emoji: "💚", free: false },
+  { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
+  { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
   { id: "account",   label: "Account",    emoji: "👤", free: true  },
 ];
 
@@ -108,7 +110,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
 
 export default function App() {
   const { authUser, authLoading, signOut } = useAuth();
-  const { isSubscribed, subData, subLoading, refetch: refetchSub } = useSubscription(authUser);
+  const { isSubscribed, isPractitioner, subData, subLoading, refetch: refetchSub } = useSubscription(authUser);
   const {
     profiles, activeProfile, activeProfileId,
     profilesLoading, loadProfiles,
@@ -183,6 +185,7 @@ export default function App() {
         <Account
           authUser={authUser}
           isSubscribed={isSubscribed}
+          isPractitioner={isPractitioner}
           subData={subData}
           subLoading={subLoading}
           onSignOut={signOut}
@@ -211,6 +214,8 @@ export default function App() {
         return <Body searchBooks={searchBooks} navQuery={navQuery} />;
       case "community":
         return <Community authUser={authUser} userProfile={activeProfile} />;
+      case "practice":
+        return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
       case "aw":
         return <AW />;
       case "account":
@@ -319,7 +324,7 @@ export default function App() {
         paddingBottom: "env(safe-area-inset-bottom, 6px)",
       }}>
         <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" }}>
-          {TABS.map((t) => {
+          {TABS.filter(t => !t.practitionerOnly || isPractitioner).map((t) => {
             const locked = !t.free && !isSubscribed && !subLoading;
             const active = tab === t.id;
             return (

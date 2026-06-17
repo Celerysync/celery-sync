@@ -9,29 +9,25 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Create Stripe Checkout session
+// Shared helper — get or create Stripe customer
+async function getOrCreateCustomer(userId, email) {
+  const { data: existing } = await supabase
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('user_id', userId)
+    .single()
+  if (existing?.stripe_customer_id) return existing.stripe_customer_id
+  const customer = await stripe.customers.create({ email, metadata: { supabase_user_id: userId } })
+  return customer.id
+}
+
+// Create Stripe Checkout session (healer plan)
 router.post('/checkout', async (req, res) => {
   const { userId, email } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
-
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
-
   try {
-    const { data: existing } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .single()
-
-    let customerId = existing?.stripe_customer_id
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email,
-        metadata: { supabase_user_id: userId },
-      })
-      customerId = customer.id
-    }
-
+    const customerId = await getOrCreateCustomer(userId, email)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -42,14 +38,38 @@ router.post('/checkout', async (req, res) => {
       cancel_url: `${CLIENT_URL}?tab=account`,
       allow_promotion_codes: true,
     })
-
     await supabase.from('subscriptions').upsert({
-      user_id: userId,
-      stripe_customer_id: customerId,
-      status: 'pending',
-      updated_at: new Date().toISOString(),
+      user_id: userId, stripe_customer_id: customerId,
+      status: 'pending', updated_at: new Date().toISOString(),
     })
+    res.json({ url: session.url })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
+// Create Stripe Checkout session (practitioner plan — $49/month)
+router.post('/checkout/practitioner', async (req, res) => {
+  const { userId, email } = req.body
+  if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
+  if (!process.env.STRIPE_PRACTITIONER_PRICE_ID) return res.status(500).json({ error: 'Practitioner plan not configured' })
+  const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
+  try {
+    const customerId = await getOrCreateCustomer(userId, email)
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: process.env.STRIPE_PRACTITIONER_PRICE_ID, quantity: 1 }],
+      subscription_data: { trial_period_days: 7 },
+      success_url: `${CLIENT_URL}?subscribed=true&plan=practitioner`,
+      cancel_url: `${CLIENT_URL}?tab=account`,
+      allow_promotion_codes: true,
+    })
+    await supabase.from('subscriptions').upsert({
+      user_id: userId, stripe_customer_id: customerId,
+      status: 'pending', updated_at: new Date().toISOString(),
+    })
     res.json({ url: session.url })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -80,11 +100,14 @@ router.post('/webhook', async (req, res) => {
         const userId = await getUserId(session.customer)
         if (!userId) break
         const sub = await stripe.subscriptions.retrieve(session.subscription)
+        const priceId = sub.items.data[0]?.price?.id
+        const plan = priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner' : 'healer'
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: session.customer,
           stripe_subscription_id: session.subscription,
           status: sub.status,
+          plan,
           current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -96,11 +119,14 @@ router.post('/webhook', async (req, res) => {
         const sub = event.data.object
         const userId = await getUserId(sub.customer)
         if (!userId) break
+        const priceId = sub.items.data[0]?.price?.id
+        const plan = priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner' : 'healer'
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: sub.customer,
           stripe_subscription_id: sub.id,
           status: sub.status,
+          plan,
           current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
           updated_at: new Date().toISOString(),
         })
