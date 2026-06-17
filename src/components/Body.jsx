@@ -206,8 +206,15 @@ function OrganDetail({ organ, onBack, searchBooks }) {
   );
 }
 
-export default function Body({ searchBooks }) {
+export default function Body({ searchBooks, navQuery }) {
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    if (!navQuery) return;
+    const q = navQuery.toLowerCase();
+    const match = ORGANS.find(o => o.name.toLowerCase().includes(q) || q.includes(o.name.toLowerCase().split(" ")[0]));
+    if (match) setSelected(match);
+  }, [navQuery]);
 
   if (selected) {
     return <OrganDetail organ={selected} onBack={() => setSelected(null)} searchBooks={searchBooks} />;

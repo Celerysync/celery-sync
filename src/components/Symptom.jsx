@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { Card, Btn } from "./ui.jsx";
@@ -107,7 +107,7 @@ function printDoctorSummary({ user, conditions, result }) {
   setTimeout(() => win.print(), 400);
 }
 
-export default function Symptom({ user, bookNotes, searchBooks }) {
+export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
   const [sel, setSel] = useState([]);
   const [custom, setCustom] = useState("");
   const [result, setResult] = useState(null);
@@ -115,6 +115,14 @@ export default function Symptom({ user, bookNotes, searchBooks }) {
   const [showDrNote, setShowDrNote] = useState(false);
   const [bookEnhanced, setBookEnhanced] = useState(false);
   const { speak, speaking, stopSpeaking } = useVoice();
+
+  useEffect(() => {
+    if (!navQuery) return;
+    const q = navQuery.trim();
+    const match = Object.keys(CONDITIONS).find(k => k.toLowerCase() === q.toLowerCase());
+    if (match) setSel([match]);
+    else setCustom(q);
+  }, [navQuery]);
 
   const analyse = async () => {
     if (!sel.length && !custom.trim()) return;

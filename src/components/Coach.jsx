@@ -83,6 +83,32 @@ Goal: ${user?.goal || "healing and wellness"}
 ${historySection}${booksSection}${videosSection}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+APP NAVIGATION — YOU CONTROL THE ENTIRE APP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Many users are bedbound or too exhausted to navigate menus. YOU do it for them.
+When a user asks about something that has a dedicated section, take them there automatically.
+At the END of your response, append ONE navigation command if relevant. Format: [[GO:tab:query]]
+
+AVAILABLE NAVIGATION:
+• [[GO:symptoms:symptom name]] → Opens Symptom Checker with that symptom pre-filled and analyses it
+• [[GO:recipes:recipe or ingredient]] → Opens Recipes and searches (e.g. [[GO:recipes:heavy metal detox smoothie]])
+• [[GO:cleanses:cleanse name]] → Opens Cleanses and selects it. Available: "Original 3:6:9", "Simplified 3:6:9", "Advanced 3:6:9", "Heavy Metal Detox", "Anti-Bug Cleanse", "Morning Cleanse", "Liver Rescue Morning", "Mono Eating Cleanse"
+• [[GO:body:organ name]] → Opens Body tab for that organ. Available: Liver, Thyroid, Adrenal Glands, Brain & Nervous System, Gut & Digestive System, Immune System, Lymphatic System, Heart & Cardiovascular
+• [[GO:journal]] → Opens Journal
+• [[GO:home]] → Opens Today tab
+• [[GO:knowledge]] → Opens My Books
+
+USE navigation when:
+- User asks about a symptom or condition → [[GO:symptoms:condition]]
+- User asks for a specific recipe or juice → [[GO:recipes:name]]
+- User wants to do a cleanse → [[GO:cleanses:name]]
+- User asks about a body organ or system → [[GO:body:organ]]
+- User says they feel like journaling → [[GO:journal]]
+
+DO NOT navigate for general questions, supplement advice, or protocol explanations — keep them in the conversation.
+In your response text, naturally mention you're taking them there: "Let me open that for you" or "I'm taking you to the Symptom Checker now."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HOW TO RESPOND:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Always attribute teachings clearly: "Anthony William teaches…", "Per Cleanse to Heal…", "According to Brain Saver…"
@@ -93,10 +119,18 @@ HOW TO RESPOND:
 • Always recommend which Anthony William book goes deepest on their question
 • Never contradict a doctor or give conventional medical advice — say "alongside your doctor"
 • End every response with genuine encouragement — healing takes courage
-• You have access to 54 exact condition protocols — use them precisely when relevant`;
+• You have access to 54 exact condition protocols — use them precisely when relevant
+• Many users are very unwell — keep responses clear and actionable, not overwhelming`;
 }
 
-export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks }) {
+function parseNavCommand(text) {
+  const match = text.match(/\[\[GO:([a-z]+)(?::([^\]]*))?\]\]/i);
+  if (!match) return { clean: text, nav: null };
+  const clean = text.replace(/\s*\[\[GO:[^\]]*\]\]/gi, "").trim();
+  return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
+}
+
+export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,33 +215,42 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         }
         const systemWithBooks = systemPromptRef.current + bookContext;
         let firstToken = true;
+        let streamBuffer = "";
         const reply = await streamClaude({
           system: systemWithBooks,
           messages: newMsgs,
           maxTokens: 1100,
-          onDelta: (delta) => {
+          onDelta: (delta, full) => {
+            streamBuffer = full;
+            const { clean } = parseNavCommand(full);
             if (firstToken) {
               firstToken = false;
               setLoading(false);
-              setMessages((m) => [...m, { role: "assistant", content: delta }]);
+              setMessages((m) => [...m, { role: "assistant", content: clean }]);
             } else {
               setMessages((m) => {
                 const last = m[m.length - 1];
                 if (!last || last.role !== "assistant") return m;
-                return [...m.slice(0, -1), { role: "assistant", content: last.content + delta }];
+                return [...m.slice(0, -1), { role: "assistant", content: clean }];
               });
             }
           },
           onDone: (full) => {
-            speak(full, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
-            saveExchange(text, full);
-            systemPromptRef.current = buildSystemPrompt({
-              user,
-              bookNotes,
-              videoNotes,
-              healingProfile,
-              priorMessages: [...priorMessages, userMsg, { role: "assistant", content: full }],
+            const { clean, nav } = parseNavCommand(full);
+            setMessages((m) => {
+              const last = m[m.length - 1];
+              if (!last || last.role !== "assistant") return m;
+              return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
+            speak(clean, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
+            saveExchange(text, clean);
+            systemPromptRef.current = buildSystemPrompt({
+              user, bookNotes, videoNotes, healingProfile,
+              priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
+            });
+            if (nav && onNavigate) {
+              setTimeout(() => onNavigate(nav.tab, nav.query), 2500);
+            }
           },
         });
         if (!reply) setLoading(false);

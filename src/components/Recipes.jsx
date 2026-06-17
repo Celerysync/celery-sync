@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { RECIPES, getForTimeOfDay, MEAL_TYPES } from "../data/recipes.js";
@@ -158,11 +158,17 @@ function RecipeCard({ recipe, onSave, saved, onAddToPlan, compact = false }) {
   );
 }
 
-export default function Recipes({ user }) {
+export default function Recipes({ user, navQuery }) {
   const [view, setView] = useState("juices"); // juices | browse | plan | shopping
   const [mealTypeFilter, setMealTypeFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+
+  useEffect(() => {
+    if (!navQuery) return;
+    setSearchText(navQuery);
+    setView("browse");
+  }, [navQuery]);
 
   // AI custom recipe
   const [aiPrompt, setAiPrompt] = useState("");

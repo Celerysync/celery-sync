@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
@@ -6,11 +6,18 @@ import { Tag, Card, Btn } from "./ui.jsx";
 import { CLEANSES_SUMMARY, ORIGINAL_369 } from "../data/cleanses.js";
 import { AVOID_ALL } from "../data/avoidList.js";
 
-export default function Cleanse() {
+export default function Cleanse({ navQuery }) {
   const [sel, setSel] = useState(null);
   const [activeDay, setActiveDay] = useState(null);
   const [started, setStarted] = useLocalStorage("cs_started_cleanses", {});
   const { speak, speaking, stopSpeaking } = useVoice();
+
+  useEffect(() => {
+    if (!navQuery) return;
+    const q = navQuery.toLowerCase();
+    const match = CLEANSES_SUMMARY.find(c => c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase().split(" ")[0]));
+    if (match) setSel(match.name);
+  }, [navQuery]);
 
   if (sel === "Original 3:6:9") {
     const days = Object.keys(ORIGINAL_369);

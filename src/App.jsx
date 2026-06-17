@@ -116,6 +116,12 @@ export default function App() {
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
+  const [navQuery, setNavQuery] = useState(null);
+
+  const handleNavigate = (tabId, query) => {
+    setNavQuery(query || null);
+    setTab(tabId);
+  };
   const { activeReminder, dismiss: dismissReminder, snooze: snoozeReminder } = useReminders();
   const { searchBooks } = useBooks(authUser);
 
@@ -184,19 +190,19 @@ export default function App() {
       case "home":
         return <Home user={activeProfile} />;
       case "coach":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} />;
       case "journal":
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":
-        return <Recipes user={activeProfile} />;
+        return <Recipes user={activeProfile} navQuery={navQuery} />;
       case "cleanses":
-        return <Cleanse />;
+        return <Cleanse navQuery={navQuery} />;
       case "symptoms":
-        return <Symptom user={activeProfile} bookNotes={bookNotes} searchBooks={searchBooks} />;
+        return <Symptom user={activeProfile} bookNotes={bookNotes} searchBooks={searchBooks} navQuery={navQuery} />;
       case "knowledge":
         return <Knowledge authUser={authUser} bookNotes={bookNotes} setBookNotes={setBookNotes} videoNotes={videoNotes} setVideoNotes={setVideoNotes} />;
       case "body":
-        return <Body searchBooks={searchBooks} />;
+        return <Body searchBooks={searchBooks} navQuery={navQuery} />;
       case "aw":
         return <AW />;
       case "account":
