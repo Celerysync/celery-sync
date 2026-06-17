@@ -113,6 +113,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     useHealingMemory(authUser, profileId);
   const endRef = useRef(null);
   const systemPromptRef = useRef("");
+  const voiceModeRef = useRef(false);
 
   useEffect(() => {
     const load = () => setVoices(window.speechSynthesis.getVoices());
@@ -198,7 +199,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             }
           },
           onDone: (full) => {
-            speak(full);
+            speak(full, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
             saveExchange(text, full);
             systemPromptRef.current = buildSystemPrompt({
               user,
@@ -549,7 +550,15 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
           }}
         />
         <button
-          onClick={() => (listening ? stopListening() : startListening((t) => send(t)))}
+          onClick={() => {
+            if (listening) {
+              voiceModeRef.current = false;
+              stopListening();
+            } else {
+              voiceModeRef.current = true;
+              startListening((t) => send(t));
+            }
+          }}
           style={{
             width: 50,
             height: 50,
