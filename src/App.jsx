@@ -208,6 +208,7 @@ export default function App() {
               subData={subData}
               subLoading={subLoading}
               onSignOut={signOut}
+              onReplayWelcome={() => setShowWelcome(true)}
             />
             <ReminderSettings />
             <ProfileManager

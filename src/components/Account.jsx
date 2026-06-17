@@ -11,7 +11,7 @@ const FEATURES = [
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
 ]
 
-export default function Account({ authUser, isSubscribed, subData, subLoading, onSignOut }) {
+export default function Account({ authUser, isSubscribed, subData, subLoading, onSignOut, onReplayWelcome }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -199,6 +199,11 @@ export default function Account({ authUser, isSubscribed, subData, subLoading, o
           <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
             Signed in as <strong>{authUser.email}</strong>
           </div>
+        )}
+        {onReplayWelcome && (
+          <Btn full onClick={onReplayWelcome} color={C.sage} style={{ marginBottom: 10 }}>
+            🎙 Replay Welcome Tour
+          </Btn>
         )}
         <Btn full onClick={onSignOut} color={C.muted}>
           Sign Out

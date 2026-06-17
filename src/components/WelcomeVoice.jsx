@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import C from "../lib/colors.js";
+import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 
 const WELCOME_TEXT =
   "Welcome to CelerySync — your personal Medical Medium healing companion. I'm so glad you're here. " +
@@ -21,36 +22,46 @@ const STEPS = [
   { emoji: "📖", label: "My Books",   desc: "Upload your MM books — I'll reference them in every answer" },
 ];
 
-const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah
+const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL"; // Sarah
 
 export default function WelcomeVoice({ onDone }) {
-  const [phase, setPhase] = useState("idle"); // idle | loading | playing | done
+  const saved = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
+  const [selectedVoice, setSelectedVoice] = useState(saved);
+  const [phase, setPhase] = useState("idle"); // idle | loading | playing
   const audioRef = useRef(null);
 
-  const dismiss = () => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+  const saveVoiceAndDismiss = () => {
+    localStorage.setItem("cs_voiceName", selectedVoice);
     localStorage.setItem("cs_welcomed", "1");
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     onDone();
+  };
+
+  const handleVoiceChange = (e) => {
+    const v = e.target.value;
+    setSelectedVoice(v);
+    localStorage.setItem("cs_voiceName", v);
   };
 
   const play = async () => {
     setPhase("loading");
+    const voiceId = selectedVoice.startsWith("el:") ? selectedVoice.slice(3) : "EXAVITQu4vr4xnSDxMaL";
     try {
       const res = await fetch("/api/elevenlabs/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: WELCOME_TEXT, voiceId: VOICE_ID }),
+        body: JSON.stringify({ text: WELCOME_TEXT, voiceId }),
       });
       if (!res.ok) throw new Error("audio error");
       const { url } = await res.json();
       const audio = new Audio(url);
       audioRef.current = audio;
-      audio.onended = dismiss;
-      audio.onerror = dismiss;
+      audio.onended = saveVoiceAndDismiss;
+      audio.onerror = saveVoiceAndDismiss;
       setPhase("playing");
-      audio.play().catch(dismiss);
+      audio.play().catch(saveVoiceAndDismiss);
     } catch {
-      dismiss();
+      saveVoiceAndDismiss();
     }
   };
 
@@ -72,27 +83,26 @@ export default function WelcomeVoice({ onDone }) {
         }}>
           Welcome to CelerySync
         </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 28 }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 24 }}>
           Your Medical Medium healing companion
         </div>
 
         {/* Feature list */}
         <div style={{
           background: "rgba(255,255,255,0.12)", borderRadius: 16,
-          padding: "16px 20px", marginBottom: 28, textAlign: "left",
+          padding: "16px 20px", marginBottom: 20, textAlign: "left",
         }}>
-          {STEPS.map((s) => (
+          {STEPS.map((s, i) => (
             <div key={s.label} style={{
               display: "flex", alignItems: "flex-start", gap: 12,
               padding: "8px 0",
-              borderBottom: `1px solid rgba(255,255,255,0.1)`,
+              borderBottom: i < STEPS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none",
             }}>
               <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{s.emoji}</span>
               <div>
-                <div style={{
-                  fontFamily: "Georgia,serif", fontWeight: 700,
-                  fontSize: 13, color: C.white,
-                }}>{s.label}</div>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.white }}>
+                  {s.label}
+                </div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>
                   {s.desc}
                 </div>
@@ -101,7 +111,34 @@ export default function WelcomeVoice({ onDone }) {
           ))}
         </div>
 
-        {/* Play button */}
+        {/* Voice picker */}
+        <div style={{
+          background: "rgba(255,255,255,0.12)", borderRadius: 12,
+          padding: "12px 16px", marginBottom: 20, textAlign: "left",
+        }}>
+          <div style={{
+            fontSize: 12, color: "rgba(255,255,255,0.8)",
+            fontFamily: "Georgia,serif", marginBottom: 8,
+          }}>
+            Choose your companion's voice
+          </div>
+          <select
+            value={selectedVoice}
+            onChange={handleVoiceChange}
+            style={{
+              width: "100%", fontFamily: "Georgia,serif", fontSize: 13,
+              color: C.charcoal, background: C.white,
+              border: "none", borderRadius: 8, padding: "8px 10px",
+              outline: "none", cursor: "pointer",
+            }}
+          >
+            {ELEVENLABS_VOICES.map((v) => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Action buttons */}
         {phase === "idle" && (
           <button
             onClick={play}
@@ -136,7 +173,7 @@ export default function WelcomeVoice({ onDone }) {
         )}
 
         <button
-          onClick={dismiss}
+          onClick={saveVoiceAndDismiss}
           style={{
             background: "transparent", border: "1px solid rgba(255,255,255,0.35)",
             color: "rgba(255,255,255,0.7)", borderRadius: 50,
@@ -144,7 +181,7 @@ export default function WelcomeVoice({ onDone }) {
             fontFamily: "Georgia,serif", fontSize: 13, width: "100%",
           }}
         >
-          {phase === "playing" ? "Skip & Enter App" : "Skip Welcome"}
+          {phase === "playing" ? "Skip & Enter App" : "Skip — Enter App"}
         </button>
       </div>
     </div>
