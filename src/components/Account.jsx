@@ -34,6 +34,7 @@ export default function Account({ authUser, isSubscribed, subData, subLoading, o
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
+  const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
 
   const subscribe = async () => {
     setLoading(true)
@@ -212,6 +213,42 @@ export default function Account({ authUser, isSubscribed, subData, subLoading, o
           </Card>
         </>
       )}
+
+      {/* Caregiver mode */}
+      <Card>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+              💜 Caregiver Mode
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+              Switches the app to a carer's perspective — care prep dashboard, AI guidance addressed to you as the carer, and practical daily support for looking after a loved one doing Medical Medium healing.
+            </div>
+          </div>
+          <button
+            onClick={() => setCaregiver((v) => !v)}
+            style={{
+              width: 46, height: 26, borderRadius: 13, border: 'none',
+              background: caregiver ? C.plum : '#d1d5db',
+              cursor: 'pointer', position: 'relative', flexShrink: 0,
+              transition: 'background 0.2s',
+            }}
+          >
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              position: 'absolute', top: 3,
+              left: caregiver ? 23 : 3,
+              transition: 'left 0.2s',
+              boxShadow: '0 1px 4px #00000030',
+            }} />
+          </button>
+        </div>
+        {caregiver && (
+          <div style={{ marginTop: 10, fontSize: 12, color: C.plum, fontWeight: 700 }}>
+            💜 Caregiver Mode is active — the Today tab and AI Guide are now in carer mode
+          </div>
+        )}
+      </Card>
 
       {/* Language */}
       <Card>

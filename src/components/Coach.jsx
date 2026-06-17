@@ -30,7 +30,7 @@ function buildConditionsIndex() {
     .join("\n");
 }
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang }) {
+function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
   const conditionsIndex = buildConditionsIndex();
 
@@ -65,7 +65,21 @@ ${priorMessages.length > 0
       ? `\nUSER'S SAVED VIDEOS:\n${videoNotes.map((v) => v.title).join(", ")}`
       : "";
 
+  const caregiverIntro = caregiverMode ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CAREGIVER MODE — YOU ARE SPEAKING WITH THE CARER:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You are NOT speaking with the patient. You are speaking with the person caring for ${user?.name || "their loved one"}.
+Address them as a carer, not a patient. Use "your loved one" or "${user?.name || "them"}" to refer to the patient.
+Give practical, actionable guidance: what to prepare, what to buy, how to support the protocol, what to expect.
+Be warm and acknowledge how hard caregiving is — they need support too.
+Explain healing reactions so they don't panic. Tell them what's normal and what needs a doctor.
+Remind them that consistency in the small things (snacks, juicing, morning routine) is the most powerful thing they can do.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+` : "";
+
   return `You are a supreme Medical Medium healing companion — the most knowledgeable, warm, and precise MM guide available. You have deeply studied every Anthony William book and are trained to give exact, specific, personalised healing guidance.
+${caregiverIntro}
 
 ${MM_CORE}
 
@@ -132,7 +146,7 @@ function parseNavCommand(text) {
   return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
 }
 
-export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate }) {
+export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate, caregiverMode }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -173,15 +187,12 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   useEffect(() => {
     if (memoryLoading) return;
     systemPromptRef.current = buildSystemPrompt({
-      user,
-      bookNotes,
-      videoNotes,
-      healingProfile,
-      priorMessages,
-      lang,
+      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode,
     });
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
-    const greeting = hasHistory
+    const greeting = caregiverMode
+      ? `Hello! 💜 I'm here to support you as you care for ${user?.name || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
+      : hasHistory
       ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿 I remember our journey together — ${
           healingProfile?.healing_summary
             ? "I've been keeping your healing notes safe and I'm ready to pick up where we left off."
@@ -249,7 +260,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             speak(clean, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile, lang,
+              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode,
               priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
             });
             if (nav && onNavigate) {

@@ -23,6 +23,7 @@ import ReminderBanner from "./components/ReminderBanner.jsx";
 import ReminderSettings from "./components/ReminderSettings.jsx";
 import { useReminders } from "./hooks/useReminders.js";
 import WelcomeVoice from "./components/WelcomeVoice.jsx";
+import CaregiverDashboard from "./components/CaregiverDashboard.jsx";
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -117,6 +118,7 @@ export default function App() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
   const [navQuery, setNavQuery] = useState(null);
+  const [caregiverMode] = useLocalStorage("cs_caregiver", false);
 
   const handleNavigate = (tabId, query) => {
     setNavQuery(query || null);
@@ -188,9 +190,11 @@ export default function App() {
 
     switch (tab) {
       case "home":
-        return <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
+        return caregiverMode
+          ? <CaregiverDashboard patient={activeProfile} />
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} caregiverMode={caregiverMode} />;
       case "journal":
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":
@@ -228,7 +232,9 @@ export default function App() {
           </div>
         );
       default:
-        return <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
+        return caregiverMode
+          ? <CaregiverDashboard patient={activeProfile} />
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };
 
