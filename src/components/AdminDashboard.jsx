@@ -56,6 +56,8 @@ export default function AdminDashboard({ authUser }) {
       .finally(() => setLoading(false));
   }, [authUser?.id]);
 
+  const latestDigest = data?.latestDigest;
+
   if (loading) return (
     <div style={{ textAlign: "center", padding: 48, color: C.muted, fontFamily: "Georgia,serif" }}>
       🌿 Loading dashboard…
@@ -170,6 +172,19 @@ export default function AdminDashboard({ authUser }) {
           {data.topCircles.map(([id, count]) => (
             <BarRow key={id} label={CIRCLE_LABELS[id] || id} value={count} max={maxCircleCount} color={C.plum} />
           ))}
+        </Card>
+      )}
+
+      {/* Weekly AI digest */}
+      {latestDigest && (
+        <Card style={{ background: C.goldLight, border: `1.5px solid ${C.gold}40` }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
+            ✨ Weekly AI Digest
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>
+            Generated {new Date(latestDigest.generatedAt).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}
+          </div>
+          <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, fontStyle: "italic" }}>{latestDigest.digest}</div>
         </Card>
       )}
 

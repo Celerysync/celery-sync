@@ -8,7 +8,7 @@ import elevenLabsRoutes from './routes/elevenlabs.js'
 import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
-import analyticsRoutes from './routes/analytics.js'
+import analyticsRoutes, { generateWeeklyDigest } from './routes/analytics.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -56,10 +56,15 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   });
   console.log('🔔 Push notification scheduler active')
 
-  // Sync Oura Ring data for all connected users at 6am local time
+  // Sync Oura Ring data for all connected users at 6:30am
   cron.schedule('30 6 * * *', async () => {
     try { await syncAllOuraUsers(); } catch (err) { console.warn('Oura cron error:', err.message); }
-  });;
+  });
+
+  // Weekly analytics digest — every Monday at 7am UTC
+  cron.schedule('0 7 * * 1', async () => {
+    try { await generateWeeklyDigest(); } catch (err) { console.warn('Weekly digest error:', err.message); }
+  });
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

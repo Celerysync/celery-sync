@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import "./App.css";
 import C from "./lib/colors.js";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
@@ -6,28 +6,32 @@ import { useAuth } from "./hooks/useAuth.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useProfiles } from "./hooks/useProfiles.js";
 import { useBooks } from "./hooks/useBooks.js";
+import { useReminders } from "./hooks/useReminders.js";
+import { useAnalytics } from "./hooks/useAnalytics.js";
+
+// Always-loaded: auth, onboarding, home, account (needed immediately)
 import Auth from "./components/Auth.jsx";
 import Account from "./components/Account.jsx";
 import ProfileManager from "./components/ProfileManager.jsx";
 import Onboarding from "./components/Onboarding.jsx";
 import Home from "./components/Home.jsx";
-import Cleanse from "./components/Cleanse.jsx";
-import Symptom from "./components/Symptom.jsx";
-import Coach from "./components/Coach.jsx";
-import Knowledge from "./components/Knowledge.jsx";
-import Journal from "./components/Journal.jsx";
-import Recipes from "./components/Recipes.jsx";
-import AW from "./components/AW.jsx";
-import Body from "./components/Body.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
 import ReminderSettings from "./components/ReminderSettings.jsx";
-import { useReminders } from "./hooks/useReminders.js";
 import WelcomeVoice from "./components/WelcomeVoice.jsx";
-import CaregiverDashboard from "./components/CaregiverDashboard.jsx";
-import Community from "./components/Community.jsx";
-import PractitionerPortal from "./components/PractitionerPortal.jsx";
-import AdminDashboard from "./components/AdminDashboard.jsx";
-import { useAnalytics } from "./hooks/useAnalytics.js";
+
+// Lazy-loaded: only fetched when the user first taps that tab
+const Coach            = lazy(() => import("./components/Coach.jsx"));
+const Journal          = lazy(() => import("./components/Journal.jsx"));
+const Recipes          = lazy(() => import("./components/Recipes.jsx"));
+const Cleanse          = lazy(() => import("./components/Cleanse.jsx"));
+const Symptom          = lazy(() => import("./components/Symptom.jsx"));
+const Knowledge        = lazy(() => import("./components/Knowledge.jsx"));
+const Body             = lazy(() => import("./components/Body.jsx"));
+const Community        = lazy(() => import("./components/Community.jsx"));
+const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.jsx"));
+const AW               = lazy(() => import("./components/AW.jsx"));
+const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
+const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -321,7 +325,15 @@ export default function App() {
       <ReminderBanner reminder={activeReminder} onDismiss={dismissReminder} onSnooze={snoozeReminder} />
 
       {/* Page content */}
-      <div style={{ padding: "14px 14px 110px" }}>{renderTab()}</div>
+      <div style={{ padding: "14px 14px 110px" }}>
+        <Suspense fallback={
+          <div style={{ textAlign: "center", padding: 48, color: C.muted, fontFamily: "Georgia,serif" }}>
+            🌿 Loading…
+          </div>
+        }>
+          {renderTab()}
+        </Suspense>
+      </div>
 
       {/* Bottom nav */}
       <div style={{

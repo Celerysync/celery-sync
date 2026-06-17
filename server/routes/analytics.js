@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { createClient } from '@supabase/supabase-js'
+import Anthropic from '@anthropic-ai/sdk'
 
 const router = Router()
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'allij@live.com.au'
@@ -47,6 +48,7 @@ router.get('/admin/:userId', async (req, res) => {
     tabViewsRes,
     circleJoinsRes,
     subRes,
+    latestDigestRes,
   ] = await Promise.all([
     supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
     supabaseAdmin.from('analytics_events').select('user_id', { count: 'exact', head: true })
@@ -58,6 +60,7 @@ router.get('/admin/:userId', async (req, res) => {
     supabaseAdmin.from('analytics_events').select('properties').eq('event_type', 'tab_view').gte('created_at', day7),
     supabaseAdmin.from('circle_members').select('circle_id').gte('joined_at', day30),
     supabaseAdmin.from('subscriptions').select('plan, status').eq('status', 'active'),
+    supabaseAdmin.from('analytics_events').select('properties').eq('event_type', 'weekly_digest').order('created_at', { ascending: false }).limit(1).single(),
   ])
 
   // Event type counts
@@ -101,7 +104,59 @@ router.get('/admin/:userId', async (req, res) => {
     topTabs: Object.entries(tabCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
     topCircles: Object.entries(circleCounts).sort((a, b) => b[1] - a[1]).slice(0, 5),
     checkinsThisWeek: dailyCheckinsRes.data?.length || 0,
+    latestDigest: latestDigestRes.data?.properties || null,
   })
 })
+
+// Weekly digest — called by cron every Monday
+// Stores result as an analytics_event so admin dashboard can display it
+export async function generateWeeklyDigest() {
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const day7 = new Date(Date.now() - 7 * 86400000).toISOString()
+
+  const [profilesRes, checkinsRes, eventsRes, subsRes] = await Promise.all([
+    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('daily_checkins').select('energy, celery_oz, symptoms').gte('check_date', day7.split('T')[0]),
+    supabaseAdmin.from('analytics_events').select('event_type').gte('created_at', day7),
+    supabaseAdmin.from('subscriptions').select('plan, status').eq('status', 'active'),
+  ])
+
+  const checkins = checkinsRes.data || []
+  const avgEnergy = checkins.length
+    ? (checkins.reduce((s, c) => s + (c.energy || 0), 0) / checkins.length).toFixed(1)
+    : 0
+  const celeryCt = checkins.filter(c => c.celery_oz > 0).length
+  const eventCounts = {}
+  for (const e of (eventsRes.data || [])) {
+    eventCounts[e.event_type] = (eventCounts[e.event_type] || 0) + 1
+  }
+  const totalSubs = (subsRes.data || []).length
+
+  const summary = `CelerySync weekly data: ${profilesRes.count} total users, ${totalSubs} active subscribers, ${checkins.length} check-ins this week, avg energy ${avgEnergy}/10, ${celeryCt} celery juice days logged. Top events: ${Object.entries(eventCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`${k}(${v})`).join(', ')}.`
+
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 300,
+    messages: [{
+      role: 'user',
+      content: `You are the CelerySync app assistant giving a weekly health report to Alli, the founder. Based on this data: ${summary}. Write a warm, encouraging 3-sentence summary of the week's healing community activity. Mention specific numbers. End with one actionable suggestion for improving engagement. Keep it under 80 words.`,
+    }],
+  })
+
+  const digest = response.content.find(b => b.type === 'text')?.text || ''
+
+  // Store as a special analytics event so admin dashboard can read it
+  await supabaseAdmin.from('analytics_events').insert({
+    user_id: null,
+    event_type: 'weekly_digest',
+    properties: {
+      digest,
+      stats: { totalUsers: profilesRes.count, totalSubs, checkinsThisWeek: checkins.length, avgEnergy, celeryCt },
+      generatedAt: new Date().toISOString(),
+    },
+  })
+
+  console.log('📊 Weekly digest generated')
+}
 
 export default router
