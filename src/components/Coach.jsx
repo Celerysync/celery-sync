@@ -111,6 +111,7 @@ AVAILABLE NAVIGATION:
 • [[GO:journal]] → Opens Journal
 • [[GO:home]] → Opens Today tab
 • [[GO:knowledge]] → Opens My Books
+• [[GO:community]] → Opens Healing Circles community
 
 USE navigation when:
 - User asks about a symptom or condition → [[GO:symptoms:condition]]

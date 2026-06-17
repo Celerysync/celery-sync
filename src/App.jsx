@@ -24,6 +24,7 @@ import ReminderSettings from "./components/ReminderSettings.jsx";
 import { useReminders } from "./hooks/useReminders.js";
 import WelcomeVoice from "./components/WelcomeVoice.jsx";
 import CaregiverDashboard from "./components/CaregiverDashboard.jsx";
+import Community from "./components/Community.jsx";
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -34,6 +35,7 @@ const TABS = [
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
   { id: "knowledge", label: "My Books",   emoji: "📖", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
+  { id: "community", label: "Circles",    emoji: "💚", free: false },
   { id: "aw",        label: "Support AW", emoji: "💛", free: true  },
   { id: "account",   label: "Account",    emoji: "👤", free: true  },
 ];
@@ -207,6 +209,8 @@ export default function App() {
         return <Knowledge authUser={authUser} bookNotes={bookNotes} setBookNotes={setBookNotes} videoNotes={videoNotes} setVideoNotes={setVideoNotes} />;
       case "body":
         return <Body searchBooks={searchBooks} navQuery={navQuery} />;
+      case "community":
+        return <Community authUser={authUser} userProfile={activeProfile} />;
       case "aw":
         return <AW />;
       case "account":
