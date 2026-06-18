@@ -158,11 +158,30 @@ function RecipeCard({ recipe, onSave, saved, onAddToPlan, compact = false }) {
   );
 }
 
+const SYMPTOM_CHIPS = [
+  { label: "Fatigue", tag: "fatigue" },
+  { label: "Brain Fog", tag: "brain-fog" },
+  { label: "Anxiety", tag: "anxiety" },
+  { label: "Liver", tag: "liver" },
+  { label: "Adrenal", tag: "adrenal-fatigue" },
+  { label: "Thyroid", tag: "thyroid" },
+  { label: "Digestion", tag: "digestion" },
+  { label: "Bloating", tag: "bloating" },
+  { label: "Inflammation", tag: "inflammation" },
+  { label: "Immune", tag: "immune" },
+  { label: "Skin", tag: "skin" },
+  { label: "Insomnia", tag: "insomnia" },
+  { label: "Depression", tag: "depression" },
+  { label: "Detox", tag: "detox" },
+  { label: "Snacks", tag: "adrenal-fatigue", mealType: "snack" },
+];
+
 export default function Recipes({ user, navQuery }) {
   const [view, setView] = useState("juices"); // juices | browse | plan | shopping
   const [mealTypeFilter, setMealTypeFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [symptomFilter, setSymptomFilter] = useState(null);
 
   useEffect(() => {
     if (!navQuery) return;
@@ -192,10 +211,17 @@ export default function Recipes({ user, navQuery }) {
     buildShoppingList, toggleShoppingItem, addShoppingItem, clearShoppingList,
   } = useRecipes();
 
+  // Personalised section — recipes for user's own conditions
+  const userConditionTags = (user?.conditions || []).map((c) => c.toLowerCase().replace(/[^a-z0-9]/g, "-"));
+  const forYourHealing = RECIPES.filter((r) =>
+    r.goodFor?.some((g) => userConditionTags.some((t) => g.includes(t)))
+  ).slice(0, 6);
+
   // Filter recipes
   const filtered = RECIPES.filter((r) => {
     if (showSavedOnly && !savedIds.includes(r.id)) return false;
     if (mealTypeFilter !== "all" && r.mealType !== mealTypeFilter) return false;
+    if (symptomFilter && !r.goodFor?.includes(symptomFilter)) return false;
     if (searchText && !r.name.toLowerCase().includes(searchText.toLowerCase()) &&
         !r.goodFor?.some((g) => g.includes(searchText.toLowerCase()))) return false;
     return true;
@@ -390,7 +416,68 @@ How to make it: [brief instructions]
             </Card>
           )}
 
-          {/* Filters */}
+          {/* Personalised — For Your Healing */}
+          {forYourHealing.length > 0 && !symptomFilter && !searchText && (
+            <Card style={{ border: `1.5px solid ${C.plum}25` }}>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
+                💜 For your healing
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
+                Based on your health conditions
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {forYourHealing.map((r) => (
+                  <div
+                    key={r.id}
+                    onClick={() => setSearchText(r.name)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 10px", borderRadius: 10,
+                      background: C.mist, cursor: "pointer",
+                      border: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontFamily: "Georgia,serif", color: C.charcoal }}>{r.name}</div>
+                      <div style={{ fontSize: 10.5, color: C.muted }}>{MEAL_LABELS[r.mealType]} · {r.prepTime} min</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Symptom chips */}
+          <div style={{ overflowX: "auto", paddingBottom: 4 }}>
+            <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
+              {SYMPTOM_CHIPS.map((chip) => {
+                const active = symptomFilter === chip.tag;
+                return (
+                  <button
+                    key={chip.tag + chip.label}
+                    onClick={() => setSymptomFilter(active ? null : chip.tag)}
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: 20,
+                      border: `1.5px solid ${active ? C.sage : C.border}`,
+                      background: active ? C.sageLight : "transparent",
+                      color: active ? C.sageDark : C.mid,
+                      fontSize: 11.5,
+                      fontFamily: "Georgia,serif",
+                      cursor: "pointer",
+                      fontWeight: active ? 700 : 400,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Meal type + saved filters */}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {["all", ...MEAL_TYPES].map((t) => (
               <button
