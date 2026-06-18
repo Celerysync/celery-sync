@@ -143,6 +143,7 @@ export default function Knowledge({ authUser, bookNotes, setBookNotes, videoNote
     setBookNotes((n) => [note, ...n]);
     try {
       const insight = await callClaude({
+        tier: 'quick',
         maxTokens: 280,
         messages: [{
           role: "user",

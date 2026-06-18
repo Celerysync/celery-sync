@@ -217,6 +217,7 @@ function ClientView({ client, authUser, prac, onBack, onEdit }) {
     }).join("\n");
 
     const text = await callClaude({
+      tier: 'deep',
       maxTokens: 1200,
       messages: [{
         role: "user",
