@@ -175,7 +175,8 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     "el:EXAVITQu4vr4xnSDxMaL"
   );
   const [lang] = useLocalStorage("cs_lang", "en");
-  const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening } =
+  const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
+          queueSentence, endQueue, resetQueue } =
     useVoice(selectedVoiceName);
   const { healingProfile, priorMessages, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
@@ -250,6 +251,9 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         const systemWithBooks = systemPromptRef.current + bookContext;
         let firstToken = true;
         let streamBuffer = "";
+        let sentenceBuffer = "";
+        const isElVoice = selectedVoiceName.startsWith("el:");
+        resetQueue();
         const reply = await streamClaude({
           system: systemWithBooks,
           messages: newMsgs,
@@ -268,6 +272,19 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
                 return [...m.slice(0, -1), { role: "assistant", content: clean }];
               });
             }
+            // Sentence-streaming TTS — fire ElevenLabs as each sentence completes
+            if (isElVoice) {
+              sentenceBuffer += delta;
+              const boundaryIdx = sentenceBuffer.search(/[.!?][ \n]/);
+              if (boundaryIdx > 5) {
+                const sentence = sentenceBuffer.slice(0, boundaryIdx + 1)
+                  .replace(/\[\[GO:[^\]]*\]\]/gi, "")
+                  .replace(/[*_`#•]/g, "")
+                  .trim();
+                sentenceBuffer = sentenceBuffer.slice(boundaryIdx + 2);
+                if (sentence) queueSentence(sentence);
+              }
+            }
           },
           onDone: (full) => {
             const { clean, nav } = parseNavCommand(full);
@@ -276,7 +293,18 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               if (!last || last.role !== "assistant") return m;
               return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
-            speak(clean, voiceModeRef.current ? () => startListening((t) => send(t)) : undefined);
+            const autoListen = voiceModeRef.current ? () => startListening((t) => send(t)) : undefined;
+            if (isElVoice) {
+              // Flush any remaining text after the last sentence boundary
+              const rem = sentenceBuffer
+                .replace(/\[\[GO:[^\]]*\]\]/gi, "")
+                .replace(/[*_`#•]/g, "")
+                .trim();
+              if (rem) queueSentence(rem);
+              endQueue(autoListen);
+            } else {
+              speak(clean, autoListen);
+            }
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
               user, bookNotes, videoNotes, healingProfile, lang, caregiverMode,

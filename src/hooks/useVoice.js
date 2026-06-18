@@ -20,6 +20,91 @@ export function useVoice(preferredVoiceName = "") {
   const preferredVoiceRef = useRef(preferredVoiceName);
   preferredVoiceRef.current = preferredVoiceName;
 
+  // ── Sentence-streaming queue ─────────────────────────────────────
+  // Each message gets a new "generation" so stale promises self-discard.
+  const generationRef = useRef(0);
+  const sentenceQueue = useRef([]);  // [{promise: Promise<string|null>}]
+  const queueActive = useRef(false); // true while playing or awaiting audio URL
+  const queueFinished = useRef(false);
+  const queueOnDone = useRef(null);
+
+  const _playNext = useCallback(() => {
+    const gen = generationRef.current;
+    if (sentenceQueue.current.length === 0) {
+      queueActive.current = false;
+      if (queueFinished.current) {
+        setSpeaking(false);
+        queueOnDone.current?.();
+      }
+      return;
+    }
+    const { promise } = sentenceQueue.current.shift();
+    promise.then((url) => {
+      if (gen !== generationRef.current) return; // stale — new message started
+      if (!url) { _playNext(); return; }
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        if (gen !== generationRef.current) return;
+        audioRef.current = null;
+        _playNext();
+      };
+      audio.onerror = () => {
+        if (gen !== generationRef.current) return;
+        audioRef.current = null;
+        _playNext();
+      };
+      audio.play().catch(() => {
+        if (gen !== generationRef.current) return;
+        audioRef.current = null;
+        _playNext();
+      });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add a sentence to the ElevenLabs queue — fires the fetch immediately.
+  const queueSentence = useCallback((text) => {
+    const voice = preferredVoiceRef.current;
+    if (!voice.startsWith("el:")) return;
+    const voiceId = voice.slice(3);
+    const promise = fetch("/api/elevenlabs/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voiceId }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.url || null)
+      .catch(() => null);
+
+    sentenceQueue.current.push({ promise });
+    setSpeaking(true);
+    if (!queueActive.current) {
+      queueActive.current = true;
+      _playNext();
+    }
+  }, [_playNext]);
+
+  // Signal that no more sentences are coming.
+  const endQueue = useCallback((onDone) => {
+    queueFinished.current = true;
+    queueOnDone.current = onDone ?? null;
+    if (!queueActive.current && sentenceQueue.current.length === 0) {
+      setSpeaking(false);
+      onDone?.();
+    }
+  }, []);
+
+  // Reset queue — call at start of each new send to discard any stale audio.
+  const resetQueue = useCallback(() => {
+    generationRef.current++;
+    sentenceQueue.current = [];
+    queueActive.current = false;
+    queueFinished.current = false;
+    queueOnDone.current = null;
+  }, []);
+  // ────────────────────────────────────────────────────────────────
+
   const stopSpeaking = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -27,8 +112,9 @@ export function useVoice(preferredVoiceName = "") {
       audioRef.current = null;
     }
     window.speechSynthesis.cancel();
+    resetQueue();
     setSpeaking(false);
-  }, []);
+  }, [resetQueue]);
 
   // Browser TTS — used as primary for non-ElevenLabs voices and as fallback
   const browserSpeak = useCallback((text, voiceName, onDone) => {
@@ -85,8 +171,6 @@ export function useVoice(preferredVoiceName = "") {
             return;
           }
 
-          // Server now returns { url, cached } — url is either a Supabase CDN
-          // URL (cache hit, instant) or a data URL (storage fallback)
           const { url } = await res.json();
           if (!url) {
             setSpeaking(false);
@@ -166,5 +250,8 @@ export function useVoice(preferredVoiceName = "") {
     stopSpeaking,
     startListening,
     stopListening,
+    queueSentence,
+    endQueue,
+    resetQueue,
   };
 }
