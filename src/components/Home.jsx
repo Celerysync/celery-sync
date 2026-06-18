@@ -11,6 +11,28 @@ import SupplementTracker from "./SupplementTracker.jsx";
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
 
+const AW_QUOTES = [
+  { text: "Be proud of using your free will to make your own choice to work on your healing. Have compassion for yourself and know that your suffering is not your fault. I believe you can heal. More than believe — I know.", source: "Cleanse to Heal" },
+  { text: "Celery juice is a medical discovery waiting to be made by science. Its sodium cluster salts are some of the most powerful natural antiseptics and antiviral compounds on earth.", source: "Celery Juice" },
+  { text: "Your liver works incredibly hard to protect you every day. When you give it the support it needs, it will reward you with energy, clarity, and healing beyond what you imagined possible.", source: "Liver Rescue" },
+  { text: "The brain is not aging. The brain is being burdened by toxic heavy metals and viral neurotoxins. Remove these and the brain heals. That is the truth of what is called brain ageing.", source: "Brain Saver" },
+  { text: "The thyroid is not attacking itself. The immune system is not confused. The body is fighting a very real pathogen — Epstein-Barr virus. And when you know your enemy, you can win.", source: "Thyroid Healing" },
+  { text: "Wild blueberries are the most powerful food on the planet for healing the brain. No other food can do what wild blueberries do for the brain tissue that has been damaged by heavy metals.", source: "Brain Saver" },
+  { text: "Your fatigue is not laziness. Your brain fog is not weakness. Your pain is not in your head. You are fighting something real, and this information can help you win.", source: "Medical Medium" },
+  { text: "The 3:6:9 Cleanse is the most advanced healing protocol I have ever received. It gives the liver the rest and support it needs to perform the deepest cleanse of your lifetime.", source: "Cleanse to Heal" },
+  { text: "Anxiety is not a character flaw. It is a physical condition — adrenaline surges caused by blood sugar instability, viral neurotoxins, and heavy metals affecting the emotional centres of the brain.", source: "Brain Saver Protocols" },
+  { text: "Your body wants to heal. Every cell in your body is on your side. The protocols and the foods and the supplements are simply giving your body what it needs to do the work it already knows how to do.", source: "Medical Medium" },
+  { text: "Lemon water prepares the liver for its most important morning function — cleansing. The organic acids from the lemon directly support hepatic cell function. There is nothing else like it.", source: "Liver Rescue" },
+  { text: "Heavy metals don't stay where they land. They migrate through the body over years and decades. That is why symptoms change. That is why the brain is affected. That is why the HMDS is so important.", source: "Cleanse to Heal" },
+  { text: "Adrenal fatigue is real — more real than most medicine currently acknowledges. Your adrenals are like two small walnut-shaped glands carrying the weight of your entire survival system. Honour them.", source: "Medical Medium" },
+  { text: "You are not broken. You are not weak. You are not to blame. Your body is fighting something very real that medicine has not yet discovered. Keep going. Keep healing. You are not alone.", source: "Medical Medium" },
+];
+
+function getTodaysQuote() {
+  const dayNum = Math.floor(Date.now() / 86400000);
+  return AW_QUOTES[dayNum % AW_QUOTES.length];
+}
+
 function getNowFood() {
   const h = new Date().getHours();
   if (h >= 5 && h < 9) return {
@@ -359,30 +381,36 @@ export default function Home({ user, authUser, profileId }) {
         </div>
       </Card>
 
-      {/* AW quote */}
-      <div style={{
-        background: C.goldLight,
-        border: `1px solid ${C.gold}50`,
-        borderRadius: 16,
-        padding: 18,
-      }}>
-        <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
-          💛 "Be proud of using your free will to make your own choice to work on your healing.
-          Have compassion for yourself and know that your suffering is not your fault. I believe
-          you can heal. More than believe — I know."
-        </div>
-        <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginTop: 8 }}>
-          — Anthony William, Cleanse to Heal
-        </div>
-        <a
-          href="https://medicalmedium.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display: "inline-block", marginTop: 10, color: C.gold, fontSize: 12, fontWeight: 700 }}
-        >
-          Visit medicalmedium.com →
-        </a>
-      </div>
+      {/* AW daily quote — rotates each day */}
+      {(() => {
+        const q = getTodaysQuote();
+        return (
+          <div style={{
+            background: C.goldLight,
+            border: `1px solid ${C.gold}50`,
+            borderRadius: 16,
+            padding: 18,
+          }}>
+            <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+              Today's healing teaching
+            </div>
+            <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
+              💛 "{q.text}"
+            </div>
+            <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginTop: 8 }}>
+              — Anthony William, {q.source}
+            </div>
+            <a
+              href="https://medicalmedium.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-block", marginTop: 10, color: C.gold, fontSize: 12, fontWeight: 700 }}
+            >
+              Visit medicalmedium.com →
+            </a>
+          </div>
+        );
+      })()}
     </div>
   );
 }
