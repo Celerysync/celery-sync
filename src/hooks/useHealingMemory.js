@@ -74,6 +74,7 @@ export function useHealingMemory(authUser, profileId) {
         .join("\n");
 
       const summary = await callClaude({
+        tier: 'quick',
         maxTokens: 350,
         messages: [
           {
