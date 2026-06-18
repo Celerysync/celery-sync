@@ -5,20 +5,24 @@ import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 const WELCOME_TEXT =
   "Welcome to CelerySync — your personal Medical Medium healing companion. I'm so glad you're here. " +
   "Let me give you a quick tour. " +
-  "Your Today tab is your daily home — morning protocol, symptoms, and reminders. " +
+  "Your Today tab is your daily home — morning protocol, supplement tracker, and healing reminders. " +
   "The AI Guide is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. " +
-  "The Symptom Checker helps you understand what your body is communicating and how to heal it. " +
-  "Recipes gives you healing meals, juices, and shots. " +
-  "Cleanses walks you through Anthony William's full cleanse protocols step by step. " +
+  "The Symptom Checker helps you understand what your body is communicating and how to heal it, with exact supplement protocols for 80 conditions. " +
+  "Recipes gives you 50 healing meals, juices, shots, and a full meal planner with a shopping list. " +
+  "Cleanses walks you through Anthony William's full cleanse protocols step by step, including the 3-6-9. " +
+  "The Body tab lets you explore each organ — liver, thyroid, brain, kidneys, skin and more — and understand what Anthony William teaches about healing each one. " +
+  "Healing Circles connects you anonymously with others healing the same conditions — a real community on the same path. " +
   "And My Books is your secret weapon — upload any Medical Medium book and I'll draw on it personally in every single answer. " +
   "You're in exactly the right place. Whenever you're ready, let's begin your healing journey together.";
 
 const STEPS = [
-  { emoji: "🏠", label: "Today",      desc: "Daily home — morning protocol, symptoms & reminders" },
+  { emoji: "🏠", label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
   { emoji: "🎙", label: "AI Guide",   desc: "Talk hands-free — mic auto-listens after every reply" },
-  { emoji: "🔍", label: "Symptoms",   desc: "Understand & heal what your body is communicating" },
-  { emoji: "🍽", label: "Recipes",    desc: "Healing meals, juices & shots" },
+  { emoji: "🔍", label: "Symptoms",   desc: "80 conditions with exact supplement protocols" },
+  { emoji: "🍽", label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
   { emoji: "🌿", label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
+  { emoji: "🫁", label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },
+  { emoji: "💚", label: "Circles",    desc: "Anonymous community — people healing the same conditions" },
   { emoji: "📖", label: "My Books",   desc: "Upload your MM books — I'll reference them in every answer" },
 ];
 
