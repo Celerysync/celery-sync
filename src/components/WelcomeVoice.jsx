@@ -7,7 +7,7 @@ const WELCOME_TEXT =
   "Let me give you a quick tour. " +
   "Your Today tab is your daily home — morning protocol, supplement tracker, and healing reminders. " +
   "The AI Guide is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. " +
-  "The Symptom Checker helps you understand what your body is communicating and how to heal it, with exact supplement protocols for 80 conditions. " +
+  "The Symptom Checker helps you understand what your body is communicating and how to heal it, with exact supplement protocols for 100 conditions. " +
   "Recipes gives you 50 healing meals, juices, shots, and a full meal planner with a shopping list. " +
   "Cleanses walks you through Anthony William's full cleanse protocols step by step, including the 3-6-9. " +
   "The Body tab lets you explore each organ — liver, thyroid, brain, kidneys, skin and more — and understand what Anthony William teaches about healing each one. " +
@@ -18,7 +18,7 @@ const WELCOME_TEXT =
 const STEPS = [
   { emoji: "🏠", label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
   { emoji: "🎙", label: "AI Guide",   desc: "Talk hands-free — mic auto-listens after every reply" },
-  { emoji: "🔍", label: "Symptoms",   desc: "80 conditions with exact supplement protocols" },
+  { emoji: "🔍", label: "Symptoms",   desc: "100 conditions with exact supplement protocols" },
   { emoji: "🍽", label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
   { emoji: "🌿", label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
   { emoji: "🫁", label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },

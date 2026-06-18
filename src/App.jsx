@@ -235,6 +235,7 @@ export default function App() {
             <Account
               authUser={authUser}
               isSubscribed={isSubscribed}
+              isPractitioner={isPractitioner}
               subData={subData}
               subLoading={subLoading}
               onSignOut={signOut}
@@ -282,7 +283,7 @@ export default function App() {
                 background: "rgba(255,255,255,0.2)", borderRadius: 20,
                 padding: "3px 10px", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
               }}>
-                ✨ Healer
+                {isPractitioner ? "🏥 Practitioner" : "✨ Healer"}
               </div>
             )}
 

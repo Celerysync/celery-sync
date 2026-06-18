@@ -13,9 +13,22 @@ import analyticsRoutes, { generateWeeklyDigest } from './routes/analytics.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
 
-app.use(cors({ origin: CLIENT_URL }))
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'https://celerysync.vercel.app',
+  'https://celery-sync.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean)
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true)
+    cb(new Error('Not allowed by CORS'))
+  },
+  credentials: true,
+}))
 
 // Rate limiting — protect AI endpoints from abuse / runaway costs
 const aiLimit = rateLimit({

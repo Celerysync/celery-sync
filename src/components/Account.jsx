@@ -187,9 +187,9 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             padding: '24px 22px',
             color: C.white,
           }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>✨</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>{isPractitioner ? '🏥' : '✨'}</div>
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20 }}>
-              Healer Plan — Active
+              {isPractitioner ? 'Practitioner Plan — Active' : 'Healer Plan — Active'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
               {subData?.status === 'trialing' ? '🎉 Free trial active' : '🌿 Subscription active'}

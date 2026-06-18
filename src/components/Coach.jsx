@@ -277,12 +277,18 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               sentenceBuffer += delta;
               const boundaryIdx = sentenceBuffer.search(/[.!?][ \n]/);
               if (boundaryIdx > 5) {
-                const sentence = sentenceBuffer.slice(0, boundaryIdx + 1)
-                  .replace(/\[\[GO:[^\]]*\]\]/gi, "")
-                  .replace(/[*_`#•]/g, "")
-                  .trim();
-                sentenceBuffer = sentenceBuffer.slice(boundaryIdx + 2);
-                if (sentence) queueSentence(sentence);
+                // Avoid splitting on abbreviations: Dr. Mr. A.W. single letters etc.
+                const wordBefore = (sentenceBuffer.slice(0, boundaryIdx).split(/\s+/).pop() ?? "");
+                const isAbbrev = wordBefore.length <= 2 ||
+                  /^(Dr|Mr|Mrs|Ms|Prof|Inc|Ltd|vs|etc|eg|ie|ch|Vol|Fig|No|St|approx|AW|MM|AM|PM)$/i.test(wordBefore);
+                if (!isAbbrev) {
+                  const sentence = sentenceBuffer.slice(0, boundaryIdx + 1)
+                    .replace(/\[\[GO:[^\]]*\]\]/gi, "")
+                    .replace(/[*_`#•]/g, "")
+                    .trim();
+                  sentenceBuffer = sentenceBuffer.slice(boundaryIdx + 2);
+                  if (sentence) queueSentence(sentence);
+                }
               }
             }
           },

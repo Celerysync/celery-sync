@@ -245,7 +245,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
         <input
           value={conditionSearch}
           onChange={(e) => setConditionSearch(e.target.value)}
-          placeholder="Search 80 conditions…"
+          placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
           style={{
             width: "100%", boxSizing: "border-box",
             padding: "9px 16px", borderRadius: 30,
@@ -301,7 +301,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
         </div>
         {!conditionSearch && (
           <div style={{ fontSize: 11, color: C.muted, marginTop: 6, textAlign: "center" }}>
-            Showing all 80 conditions — search to filter
+            Showing all {Object.keys(CONDITIONS).length} conditions — search to filter
           </div>
         )}
       </div>

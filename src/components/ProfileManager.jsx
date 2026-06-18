@@ -96,7 +96,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
         <input
           value={condSearch}
           onChange={(e) => setCondSearch(e.target.value)}
-          placeholder="Search 80 conditions…"
+          placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
           style={{
             width: "100%", boxSizing: "border-box",
             padding: "8px 14px", borderRadius: 30,
