@@ -11,10 +11,15 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   stripe_customer_id text,
   stripe_subscription_id text,
   status text,
+  plan text DEFAULT 'healer', -- healer | practitioner
   current_period_end timestamptz,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
+-- Add plan column if upgrading from v1 (safe no-op if column already exists)
+DO $$ BEGIN
+  ALTER TABLE subscriptions ADD COLUMN plan text DEFAULT 'healer';
+EXCEPTION WHEN duplicate_column THEN NULL; END $$;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Users can view own subscription"

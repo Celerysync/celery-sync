@@ -894,8 +894,8 @@ export const RECIPES = [
 
   // ── SALADS & LUNCHES ─────────────────────────────────────
   {
-    id: "liver-rescue-salad",
-    name: "Liver Rescue Salad",
+    id: "healing-herb-salad",
+    name: "Healing Herb Salad",
     emoji: "🥗",
     mealType: "lunch",
     category: "salad",
