@@ -26,6 +26,20 @@ const AW_QUOTES = [
   { text: "Heavy metals don't stay where they land. They migrate through the body over years and decades. That is why symptoms change. That is why the brain is affected. That is why the HMDS is so important.", source: "Cleanse to Heal" },
   { text: "Adrenal fatigue is real — more real than most medicine currently acknowledges. Your adrenals are like two small walnut-shaped glands carrying the weight of your entire survival system. Honour them.", source: "Medical Medium" },
   { text: "You are not broken. You are not weak. You are not to blame. Your body is fighting something very real that medicine has not yet discovered. Keep going. Keep healing. You are not alone.", source: "Medical Medium" },
+  { text: "Zinc is the number one mineral deficiency on the planet. Without zinc, the immune system cannot fight viral and bacterial infections. It is the great protector — the shield your body needs.", source: "Brain Saver Protocols" },
+  { text: "The liver is like a best friend who never stops working for you. When you understand what your liver does for you every day — without thanks — you will want to take care of it with everything you have.", source: "Liver Rescue" },
+  { text: "EBV is behind more chronic illness than science currently knows. When science finally catches up with what I share, millions of people will have answers they have been waiting decades for.", source: "Thyroid Healing" },
+  { text: "Sleep is not a luxury — it is the time when your liver does its most critical work, when neurotoxins are processed, when the brain heals. Prioritise your sleep as if your healing depends on it. Because it does.", source: "Brain Saver" },
+  { text: "Spirulina is a gift from the earth. It is the most bioavailable source of protein on the planet and it binds to heavy metals in a way nothing else can, drawing them safely out of your body.", source: "Cleanse to Heal" },
+  { text: "Depression is not caused by a serotonin deficiency. It is caused by neurotoxins from viral activity, heavy metals disrupting brain chemistry, and adrenaline exhausting the nervous system. It is a physical condition.", source: "Brain Saver" },
+  { text: "The celery juice movement exists because people are healing conditions that have had no answers for decades. When something helps this many people, the world has a responsibility to pay attention.", source: "Celery Juice" },
+];
+
+const STREAK_MILESTONES = [
+  { days: 7,  emoji: "🌟", title: "One week of healing!", msg: "Seven days of celery juice — your liver's sodium cluster salt reserves are rebuilding. Anthony William says the first week is when the gut lining begins to repair.", color: C.leaf },
+  { days: 14, emoji: "✨", title: "Two weeks strong!", msg: "Fourteen days — the longest streak most people maintain. You are in rare company. Your immune system is receiving daily antiviral support and your adrenals are getting steadier.", color: C.sage },
+  { days: 21, emoji: "💫", title: "Three weeks of commitment!", msg: "Anthony William teaches that 21 days is when deeper cellular changes begin. Viral loads start to meaningfully reduce at this stage. Your body is doing something profound.", color: C.plum },
+  { days: 28, emoji: "🏆", title: "One full month!", msg: "A full lunar cycle of healing. Your liver has had a month of daily sodium cluster salts. This is the kind of sustained effort that produces lasting transformation.", color: C.gold },
 ];
 
 function getTodaysQuote() {
@@ -182,6 +196,31 @@ export default function Home({ user, authUser, profileId }) {
           </button>
         </div>
       </div>
+
+      {/* Celery streak milestone */}
+      {(() => {
+        const milestone = [...STREAK_MILESTONES].reverse().find((m) => celeryStreak >= m.days && celeryStreak % m.days < 3);
+        if (!milestone) return null;
+        return (
+          <div style={{
+            background: `linear-gradient(135deg,${milestone.color}22,${milestone.color}10)`,
+            border: `2px solid ${milestone.color}60`,
+            borderRadius: 18,
+            padding: "16px 18px",
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 6, textAlign: "center" }}>{milestone.emoji}</div>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: milestone.color, textAlign: "center", marginBottom: 6 }}>
+              {milestone.title}
+            </div>
+            <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, textAlign: "center" }}>
+              {milestone.msg}
+            </div>
+            <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
+              🥬 {celeryStreak}-day celery streak — Anthony William
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Supplement tracker */}
       {authUser && (
