@@ -197,8 +197,8 @@ The heart is also profoundly connected to emotional experience. Fear, grief, and
     name: "Kidneys",
     emoji: "🫘",
     tagline: "Your body's master filtration system",
-    color: "#7c3aed",
-    lightColor: "#f5f3ff",
+    color: "#0891b2",
+    lightColor: "#ecfeff",
     overview: `Anthony William teaches that the kidneys are under enormous stress in our modern world due to the high viral and toxic load the body is managing. The kidneys filter blood continuously — removing waste, balancing electrolytes, and producing erythropoietin for red blood cell production.
 
 Kidney issues in Anthony William's view are rarely about the kidneys themselves but about what the kidneys are being asked to process — viral waste, heavy metals, pharmaceutical residue, and the byproducts of a burdened liver.`,
