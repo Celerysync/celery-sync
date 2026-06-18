@@ -110,6 +110,7 @@ function printDoctorSummary({ user, conditions, result }) {
 export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
   const [sel, setSel] = useState([]);
   const [custom, setCustom] = useState("");
+  const [conditionSearch, setConditionSearch] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showDrNote, setShowDrNote] = useState(false);
@@ -239,30 +240,70 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
         📚 Powered by exact data from <strong>Cleanse to Heal Ch. 29</strong> by Anthony William
       </div>
 
-      {/* Symptom chips */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-        {Object.keys(CONDITIONS).map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setSel((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
-              setResult(null);
-            }}
-            style={{
-              padding: "7px 14px",
-              borderRadius: 30,
-              fontSize: 12,
-              fontFamily: "Georgia,serif",
-              cursor: "pointer",
-              border: `2px solid ${sel.includes(s) ? C.plum : C.border}`,
-              background: sel.includes(s) ? C.plumLight : "transparent",
-              color: sel.includes(s) ? C.plum : C.mid,
-              fontWeight: sel.includes(s) ? 700 : 400,
-            }}
-          >
-            {s}
+      {/* Condition search + chips */}
+      <div>
+        <input
+          value={conditionSearch}
+          onChange={(e) => setConditionSearch(e.target.value)}
+          placeholder="Search 74 conditions…"
+          style={{
+            width: "100%", boxSizing: "border-box",
+            padding: "9px 16px", borderRadius: 30,
+            border: `1.5px solid ${C.border}`,
+            fontFamily: "Georgia,serif", fontSize: 13,
+            outline: "none", background: C.mist,
+            marginBottom: 10,
+          }}
+        />
+        {sel.length > 0 && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+            {sel.map((s) => (
+              <div
+                key={s}
+                onClick={() => { setSel((p) => p.filter((x) => x !== s)); setResult(null); }}
+                style={{
+                  padding: "5px 12px", borderRadius: 30, fontSize: 12,
+                  fontFamily: "Georgia,serif", cursor: "pointer",
+                  border: `2px solid ${C.plum}`,
+                  background: C.plumLight, color: C.plum, fontWeight: 700,
+                }}
+              >
+                {s} ✕
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, maxHeight: conditionSearch ? "none" : 180, overflowY: conditionSearch ? "visible" : "auto" }}>
+          {Object.keys(CONDITIONS)
+            .filter((s) => !conditionSearch || s.toLowerCase().includes(conditionSearch.toLowerCase()))
+            .map((s) => (
+              <div
+                key={s}
+                onClick={() => {
+                  setSel((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+                  setResult(null);
+                }}
+                style={{
+                  padding: "7px 14px",
+                  borderRadius: 30,
+                  fontSize: 12,
+                  fontFamily: "Georgia,serif",
+                  cursor: "pointer",
+                  border: `2px solid ${sel.includes(s) ? C.plum : C.border}`,
+                  background: sel.includes(s) ? C.plumLight : "transparent",
+                  color: sel.includes(s) ? C.plum : C.mid,
+                  fontWeight: sel.includes(s) ? 700 : 400,
+                }}
+              >
+                {s}
+              </div>
+            ))}
+        </div>
+        {!conditionSearch && (
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, textAlign: "center" }}>
+            Showing all 74 conditions — search to filter
+          </div>
+        )}
       </div>
 
       <input
