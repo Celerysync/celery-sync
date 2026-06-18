@@ -11,8 +11,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body || "",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/badge-72.png",
+    icon: "/icons/icon-192.svg",
+    badge: "/icons/icon-192.svg",
     tag: data.tag || "celerysync",
     renotify: true,
     requireInteraction: false,

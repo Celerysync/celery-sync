@@ -21,6 +21,18 @@
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -36,6 +48,20 @@
       "short_name": "AI Guide",
       "description": "Ask your Medical Medium healing guide",
       "url": "/?tab=coach",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Symptom Checker",
+      "short_name": "Symptoms",
+      "description": "Look up protocols for your conditions",
+      "url": "/?tab=symptom",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Healing Recipes",
+      "short_name": "Recipes",
+      "description": "Medical Medium healing recipes",
+      "url": "/?tab=recipes",
       "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
     }
   ]
