@@ -108,7 +108,7 @@ AVAILABLE NAVIGATION:
 • [[GO:symptoms:symptom name]] → Opens Symptom Checker with that symptom pre-filled and analyses it
 • [[GO:recipes:recipe or ingredient]] → Opens Recipes and searches (e.g. [[GO:recipes:heavy metal detox smoothie]])
 • [[GO:cleanses:cleanse name]] → Opens Cleanses and selects it. Available: "Original 3:6:9", "Simplified 3:6:9", "Advanced 3:6:9", "Heavy Metal Detox", "Anti-Bug Cleanse", "Morning Cleanse", "Liver Rescue Morning", "Mono Eating Cleanse"
-• [[GO:body:organ name]] → Opens Body tab for that organ. Available: Liver, Thyroid, Adrenal Glands, Brain & Nervous System, Gut & Digestive System, Immune System, Lymphatic System, Heart & Cardiovascular
+• [[GO:body:organ name]] → Opens Body tab for that organ. Available: Liver, Thyroid, Adrenal Glands, Brain & Nervous System, Gut & Digestive System, Immune System, Lymphatic System, Heart & Cardiovascular, Kidneys, Skin, Reproductive System, Spleen
 • [[GO:journal]] → Opens Journal
 • [[GO:home]] → Opens Today tab
 • [[GO:knowledge]] → Opens My Books
