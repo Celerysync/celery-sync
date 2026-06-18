@@ -192,6 +192,103 @@ The heart is also profoundly connected to emotional experience. Fear, grief, and
     book: "Medical Medium",
     protocol: "Magnesium glycinate before bed + lemon balm tea addresses most palpitation and arrhythmia symptoms per Anthony William. Address blood sugar first (adrenal snacks) as adrenaline surges directly stress the heart.",
   },
+  {
+    id: "kidneys",
+    name: "Kidneys",
+    emoji: "🫘",
+    tagline: "Your body's master filtration system",
+    color: "#7c3aed",
+    lightColor: "#f5f3ff",
+    overview: `Anthony William teaches that the kidneys are under enormous stress in our modern world due to the high viral and toxic load the body is managing. The kidneys filter blood continuously — removing waste, balancing electrolytes, and producing erythropoietin for red blood cell production.
+
+Kidney issues in Anthony William's view are rarely about the kidneys themselves but about what the kidneys are being asked to process — viral waste, heavy metals, pharmaceutical residue, and the byproducts of a burdened liver.`,
+    awTeachings: [
+      "Kidney stones form when the body is dehydrated and high in oxalate from eggs and animal protein — not from eating greens",
+      "UTIs (urinary tract infections) are bacterial — streptococcus is usually the culprit, not E. coli as commonly believed",
+      "Edema and water retention are often a sign the kidneys are overwhelmed, not that you should restrict water",
+      "Coconut water is one of the most kidney-supportive drinks — its electrolytes go directly to the kidneys",
+      "Cucumber and asparagus are the most powerful kidney-flushing foods per Anthony William",
+      "The kidneys are vulnerable to certain medications, pesticides, and prescription drug residue",
+    ],
+    healingFoods: ["Cucumber", "Asparagus", "Coconut water", "Celery juice", "Lemon water", "Parsley", "Watermelon", "Nettle tea"],
+    avoid: ["Eggs", "Dairy", "Excessive sodium", "Alcohol", "Corn", "High-fat diets", "Carbonated water"],
+    supplements: ["Nettle leaf", "Chanca piedra", "Marshmallow root", "Lemon balm", "Vitamin B12", "Magnesium"],
+    book: "Cleanse to Heal",
+    protocol: "The 369 Cleanse dramatically reduces kidney burden by removing the foods that generate the most filtration waste (eggs, dairy, animal protein). Cucumber + celery juice daily flushes the kidneys continuously. Per Anthony William, Cleanse to Heal.",
+  },
+  {
+    id: "skin",
+    name: "Skin",
+    emoji: "✨",
+    tagline: "Your largest detox organ",
+    color: "#d97706",
+    lightColor: "#fffbeb",
+    overview: `Anthony William teaches that skin is an elimination organ — the body pushes toxins out through the skin when the liver, kidneys, and lymphatic system are overloaded. This is why skin conditions like acne, eczema, psoriasis, and rosacea rarely respond permanently to topical treatments — the source is internal.
+
+The skin's health is a direct reflection of liver health in Anthony William's view. When the liver is overburdened and the lymphatic system is sluggish, the body uses the skin as a backup route for detoxification.`,
+    awTeachings: [
+      "Acne is caused by the liver pushing out streptococcus byproducts and bacterial waste through the skin — not by dirty pores",
+      "Eczema is an internal condition — the liver is processing inflammatory viral waste and pushing it out through skin",
+      "Psoriasis involves streptococcus living in the liver and bloodstream, with the immune system attacking its byproducts",
+      "Rosacea is caused by low-grade streptococcus in the gut and blood — the flushing is an immune response",
+      "Cystic acne is often related to the liver being overwhelmed with adrenaline, eggs, and dairy — all of which feed strep",
+      "Skin heals when the liver heals — topical products address symptoms, not causes",
+    ],
+    healingFoods: ["Celery juice", "Wild blueberries", "Cucumber", "Leafy greens", "Aloe vera", "Sprouts", "Apples", "Papaya"],
+    avoid: ["Eggs (feed streptococcus most powerfully)", "Dairy", "Gluten", "Corn", "Canola oil", "Pork", "Soy"],
+    supplements: ["Zinc (sulfate)", "Vitamin C", "Spirulina", "Barley grass juice", "Lemon balm", "Cat's claw"],
+    book: "Cleanse to Heal",
+    protocol: "The 369 Cleanse with strict egg and dairy elimination is the most powerful skin protocol per Anthony William. Celery juice (16oz daily) and Wild Blueberries together target streptococcus in the liver — this is the root cause of most skin conditions. Skin changes typically begin within 2–4 weeks of strict protocol.",
+  },
+  {
+    id: "reproductive",
+    name: "Reproductive System",
+    emoji: "🌸",
+    tagline: "Healing the hormonal storm",
+    color: "#db2777",
+    lightColor: "#fdf2f8",
+    overview: `Anthony William teaches that most reproductive and hormonal conditions — PCOS, endometriosis, ovarian cysts, uterine fibroids, heavy periods, infertility — are not primarily hormonal problems. They are caused by EBV (Epstein-Barr virus) and its neurotoxins interfering with the endocrine system, combined with a burdened liver that cannot properly process hormones.
+
+This is why hormonal treatments often fail to produce lasting results — they address the symptom (hormone imbalance) rather than the cause (viral activity and liver congestion).`,
+    awTeachings: [
+      "Endometriosis is caused by EBV neurotoxins that have settled in the pelvic area — not from retrograde menstruation",
+      "Ovarian cysts are often viral in origin — EBV feeds on estrogen, creating cystic growth on the ovaries",
+      "PCOS is driven by a liver that is too sluggish to properly metabolise testosterone and estrogen",
+      "Fibroids grow when streptococcus and EBV are both active in the body — they feed on eggs and dairy",
+      "Infertility in women is often traced to EBV burdening the liver and affecting egg quality",
+      "PMS and severe period pain indicate the liver is overloaded with hormones it cannot process fast enough",
+      "The thyroid is intimately connected to reproductive health — EBV in the thyroid disrupts sex hormones indirectly",
+    ],
+    healingFoods: ["Wild blueberries", "Celery juice", "Leafy greens", "Figs", "Raspberries", "Turmeric", "Ginger", "Asparagus"],
+    avoid: ["Eggs (feed EBV most powerfully)", "Dairy", "Gluten", "Corn", "Soy", "Pork", "Canola oil", "Alcohol"],
+    supplements: ["Vitex (Chaste tree)", "Lemon balm", "Cats claw", "Zinc", "Vitamin B12 (methylcobalamin)", "Spirulina", "Red clover"],
+    book: "Thyroid Healing",
+    protocol: "Strict elimination of eggs and dairy while doing the 369 Cleanse is the foundation per Anthony William. The liver needs to be freed to process the hormones that are accumulating. Vitex supports progesterone; Lemon balm directly targets EBV. This combination, sustained over 3–6 months, produces the most profound results.",
+  },
+  {
+    id: "spleen",
+    name: "Spleen",
+    emoji: "💜",
+    tagline: "The first line of defence against pathogens",
+    color: "#7c3aed",
+    lightColor: "#f5f3ff",
+    overview: `Anthony William teaches that the spleen is one of the most overlooked yet critical organs for healing chronic illness. The spleen produces B-cells, filters old red blood cells, and is the first line of defence when pathogens like EBV enter the body.
+
+When someone has mono (infectious mononucleosis), the spleen swells — this is a sign that EBV has reached the spleen and is actively being fought. Many people with chronic fatigue, frequent illness, and slow healing have a chronically burdened spleen that never fully recovered from an early EBV or strep infection.`,
+    awTeachings: [
+      "The spleen produces B-cells that create antibodies against EBV — when the spleen is overwhelmed, EBV wins",
+      "Chronic spleen burden is a hidden cause of chronic fatigue, anaemia, and frequent illness",
+      "Mono (glandular fever) swells the spleen — many people never recover their spleen health after a mono infection",
+      "Streptococcus attacks the spleen and thrives there — this is why recurring strep leads to ongoing immune problems",
+      "The spleen communicates with the thymus gland, making it essential for long-term immune memory",
+      "Wild blueberries are the most powerful spleen-supportive food — they contain phytochemicals that directly assist spleen function",
+    ],
+    healingFoods: ["Wild blueberries", "Celery juice", "Oranges", "Apples", "Leafy greens", "Turmeric", "Ginger"],
+    avoid: ["Eggs", "Dairy", "Gluten", "Corn", "Pork", "Alcohol", "Canola oil"],
+    supplements: ["Cat's claw", "Elderberry", "Zinc", "Vitamin C", "Spirulina", "Red clover", "Chaga mushroom"],
+    book: "Medical Medium",
+    protocol: "Anthony William recommends wild blueberries daily (1–2 cups) as the most direct spleen support. Cat's claw is the most antiviral supplement for directly addressing the pathogens (EBV, strep) that burden the spleen. The spleen responds well to the 369 Cleanse — particularly the wild blueberry focus on days 1–3.",
+  },
 ];
 
 export function getOrgan(id) {
