@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import cron from 'node-cron'
+import { rateLimit } from 'express-rate-limit'
 import claudeRoutes from './routes/claude.js'
 import stripeRoutes from './routes/stripe.js'
 import elevenLabsRoutes from './routes/elevenlabs.js'
@@ -16,18 +17,43 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
 
 app.use(cors({ origin: CLIENT_URL }))
 
+// Rate limiting — protect AI endpoints from abuse / runaway costs
+const aiLimit = rateLimit({
+  windowMs: 60 * 1000,       // 1 minute window
+  max: 20,                   // 20 AI requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait a moment before trying again.' },
+})
+
+const ttsLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,                   // TTS is expensive — 10 per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many voice requests — please wait a moment.' },
+})
+
+const generalLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,                   // 60 general API calls per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please slow down.' },
+})
+
 // Stripe webhook needs raw body — must be registered before express.json()
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }))
 
 app.use(express.json({ limit: '50mb' }))
 
-app.use('/api/claude', claudeRoutes)
-app.use('/api/stripe', stripeRoutes)
-app.use('/api/elevenlabs', elevenLabsRoutes)
-app.use('/api/books', booksRoutes)
-app.use('/api/notifications', notificationRoutes)
-app.use('/api/wearable', wearableRoutes)
-app.use('/api/analytics', analyticsRoutes)
+app.use('/api/claude', aiLimit, claudeRoutes)
+app.use('/api/elevenlabs', ttsLimit, elevenLabsRoutes)
+app.use('/api/stripe', generalLimit, stripeRoutes)
+app.use('/api/books', generalLimit, booksRoutes)
+app.use('/api/notifications', generalLimit, notificationRoutes)
+app.use('/api/wearable', generalLimit, wearableRoutes)
+app.use('/api/analytics', generalLimit, analyticsRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 

@@ -6,6 +6,7 @@ import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { Tag, Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import HealingTrends from "./HealingTrends.jsx";
+import SupplementTracker from "./SupplementTracker.jsx";
 
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
@@ -159,6 +160,11 @@ export default function Home({ user, authUser, profileId }) {
           </button>
         </div>
       </div>
+
+      {/* Supplement tracker */}
+      {authUser && (
+        <SupplementTracker userConditions={user?.conditions || []} />
+      )}
 
       {/* Daily check-in */}
       {authUser && (
