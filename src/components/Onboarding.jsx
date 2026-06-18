@@ -6,6 +6,7 @@ import { CONDITIONS } from "../data/conditions.js";
 export default function Onboarding({ onDone }) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({ name: "", symptoms: [], goal: "" });
+  const [condSearch, setCondSearch] = useState("");
   const { speak } = useVoice();
 
   const steps = [
@@ -142,44 +143,62 @@ export default function Onboarding({ onDone }) {
           )}
 
           {cur.type === "multi" && (
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 7,
-                maxHeight: 220,
-                overflowY: "auto",
-              }}
-            >
-              {cur.options.map((o) => {
-                const on = data.symptoms.includes(o);
-                return (
-                  <div
-                    key={o}
-                    onClick={() =>
-                      setData((d) => ({
-                        ...d,
-                        symptoms: on
-                          ? d.symptoms.filter((x) => x !== o)
-                          : [...d.symptoms, o],
-                      }))
-                    }
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: 30,
-                      border: `2px solid ${on ? C.sage : C.border}`,
-                      background: on ? C.sageLight : "transparent",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontFamily: "Georgia,serif",
-                      color: on ? C.sageDark : C.mid,
-                      fontWeight: on ? 700 : 400,
-                    }}
-                  >
-                    {o}
-                  </div>
-                );
-              })}
+            <div>
+              <input
+                value={condSearch}
+                onChange={(e) => setCondSearch(e.target.value)}
+                placeholder="Search 74 conditions…"
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  padding: "9px 14px", borderRadius: 30,
+                  border: `1.5px solid ${C.border}`,
+                  fontFamily: "Georgia,serif", fontSize: 13,
+                  outline: "none", background: C.mist, marginBottom: 8,
+                }}
+              />
+              {data.symptoms.length > 0 && (
+                <div style={{ fontSize: 11, color: C.sageDark, marginBottom: 6, fontWeight: 600 }}>
+                  ✓ {data.symptoms.length} selected
+                </div>
+              )}
+              <div
+                style={{
+                  display: "flex", flexWrap: "wrap", gap: 7,
+                  maxHeight: 180, overflowY: "auto",
+                }}
+              >
+                {cur.options
+                  .filter((o) => !condSearch || o.toLowerCase().includes(condSearch.toLowerCase()))
+                  .map((o) => {
+                    const on = data.symptoms.includes(o);
+                    return (
+                      <div
+                        key={o}
+                        onClick={() =>
+                          setData((d) => ({
+                            ...d,
+                            symptoms: on
+                              ? d.symptoms.filter((x) => x !== o)
+                              : [...d.symptoms, o],
+                          }))
+                        }
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: 30,
+                          border: `2px solid ${on ? C.sage : C.border}`,
+                          background: on ? C.sageLight : "transparent",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          fontFamily: "Georgia,serif",
+                          color: on ? C.sageDark : C.mid,
+                          fontWeight: on ? 700 : 400,
+                        }}
+                      >
+                        {o}
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
           )}
 
