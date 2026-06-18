@@ -48,7 +48,7 @@ const FEATURES = [
   {
     emoji: "🍽",
     title: "MM-compliant meals, planned for you",
-    desc: "47+ healing recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
+    desc: "50+ healing recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
   },
   {
     emoji: "📚",

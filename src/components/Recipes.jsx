@@ -736,14 +736,33 @@ How to make it: [brief instructions]
             <div style={{ fontSize: 13, color: C.mid }}>
               {uncheckedCount > 0 ? `${uncheckedCount} items remaining` : shoppingList.length > 0 ? "All done! ✅" : "List is empty"}
             </div>
-            {shoppingList.length > 0 && (
-              <button
-                onClick={clearShoppingList}
-                style={{ background: "none", border: "none", fontSize: 12, color: C.muted, cursor: "pointer" }}
-              >
-                Clear all
-              </button>
-            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              {shoppingList.length > 0 && (
+                <>
+                  <button
+                    onClick={() => {
+                      const text = Object.entries(shoppingByCategory)
+                        .map(([cat, items]) => `${cat}:\n${items.map(i => `• ${i.text}`).join("\n")}`)
+                        .join("\n\n");
+                      navigator.clipboard?.writeText(text).then(() => {
+                        const btn = document.getElementById("cs-copy-btn");
+                        if (btn) { btn.textContent = "Copied!"; setTimeout(() => { btn.textContent = "Copy"; }, 2000); }
+                      });
+                    }}
+                    id="cs-copy-btn"
+                    style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.sage, cursor: "pointer", fontFamily: "Georgia,serif", fontWeight: 700 }}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={clearShoppingList}
+                    style={{ background: "none", border: "none", fontSize: 12, color: C.muted, cursor: "pointer" }}
+                  >
+                    Clear all
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {Object.entries(shoppingByCategory).map(([cat, items]) => (
