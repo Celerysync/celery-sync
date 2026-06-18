@@ -48,7 +48,7 @@ const FEATURES = [
   {
     emoji: "🍽",
     title: "MM-compliant meals, planned for you",
-    desc: "27+ recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
+    desc: "47+ healing recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
   },
   {
     emoji: "📚",
@@ -399,7 +399,7 @@ export default function Landing({ onGetStarted }) {
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["54 exact condition protocols", "Remembers your journey", "Speaks & listens", "Quotes your own books"].map((t) => (
+            {["74 exact condition protocols", "Remembers your journey", "Speaks & listens", "Quotes your own books"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",
