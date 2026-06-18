@@ -167,30 +167,49 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
 
     try {
       const text = await callClaude({
-        maxTokens: 1000,
+        tier: 'standard',
+        maxTokens: 1100,
         messages: [
           {
             role: "user",
-            content: `You are a Medical Medium healing companion with exact data from Anthony William's books.
+            content: `You are a compassionate Medical Medium healing companion with deep knowledge from Anthony William's books.
 
-User symptoms: ${all.join(", ")}
+Person: ${user?.name || "friend"}
+Their existing conditions: ${(user?.conditions || []).join(", ") || "not previously specified"}
+Conditions/symptoms they're asking about now: ${all.join(", ")}
 
 EXACT DATA FROM ANTHONY WILLIAM'S BOOKS:
-${dbContext || "Use Anthony William's Medical Medium teachings."}
+${dbContext || "Draw from Anthony William's Medical Medium teachings."}
 ${notesCtx}${bookChunksCtx}
 
-Provide a response with these sections:
-1. 🦠 TRUE CAUSE (attribute clearly to Anthony William and cite which book/chapter)
-2. 🌿 BEST CLEANSE to start (from Cleanse to Heal by Anthony William)
-3. 💊 EXACT SUPPLEMENTS with dosages (as taught by Anthony William)
-4. 🍎 HEALING FOODS to eat daily (per Anthony William)
-5. 🚫 AVOID these foods (per Anthony William's teachings)
-6. 📚 Which Anthony William book to read next
-7. 💛 Encouragement
+This person may be suffering — be warm and compassionate while being specific. Address them by name (${user?.name || "friend"}).
 
-Important: Always frame causes and protocols as Anthony William's teachings, not as your own claims. Use phrases like "Anthony William teaches…", "According to Anthony William…", "Per Cleanse to Heal…".
+Provide these sections clearly:
 
-End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always consult your healthcare provider.`,
+## 🦠 True Cause
+What Anthony William teaches is actually causing this — be specific. Name the pathogen (EBV, streptococcus, etc.) or toxic load (heavy metals, etc.) where relevant. Cite the specific book.
+
+## 🌿 Best Cleanse to Start
+From Cleanse to Heal by Anthony William — which cleanse level and which specific foods. Be concrete.
+
+## 💊 Exact Supplements
+With dosages exactly as Anthony William teaches. Don't be vague — give actual amounts where available. Note which book/protocol these come from.
+
+## 🍎 Healing Foods
+What to eat daily for this condition specifically — per Anthony William. Include any specific timing (with/without meals, time of day, etc.)
+
+## 🚫 Must Avoid
+The key foods and substances that feed the pathogens causing this — per Anthony William. Be direct.
+
+## 📚 Read Next
+The most important Anthony William book for this specific situation, and what chapter to start with.
+
+## 💛 Encouragement
+One genuine, heartfelt paragraph. This person is doing the hard work of healing. Honour that.
+
+Always frame all claims as "Anthony William teaches…" or "Per [Book]…" — never as your own medical claims.
+
+End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always work alongside your healthcare provider.`,
           },
         ],
       });
