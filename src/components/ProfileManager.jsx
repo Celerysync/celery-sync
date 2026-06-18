@@ -20,6 +20,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
   const [symptoms, setSymptoms] = useState(initial.symptoms || []);
   const [goal, setGoal] = useState(initial.goal || "");
   const [avatar, setAvatar] = useState(initial.avatar_emoji || "🌿");
+  const [condSearch, setCondSearch] = useState("");
 
   const toggleSymptom = (s) =>
     setSymptoms((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
@@ -90,25 +91,39 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
       {/* Symptoms */}
       <div>
         <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
-          Main symptoms (select all that apply)
+          Main symptoms (select all that apply) {symptoms.length > 0 && `· ${symptoms.length} selected`}
         </div>
+        <input
+          value={condSearch}
+          onChange={(e) => setCondSearch(e.target.value)}
+          placeholder="Search 74 conditions…"
+          style={{
+            width: "100%", boxSizing: "border-box",
+            padding: "8px 14px", borderRadius: 30,
+            border: `1.5px solid ${C.border}`,
+            fontFamily: "Georgia,serif", fontSize: 12,
+            outline: "none", background: C.mist, marginBottom: 8,
+          }}
+        />
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 180, overflowY: "auto" }}>
-          {Object.keys(CONDITIONS).map((s) => (
-            <button
-              key={s}
-              onClick={() => toggleSymptom(s)}
-              style={{
-                padding: "5px 12px", borderRadius: 20,
-                border: `1.5px solid ${symptoms.includes(s) ? C.sage : C.border}`,
-                background: symptoms.includes(s) ? C.sageLight : "transparent",
-                color: symptoms.includes(s) ? C.sageDark : C.mid,
-                fontSize: 12, fontFamily: "Georgia,serif",
-                cursor: "pointer", fontWeight: symptoms.includes(s) ? 700 : 400,
-              }}
-            >
-              {s}
-            </button>
-          ))}
+          {Object.keys(CONDITIONS)
+            .filter((s) => !condSearch || s.toLowerCase().includes(condSearch.toLowerCase()))
+            .map((s) => (
+              <button
+                key={s}
+                onClick={() => toggleSymptom(s)}
+                style={{
+                  padding: "5px 12px", borderRadius: 20,
+                  border: `1.5px solid ${symptoms.includes(s) ? C.sage : C.border}`,
+                  background: symptoms.includes(s) ? C.sageLight : "transparent",
+                  color: symptoms.includes(s) ? C.sageDark : C.mid,
+                  fontSize: 12, fontFamily: "Georgia,serif",
+                  cursor: "pointer", fontWeight: symptoms.includes(s) ? 700 : 400,
+                }}
+              >
+                {s}
+              </button>
+            ))}
         </div>
       </div>
 
