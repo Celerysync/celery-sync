@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 DO $$ BEGIN
   ALTER TABLE subscriptions ADD COLUMN plan text DEFAULT 'healer';
 EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE subscriptions ADD COLUMN cancel_at_period_end boolean DEFAULT false;
+EXCEPTION WHEN duplicate_column THEN NULL; END $$;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Users can view own subscription"
@@ -94,7 +97,8 @@ EXCEPTION WHEN OTHERS THEN NULL; END $$;
 DO $$ BEGIN
   ALTER TABLE daily_checkins ADD CONSTRAINT daily_checkins_profile_date_unique
     UNIQUE (profile_id, check_date);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL;
+         WHEN sqlstate '42P07' THEN NULL; END $$;
 CREATE INDEX IF NOT EXISTS checkins_profile_date
   ON daily_checkins(profile_id, check_date DESC);
 ALTER TABLE daily_checkins ENABLE ROW LEVEL SECURITY;
@@ -250,7 +254,9 @@ ALTER TABLE daily_checkins
   ADD COLUMN IF NOT EXISTS hrv integer,
   ADD COLUMN IF NOT EXISTS resting_hr integer,
   ADD COLUMN IF NOT EXISTS sleep_score integer,
-  ADD COLUMN IF NOT EXISTS wearable_source text;
+  ADD COLUMN IF NOT EXISTS wearable_source text,
+  ADD COLUMN IF NOT EXISTS steps integer,
+  ADD COLUMN IF NOT EXISTS readiness_score integer;
 
 CREATE TABLE IF NOT EXISTS wearable_tokens (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -334,7 +340,7 @@ INSERT INTO circles (id, name, emoji, description, condition_tags) VALUES
   ('mentalhealth', 'Mental Health & Anxiety Circle', '💜', 'Anxiety, depression, OCD, panic, low mood — exploring the viral and toxic roots Anthony William reveals.', ARRAY['Anxiety','Depression','OCD','Panic attacks','PTSD','Bipolar']),
   ('womens',       'Women''s Health Circle',         '🌸', 'PCOS, endometriosis, infertility, perimenopause, hormonal conditions — women healing together.', ARRAY['PCOS','Endometriosis','Infertility','Hormonal imbalance','Menopause']),
   ('digestive',    'Digestive Healing Circle',       '🌿', 'IBS, SIBO, bloating, reflux, Crohn''s, constipation — gut healing in the MM way.', ARRAY['IBS','SIBO','Crohn''s','Bloating','Reflux','Constipation']),
-  ('general',      'General Healing Circle',         '🌱', 'For everyone on the Medical Medium path — share wins, questions, protocol tips, and encouragement.', ARRAY[])
+  ('general',      'General Healing Circle',         '🌱', 'For everyone on the Medical Medium path — share wins, questions, protocol tips, and encouragement.', ARRAY[]::text[])
 ON CONFLICT (id) DO NOTHING;
 
 

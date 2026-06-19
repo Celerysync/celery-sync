@@ -155,6 +155,40 @@ router.get("/status/:userId", async (req, res) => {
   res.json({ tokens: data || [] });
 });
 
+// Manual wearable data entry — Apple Watch, Garmin, Whoop, Fitbit etc.
+router.post("/manual", async (req, res) => {
+  const { userId, date, source, sleep_hours, sleep_quality, hrv, resting_hr, steps, readiness_score } = req.body;
+  if (!userId || !date) return res.status(400).json({ error: "userId and date required" });
+  const row = {
+    user_id: userId,
+    check_date: date,
+    wearable_source: source || "manual",
+    updated_at: new Date().toISOString(),
+  };
+  if (sleep_hours != null) row.sleep_hours = parseFloat(sleep_hours);
+  if (sleep_quality != null) row.sleep_quality = parseInt(sleep_quality);
+  if (hrv != null) row.hrv = parseInt(hrv);
+  if (resting_hr != null) row.resting_hr = parseInt(resting_hr);
+  if (steps != null) row.steps = parseInt(steps);
+  if (readiness_score != null) row.readiness_score = parseInt(readiness_score);
+
+  // Update existing checkin if one exists for this date, else just save wearable columns
+  const { error } = await supabaseAdmin
+    .from("daily_checkins")
+    .update(row)
+    .eq("user_id", userId)
+    .eq("check_date", date);
+
+  if (error) {
+    // No existing checkin — insert a wearable-only row
+    const { error: insertErr } = await supabaseAdmin
+      .from("daily_checkins")
+      .insert({ ...row });
+    if (insertErr) return res.status(500).json({ error: insertErr.message });
+  }
+  res.json({ ok: true });
+});
+
 // Called by cron — sync all users with Oura tokens
 export async function syncAllOuraUsers() {
   const { data: tokens } = await supabaseAdmin

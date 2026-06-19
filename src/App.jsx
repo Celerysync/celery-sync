@@ -32,6 +32,7 @@ const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.js
 const AW               = lazy(() => import("./components/AW.jsx"));
 const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
 const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
+const KidsCorner       = lazy(() => import("./components/KidsCorner.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -44,6 +45,7 @@ const TABS = [
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
   { id: "community",    label: "Circles",   emoji: "💚", free: false },
   { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
+  { id: "kids",         label: "Kids",       emoji: "🌈", free: false },
   { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
   { id: "account",   label: "Account",    emoji: "👤", free: true  },
   { id: "admin",     label: "Admin",      emoji: "📊", free: true, adminOnly: true },
@@ -225,6 +227,8 @@ export default function App() {
         return <Community authUser={authUser} userProfile={activeProfile} />;
       case "practice":
         return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
+      case "kids":
+        return <KidsCorner parentProfile={activeProfile} />;
       case "aw":
         return <AW />;
       case "admin":
@@ -260,7 +264,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: C.cream, minHeight: "100vh" }}>
+    <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
       <div style={{
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
@@ -326,7 +330,7 @@ export default function App() {
       <ReminderBanner reminder={activeReminder} onDismiss={dismissReminder} onSnooze={snoozeReminder} />
 
       {/* Page content */}
-      <div style={{ padding: "14px 14px 110px" }}>
+      <div style={{ padding: "14px 14px calc(110px + env(safe-area-inset-bottom, 0px))", maxWidth: 680, margin: "0 auto" }}>
         <Suspense fallback={
           <div style={{ textAlign: "center", padding: 48, color: C.muted, fontFamily: "Georgia,serif" }}>
             🌿 Loading…
@@ -343,7 +347,7 @@ export default function App() {
         boxShadow: "0 -4px 24px #1e2a1e12",
         paddingBottom: "env(safe-area-inset-bottom, 6px)",
       }}>
-        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" }}>
+        <div className="scrollbar-none" style={{ display: "flex", overflowX: "auto" }}>
           {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
             const locked = !t.free && !isSubscribed && !subLoading;
             const active = tab === t.id;

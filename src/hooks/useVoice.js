@@ -1,14 +1,29 @@
 import { useState, useRef, useCallback } from "react";
 
 export const ELEVENLABS_VOICES = [
-  { id: "el:EXAVITQu4vr4xnSDxMaL", name: "Sarah — reassuring & mature ✨" },
-  { id: "el:XrExE9yKIg1WjnnlVkGX", name: "Matilda — knowledgeable & warm ✨" },
-  { id: "el:cgSgspJ2msm6clMCkdW9", name: "Jessica — bright & warm ✨" },
-  { id: "el:pFZP5JQG7iQjIQuC4Bku", name: "Lily — velvety & calm ✨" },
-  { id: "el:hpp4J3VqNfWAUOO0d1Us", name: "Bella — professional & warm ✨" },
-  { id: "el:nPczCjzI2devNBz1zQrb", name: "Brian — deep & comforting ✨" },
-  { id: "el:JBFqnCBsd6RMkjVDRZzb", name: "George — warm storyteller ✨" },
-  { id: "el:SAz9YHcvj6GT2YYXdXww", name: "River — relaxed & neutral ✨" },
+  // Warm & healing — best for this app
+  { id: "el:EXAVITQu4vr4xnSDxMaL", name: "Sarah — reassuring & mature", group: "Warm & Healing" },
+  { id: "el:XrExE9yKIg1WjnnlVkGX", name: "Matilda — knowledgeable & warm", group: "Warm & Healing" },
+  { id: "el:pFZP5JQG7iQjIQuC4Bku", name: "Lily — velvety & calm", group: "Warm & Healing" },
+  { id: "el:cgSgspJ2msm6clMCkdW9", name: "Jessica — bright & uplifting", group: "Warm & Healing" },
+  { id: "el:9BWtsMINqrJLrRacOk9x", name: "Aria — gentle & empathetic", group: "Warm & Healing" },
+  { id: "el:FGY2WhTYpPnrIDTdsKH5", name: "Laura — serene & soothing", group: "Warm & Healing" },
+  { id: "el:jsCqWAovK2LkecY7zXl4", name: "Freya — natural & earthy", group: "Warm & Healing" },
+  // Professional & clear
+  { id: "el:hpp4J3VqNfWAUOO0d1Us", name: "Bella — professional & clear", group: "Professional" },
+  { id: "el:21m00Tcm4TlvDq8ikWAM", name: "Rachel — confident & articulate", group: "Professional" },
+  { id: "el:AZnzlk1XvdvUeBnXmlld", name: "Domi — expressive & precise", group: "Professional" },
+  { id: "el:MF3mGyEYCl7XYWbV9V6O", name: "Elli — friendly & warm", group: "Professional" },
+  // Male voices
+  { id: "el:nPczCjzI2devNBz1zQrb", name: "Brian — deep & comforting", group: "Male Voices" },
+  { id: "el:JBFqnCBsd6RMkjVDRZzb", name: "George — warm storyteller", group: "Male Voices" },
+  { id: "el:SAz9YHcvj6GT2YYXdXww", name: "River — relaxed & neutral", group: "Male Voices" },
+  { id: "el:TxGEqnHWrfWFTfGW9XjX", name: "Josh — young & energetic", group: "Male Voices" },
+  { id: "el:VR6AewLTigWG4xSOukaG", name: "Arnold — authoritative & calm", group: "Male Voices" },
+  { id: "el:ErXwobaYiN019PkySvjV", name: "Antoni — natural & conversational", group: "Male Voices" },
+  // Australian / NZ accents
+  { id: "el:XB0fDUnXU5powFXDhCwa", name: "Charlotte — Australian warmth", group: "Australian / NZ" },
+  { id: "el:IKne3meq5aSn9XLyUdCD", name: "Charlie — friendly Aussie", group: "Australian / NZ" },
 ];
 
 export function useVoice(preferredVoiceName = "") {

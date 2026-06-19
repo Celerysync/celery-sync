@@ -129,6 +129,15 @@ export default function Home({ user, authUser, profileId }) {
   const done = Object.values(checks).every(Boolean);
   const { speak, speaking, stopSpeaking } = useVoice();
 
+  // Healing score (0–100): morning protocol 60pts + check-in 25pts + snacks 15pts
+  const protocolScore = Object.values(checks).filter(Boolean).length * 20;
+  const checkinScore = todaysCheckin ? 25 : 0;
+  const snackScore = Math.min(snackCount, 2) * 7;
+  const healingScore = protocolScore + checkinScore + snackScore;
+
+  // Streak protection — warn if evening and check-in not done
+  const streakAtRisk = h >= 19 && celeryStreak > 2 && !todaysCheckin?.celery_juice;
+
   const morningScript = `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 16 to 32 ounces. After 15 to 30 minutes, drink your fresh celery juice — 16 ounces of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`;
 
   const nowFood = getNowFood();
@@ -172,11 +181,18 @@ export default function Home({ user, authUser, profileId }) {
           {greeting}{user?.name ? ", " + user.name : ""} 🌿
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your healing journey continues</div>
-        {celeryStreak > 0 && (
-          <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
-            🥬 {celeryStreak}-day celery streak · {protocolDays} days checked in
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+          {celeryStreak > 0 && (
+            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+              🥬 {celeryStreak}-day streak
+            </div>
+          )}
+          {healingScore > 0 && (
+            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+              ✨ Today: {healingScore}/100
+            </div>
+          )}
+        </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <button
             onClick={() => (speaking ? stopSpeaking() : speak(morningScript))}
@@ -221,6 +237,73 @@ export default function Home({ user, authUser, profileId }) {
           </div>
         );
       })()}
+
+      {/* 7-day habit grid */}
+      {last7 && last7.length > 0 && (
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+              🗓 Your healing week
+            </div>
+            <div style={{ fontSize: 11, color: C.muted }}>last 7 days</div>
+          </div>
+          <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
+            {Array.from({ length: 7 }, (_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (6 - i));
+              const dateStr = d.toISOString().split("T")[0];
+              const isToday = dateStr === TODAY;
+              const entry = last7.find(c => c.date === dateStr);
+              const hasCelery = entry?.celery_juice;
+              const hasProtocol = entry?.protocol_done || (isToday && done);
+              const hasCheckin = !!entry;
+              const score = (hasCelery ? 2 : 0) + (hasProtocol ? 2 : 0) + (hasCheckin ? 1 : 0);
+              const color = score >= 4 ? C.sage : score >= 2 ? C.gold : score >= 1 ? C.muted : C.border;
+              return (
+                <div key={dateStr} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>
+                    {d.toLocaleDateString("en-AU", { weekday: "short" }).slice(0, 2)}
+                  </div>
+                  <div style={{
+                    width: "100%", aspectRatio: "1", borderRadius: 8,
+                    background: color,
+                    border: isToday ? `2px solid ${C.sageDark}` : "none",
+                    opacity: isToday && !hasCheckin ? 0.5 : 1,
+                  }} />
+                  {isToday && <div style={{ fontSize: 7, color: C.sage, fontWeight: 700 }}>today</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+            {[[C.sage, "Great day"], [C.gold, "Partial"], [C.border, "Rest day"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: col }} />
+                <span style={{ fontSize: 10, color: C.muted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Streak protection warning */}
+      {streakAtRisk && (
+        <div style={{
+          background: "#FEF3C7", border: "2px solid #F59E0B80",
+          borderRadius: 16, padding: "14px 16px",
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <div style={{ fontSize: 26, flexShrink: 0 }}>⚠️</div>
+          <div>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#92400E" }}>
+              Don't break your {celeryStreak}-day streak!
+            </div>
+            <div style={{ fontSize: 12, color: "#B45309", marginTop: 2, lineHeight: 1.4 }}>
+              Log your celery juice in the daily check-in before midnight to keep it going.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Supplement tracker */}
       {authUser && (

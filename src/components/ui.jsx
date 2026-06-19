@@ -56,6 +56,7 @@ export const Btn = ({
       cursor: disabled ? "not-allowed" : "pointer",
       width: full ? "100%" : "auto",
       opacity: disabled ? 0.5 : 1,
+      touchAction: "manipulation",
     }}
   >
     {children}

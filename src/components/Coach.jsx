@@ -299,7 +299,14 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               if (!last || last.role !== "assistant") return m;
               return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
-            const autoListen = voiceModeRef.current ? () => startListening((t) => send(t)) : undefined;
+            const autoListen = voiceModeRef.current ? () => startListening((t) => {
+            const lower = t.trim().toLowerCase();
+            if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
+              stopSpeaking();
+            } else {
+              send(t);
+            }
+          }) : undefined;
             if (isElVoice) {
               // Flush any remaining text after the last sentence boundary
               const rem = sentenceBuffer
@@ -444,16 +451,20 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             padding: "5px 8px",
             cursor: "pointer",
             outline: "none",
+            touchAction: "manipulation",
           }}
         >
-          <optgroup label="✨ ElevenLabs AI Voices (recommended)">
-            {ELEVENLABS_VOICES.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Browser voices">
+          {["Warm & Healing", "Professional", "Male Voices", "Australian / NZ"].map(group => {
+            const groupVoices = ELEVENLABS_VOICES.filter(v => v.group === group);
+            return (
+              <optgroup key={group} label={`✨ ${group}`}>
+                {groupVoices.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </optgroup>
+            );
+          })}
+          <optgroup label="Browser voices (no internet needed)">
             <option value="">Default (Samantha / Karen)</option>
             {englishFirst.map((v) => (
               <option key={v.name} value={v.name}>
@@ -529,8 +540,8 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       {/* Chat window */}
       <div
         style={{
-          minHeight: 280,
-          maxHeight: 420,
+          minHeight: 200,
+          maxHeight: "clamp(200px, 38vh, 420px)",
           overflowY: "auto",
           background: C.mist,
           borderRadius: 18,
@@ -622,24 +633,31 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         </div>
       )}
 
-      {/* Speaking indicator */}
+      {/* Speaking indicator — tap anywhere on it to stop */}
       {speaking && (
-        <div
+        <button
+          onClick={stopSpeaking}
           style={{
             background: C.goldLight,
-            border: `1px solid ${C.gold}50`,
+            border: `1.5px solid ${C.gold}80`,
             borderRadius: 12,
-            padding: "10px 16px",
+            padding: "12px 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            width: "100%",
+            cursor: "pointer",
+            touchAction: "manipulation",
           }}
         >
-          <div style={{ fontSize: 13 }}>🔊 Speaking to you…</div>
-          <Btn small onClick={stopSpeaking} color={C.gold}>
-            Stop
-          </Btn>
-        </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.gold, animation: "pulse 1s infinite", flexShrink: 0 }} />
+            <div style={{ fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif" }}>🔊 Tap to stop speaking</div>
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 20, padding: "3px 10px" }}>
+            Stop ✕
+          </div>
+        </button>
       )}
 
       {/* Input row */}
@@ -667,7 +685,14 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               stopListening();
             } else {
               voiceModeRef.current = true;
-              startListening((t) => send(t));
+              startListening((t) => {
+                const lower = t.trim().toLowerCase();
+                if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
+                  stopSpeaking();
+                } else {
+                  send(t);
+                }
+              });
             }
           }}
           style={{

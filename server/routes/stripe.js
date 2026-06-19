@@ -157,6 +157,77 @@ router.post('/webhook', async (req, res) => {
   res.json({ received: true })
 })
 
+// Get current subscription status for a user
+router.get('/subscription', async (req, res) => {
+  const { userId } = req.query
+  if (!userId) return res.status(400).json({ error: 'userId required' })
+  try {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    if (!sub?.stripe_subscription_id) return res.json({ status: 'none' })
+    const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id)
+    res.json({
+      status: stripeSub.status,
+      plan: sub.plan,
+      current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: stripeSub.cancel_at_period_end,
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Cancel subscription at period end (keeps access until renewal date)
+router.post('/cancel', async (req, res) => {
+  const { userId } = req.body
+  if (!userId) return res.status(400).json({ error: 'userId required' })
+  try {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .single()
+    if (!sub?.stripe_subscription_id) return res.status(404).json({ error: 'No subscription found' })
+    const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      cancel_at_period_end: true,
+    })
+    await supabase.from('subscriptions').update({
+      cancel_at_period_end: true,
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', userId)
+    res.json({ cancel_at_period_end: updated.cancel_at_period_end, current_period_end: new Date(updated.current_period_end * 1000).toISOString() })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Resume a subscription that was set to cancel at period end
+router.post('/resume', async (req, res) => {
+  const { userId } = req.body
+  if (!userId) return res.status(400).json({ error: 'userId required' })
+  try {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .single()
+    if (!sub?.stripe_subscription_id) return res.status(404).json({ error: 'No subscription found' })
+    const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    })
+    await supabase.from('subscriptions').update({
+      cancel_at_period_end: false,
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', userId)
+    res.json({ cancel_at_period_end: updated.cancel_at_period_end, current_period_end: new Date(updated.current_period_end * 1000).toISOString() })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Stripe Customer Portal — lets subscriber manage their own billing
 router.post('/portal', async (req, res) => {
   const { userId } = req.body
