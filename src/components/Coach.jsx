@@ -4,7 +4,7 @@ import { useVoice, ELEVENLABS_VOICES, srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { Btn } from "./ui.jsx";
-import { streamClaude } from "../lib/api.js";
+import { streamClaude, callClaude } from "../lib/api.js";
 import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useBooks } from "../hooks/useBooks.js";
@@ -219,6 +219,10 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const [crisisDetected, setCrisisDetected] = useState(false);
   const [voices, setVoices] = useState([]);
   const [showMemory, setShowMemory] = useState(false);
+  const [followUps, setFollowUps] = useState([]);
+  const [tappedMsg, setTappedMsg] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
   const [selectedVoiceName, setSelectedVoiceName] = useLocalStorage(
     "cs_voiceName",
     "el:EXAVITQu4vr4xnSDxMaL"
@@ -232,8 +236,11 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const endRef = useRef(null);
   const systemPromptRef = useRef("");
-  const voiceModeRef = useRef(false);
+  const voiceModeRef = useRef(handsFree);
   const { track } = useAnalytics(authUser);
+
+  // Keep voiceModeRef in sync with handsFree preference
+  useEffect(() => { voiceModeRef.current = handsFree; }, [handsFree]);
 
   useEffect(() => {
     const load = () => setVoices(window.speechSynthesis.getVoices());
@@ -294,6 +301,8 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       if (!text.trim() || loading) return;
       if (hasCrisisWords(text)) setCrisisDetected(true);
       track("ai_query", { chars: text.length });
+      setFollowUps([]);
+      setTappedMsg(null);
       const userMsg = { role: "user", content: text };
       const newMsgs = [...messages, userMsg];
       setMessages(newMsgs);
@@ -387,6 +396,16 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             if (nav && onNavigate) {
               setTimeout(() => onNavigate(nav.tab, nav.query), 2500);
             }
+            // Generate contextual follow-up questions asynchronously
+            setFollowUps([]);
+            callClaude({
+              tier: "quick", maxTokens: 80,
+              messages: [{ role: "user", content: `Based on this Medical Medium healing advice, suggest exactly 2 short follow-up questions the user might want to ask. Output only the 2 questions separated by | with no numbering, bullets, or extra text. Each question max 7 words.\n\nAdvice: ${clean.slice(0, 350)}` }],
+            }).then((r) => {
+              if (!r) return;
+              const qs = r.split("|").map(q => q.replace(/^\d+[\.\)]\s*/, "").trim()).filter(q => q.length > 4 && q.length < 80).slice(0, 2);
+              if (qs.length) setFollowUps(qs);
+            }).catch(() => {});
           },
         });
         if (!reply) setLoading(false);
@@ -536,6 +555,29 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         </select>
       </div>
 
+      {/* Hands-free status banner */}
+      {handsFree && srSupported && (
+        <div style={{
+          background: `${C.sage}18`,
+          border: `1.5px solid ${C.sage}50`,
+          borderRadius: 12, padding: "10px 14px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.sage, animation: "pulse 1.5s infinite", flexShrink: 0 }} />
+            <div style={{ fontSize: 12, color: C.sageDark, fontFamily: "Georgia,serif" }}>
+              Hands-free mode — AI will listen after each response
+            </div>
+          </div>
+          <button
+            onClick={() => setHandsFree(false)}
+            style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Crisis banner */}
       {crisisDetected && (
         <div
@@ -616,32 +658,76 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
           </div>
         ) : (
           messages.map((m, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                flexDirection: m.role === "user" ? "row-reverse" : "row",
-                gap: 8,
-                marginBottom: 14,
-                alignItems: "flex-start",
-              }}
-            >
-              <div style={{ fontSize: 20, flexShrink: 0 }}>{m.role === "user" ? "🧑" : "🌿"}</div>
+            <div key={i} style={{ marginBottom: 14 }}>
               <div
                 style={{
-                  background: m.role === "user" ? C.sage : C.white,
-                  color: m.role === "user" ? C.white : C.charcoal,
-                  borderRadius: 14,
-                  padding: "10px 14px",
-                  maxWidth: "84%",
-                  fontSize: 13.5,
-                  lineHeight: 1.75,
-                  whiteSpace: "pre-wrap",
-                  boxShadow: "0 1px 6px #0000000d",
+                  display: "flex",
+                  flexDirection: m.role === "user" ? "row-reverse" : "row",
+                  gap: 8,
+                  alignItems: "flex-start",
                 }}
               >
-                {m.content}
+                <div style={{ fontSize: 20, flexShrink: 0 }}>{m.role === "user" ? "🧑" : "🌿"}</div>
+                <div
+                  onClick={() => m.role === "assistant" && setTappedMsg(tappedMsg === i ? null : i)}
+                  style={{
+                    background: m.role === "user" ? C.sage : C.white,
+                    color: m.role === "user" ? C.white : C.charcoal,
+                    borderRadius: 14,
+                    padding: "10px 14px",
+                    maxWidth: "84%",
+                    fontSize: 13.5,
+                    lineHeight: 1.75,
+                    whiteSpace: "pre-wrap",
+                    boxShadow: "0 1px 6px #0000000d",
+                    cursor: m.role === "assistant" ? "pointer" : "default",
+                    border: tappedMsg === i ? `1.5px solid ${C.sage}60` : "1.5px solid transparent",
+                    transition: "border 0.15s",
+                  }}
+                >
+                  {m.content}
+                </div>
               </div>
+              {/* Message action bar — tap to copy or re-read */}
+              {tappedMsg === i && m.role === "assistant" && (
+                <div style={{ display: "flex", gap: 6, marginTop: 6, marginLeft: 32 }}>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(m.content).catch(() => {});
+                      setCopied(true);
+                      setTimeout(() => { setCopied(false); setTappedMsg(null); }, 1500);
+                    }}
+                    style={{
+                      background: copied ? C.sage : C.white, color: copied ? C.white : C.mid,
+                      border: `1px solid ${C.border}`, borderRadius: 20,
+                      padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      fontFamily: "Georgia,serif", transition: "all 0.2s",
+                    }}
+                  >
+                    {copied ? "✓ Copied" : "📋 Copy"}
+                  </button>
+                  <button
+                    onClick={() => { speak(m.content); setTappedMsg(null); }}
+                    style={{
+                      background: C.white, color: C.mid,
+                      border: `1px solid ${C.border}`, borderRadius: 20,
+                      padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      fontFamily: "Georgia,serif",
+                    }}
+                  >
+                    🔊 Re-read
+                  </button>
+                  <button
+                    onClick={() => setTappedMsg(null)}
+                    style={{
+                      background: "none", color: C.muted, border: "none",
+                      fontSize: 14, cursor: "pointer", padding: "5px 6px",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -722,12 +808,31 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       )}
 
       {/* Input row */}
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        {srSupported && (
+          <button
+            onClick={() => setHandsFree(v => !v)}
+            title={handsFree ? "Hands-free ON — tap to turn off" : "Turn on hands-free mode"}
+            style={{
+              flexShrink: 0, height: 44, borderRadius: 22,
+              padding: "0 12px",
+              border: `1.5px solid ${handsFree ? C.sage : C.border}`,
+              background: handsFree ? C.sage : C.white,
+              color: handsFree ? C.white : C.muted,
+              fontSize: 11, fontFamily: "Georgia,serif", fontWeight: 700,
+              cursor: "pointer", whiteSpace: "nowrap",
+              boxShadow: handsFree ? `0 0 0 3px ${C.sage}30` : "none",
+              transition: "all 0.2s",
+            }}
+          >
+            {handsFree ? "🎙 Hands-free" : "🎙"}
+          </button>
+        )}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(input)}
-          placeholder="Type or press 🎙 to speak…"
+          placeholder={handsFree ? "Hands-free — just speak…" : "Type or press 🎙 to speak…"}
           style={{
             flex: 1,
             padding: "11px 16px",
@@ -792,27 +897,56 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         </button>
       </div>
 
-      {/* Quick questions */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-        {quickQuestions.map((q) => (
-          <div
-            key={q}
-            onClick={() => send(q)}
-            style={{
-              padding: "7px 13px",
-              borderRadius: 30,
-              border: `1.5px solid ${C.border}`,
-              fontSize: 12,
-              cursor: "pointer",
-              color: C.mid,
-              fontFamily: "Georgia,serif",
-              background: C.mist,
-            }}
-          >
-            {q}
+      {/* Follow-up suggestions — appear after each AI response */}
+      {followUps.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          <div style={{ width: "100%", fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>
+            Ask next
           </div>
-        ))}
-      </div>
+          {followUps.map((q) => (
+            <div
+              key={q}
+              onClick={() => { send(q); setFollowUps([]); }}
+              style={{
+                padding: "7px 14px",
+                borderRadius: 30,
+                border: `1.5px solid ${C.sage}60`,
+                fontSize: 12,
+                cursor: "pointer",
+                color: C.sageDark,
+                fontFamily: "Georgia,serif",
+                background: `${C.sageLight}80`,
+              }}
+            >
+              {q}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick questions — shown when no follow-ups yet */}
+      {followUps.length === 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {quickQuestions.map((q) => (
+            <div
+              key={q}
+              onClick={() => send(q)}
+              style={{
+                padding: "7px 13px",
+                borderRadius: 30,
+                border: `1.5px solid ${C.border}`,
+                fontSize: 12,
+                cursor: "pointer",
+                color: C.mid,
+                fontFamily: "Georgia,serif",
+                background: C.mist,
+              }}
+            >
+              {q}
+            </div>
+          ))}
+        </div>
+      )}
 
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </div>
