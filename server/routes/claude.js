@@ -4,11 +4,11 @@ import Anthropic from '@anthropic-ai/sdk'
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// Model tiers — quick tasks use Haiku (~20x cheaper), coaching uses Sonnet
+// Model tiers — Opus for all health guidance, Sonnet for quick tasks
 const MODELS = {
-  quick:    'claude-haiku-4-5-20251001',  // insights, summaries, recipes
-  standard: process.env.AI_MODEL || 'claude-sonnet-4-6',  // coaching, symptoms
-  deep:     'claude-sonnet-4-6',          // protocol generation, complex reasoning
+  quick:    'claude-sonnet-4-6',   // summaries, welcome replies, recipes
+  standard: 'claude-opus-4-8',    // coaching, symptoms, protocol guidance
+  deep:     'claude-opus-4-8',    // complex reasoning, practitioner protocols
 }
 
 function resolveModel(tier) {
