@@ -43,6 +43,211 @@ const LINKS = [
   { label: "📘 Facebook",              url: "https://facebook.com/medicalmedium",                              desc: "Community groups and daily posts" },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// YOUTUBE VIDEOS — paste real video IDs here (11-char code after watch?v=)
+// To find an ID: open any AW YouTube video → copy the ?v=XXXXXXXXXXX part
+// ─────────────────────────────────────────────────────────────────────────────
+const AW_VIDEOS = [
+  // { id: "PASTE_ID_HERE", title: "Video title", topic: "Celery Juice" },
+  // Examples of how to add once you have IDs:
+  // { id: "abc123defgh", title: "Why Celery Juice Heals", topic: "Celery Juice" },
+  // { id: "xyz987uvwqr", title: "Heavy Metal Detox Smoothie", topic: "Heavy Metal Detox" },
+];
+
+const TOPICS = [
+  { label: "Celery Juice",        emoji: "🥬", search: "celery juice healing" },
+  { label: "Heavy Metal Detox",   emoji: "🫐", search: "heavy metal detox smoothie" },
+  { label: "Morning Protocol",    emoji: "🌅", search: "morning protocol lemon water" },
+  { label: "Liver",               emoji: "🍋", search: "liver rescue healing" },
+  { label: "Thyroid",             emoji: "🦋", search: "thyroid healing hashimotos" },
+  { label: "EBV & Viral",         emoji: "🛡", search: "epstein barr virus chronic illness" },
+  { label: "Anxiety & Brain",     emoji: "🧠", search: "anxiety depression brain healing" },
+  { label: "Adrenal Health",      emoji: "⚡", search: "adrenal fatigue healing protocol" },
+  { label: "3:6:9 Cleanse",       emoji: "✨", search: "369 cleanse detox" },
+  { label: "Supplements",         emoji: "💊", search: "supplements healing protocol" },
+];
+
+function YouTubeSection() {
+  const [activeVideo, setActiveVideo] = useState(null);   // { id, title }
+  const [activeTopic, setActiveTopic] = useState(null);   // topic label
+  const [open, setOpen] = useState(false);
+
+  const videosByTopic = AW_VIDEOS.reduce((acc, v) => {
+    (acc[v.topic] = acc[v.topic] || []).push(v);
+    return acc;
+  }, {});
+
+  const hasVideos = AW_VIDEOS.length > 0;
+
+  if (!open) return (
+    <Card style={{ border: `1.5px solid ${C.gold}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 28 }}>▶️</div>
+        <div>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+            Watch AW's healing videos
+          </div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            Browse Anthony William's teachings by topic — watch in-app or open on YouTube.
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", color: C.gold, fontSize: 20 }}>›</div>
+      </div>
+    </Card>
+  );
+
+  return (
+    <Card style={{ border: `1.5px solid ${C.gold}50` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
+          ▶️ AW's Healing Videos
+        </div>
+        <button onClick={() => { setOpen(false); setActiveVideo(null); setActiveTopic(null); }}
+          style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
+      </div>
+
+      {/* In-app player */}
+      {activeVideo && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", background: "#000" }}>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${activeVideo.id}?autoplay=1&rel=0&modestbranding=1`}
+              title={activeVideo.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+            />
+          </div>
+          <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 12, color: C.charcoal, fontFamily: "Georgia,serif", fontWeight: 700, flex: 1 }}>
+              {activeVideo.title}
+            </div>
+            <a
+              href={`https://www.youtube.com/watch?v=${activeVideo.id}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 11, color: C.sage, textDecoration: "none", flexShrink: 0, marginLeft: 8 }}
+            >
+              Watch on YouTube ↗
+            </a>
+          </div>
+          <button onClick={() => setActiveVideo(null)}
+            style={{ marginTop: 8, background: "none", border: `1px solid ${C.border}`, borderRadius: 20, padding: "5px 14px", fontSize: 11, color: C.muted, cursor: "pointer" }}>
+            ← Back to topics
+          </button>
+        </div>
+      )}
+
+      {/* Topic grid */}
+      {!activeVideo && (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            {TOPICS.map(t => {
+              const count = (videosByTopic[t.label] || []).length;
+              const isActive = activeTopic === t.label;
+              return (
+                <button
+                  key={t.label}
+                  onClick={() => setActiveTopic(isActive ? null : t.label)}
+                  style={{
+                    background: isActive ? C.sage : C.mist,
+                    color: isActive ? C.white : C.charcoal,
+                    border: `1.5px solid ${isActive ? C.sage : C.border}`,
+                    borderRadius: 30, padding: "6px 12px",
+                    fontSize: 12, fontFamily: "Georgia,serif", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 5,
+                  }}
+                >
+                  <span>{t.emoji}</span>
+                  <span>{t.label}</span>
+                  {count > 0 && <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.3)" : C.sage + "30", borderRadius: 10, padding: "1px 6px", color: isActive ? C.white : C.sage }}>{count}</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Videos for selected topic */}
+          {activeTopic && (
+            <div style={{ marginBottom: 12 }}>
+              {(videosByTopic[activeTopic] || []).length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {(videosByTopic[activeTopic] || []).map(v => (
+                    <button
+                      key={v.id}
+                      onClick={() => setActiveVideo(v)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: C.white, border: `1px solid ${C.border}`,
+                        borderRadius: 12, padding: "10px 12px", cursor: "pointer", textAlign: "left",
+                      }}
+                    >
+                      {/* Lazy thumbnail */}
+                      <div style={{
+                        width: 80, height: 45, borderRadius: 6, overflow: "hidden",
+                        background: "#000", flexShrink: 0, position: "relative",
+                      }}>
+                        <img
+                          src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                          alt={v.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        <div style={{
+                          position: "absolute", inset: 0, display: "flex",
+                          alignItems: "center", justifyContent: "center",
+                          background: "rgba(0,0,0,0.3)",
+                        }}>
+                          <div style={{ width: 0, height: 0, borderTop: "7px solid transparent", borderBottom: "7px solid transparent", borderLeft: "12px solid white", marginLeft: 2 }} />
+                        </div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", lineHeight: 1.4 }}>{v.title}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Anthony William · Medical Medium</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ background: C.mist, borderRadius: 12, padding: "14px 16px" }}>
+                  <div style={{ fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 6 }}>
+                    Search AW's free content on {activeTopic}:
+                  </div>
+                  <a
+                    href={`https://www.youtube.com/results?search_query=medical+medium+${encodeURIComponent(TOPICS.find(t => t.label === activeTopic)?.search || activeTopic)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block", background: "#FF0000", color: C.white,
+                      borderRadius: 30, padding: "7px 16px", fontSize: 12,
+                      fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
+                    }}
+                  >
+                    ▶ Search on YouTube
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Browse all CTA */}
+          <a
+            href="https://www.youtube.com/@MedicalMedium"
+            target="_blank" rel="noopener noreferrer"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: C.mist, borderRadius: 12, padding: "12px 14px",
+              textDecoration: "none",
+            }}
+          >
+            <div style={{ fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif", fontWeight: 700 }}>
+              Browse all of AW's videos on YouTube
+            </div>
+            <div style={{ color: C.sage, fontSize: 18 }}>›</div>
+          </a>
+        </>
+      )}
+    </Card>
+  );
+}
+
 function HealingStorySection() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -636,6 +841,9 @@ export default function AW({ onNavigate }) {
           healing@celerysync.com
         </div>
       </Card>
+
+      {/* ── YouTube videos ── */}
+      <YouTubeSection />
 
       {/* ── Share your healing story ── */}
       <HealingStorySection />
