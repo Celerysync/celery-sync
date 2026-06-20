@@ -106,11 +106,14 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               Healer Plan
             </div>
             <div style={{ fontSize: 32, fontFamily: 'Georgia,serif', fontWeight: 700 }}>
-              $9.97
-              <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>/month</span>
+              $14.97
+              <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4, marginBottom: 8 }}>
+              or $119/year — save $61
             </div>
             <div style={{
-              marginTop: 10,
+              marginTop: 6,
               background: 'rgba(255,255,255,0.18)',
               borderRadius: 30,
               padding: '6px 18px',
@@ -227,7 +230,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Subscribe — $9.97/month →'}
+                {loading ? '🌿 Please wait…' : 'Subscribe — $14.97/month →'}
               </button>
             </div>
           )}
@@ -339,7 +342,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                 🏥 Are you a practitioner?
               </div>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 14 }}>
-                Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $49/month and get a full client management portal — AI protocol generation, session notes, and printable healing plans.
+                Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $79/month and get a full client management portal — AI protocol generation, session notes, and printable healing plans.
               </div>
               <Btn full onClick={async () => {
                 setLoading(true)
@@ -350,7 +353,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                   window.location.href = data.url
                 } catch (err) { setError(err.message); setLoading(false) }
               }} color={C.gold} disabled={loading}>
-                {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $49/month →'}
+                {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $79/month →'}
               </Btn>
             </Card>
           )}

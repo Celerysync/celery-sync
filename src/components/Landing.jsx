@@ -221,7 +221,7 @@ export default function Landing({ onGetStarted }) {
         </button>
 
         <div style={{ fontSize: 12, opacity: 0.7 }}>
-          No credit card needed · $9.97/month after · Cancel anytime
+          No credit card needed · $14.97/month after · Cancel anytime
         </div>
       </div>
 
@@ -556,10 +556,13 @@ export default function Landing({ onGetStarted }) {
           </p>
 
           <div style={{ fontSize: 28, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>
-            $9.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month</span>
+            $14.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
+            or $119/year — save $61
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
-            Less than a single supplement bottle. Unlimited family members included.
+            Less than one naturopath visit per year. Unlimited family members included.
           </div>
 
           <button
