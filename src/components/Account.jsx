@@ -38,6 +38,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [error, setError] = useState(null)
   const [cancelPending, setCancelPending] = useState(subData?.cancel_at_period_end || false)
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
+  const [units, setUnits] = useLocalStorage("cs_units", "metric")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
 
   const subscribe = async () => {
@@ -363,6 +364,43 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
         {lang !== 'en' && (
           <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
             ✓ AI Guide will respond in {LANGUAGES.find(l => l.code === lang)?.label}
+          </div>
+        )}
+      </Card>
+
+      {/* Measurement units */}
+      <Card>
+        <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
+          📏 Measurement Units
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
+          The AI Guide and voice will use your preferred units for all dosages and quantities.
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { val: 'metric', label: '🌏 Metric', sub: 'mL, litres, grams' },
+            { val: 'imperial', label: '🇺🇸 Imperial', sub: 'oz, cups, lbs' },
+          ].map(opt => (
+            <button
+              key={opt.val}
+              onClick={() => setUnits(opt.val)}
+              style={{
+                flex: 1, padding: '12px 10px', borderRadius: 12,
+                border: `2px solid ${units === opt.val ? C.sage : C.border}`,
+                background: units === opt.val ? C.sageLight : C.white,
+                cursor: 'pointer', touchAction: 'manipulation',
+              }}
+            >
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 13, color: units === opt.val ? C.sageDark : C.charcoal }}>
+                {opt.label}
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{opt.sub}</div>
+            </button>
+          ))}
+        </div>
+        {units === 'metric' && (
+          <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
+            ✓ "500ml of celery juice" · "half a litre" · "milligrams"
           </div>
         )}
       </Card>

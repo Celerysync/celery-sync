@@ -31,7 +31,7 @@ function buildConditionsIndex() {
     .join("\n");
 }
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode }) {
+function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
   const conditionsIndex = buildConditionsIndex();
 
@@ -153,7 +153,21 @@ Every 1.5–2 hours between meals: apple + celery, banana + dates, coconut water
 
 FOODS TO ALWAYS AVOID (Anthony William's core list):
 Eggs, dairy (all forms), gluten, corn, soy, pork, canola oil, MSG, natural flavours, citric acid (from aspergillus mould), artificial sweeteners, alcohol. These feed pathogens directly. Eggs are the #1 food for EBV and streptococcus.
-${lang && lang !== "en" ? `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nLANGUAGE:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nIMPORTANT: This user's preferred language is "${lang}". Respond ENTIRELY in that language for all messages. Keep supplement names, book titles, and Anthony William's name in their original form.` : ""}`;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MEASUREMENT UNITS — ALWAYS USE THESE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's imperial amounts:
+• 16 oz celery juice → "500ml" or "half a litre"
+• 32 oz → "1 litre" or "about a litre"
+• 1 cup → "240ml"
+Speak naturally: "half a litre of celery juice" not "473 millilitres". Round to sensible metric amounts.
+Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}
+${lang && lang !== "en" ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LANGUAGE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT: This user's preferred language is "${lang}". Respond ENTIRELY in that language. Keep supplement names, book titles, and Anthony William's name in their original form.` : ""}`;
 }
 
 function parseNavCommand(text) {
@@ -163,7 +177,7 @@ function parseNavCommand(text) {
   return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
 }
 
-export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate, caregiverMode }) {
+export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate, caregiverMode, units = 'metric' }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -177,7 +191,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const [lang] = useLocalStorage("cs_lang", "en");
   const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } =
-    useVoice(selectedVoiceName);
+    useVoice(selectedVoiceName, units);
   const { healingProfile, priorMessages, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
   const endRef = useRef(null);
@@ -206,7 +220,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   useEffect(() => {
     if (memoryLoading) return;
     systemPromptRef.current = buildSystemPrompt({
-      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode,
+      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units,
     });
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
     const greeting = caregiverMode
@@ -320,7 +334,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             }
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode,
+              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode, units,
               priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
             });
             if (nav && onNavigate) {

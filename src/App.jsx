@@ -210,7 +210,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} caregiverMode={caregiverMode} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} />;
       case "journal":
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":

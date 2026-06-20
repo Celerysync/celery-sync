@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { cleanForSpeech } from "../lib/ttsClean.js";
 
 export const ELEVENLABS_VOICES = [
   // Warm & healing — best for this app
@@ -26,7 +27,7 @@ export const ELEVENLABS_VOICES = [
   { id: "el:IKne3meq5aSn9XLyUdCD", name: "Charlie — friendly Aussie", group: "Australian / NZ" },
 ];
 
-export function useVoice(preferredVoiceName = "") {
+export function useVoice(preferredVoiceName = "", units = "metric") {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [speaking, setSpeaking] = useState(false);
@@ -83,10 +84,11 @@ export function useVoice(preferredVoiceName = "") {
     const voice = preferredVoiceRef.current;
     if (!voice.startsWith("el:")) return;
     const voiceId = voice.slice(3);
+    const cleaned = cleanForSpeech(text, units);
     const promise = fetch("/api/elevenlabs/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voiceId }),
+      body: JSON.stringify({ text: cleaned, voiceId }),
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d?.url || null)
@@ -133,10 +135,7 @@ export function useVoice(preferredVoiceName = "") {
 
   // Browser TTS — used as primary for non-ElevenLabs voices and as fallback
   const browserSpeak = useCallback((text, voiceName, onDone) => {
-    const clean = text
-      .replace(/[#*_`•→]/g, "")
-      .replace(/\n+/g, ". ")
-      .replace(/\s+/g, " ");
+    const clean = cleanForSpeech(text, units);
     const chunks = clean.match(/.{1,200}(?:[.!?,\s]|$)/g) ?? [clean];
     setSpeaking(true);
     let i = 0;
