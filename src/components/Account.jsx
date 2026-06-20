@@ -32,7 +32,7 @@ const FEATURES = [
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
 ]
 
-export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, onSignOut, onReplayWelcome }) {
+export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome }) {
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -184,9 +184,64 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             Secure payment powered by Stripe.
           </div>
         </>
+      ) : isInTrial ? (
+        <>
+          {/* Free trial active */}
+          <div style={{
+            background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
+            borderRadius: 22,
+            padding: '24px 22px',
+            color: C.white,
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>🌿</div>
+            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20 }}>
+              Free Trial — Full Access
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
+              {trialDaysLeft > 1
+                ? `🎉 ${trialDaysLeft} days remaining — everything is unlocked`
+                : trialDaysLeft === 1
+                ? '⏰ Last day of your free trial'
+                : '⏰ Your trial ends today'}
+            </div>
+          </div>
+
+          {trialDaysLeft <= 3 && (
+            <div style={{
+              background: C.goldLight, border: `1.5px solid ${C.gold}50`,
+              borderRadius: 16, padding: '14px 16px',
+            }}>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
+                {trialDaysLeft === 0 ? 'Your trial ends today' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`}
+              </div>
+              <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+                Subscribe now to keep full access to your AI Guide, healing memory, weekly summaries, and everything else.
+              </div>
+              <button
+                onClick={subscribe}
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '13px', background: loading ? C.muted : C.sageDark,
+                  color: C.white, border: 'none', borderRadius: 30,
+                  fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15,
+                  cursor: loading ? 'default' : 'pointer',
+                }}
+              >
+                {loading ? '🌿 Please wait…' : 'Subscribe — $9.97/month →'}
+              </button>
+            </div>
+          )}
+
+          <Card>
+            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
+              Account
+            </div>
+            <div style={{ fontSize: 13, color: C.mid }}>{authUser.email}</div>
+          </Card>
+        </>
       ) : (
         <>
-          {/* Active subscription */}
+          {/* Active paid subscription */}
           <div style={{
             background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
             borderRadius: 22,
@@ -198,10 +253,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               {isPractitioner ? 'Practitioner Plan — Active' : 'Healer Plan — Active'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
-              {subData?.status === 'trialing' ? '🎉 Free trial active' : cancelPending ? '⚠️ Cancelling at period end' : '🌿 Subscription active'}
+              {cancelPending ? '⚠️ Cancelling at period end' : '🌿 Subscription active'}
               {subData?.current_period_end && (
                 <span>
-                  {' '}· {subData.status === 'trialing' ? 'trial ends' : cancelPending ? 'access until' : 'renews'}{' '}
+                  {' '}· {cancelPending ? 'access until' : 'renews'}{' '}
                   {new Date(subData.current_period_end).toLocaleDateString('en-AU', {
                     day: 'numeric', month: 'long', year: 'numeric'
                   })}

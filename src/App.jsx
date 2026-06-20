@@ -125,7 +125,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
 
 export default function App() {
   const { authUser, authLoading, signOut } = useAuth();
-  const { isSubscribed, isPractitioner, subData, subLoading, refetch: refetchSub } = useSubscription(authUser);
+  const { isSubscribed, isPractitioner, subData, subLoading, refetch: refetchSub, isInTrial, trialDaysLeft } = useSubscription(authUser);
   const {
     profiles, activeProfile, activeProfileId,
     profilesLoading, loadProfiles,
@@ -247,6 +247,8 @@ export default function App() {
           isPractitioner={isPractitioner}
           subData={subData}
           subLoading={subLoading}
+          isInTrial={isInTrial}
+          trialDaysLeft={trialDaysLeft}
           onSignOut={signOut}
         />
       );
@@ -276,7 +278,7 @@ export default function App() {
       case "carers":
         return <CarerView authUser={authUser} />;
       case "practice":
-        return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
+        return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} isInTrial={isInTrial} trialDaysLeft={trialDaysLeft} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
       case "kids":
         return <KidsCorner parentProfile={activeProfile} />;
       case "aw":
@@ -292,6 +294,8 @@ export default function App() {
               isPractitioner={isPractitioner}
               subData={subData}
               subLoading={subLoading}
+              isInTrial={isInTrial}
+              trialDaysLeft={trialDaysLeft}
               onSignOut={signOut}
               onReplayWelcome={() => setShowWelcome(true)}
             />
