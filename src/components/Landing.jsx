@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 
 // ─── Copy ────────────────────────────────────────────────────────────────────
@@ -107,11 +107,52 @@ function Divider() {
   return <div style={{ height: 1, background: C.border, margin: "0 24px" }} />;
 }
 
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
 export default function Landing({ onGetStarted }) {
   const [openPain, setOpenPain] = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setStickyVisible(window.scrollY > 320);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div style={{ background: C.cream, minHeight: "100dvh", fontFamily: "Georgia,serif" }}>
+
+      {/* ── STICKY HEADER ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        background: "rgba(255,255,255,0.96)",
+        backdropFilter: "blur(10px)",
+        borderBottom: `1px solid ${C.border}`,
+        padding: "10px 16px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        transform: stickyVisible ? "translateY(0)" : "translateY(-100%)",
+        transition: "transform 0.25s ease",
+        boxShadow: "0 2px 16px #00000012",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 20 }}>🌿</span>
+          <span style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>CelerySync</span>
+        </div>
+        <button
+          onClick={onGetStarted}
+          style={{
+            background: C.sageDark, color: "#fff",
+            border: "none", borderRadius: 30,
+            padding: "9px 20px",
+            fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Start Free →
+        </button>
+      </div>
 
       {/* ── HERO ── */}
       <div style={{
@@ -399,7 +440,7 @@ export default function Landing({ onGetStarted }) {
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["80 exact condition protocols", "Remembers your journey", "Speaks & listens", "Quotes your own books"].map((t) => (
+            {["100 exact condition protocols", "Remembers your journey", "Speaks & listens", "Quotes your own books"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",
@@ -411,6 +452,71 @@ export default function Landing({ onGetStarted }) {
           </div>
         </div>
       </div>
+
+      {/* ── INSTALL SECTION (mobile only, not already installed) ── */}
+      {(isIOS || isAndroid) && !isStandalone && (
+        <>
+          <Divider />
+          <div style={{ padding: "36px 24px", maxWidth: 480, margin: "0 auto" }}>
+            <h2 style={{
+              fontFamily: "Georgia,serif", fontWeight: 700,
+              fontSize: 20, color: C.charcoal,
+              marginBottom: 6, textAlign: "center",
+            }}>
+              Works best on your home screen
+            </h2>
+            <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 20, lineHeight: 1.65 }}>
+              Install CelerySync like a native app — no App Store needed. You get healing reminders even when the app is closed.
+            </p>
+
+            <div style={{
+              background: "#fff", borderRadius: 18, padding: "18px 16px",
+              border: `1px solid ${C.border}`, boxShadow: "0 2px 10px #00000008",
+            }}>
+              {isIOS ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    { step: "1", text: 'Tap the Share button at the bottom of Safari (the box with an arrow)' },
+                    { step: "2", text: 'Scroll down and tap "Add to Home Screen"' },
+                    { step: "3", text: 'Tap "Add" — CelerySync appears on your home screen instantly' },
+                  ].map(({ step, text }) => (
+                    <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: "50%",
+                        background: C.sageDark, color: "#fff", flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12,
+                      }}>{step}</div>
+                      <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, paddingTop: 4 }}>{text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    { step: "1", text: 'Tap the three-dot menu (⋮) in the top right of Chrome' },
+                    { step: "2", text: 'Tap "Add to Home screen"' },
+                    { step: "3", text: 'Tap "Add" — CelerySync is on your home screen' },
+                  ].map(({ step, text }) => (
+                    <div key={step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: "50%",
+                        background: C.sageDark, color: "#fff", flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12,
+                      }}>{step}</div>
+                      <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, paddingTop: 4 }}>{text}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ marginTop: 14, padding: "10px 14px", background: C.sageLight, borderRadius: 12, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
+                ✓ Background healing reminders · ✓ Offline access · ✓ Full-screen experience
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── FINAL CTA ── */}
       <div style={{ padding: "40px 20px 20px", maxWidth: 480, margin: "0 auto" }}>
