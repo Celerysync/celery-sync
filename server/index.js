@@ -10,6 +10,7 @@ import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest } from './routes/analytics.js'
+import memoryRoutes, { generateAllWeeklySummaries } from './routes/memory.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -67,6 +68,7 @@ app.use('/api/books', generalLimit, booksRoutes)
 app.use('/api/notifications', generalLimit, notificationRoutes)
 app.use('/api/wearable', generalLimit, wearableRoutes)
 app.use('/api/analytics', generalLimit, analyticsRoutes)
+app.use('/api/memory', generalLimit, memoryRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
@@ -104,6 +106,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   cron.schedule('0 7 * * 1', async () => {
     try { await generateWeeklyDigest(); } catch (err) { console.warn('Weekly digest error:', err.message); }
   });
+
+  // Weekly healing summaries — every Sunday at 10pm UTC (8am Monday AEST)
+  cron.schedule('0 22 * * 0', async () => {
+    try { await generateAllWeeklySummaries(); } catch (err) { console.warn('Weekly summaries error:', err.message); }
+  });
+  console.log('📊 Weekly healing summary scheduler active')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

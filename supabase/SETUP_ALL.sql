@@ -464,5 +464,54 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ═══════════════════════════════════════════════════════════════════
--- Done! All 9 parts complete.
+-- PART 10 — Healing Memory & Weekly Summaries
+-- ═══════════════════════════════════════════════════════════════════
+
+-- healing_milestones: individual insights extracted from conversations
+-- These NEVER get overwritten — they accumulate forever, building a
+-- complete picture of the subscriber's healing journey over years.
+CREATE TABLE IF NOT EXISTS healing_milestones (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid REFERENCES auth.users NOT NULL,
+  profile_id   uuid NOT NULL,
+  insight      text NOT NULL,
+  category     text DEFAULT 'general', -- supplement | symptom | pattern | emotion | milestone | protocol
+  session_date date DEFAULT CURRENT_DATE,
+  created_at   timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS healing_milestones_profile_idx
+  ON healing_milestones(profile_id, created_at DESC);
+ALTER TABLE healing_milestones ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users own their milestones"
+    ON healing_milestones FOR ALL USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- weekly_summaries: generated every Sunday for every active subscriber
+-- Persisted permanently — forms the long-term healing record.
+CREATE TABLE IF NOT EXISTS weekly_summaries (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id              uuid REFERENCES auth.users NOT NULL,
+  profile_id           uuid NOT NULL,
+  week_start           date NOT NULL,
+  week_end             date NOT NULL,
+  celery_days          integer DEFAULT 0,
+  protocol_days        integer DEFAULT 0,
+  avg_energy           numeric(3,1),
+  avg_mood             numeric(3,1),
+  journal_entries      integer DEFAULT 0,
+  ai_observations      text,
+  milestones_this_week jsonb DEFAULT '[]',
+  email_sent           boolean DEFAULT false,
+  created_at           timestamptz DEFAULT now(),
+  UNIQUE(profile_id, week_start)
+);
+ALTER TABLE weekly_summaries ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users own their weekly summaries"
+    ON weekly_summaries FOR ALL USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Done! All 10 parts complete.
 -- ═══════════════════════════════════════════════════════════════════

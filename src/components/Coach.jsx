@@ -49,18 +49,27 @@ const GREETINGS = {
   tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın tüm kitapları üzerinde eğitilmiş Medical Medium iyileşme rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
-  const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
+function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
+  const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
   const conditionsIndex = buildConditionsIndex();
+
+  const milestonesSection = milestones?.length > 0
+    ? `\nKey moments from their healing journey (oldest → newest):\n` +
+      milestones
+        .slice(-30)
+        .map((m) => `• [${m.session_date}] ${m.insight}`)
+        .join("\n")
+    : "";
 
   const historySection = hasHistory
     ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THIS USER'S HEALING JOURNEY — REMEMBER THIS:
+THIS USER'S HEALING JOURNEY — REMEMBER ALL OF THIS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${healingProfile?.healing_summary
-  ? `Healing profile:\n${healingProfile.healing_summary}`
+  ? `Rolling healing summary:\n${healingProfile.healing_summary}`
   : ""}
+${milestonesSection}
 ${priorMessages.length > 0
   ? `\nMost recent conversation (last ${Math.min(priorMessages.length, 10)} messages):\n` +
     priorMessages
@@ -231,7 +240,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } =
     useVoice(selectedVoiceName, units);
-  const { healingProfile, priorMessages, memoryLoading, loadMemory, saveExchange, clearMemory } =
+  const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const endRef = useRef(null);
@@ -264,9 +273,9 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   useEffect(() => {
     if (memoryLoading) return;
     systemPromptRef.current = buildSystemPrompt({
-      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units, todaysCheckin, celeryStreak,
+      user, bookNotes, videoNotes, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak,
     });
-    const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
+    const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
       ? GREETINGS[lang](user?.name || "")
       : null;
@@ -390,7 +399,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             }
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode, units, todaysCheckin, celeryStreak,
+              user, bookNotes, videoNotes, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak,
               priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
             });
             if (nav && onNavigate) {
