@@ -71,7 +71,7 @@ ${langRule}
 Never give conventional medical advice. Always attribute to Anthony William.`;
 
       try {
-        const result = await callClaude({ system, prompt: text, tier: "quick", maxTokens: 300 });
+        const result = await callClaude({ system, messages: [{ role: "user", content: text }], tier: "quick", maxTokens: 300 });
         const clean = (result || "").replace(/\*\*/g, "").replace(/[*_`#•]/g, "").trim();
         setReply(clean);
         setLoading(false);

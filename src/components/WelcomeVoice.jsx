@@ -81,7 +81,7 @@ export default function WelcomeVoice({ onDone }) {
     const langLabel = LANGUAGES.find(l => l.code === selectedLang)?.label || selectedLang;
     const result = await callClaude({
       system: `You are adapting a welcome message for a Medical Medium healing app into ${langLabel}. Write it as a warm, native ${langLabel} speaker would — not a direct translation. Keep it natural and flowing. Keep "Anthony William", "Medical Medium", "3-6-9", supplement names (spirulina, celery juice, etc.) in their original form. Keep the same structure and warmth.`,
-      prompt: `Adapt this welcome message into natural ${langLabel}:\n\n${WELCOME_TEXT_EN}`,
+      messages: [{ role: "user", content: `Adapt this welcome message into natural ${langLabel}:\n\n${WELCOME_TEXT_EN}` }],
       tier: "quick",
       maxTokens: 600,
     });
