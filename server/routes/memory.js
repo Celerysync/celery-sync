@@ -299,10 +299,59 @@ router.get('/weekly/:profileId/pdf', async (req, res) => {
   }
 })
 
+// ── Get healing letters for a profile ──
+router.get('/letters/:profileId', async (req, res) => {
+  const { profileId } = req.params
+  try {
+    const { data } = await supabaseAdmin
+      .from('healing_letters')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('year_number', { ascending: false })
+    res.json({ letters: data || [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Annual letter PDF download ──
+router.get('/letters/:profileId/:letterId/pdf', async (req, res) => {
+  const { profileId, letterId } = req.params
+  try {
+    const { data: letter } = await supabaseAdmin
+      .from('healing_letters')
+      .select('*')
+      .eq('id', letterId)
+      .eq('profile_id', profileId)
+      .single()
+    if (!letter) return res.status(404).json({ error: 'Letter not found' })
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('name')
+      .eq('id', profileId)
+      .single()
+
+    const { data: milestones } = await supabaseAdmin
+      .from('healing_milestones')
+      .select('insight, session_date')
+      .eq('profile_id', profileId)
+      .order('session_date', { ascending: true })
+      .limit(30)
+
+    const pdf = await buildAnnualLetterPDF(letter, profile?.name || 'Friend', milestones || [])
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="healing-letter-year-${letter.year_number}.pdf"`)
+    res.send(pdf)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── Doctor report PDF download ──
 router.get('/doctor/:profileId/pdf', async (req, res) => {
   const { profileId } = req.params
-  const { months = 3 } = req.query
+  const { months = 3, extended = 'false' } = req.query
   try {
     const cutoff = new Date()
     cutoff.setMonth(cutoff.getMonth() - Number(months))
@@ -334,6 +383,7 @@ router.get('/doctor/:profileId/pdf', async (req, res) => {
       healingSummary: profileRes.data?.healing_summary || '',
       profileId,
       months: Number(months),
+      isExtended: extended === 'true',
     })
 
     const dateStr = new Date().toISOString().split('T')[0]
@@ -438,7 +488,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
 }
 
 // ── Build doctor report PDF ──
-async function buildDoctorPDF({ summaries, milestones, healingSummary, months }) {
+async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Personal Health Tracking Report' } })
     const chunks = []
@@ -564,6 +614,22 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months })
       y += 10
     }
 
+    // ── Extended: healing protocol context ──
+    if (isExtended && healingSummary) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('HEALING PROTOCOL CONTEXT (Extended Report)', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 10
+      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(
+        'This section is included for integrative health practitioners familiar with nutritional and naturopathic approaches.',
+        50, y, { width: pageW }
+      )
+      y = doc.y + 10
+      doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(healingSummary, 50, y, { width: pageW, lineGap: 3 })
+      y = doc.y + 16
+    }
+
     // ── Footer ──
     doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill('#1a365d')
     doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
@@ -574,6 +640,255 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months })
 
     doc.end()
   })
+}
+
+// ── Build annual healing letter PDF ──
+async function buildAnnualLetterPDF(letter, name, milestones) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 70, size: 'A4', info: { Title: `Year ${letter.year_number} Healing Letter` } })
+    const chunks = []
+    doc.on('data', c => chunks.push(c))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    const GREEN = '#3D6B44'
+    const GOLD = '#C8973A'
+    const CHARCOAL = '#1e2a1e'
+    const MUTED = '#6b7c6b'
+    const pageW = doc.page.width - 140
+
+    // ── Header ──
+    doc.rect(0, 0, doc.page.width, 130).fill(GREEN)
+    doc.fillColor('#fff').fontSize(13).font('Helvetica').text('CelerySync', 70, 32)
+    doc.fontSize(26).font('Helvetica-Bold').text(`Year ${letter.year_number} Healing Letter`, 70, 52)
+    doc.fontSize(12).font('Helvetica').fillColor('rgba(255,255,255,0.8)')
+      .text(`For ${name}  ·  ${new Date(letter.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`, 70, 94)
+
+    // ── Decorative leaf ──
+    doc.fontSize(48).text('🌿', doc.page.width - 110, 40)
+
+    let y = 160
+
+    // ── Letter body ──
+    const paragraphs = letter.letter_text.split('\n\n').filter(p => p.trim())
+    paragraphs.forEach((para, i) => {
+      if (y > doc.page.height - 120) { doc.addPage(); y = 70 }
+      if (i === 0) {
+        doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text(para.trim(), 70, y, { width: pageW, lineGap: 4 })
+      } else {
+        doc.fillColor(CHARCOAL).fontSize(12).font('Helvetica').text(para.trim(), 70, y, { width: pageW, lineGap: 4 })
+      }
+      y = doc.y + 18
+    })
+
+    // ── Milestone timeline ──
+    if (milestones.length) {
+      if (y > doc.page.height - 180) { doc.addPage(); y = 70 }
+      y += 10
+      doc.rect(70, y, pageW, 3).fill(GOLD)
+      y += 16
+      doc.fillColor(GOLD).fontSize(13).font('Helvetica-Bold').text('Your Healing Milestones', 70, y)
+      y += 20
+
+      milestones.slice(0, 20).forEach(m => {
+        if (y > doc.page.height - 80) { doc.addPage(); y = 70 }
+        doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(fmtDate(m.session_date), 70, y, { width: 90 })
+        doc.fillColor(CHARCOAL).fontSize(11).text(m.insight, 168, y, { width: pageW - 98 })
+        y = doc.y + 6
+      })
+    }
+
+    // ── Closing ──
+    if (y > doc.page.height - 120) { doc.addPage(); y = 70 }
+    y += 20
+    doc.rect(70, y, pageW, 1).fill('#e0e8db')
+    y += 20
+    doc.fillColor(GREEN).fontSize(12).font('Helvetica-Bold').text('Keep going. You are healing. 🌿', 70, y, { align: 'center', width: pageW })
+
+    // ── Footer ──
+    doc.rect(0, doc.page.height - 45, doc.page.width, 45).fill(GREEN)
+    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+      .text('CelerySync · Inspired by the teachings of Anthony William · Medical Medium', 70, doc.page.height - 30, { width: pageW, align: 'center' })
+
+    doc.end()
+  })
+}
+
+// ── Generate anniversary letters for all profiles whose anniversary is today ──
+export async function generateAnniversaryLetters() {
+  const today = new Date()
+  const todayMonth = today.getMonth() + 1
+  const todayDay = today.getDate()
+
+  // Find profiles created on this month+day in a prior year
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, user_id, name, created_at')
+
+  if (!profiles?.length) return
+
+  const anniversaries = profiles.filter(p => {
+    const created = new Date(p.created_at)
+    return (
+      created.getMonth() + 1 === todayMonth &&
+      created.getDate() === todayDay &&
+      created.getFullYear() < today.getFullYear()
+    )
+  })
+
+  if (!anniversaries.length) {
+    console.log('💌 No anniversaries today')
+    return
+  }
+
+  console.log(`💌 Generating anniversary letters for ${anniversaries.length} profiles`)
+
+  for (const profile of anniversaries) {
+    const yearNumber = today.getFullYear() - new Date(profile.created_at).getFullYear()
+
+    // Skip if letter already sent this year
+    const { data: existing } = await supabaseAdmin
+      .from('healing_letters')
+      .select('id')
+      .eq('profile_id', profile.id)
+      .eq('year_number', yearNumber)
+      .maybeSingle()
+
+    if (existing) continue
+
+    try {
+      await generateAnniversaryLetterForProfile(profile, yearNumber)
+      console.log(`✓ Anniversary letter: ${profile.name} — Year ${yearNumber}`)
+    } catch (err) {
+      console.warn(`✗ Anniversary letter failed for ${profile.id}:`, err.message)
+    }
+  }
+}
+
+async function generateAnniversaryLetterForProfile(profile, yearNumber) {
+  const [milestonesRes, summariesRes, healingProfileRes] = await Promise.all([
+    supabaseAdmin
+      .from('healing_milestones')
+      .select('insight, category, session_date')
+      .eq('profile_id', profile.id)
+      .order('session_date', { ascending: true }),
+    supabaseAdmin
+      .from('weekly_summaries')
+      .select('week_start, celery_days, avg_energy, protocol_days')
+      .eq('profile_id', profile.id)
+      .order('week_start', { ascending: false })
+      .limit(52),
+    supabaseAdmin
+      .from('healing_profiles')
+      .select('healing_summary')
+      .eq('profile_id', profile.id)
+      .maybeSingle(),
+  ])
+
+  const milestones = milestonesRes.data || []
+  const summaries = summariesRes.data || []
+  const healingSummary = healingProfileRes.data?.healing_summary || ''
+
+  // Build stats
+  const totalCeleryDays = summaries.reduce((s, w) => s + (w.celery_days || 0), 0)
+  const energyScores = summaries.map(w => w.avg_energy).filter(Boolean)
+  const firstEnergy = energyScores.length ? energyScores[energyScores.length - 1] : null
+  const recentEnergy = energyScores.length ? energyScores[0] : null
+  const milestonesText = milestones.slice(0, 25).map(m => `• [${m.session_date}] ${m.insight}`).join('\n')
+
+  const letter = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 800,
+    messages: [{
+      role: 'user',
+      content: `Write a deeply personal, warm, emotional annual healing letter for ${profile.name} on their ${yearNumber === 1 ? 'first' : yearNumber === 2 ? 'second' : yearNumber === 3 ? 'third' : yearNumber + 'th'} anniversary of their healing journey with CelerySync.
+
+This is NOT a generic letter. It must feel like it was written specifically for them based on their actual journey.
+
+Their healing data:
+- Years on journey: ${yearNumber}
+- Total celery juice days logged: ${totalCeleryDays}
+- Energy when they started: ${firstEnergy ? firstEnergy + '/10' : 'not recorded'}
+- Energy recently: ${recentEnergy ? recentEnergy + '/10' : 'not recorded'}
+- Healing summary: ${healingSummary.slice(0, 400) || 'Dedicated healer on the Medical Medium path'}
+
+Key moments from their journey:
+${milestonesText || 'Many conversations, much growth'}
+
+Write the letter in 4-5 paragraphs.
+- Open by acknowledging what they've been through and how far they've come — specifically.
+- Reflect on specific milestones and what they mean.
+- Acknowledge the hard moments (healing is not linear — don't pretend it's been easy).
+- Celebrate who they've become through this process.
+- Close with hope and belief in their continued healing.
+
+Sign it: "With love and belief in your healing, Your CelerySync companion 🌿"
+
+Write only the letter. No preamble.`,
+    }],
+  })
+
+  const letterText = letter.content.find(b => b.type === 'text')?.text?.trim() || ''
+
+  const { data: saved } = await supabaseAdmin
+    .from('healing_letters')
+    .insert({
+      user_id: profile.user_id,
+      profile_id: profile.id,
+      year_number: yearNumber,
+      letter_text: letterText,
+    })
+    .select()
+    .single()
+
+  // Send email (fire-and-forget)
+  if (saved && resend) {
+    sendAnniversaryEmail(profile.user_id, profile.name, yearNumber, letterText).catch(() => {})
+  }
+
+  return saved
+}
+
+async function sendAnniversaryEmail(userId, name, yearNumber, letterText) {
+  if (!resend) return
+  try {
+    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId)
+    const email = userRes?.user?.email
+    if (!email) return
+
+    const ordinal = yearNumber === 1 ? 'first' : yearNumber === 2 ? 'second' : yearNumber === 3 ? 'third' : `${yearNumber}th`
+    const paragraphs = letterText.split('\n\n').filter(p => p.trim())
+
+    await resend.emails.send({
+      from: 'CelerySync <healing@celerysync.com>',
+      to: email,
+      subject: `Happy ${ordinal} healing anniversary, ${name} 🌿`,
+      html: `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f7f9f4;font-family:Georgia,serif;">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+  <div style="background:linear-gradient(135deg,#3D6B44,#5a9a6a);padding:40px 32px;text-align:center;color:#fff;">
+    <div style="font-size:48px;margin-bottom:12px;">🌿</div>
+    <h1 style="margin:0;font-size:24px;">Year ${yearNumber} of Your Healing Journey</h1>
+    <p style="margin:10px 0 0;opacity:0.85;font-size:13px;">A letter just for you, ${name}</p>
+  </div>
+  <div style="padding:32px;color:#1e2a1e;line-height:1.85;font-size:14px;">
+    ${paragraphs.map(p => `<p style="margin:0 0 20px;">${p}</p>`).join('')}
+  </div>
+  <div style="background:#f0f7f0;padding:20px 32px;text-align:center;">
+    <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:13px 28px;font-family:Georgia,serif;font-weight:700;font-size:14px;text-decoration:none;">Open Your Healing Journey →</a>
+  </div>
+  <div style="padding:16px 32px;text-align:center;border-top:1px solid #e8f0e4;">
+    <p style="margin:0;font-size:11px;color:#aaa;">CelerySync · Inspired by Anthony William · Medical Medium</p>
+  </div>
+</div>
+</body>
+</html>`,
+    })
+    console.log(`💌 Anniversary email sent to ${email}`)
+  } catch (err) {
+    console.warn('Anniversary email error:', err.message)
+  }
 }
 
 // ── Send weekly summary email via Resend ──

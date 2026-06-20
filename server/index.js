@@ -10,7 +10,7 @@ import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest } from './routes/analytics.js'
-import memoryRoutes, { generateAllWeeklySummaries } from './routes/memory.js'
+import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters } from './routes/memory.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -112,6 +112,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     try { await generateAllWeeklySummaries(); } catch (err) { console.warn('Weekly summaries error:', err.message); }
   });
   console.log('📊 Weekly healing summary scheduler active')
+
+  // Anniversary letters — daily at 9am UTC, checks for today's anniversaries
+  cron.schedule('0 9 * * *', async () => {
+    try { await generateAnniversaryLetters(); } catch (err) { console.warn('Anniversary letters error:', err.message); }
+  });
+  console.log('💌 Anniversary letter scheduler active')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

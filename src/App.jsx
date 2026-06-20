@@ -33,6 +33,8 @@ const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.js
 const AW               = lazy(() => import("./components/AW.jsx"));
 const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
 const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
+const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
+const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
 const KidsCorner       = lazy(() => import("./components/KidsCorner.jsx"));
 
 const TABS = [
@@ -277,6 +279,12 @@ export default function App() {
               onUpdate={updateProfile}
               onDelete={deleteProfile}
             />
+            {activeProfileId && (
+              <>
+                <DoctorReport profileId={activeProfileId} />
+                <HealingLetters profileId={activeProfileId} />
+              </>
+            )}
           </div>
         );
       default:

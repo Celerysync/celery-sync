@@ -512,6 +512,23 @@ DO $$ BEGIN
     ON weekly_summaries FOR ALL USING (auth.uid() = user_id);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+-- healing_letters: annual letters generated on each subscriber's anniversary
+CREATE TABLE IF NOT EXISTS healing_letters (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     uuid REFERENCES auth.users NOT NULL,
+  profile_id  uuid NOT NULL,
+  year_number integer NOT NULL,
+  letter_text text NOT NULL,
+  email_sent  boolean DEFAULT false,
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE(profile_id, year_number)
+);
+ALTER TABLE healing_letters ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users own their healing letters"
+    ON healing_letters FOR ALL USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ═══════════════════════════════════════════════════════════════════
 -- Done! All 10 parts complete.
 -- ═══════════════════════════════════════════════════════════════════
