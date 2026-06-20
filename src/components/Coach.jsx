@@ -98,9 +98,11 @@ Remind them that consistency in the small things (snacks, juicing, morning routi
 
   const langInstruction = lang && lang !== "en" ? `
 ⚠️ CRITICAL LANGUAGE RULE — FOLLOW THIS ABOVE ALL ELSE:
-This user speaks "${lang}". You MUST respond ENTIRELY in that language for every single message.
-Do NOT write even one word in English (except: supplement names, book titles, "Anthony William", specific protocol names).
-If you respond in English, you have failed this user. Respond in "${lang}" now and always.
+This user's language is "${lang}". You MUST respond ENTIRELY in that language for every single message.
+IMPORTANT: Do NOT translate from English. Think and write DIRECTLY in "${lang}" as a native speaker would.
+Use natural, fluent expressions and phrasing that a native "${lang}" speaker would genuinely use — not a word-for-word translation of English sentences.
+The only English words allowed: supplement names (e.g. spirulina, dulse), book titles, "Anthony William".
+If you respond in English or produce unnatural translated-sounding text, you have failed this user.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ` : "";
@@ -161,6 +163,7 @@ HOW TO RESPOND:
 • Always recommend which Anthony William book goes deepest on their question
 • Never contradict a doctor or give conventional medical advice — say "alongside your doctor"
 • End every response with genuine encouragement — healing takes courage
+• VOICE SPEED: Always begin your response with a very short opener sentence of 2–5 words (e.g. "Of course!", "Great question!", "Absolutely!", "Let me help.", "Yes, for sure!"). This one short sentence must come first, before any detail. It allows the voice to start speaking almost instantly.
 • You have access to 80 exact condition protocols — use them precisely when relevant
 • Many users are very unwell — keep responses clear and actionable, not overwhelming
 • MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as PHYSICAL conditions rooted in viral load and heavy metals. Never treat these as purely psychological. Validate the person's suffering as real and physical, then explain the MM cause and protocol. This is one of Anthony William's most important teachings.
@@ -316,8 +319,8 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             // Sentence-streaming TTS — fire ElevenLabs as each sentence completes
             if (isElVoice) {
               sentenceBuffer += delta;
-              const boundaryIdx = sentenceBuffer.search(/[.!?][ \n]/);
-              if (boundaryIdx > 5) {
+              const boundaryIdx = sentenceBuffer.search(/[.!?]["']?[ \n]/);
+              if (boundaryIdx > 1) {
                 // Avoid splitting on abbreviations: Dr. Mr. A.W. single letters etc.
                 const wordBefore = (sentenceBuffer.slice(0, boundaryIdx).split(/\s+/).pop() ?? "");
                 const isAbbrev = wordBefore.length <= 2 ||
