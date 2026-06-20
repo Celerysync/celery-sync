@@ -1,25 +1,23 @@
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
-const AMAZON_TAG = "celerysync-20";
 const IHERB_CODE = "CELERYSYNC";
 
-function amazonUrl(asin) {
-  return `https://www.amazon.com/dp/${asin}?tag=${AMAZON_TAG}`;
-}
 function iherbUrl(path) {
   return `https://www.iherb.com/${path}?rcode=${IHERB_CODE}`;
 }
 
+const MM_BOOKS_URL = "https://medicalmedium.com/books";
+
 const BOOKS = [
-  { title: "Medical Medium",          emoji: "📗", asin: "1401962874", desc: "Where it all began — the foundation of everything Anthony William teaches about chronic illness." },
-  { title: "Life-Changing Foods",     emoji: "🍇", asin: "1401948000", desc: "50 healing foods with their spiritual and physical healing properties — a beautiful, essential read." },
-  { title: "Thyroid Healing",         emoji: "🦋", asin: "1401948367", desc: "The truth behind Hashimoto's, Graves', hypothyroidism, and thyroid nodules. Life-changing for millions." },
-  { title: "Liver Rescue",            emoji: "🍋", asin: "1401954596", desc: "The liver is behind almost everything — skin, weight, mystery symptoms, mood. This book is extraordinary." },
-  { title: "Celery Juice",            emoji: "🥬", asin: "1401958540", desc: "Everything about the global celery juice movement Anthony William started. Simple, profound, healing." },
-  { title: "Cleanse to Heal",         emoji: "✨", asin: "1401957587", desc: "The master protocol guide — the 3:6:9 cleanse, every variation, and protocols for 200+ conditions." },
-  { title: "Brain Saver",             emoji: "🧠", asin: "1401971318", desc: "Answers to brain inflammation, anxiety, depression, and every neurological condition." },
-  { title: "Brain Saver Protocols",   emoji: "💊", asin: "1401971334", desc: "300+ symptoms with exact supplement dosages — the most clinical and detailed book in the series." },
+  { title: "Medical Medium",                        emoji: "📗", desc: "Where it all began — the foundation of everything Anthony William teaches about chronic illness." },
+  { title: "Life-Changing Foods",                   emoji: "🍇", desc: "50 healing foods with their spiritual and physical healing properties — a beautiful, essential read." },
+  { title: "Thyroid Healing",                       emoji: "🦋", desc: "The truth behind Hashimoto's, Graves', hypothyroidism, and thyroid nodules. Life-changing for millions." },
+  { title: "Liver Rescue",                          emoji: "🍋", desc: "The liver is behind almost everything — skin, weight, mystery symptoms, mood. This book is extraordinary." },
+  { title: "Celery Juice",                          emoji: "🥬", desc: "Everything about the global celery juice movement Anthony William started. Simple, profound, healing." },
+  { title: "Cleanse to Heal",                       emoji: "✨", desc: "The master protocol guide — the 3:6:9 cleanse, every variation, and protocols for 200+ conditions." },
+  { title: "Brain Saver",                           emoji: "🧠", desc: "Answers to brain inflammation, anxiety, depression, and every neurological condition." },
+  { title: "Brain Saver Protocols, Cleanses & Recipes", emoji: "💊", desc: "300+ symptoms with exact supplement dosages — the most clinical and detailed book in the series." },
 ];
 
 const SUPPLEMENTS = [
@@ -43,7 +41,7 @@ const LINKS = [
   { label: "📘 Facebook",              url: "https://facebook.com/medicalmedium",                              desc: "Community groups and daily posts" },
 ];
 
-export default function AW() {
+export default function AW({ onNavigate }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -141,7 +139,7 @@ export default function AW() {
         {[
           { emoji: "📚", title: "Every answer points to his books", desc: "The AI always says which Anthony William book to read and why. We are a referral engine for his work, not a replacement for it." },
           { emoji: "🚫", title: "We never reproduce his content", desc: "Users bring their own purchased books. We don't copy, paste, or paraphrase his text. The Bring Your Own Books model is our core principle." },
-          { emoji: "💰", title: "Affiliate revenue goes to healing", desc: "Amazon and iHerb affiliate commissions from this page are used to fund the Healing Access Fund — buying books for people who can't afford them." },
+          { emoji: "💰", title: "Book sales go straight to his team", desc: "We link directly to medicalmedium.com for books — his team earns every commission. iHerb supplement commissions fund the Healing Access Fund." },
           { emoji: "🏷", title: "Clear attribution always", desc: "Every teaching in this app is explicitly attributed to Anthony William by name, with the specific book it comes from. He always gets the credit." },
           { emoji: "🌍", title: "We amplify his reach", desc: "Every subscriber who discovers a protocol through this app is a person who will buy more of his books, follow his social, and share his teachings with others." },
         ].map(({ emoji, title, desc }) => (
@@ -159,9 +157,50 @@ export default function AW() {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
         📚 Get the Books — Read the Source
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginTop: -8 }}>
-        The most important thing you can do is own his books. Every answer in this app points back to them.
+
+      {/* Buy → Upload → AI flow banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${C.sageLight}, #f0f9f0)`,
+        border: `1.5px solid ${C.sage}50`,
+        borderRadius: 16, padding: "16px 18px",
+      }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
+          How it works with CelerySync
+        </div>
+        {[
+          { n: "1", label: "Buy from Anthony William's website", desc: "All purchases go directly to his team — he chooses the retailers and earns from every sale." },
+          { n: "2", label: "Upload your book to My Books", desc: "Once you have a digital copy, upload it in the My Books tab — it becomes part of your personal AI library." },
+          { n: "3", label: "Your AI quotes your copy directly", desc: "The AI guide now draws on your exact edition when answering — real page references, your book, his words." },
+        ].map(({ n, label, desc }) => (
+          <div key={n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: "50%", background: C.sage,
+              color: C.white, fontSize: 11, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>{n}</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>{label}</div>
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{desc}</div>
+            </div>
+          </div>
+        ))}
+        <button
+          onClick={() => onNavigate?.("knowledge")}
+          style={{
+            background: C.sage, color: C.white, border: "none",
+            borderRadius: 30, padding: "8px 18px",
+            fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+            cursor: "pointer", marginTop: 4,
+          }}
+        >
+          Go to My Books →
+        </button>
       </div>
+
+      <div style={{ fontSize: 12, color: C.muted }}>
+        Tap "Buy on medicalmedium.com" — his site uses Geni.us links that route you to your local store automatically, wherever you are in the world.
+      </div>
+
       {BOOKS.map((b) => (
         <Card key={b.title}>
           <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -171,18 +210,31 @@ export default function AW() {
                 {b.title}
               </div>
               <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>{b.desc}</div>
-              <a
-                href={amazonUrl(b.asin)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-block", background: C.sage, color: C.white,
-                  borderRadius: 30, padding: "6px 14px", fontSize: 12,
-                  fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
-                }}
-              >
-                Get on Amazon →
-              </a>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <a
+                  href={MM_BOOKS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block", background: C.sageDark, color: C.white,
+                    borderRadius: 30, padding: "6px 14px", fontSize: 12,
+                    fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
+                  }}
+                >
+                  Buy on medicalmedium.com →
+                </a>
+                <button
+                  onClick={() => onNavigate?.("knowledge")}
+                  style={{
+                    background: "transparent", color: C.sage,
+                    border: `1.5px solid ${C.sage}`, borderRadius: 30,
+                    padding: "6px 14px", fontSize: 12,
+                    fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  Already have it? Upload →
+                </button>
+              </div>
             </div>
           </div>
         </Card>
@@ -272,9 +324,9 @@ export default function AW() {
 
       <div style={{ background: C.mist, borderRadius: 16, padding: 16 }}>
         <div style={{ fontSize: 11, color: C.mid, lineHeight: 1.7 }}>
-          <strong>Affiliate disclosure:</strong> Book and supplement links use affiliate codes. Any
-          commission earned goes directly to the Healing Access Fund — used to purchase books and
-          supplements for people in financial hardship. We do not profit personally from these links.
+          <strong>Book links:</strong> Book links go directly to medicalmedium.com — Anthony William's
+          own website. His team earns from every sale. CelerySync receives no commission from book purchases.
+          Supplement links to iHerb use an affiliate code; any commission earned goes to the Healing Access Fund.
         </div>
       </div>
 

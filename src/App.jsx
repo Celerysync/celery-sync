@@ -251,7 +251,7 @@ export default function App() {
       case "kids":
         return <KidsCorner parentProfile={activeProfile} />;
       case "aw":
-        return <AW />;
+        return <AW onNavigate={handleNavigate} />;
       case "admin":
         return isAdmin ? <AdminDashboard authUser={authUser} /> : null;
       case "account":
