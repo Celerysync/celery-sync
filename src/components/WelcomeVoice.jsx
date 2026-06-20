@@ -242,6 +242,15 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { dismiss(); return; }
 
+    // Prime speech synthesis NOW while we still have the user gesture.
+    // iOS blocks speechSynthesis.speak() after async operations unless
+    // it was already unlocked during a direct user interaction.
+    if (window.speechSynthesis) {
+      const primer = new SpeechSynthesisUtterance(" ");
+      primer.volume = 0;
+      window.speechSynthesis.speak(primer);
+    }
+
     setPhase("listening");
     setUserText("");
     interimRef.current = "";
@@ -267,13 +276,15 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
   };
 
   // ── AI reply ──────────────────────────────────────────────────────────────
+  // Uses browser TTS directly — no second ElevenLabs call, so reply starts
+  // ~1-2s after the user finishes speaking (just the Claude API call).
+  // ElevenLabs is kept only for the welcome message (cached after first play).
   const sendToAI = async (text) => {
     setPhase("thinking");
     setAiText("");
-    let reply = "";
     try {
-      reply = await callClaude({
-        system: "You are the CelerySync healing guide. The user just heard your welcome introduction and is asking their first question before entering the app. Answer warmly in 2-3 sentences using Anthony William / Medical Medium principles. Be specific and encouraging. End by inviting them to explore the app.",
+      const reply = await callClaude({
+        system: "You are the CelerySync healing guide. The user just heard your welcome introduction and is asking their first question. Answer warmly in 2-3 sentences using Anthony William / Medical Medium principles. Be specific and encouraging. End by inviting them to explore the app.",
         messages: [{ role: "user", content: text }],
         tier: "quick",
         maxTokens: 180,
@@ -281,36 +292,13 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
       if (!reply) { setPhase("mic"); return; }
       setAiText(reply);
       setPhase("replying");
-
-      const voiceId = voiceRef.current.startsWith("el:")
-        ? voiceRef.current.slice(3)
-        : DEFAULT_VOICE_ID.slice(3);
-
-      const res = await fetch("/api/elevenlabs/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: reply, voiceId }),
-      });
-      if (!res.ok) throw new Error("speak failed");
-      const { url } = await res.json();
-
-      playUrl(url, () => {
+      browserSpeak(reply, () => {
         setPhase("mic");
         startIdleTimer(15000);
       });
     } catch {
-      // ElevenLabs failed — fall back to browser TTS if we have a reply
-      if (reply && window.speechSynthesis) {
-        setAiText(reply);
-        setPhase("replying");
-        browserSpeak(reply, () => {
-          setPhase("mic");
-          startIdleTimer(15000);
-        });
-      } else {
-        setPhase("mic");
-        startIdleTimer(12000);
-      }
+      setPhase("mic");
+      startIdleTimer(12000);
     }
   };
 
