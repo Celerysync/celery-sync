@@ -92,6 +92,7 @@ export default function WelcomeVoice({ userId, onDone }) {
     localStorage.setItem("cs_lang",      langRef.current);
     if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    window.speechSynthesis?.cancel();
     recogRef.current?.stop();
     onDone();
   }, [userId, onDone]);
@@ -122,6 +123,28 @@ export default function WelcomeVoice({ userId, onDone }) {
     }
   }, []);
 
+  // ── Browser TTS fallback (when ElevenLabs credits exhausted) ────────────
+  const browserSpeak = useCallback((text, onDone) => {
+    window.speechSynthesis?.cancel();
+    const chunks = text.match(/.{1,200}(?:[.!?,\s]|$)/g) ?? [text];
+    setPhase("playing");
+    let i = 0;
+    const next = () => {
+      if (i >= chunks.length) { onDone?.(); return; }
+      const u = new SpeechSynthesisUtterance(chunks[i++]);
+      u.rate = 0.88;
+      u.pitch = 1.08;
+      const voices = window.speechSynthesis.getVoices();
+      u.voice = voices.find(v =>
+        v.name.includes("Samantha") || v.name.includes("Karen") || v.name.includes("Moira")
+      ) ?? null;
+      u.onend  = next;
+      u.onerror = next;
+      window.speechSynthesis.speak(u);
+    };
+    setTimeout(next, 100);
+  }, []);
+
   // ── After welcome plays ───────────────────────────────────────────────────
   const afterWelcome = useCallback(() => {
     setPhase("mic");
@@ -136,12 +159,8 @@ export default function WelcomeVoice({ userId, onDone }) {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
 
     const load = async () => {
+      let text = WELCOME_TEXT_EN;
       try {
-        const voiceId = selectedVoice.startsWith("el:")
-          ? selectedVoice.slice(3)
-          : DEFAULT_VOICE_ID.slice(3);
-
-        let text = WELCOME_TEXT_EN;
         if (selectedLang !== "en") {
           const langLabel = LANGUAGES.find(l => l.code === selectedLang)?.label || selectedLang;
           text = await callClaude({
@@ -153,19 +172,29 @@ export default function WelcomeVoice({ userId, onDone }) {
         }
         if (gen !== loadGenRef.current) return;
 
+        const voiceId = selectedVoice.startsWith("el:")
+          ? selectedVoice.slice(3)
+          : DEFAULT_VOICE_ID.slice(3);
+
         const res = await fetch("/api/elevenlabs/speak", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, voiceId }),
         });
         if (gen !== loadGenRef.current) return;
-        if (!res.ok) throw new Error("fetch failed");
+        if (!res.ok) throw new Error("elevenlabs unavailable");
         const { url } = await res.json();
         if (gen !== loadGenRef.current) return;
 
         playUrl(url, afterWelcome);
       } catch {
-        if (gen === loadGenRef.current) setPhase("error");
+        if (gen !== loadGenRef.current) return;
+        // ElevenLabs failed (out of credits or network) — fall back to browser TTS
+        if (window.speechSynthesis) {
+          browserSpeak(text, afterWelcome);
+        } else {
+          setPhase("error");
+        }
       }
     };
 
@@ -191,6 +220,7 @@ export default function WelcomeVoice({ userId, onDone }) {
   useEffect(() => () => {
     clearTimeout(idleTimerRef.current);
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    window.speechSynthesis?.cancel();
     recogRef.current?.stop();
   }, []);
 
@@ -228,8 +258,9 @@ export default function WelcomeVoice({ userId, onDone }) {
   const sendToAI = async (text) => {
     setPhase("thinking");
     setAiText("");
+    let reply = "";
     try {
-      const reply = await callClaude({
+      reply = await callClaude({
         system: "You are the CelerySync healing guide. The user just heard your welcome introduction and is asking their first question before entering the app. Answer warmly in 2-3 sentences using Anthony William / Medical Medium principles. Be specific and encouraging. End by inviting them to explore the app.",
         messages: [{ role: "user", content: text }],
         tier: "quick",
@@ -256,8 +287,18 @@ export default function WelcomeVoice({ userId, onDone }) {
         startIdleTimer(15000);
       });
     } catch {
-      setPhase("mic");
-      startIdleTimer(12000);
+      // ElevenLabs failed — fall back to browser TTS if we have a reply
+      if (reply && window.speechSynthesis) {
+        setAiText(reply);
+        setPhase("replying");
+        browserSpeak(reply, () => {
+          setPhase("mic");
+          startIdleTimer(15000);
+        });
+      } else {
+        setPhase("mic");
+        startIdleTimer(12000);
+      }
     }
   };
 
