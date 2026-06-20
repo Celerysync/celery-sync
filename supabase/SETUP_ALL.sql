@@ -530,5 +530,32 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ═══════════════════════════════════════════════════════════════════
--- Done! All 10 parts complete.
+-- profile_carers: carer invite system
+-- A subscriber can invite a friend/carer to see their healing progress.
+-- The carer gets a read-only view — energy, check-ins, milestones.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS profile_carers (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id   uuid REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  owner_id     uuid REFERENCES auth.users NOT NULL,
+  carer_email  text NOT NULL,
+  carer_id     uuid REFERENCES auth.users,
+  token        text UNIQUE DEFAULT encode(gen_random_bytes(20), 'hex'),
+  status       text DEFAULT 'pending',  -- pending | active | revoked
+  created_at   timestamptz DEFAULT now(),
+  accepted_at  timestamptz,
+  UNIQUE(profile_id, carer_email)
+);
+ALTER TABLE profile_carers ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Owners manage their carers"
+    ON profile_carers FOR ALL USING (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE POLICY "Carers read their relationships"
+    ON profile_carers FOR SELECT USING (auth.uid() = carer_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Done!
 -- ═══════════════════════════════════════════════════════════════════

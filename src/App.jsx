@@ -35,6 +35,8 @@ const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.js
 const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
 const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
+const CarerView        = lazy(() => import("./components/CarerView.jsx"));
+const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const KidsCorner       = lazy(() => import("./components/KidsCorner.jsx"));
 
 const TABS = [
@@ -47,6 +49,7 @@ const TABS = [
   { id: "knowledge", label: "My Books",   emoji: "📖", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
   { id: "community",    label: "Circles",   emoji: "💚", free: false },
+  { id: "carers",      label: "Carers",    emoji: "💜", free: true  },
   { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
   { id: "kids",         label: "Kids",       emoji: "🌈", free: false },
   { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
@@ -186,6 +189,26 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle carer invite acceptance via URL token
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const carerToken = params.get("carer_token");
+    if (!carerToken || !authUser?.id) return;
+    window.history.replaceState({}, "", "/");
+    fetch("/api/carers/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: authUser.id, token: carerToken }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setTab("carers");
+        else alert("This invite link has already been used or has expired.");
+      })
+      .catch(() => alert("Couldn't accept invite — please try again."));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.id]);
+
   if (authLoading) return <LoadingScreen />;
   if (!authUser) return <Auth />;
   if (profilesLoading) return <LoadingScreen message="Loading your healing profiles…" />;
@@ -250,6 +273,8 @@ export default function App() {
         return <Body searchBooks={searchBooks} navQuery={navQuery} />;
       case "community":
         return <Community authUser={authUser} userProfile={activeProfile} />;
+      case "carers":
+        return <CarerView authUser={authUser} />;
       case "practice":
         return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
       case "kids":
@@ -281,6 +306,7 @@ export default function App() {
             />
             {activeProfileId && (
               <>
+                <CarerInviteManager authUser={authUser} profileId={activeProfileId} />
                 <DoctorReport profileId={activeProfileId} />
                 <HealingLetters profileId={activeProfileId} />
               </>
