@@ -330,25 +330,25 @@ export default function App() {
       {/* Sticky header */}
       <div style={{
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
-        padding: "14px 18px 12px",
         paddingTop: "calc(14px + env(safe-area-inset-top, 0px))",
+        paddingBottom: 12,
+        paddingLeft: 18,
+        paddingRight: 18,
         color: C.white,
         position: "sticky", top: 0, zIndex: 10,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 24 }}>🌿</div>
-          <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <div style={{ fontSize: 24, flexShrink: 0 }}>🌿</div>
+          <div style={{ minWidth: 0, flex: "0 0 auto" }}>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17 }}>CelerySync</div>
-            <div style={{ fontSize: 9, opacity: 0.8, letterSpacing: 1, textTransform: "uppercase" }}>
-              Inspired by Medical Medium · Anthony William
-            </div>
           </div>
 
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {!subLoading && isSubscribed && (
               <div style={{
                 background: "rgba(255,255,255,0.2)", borderRadius: 20,
                 padding: "3px 10px", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                whiteSpace: "nowrap",
               }}>
                 {isPractitioner ? "🏥 Practitioner" : "✨ Healer"}
               </div>
@@ -362,16 +362,19 @@ export default function App() {
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     background: "rgba(255,255,255,0.18)", borderRadius: 20,
-                    padding: "5px 12px 5px 8px", border: "none", cursor: "pointer",
-                    color: C.white,
+                    padding: "5px 10px 5px 8px", border: "none", cursor: "pointer",
+                    color: C.white, maxWidth: 160,
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>{activeProfile.avatar_emoji}</span>
-                  <span style={{ fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 600 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{activeProfile.avatar_emoji}</span>
+                  <span style={{
+                    fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 600,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
                     {activeProfile.name}
                   </span>
                   {profiles.length > 1 && (
-                    <span style={{ fontSize: 9, opacity: 0.8 }}>▼</span>
+                    <span style={{ fontSize: 9, opacity: 0.8, flexShrink: 0 }}>▼</span>
                   )}
                 </button>
 
