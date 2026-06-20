@@ -19,13 +19,30 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 
 // Save push subscription
 router.post("/subscribe", async (req, res) => {
-  const { userId, subscription, timezone } = req.body;
+  const { userId, subscription, timezone, morningStartHour } = req.body;
   if (!userId || !subscription?.endpoint) return res.status(400).json({ error: "Missing data" });
 
   const { error } = await supabase.from("push_subscriptions").upsert(
-    { user_id: userId, endpoint: subscription.endpoint, keys: subscription.keys, timezone: timezone || "UTC" },
+    {
+      user_id: userId,
+      endpoint: subscription.endpoint,
+      keys: subscription.keys,
+      timezone: timezone || "UTC",
+      morning_start_hour: morningStartHour ?? 6,
+    },
     { onConflict: "user_id,endpoint" }
   );
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// Update notification preferences (morning start time, etc.)
+router.post("/preferences", async (req, res) => {
+  const { userId, morningStartHour } = req.body;
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
+  const { error } = await supabase.from("push_subscriptions")
+    .update({ morning_start_hour: morningStartHour ?? 6 })
+    .eq("user_id", userId);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
 });
@@ -62,7 +79,7 @@ export async function sendPushToAll({ title, body, tag, url }) {
   return sent;
 }
 
-// Internal: send to users in a specific local hour window
+// Internal: send to users whose adjusted local hour matches (respects per-user morning start time)
 export async function sendToUsersAtLocalHour({ hour, title, body, tag, url }) {
   const { data: subs } = await supabase.from("push_subscriptions").select("*");
   if (!subs?.length) return;
@@ -74,7 +91,10 @@ export async function sendToUsersAtLocalHour({ hour, title, body, tag, url }) {
         now.toLocaleTimeString("en-US", { timeZone: sub.timezone || "UTC", hour: "numeric", hour12: false }),
         10
       );
-      return localHour === hour;
+      // Shift scheduled hour by user's morning preference offset (default wake 6am)
+      const offset = (sub.morning_start_hour ?? 6) - 6;
+      const adjustedHour = (hour + offset + 24) % 24;
+      return localHour === adjustedHour;
     } catch {
       return false;
     }

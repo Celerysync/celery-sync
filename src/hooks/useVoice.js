@@ -27,6 +27,8 @@ export const ELEVENLABS_VOICES = [
   { id: "el:IKne3meq5aSn9XLyUdCD", name: "Charlie — friendly Aussie", group: "Australian / NZ" },
 ];
 
+export const srSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
 export function useVoice(preferredVoiceName = "", units = "metric") {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -224,10 +226,10 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     [stopSpeaking, browserSpeak]
   );
 
-  const startListening = useCallback((onResult) => {
+  const startListening = useCallback((onResult, onUnsupported) => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      alert("Voice input requires Chrome.");
+      onUnsupported?.();
       return;
     }
     const r = new SR();

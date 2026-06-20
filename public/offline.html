@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CelerySync — Offline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, serif;
+      background: #f9f7f2;
+      color: #2d3f2d;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 340px;
+      box-shadow: 0 4px 24px #00000012;
+    }
+    .icon { font-size: 52px; margin-bottom: 16px; }
+    h1 { font-size: 20px; color: #4a7c59; margin-bottom: 10px; }
+    p { font-size: 14px; color: #6b7280; line-height: 1.7; margin-bottom: 20px; }
+    button {
+      background: #4a7c59; color: #fff; border: none;
+      border-radius: 30px; padding: 12px 28px;
+      font-family: Georgia, serif; font-size: 14px; font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🥬</div>
+    <h1>You're offline</h1>
+    <p>
+      CelerySync needs an internet connection to reach your healing companion.
+      Your check-ins and journal entries are safely stored locally.<br /><br />
+      Come back once you're connected and everything will sync.
+    </p>
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

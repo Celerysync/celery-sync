@@ -65,7 +65,7 @@ export default function Auth() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: `linear-gradient(160deg,${C.sageDark} 0%,${C.leaf} 100%)`,
       display: 'flex',
       flexDirection: 'column',

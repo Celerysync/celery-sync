@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "./App.css";
 import C from "./lib/colors.js";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
@@ -55,7 +55,7 @@ const TABS = [
 function LoadingScreen({ message = "Loading your healing journey…" }) {
   return (
     <div style={{
-      minHeight: "100vh",
+      minHeight: "100dvh",
       background: `linear-gradient(160deg,${C.sageDark} 0%,${C.leaf} 100%)`,
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
@@ -142,6 +142,19 @@ export default function App() {
     document.documentElement.setAttribute("data-dark", darkMode ? "true" : "false");
     document.documentElement.setAttribute("data-large", largeText ? "true" : "false");
   }, [darkMode, largeText]);
+
+  // iOS audio unlock: prime AudioContext on first user touch so programmatic play() works
+  useEffect(() => {
+    const unlock = () => {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) { const ctx = new AC(); ctx.resume().then(() => ctx.close()); }
+      } catch {}
+      document.removeEventListener("touchstart", unlock);
+    };
+    document.addEventListener("touchstart", unlock, { once: true, passive: true });
+    return () => document.removeEventListener("touchstart", unlock);
+  }, []);
 
   const handleNavigate = (tabId, query) => {
     setNavQuery(query || null);
@@ -277,6 +290,7 @@ export default function App() {
       <div style={{
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
         padding: "14px 18px 12px",
+        paddingTop: "calc(14px + env(safe-area-inset-top, 0px))",
         color: C.white,
         position: "sticky", top: 0, zIndex: 10,
       }}>

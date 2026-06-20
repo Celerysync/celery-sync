@@ -111,7 +111,7 @@ export default function Landing({ onGetStarted }) {
   const [openPain, setOpenPain] = useState(false);
 
   return (
-    <div style={{ background: C.cream, minHeight: "100vh", fontFamily: "Georgia,serif" }}>
+    <div style={{ background: C.cream, minHeight: "100dvh", fontFamily: "Georgia,serif" }}>
 
       {/* ── HERO ── */}
       <div style={{

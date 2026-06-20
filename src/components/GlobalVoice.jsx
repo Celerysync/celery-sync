@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import C from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
-import { useVoice } from "../hooks/useVoice.js";
+import { useVoice, srSupported } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
 import { cleanForSpeech } from "../lib/ttsClean.js";
 
@@ -30,6 +30,7 @@ export default function GlobalVoice({ currentTab, user }) {
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
+  const [srError, setSrError] = useState(false);
 
   // Don't show on coach tab — it already has full voice
   if (!enabled || currentTab === "coach") return null;
@@ -41,6 +42,7 @@ export default function GlobalVoice({ currentTab, user }) {
     setTranscript("");
     setReply("");
     setLoading(false);
+    setSrError(false);
   };
 
   const handleMicTap = () => {
@@ -49,6 +51,7 @@ export default function GlobalVoice({ currentTab, user }) {
 
     setTranscript("");
     setReply("");
+    setSrError(false);
     setOpen(true);
 
     startListening(async (text) => {
@@ -80,7 +83,7 @@ Never give conventional medical advice. Always attribute to Anthony William.`;
         setLoading(false);
         setReply("Sorry, something went wrong. Please try again.");
       }
-    });
+    }, () => setSrError(true));
   };
 
   const isActive = listening || speaking || loading;
@@ -138,7 +141,12 @@ Never give conventional medical advice. Always attribute to Anthony William.`;
           </div>
 
           {/* Status */}
-          {listening && !transcript && (
+          {srError && (
+            <div style={{ fontSize: 13, color: C.terracotta, lineHeight: 1.6, padding: "4px 0 8px" }}>
+              Voice input isn't available in Safari. For mic access, install CelerySync to your Home Screen (Share → Add to Home Screen), or use the AI Guide tab to type your question.
+            </div>
+          )}
+          {!srError && listening && !transcript && (
             <div style={{ color: C.sage, fontSize: 13, fontFamily: "Georgia,serif", textAlign: "center", padding: "8px 0" }}>
               <span style={{ display: "inline-block", animation: "pulse 1.2s infinite" }}>👂</span> Listening…
             </div>

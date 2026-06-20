@@ -230,9 +230,14 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   endpoint text NOT NULL,
   keys jsonb NOT NULL,
   timezone text NOT NULL DEFAULT 'UTC',
+  morning_start_hour integer NOT NULL DEFAULT 6,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, endpoint)
 );
+-- Migration: add morning_start_hour if upgrading from older schema
+DO $$ BEGIN
+  ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS morning_start_hour integer NOT NULL DEFAULT 6;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Users manage own push subscriptions"

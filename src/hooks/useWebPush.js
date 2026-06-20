@@ -26,7 +26,7 @@ export function useWebPush(authUser) {
     }).catch(() => {});
   }, [supported, authUser]);
 
-  const subscribe = useCallback(async () => {
+  const subscribe = useCallback(async (morningStartHour = 6) => {
     if (!supported || !authUser || !VAPID_PUBLIC_KEY) return;
     setLoading(true);
     setError(null);
@@ -48,6 +48,7 @@ export function useWebPush(authUser) {
           userId: authUser.id,
           subscription: sub.toJSON(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          morningStartHour,
         }),
       });
       setSubscribed(true);
@@ -56,6 +57,15 @@ export function useWebPush(authUser) {
     }
     setLoading(false);
   }, [supported, authUser]);
+
+  const updateMorningTime = useCallback(async (morningStartHour) => {
+    if (!authUser) return;
+    await fetch("/api/notifications/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: authUser.id, morningStartHour }),
+    });
+  }, [authUser]);
 
   const unsubscribe = useCallback(async () => {
     if (!supported || !authUser) return;
@@ -78,5 +88,5 @@ export function useWebPush(authUser) {
     setLoading(false);
   }, [supported, authUser]);
 
-  return { supported, permission, subscribed, loading, error, subscribe, unsubscribe };
+  return { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime };
 }

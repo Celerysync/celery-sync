@@ -3,12 +3,21 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { CONDITIONS } from "../data/conditions.js";
 
-// Core MM daily supplements that everyone on the protocol takes
 const CORE_SUPPS = [
-  "🍋 Lemon water (16–32oz on empty stomach)",
-  "🥬 Celery juice (16oz minimum)",
-  "🫐 Heavy Metal Detox Smoothie",
+  { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
+  { id: "celery", label: "🥬 Celery juice (16oz minimum)", timing: "morning_empty" },
+  { id: "hmds", label: "🫐 Heavy Metal Detox Smoothie", timing: "morning_food" },
 ];
+
+const TIMINGS = [
+  { id: "morning_empty", label: "Morning · empty stomach", color: C.leaf },
+  { id: "morning_food", label: "Morning · with food", color: C.sage },
+  { id: "midday", label: "Midday", color: C.gold },
+  { id: "evening", label: "Evening", color: C.plum },
+];
+
+const TIMING_COLORS = Object.fromEntries(TIMINGS.map(t => [t.id, t.color]));
+const TIMING_LABELS = Object.fromEntries(TIMINGS.map(t => [t.id, t.label]));
 
 function todayKey() {
   const d = new Date();
@@ -22,50 +31,86 @@ function getSuppsForConditions(conditions = []) {
     const data = CONDITIONS[cond];
     if (!data) continue;
     for (const s of (data.supps || [])) {
-      // Skip celery juice — already in core
       if (s.toLowerCase().includes("celery juice")) continue;
-      // Normalise — strip dosage to get the supplement name
       const name = s.split(" ").slice(0, 3).join(" ");
       if (!seen.has(name)) {
         seen.add(name);
-        result.push(s);
+        result.push({ id: `cond_${name}`, label: s, timing: "morning_food" });
       }
     }
   }
-  return result.slice(0, 12); // cap at 12 so it's not overwhelming
+  return result.slice(0, 12);
 }
+
+const BLANK_CUSTOM = { name: "", dose: "", timing: "morning_food" };
 
 export default function SupplementTracker({ userConditions = [] }) {
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState(false);
+  const [customSupps, setCustomSupps] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState(BLANK_CUSTOM);
 
   const key = todayKey();
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(key) || "{}");
-      setChecked(saved);
-    } catch {
-      setChecked({});
-    }
+      setChecked(JSON.parse(localStorage.getItem(key) || "{}"));
+    } catch { setChecked({}); }
+    try {
+      setCustomSupps(JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"));
+    } catch { setCustomSupps([]); }
   }, [key]);
 
-  const toggle = (supp) => {
+  const toggle = (id) => {
     setChecked((prev) => {
-      const next = { ...prev, [supp]: !prev[supp] };
+      const next = { ...prev, [id]: !prev[id] };
       localStorage.setItem(key, JSON.stringify(next));
       return next;
     });
   };
 
+  const saveCustom = () => {
+    if (!form.name.trim()) return;
+    const newSupp = {
+      id: `custom_${Date.now()}`,
+      label: form.dose ? `${form.name.trim()} (${form.dose.trim()})` : form.name.trim(),
+      timing: form.timing,
+    };
+    const next = [...customSupps, newSupp];
+    setCustomSupps(next);
+    localStorage.setItem("cs_custom_supps", JSON.stringify(next));
+    setForm(BLANK_CUSTOM);
+    setAdding(false);
+  };
+
+  const removeCustom = (id) => {
+    const next = customSupps.filter(s => s.id !== id);
+    setCustomSupps(next);
+    localStorage.setItem("cs_custom_supps", JSON.stringify(next));
+    setChecked((prev) => {
+      const next2 = { ...prev };
+      delete next2[id];
+      localStorage.setItem(key, JSON.stringify(next2));
+      return next2;
+    });
+  };
+
   const conditionSupps = getSuppsForConditions(userConditions);
-  const allSupps = [...CORE_SUPPS, ...conditionSupps];
-  const doneCount = allSupps.filter((s) => checked[s]).length;
-  const pct = Math.round((doneCount / allSupps.length) * 100);
+  const allSupps = [...CORE_SUPPS, ...conditionSupps, ...customSupps];
+  const doneCount = allSupps.filter((s) => checked[s.id]).length;
+  const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;
+
+  // Group by timing for ordered display
+  const byTiming = {};
+  for (const t of TIMINGS) byTiming[t.id] = [];
+  for (const s of allSupps) {
+    if (byTiming[s.timing]) byTiming[s.timing].push(s);
+    else byTiming["morning_food"].push(s);
+  }
 
   return (
     <Card style={{ border: `1.5px solid ${C.sage}30` }}>
-      {/* Header — always visible */}
       <button
         onClick={() => setExpanded((v) => !v)}
         style={{
@@ -83,7 +128,6 @@ export default function SupplementTracker({ userConditions = [] }) {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Progress ring */}
           <svg width={36} height={36} viewBox="0 0 36 36">
             <circle cx={18} cy={18} r={15} fill="none" stroke={C.border} strokeWidth={3} />
             <circle
@@ -103,31 +147,105 @@ export default function SupplementTracker({ userConditions = [] }) {
         </div>
       </button>
 
-      {/* Checklist */}
       {expanded && (
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 2 }}>
-          {/* Core protocol */}
-          <div style={{ fontSize: 10, fontWeight: 700, color: C.sage, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>
-            Morning Protocol
-          </div>
-          {CORE_SUPPS.map((s) => (
-            <SuppRow key={s} label={s} checked={!!checked[s]} onToggle={() => toggle(s)} />
-          ))}
-
-          {conditionSupps.length > 0 && (
-            <>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.plum, textTransform: "uppercase", letterSpacing: 0.8, margin: "10px 0 6px" }}>
-                Your Protocol Supplements
+          {TIMINGS.map((t) => {
+            const group = byTiming[t.id];
+            if (!group.length) return null;
+            return (
+              <div key={t.id}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8,
+                  marginBottom: 6, marginTop: 10, color: t.color,
+                }}>
+                  {t.label}
+                </div>
+                {group.map((s) => (
+                  <SuppRow
+                    key={s.id}
+                    label={s.label}
+                    checked={!!checked[s.id]}
+                    onToggle={() => toggle(s.id)}
+                    isCustom={s.id.startsWith("custom_")}
+                    onRemove={() => removeCustom(s.id)}
+                    timingColor={t.color}
+                  />
+                ))}
               </div>
-              {conditionSupps.map((s) => (
-                <SuppRow key={s} label={s} checked={!!checked[s]} onToggle={() => toggle(s)} />
-              ))}
-            </>
+            );
+          })}
+
+          {conditionSupps.length === 0 && customSupps.length === 0 && (
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+              Add your health conditions in your profile to see personalised supplement recommendations.
+            </div>
           )}
 
-          {conditionSupps.length === 0 && (
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
-              Add your health conditions in your profile to see personalised supplement reminders here.
+          {/* Add custom supplement */}
+          {!adding ? (
+            <button
+              onClick={() => setAdding(true)}
+              style={{
+                marginTop: 12, background: "none", border: `1.5px dashed ${C.border}`,
+                borderRadius: 10, padding: "8px 12px", fontSize: 12, color: C.muted,
+                cursor: "pointer", width: "100%", fontFamily: "Georgia,serif",
+              }}
+            >
+              + Add your own supplement
+            </button>
+          ) : (
+            <div style={{ marginTop: 12, padding: "12px", background: `${C.sageLight}60`, borderRadius: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>Add supplement</div>
+              <input
+                placeholder="Supplement name (e.g. Zinc)"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                style={{
+                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
+                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
+                }}
+              />
+              <input
+                placeholder="Dose (optional, e.g. 50mg)"
+                value={form.dose}
+                onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
+                style={{
+                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
+                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
+                }}
+              />
+              <select
+                value={form.timing}
+                onChange={(e) => setForm((f) => ({ ...f, timing: e.target.value }))}
+                style={{
+                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
+                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%",
+                }}
+              >
+                {TIMINGS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+              </select>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={saveCustom}
+                  style={{
+                    flex: 1, background: C.sage, color: "#fff", border: "none",
+                    borderRadius: 20, padding: "8px", fontSize: 13, cursor: "pointer",
+                    fontFamily: "Georgia,serif", fontWeight: 700,
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => { setAdding(false); setForm(BLANK_CUSTOM); }}
+                  style={{
+                    flex: 1, background: "none", color: C.muted, border: `1px solid ${C.border}`,
+                    borderRadius: 20, padding: "8px", fontSize: 13, cursor: "pointer",
+                    fontFamily: "Georgia,serif",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
@@ -148,34 +266,47 @@ export default function SupplementTracker({ userConditions = [] }) {
   );
 }
 
-function SuppRow({ label, checked, onToggle }) {
+function SuppRow({ label, checked, onToggle, isCustom, onRemove, timingColor }) {
   return (
-    <button
-      onClick={onToggle}
-      style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "9px 4px", background: "none", border: "none",
-        cursor: "pointer", width: "100%", textAlign: "left",
-        borderBottom: `1px solid ${C.border}40`,
-      }}
-    >
-      <div style={{
-        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-        background: checked ? C.sage : "transparent",
-        border: `2px solid ${checked ? C.sage : C.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: C.white, fontSize: 12, fontWeight: 700,
-        transition: "all 0.15s",
-      }}>
-        {checked ? "✓" : ""}
-      </div>
-      <div style={{
-        fontSize: 12, color: checked ? C.muted : C.charcoal,
-        textDecoration: checked ? "line-through" : "none",
-        lineHeight: 1.4, transition: "all 0.15s",
-      }}>
-        {label}
-      </div>
-    </button>
+    <div style={{ display: "flex", alignItems: "center", borderBottom: `1px solid ${C.border}40` }}>
+      <button
+        onClick={onToggle}
+        style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "9px 4px", background: "none", border: "none",
+          cursor: "pointer", flex: 1, textAlign: "left",
+        }}
+      >
+        <div style={{
+          width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+          background: checked ? C.sage : "transparent",
+          border: `2px solid ${checked ? C.sage : C.border}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: C.white, fontSize: 12, fontWeight: 700,
+          transition: "all 0.15s",
+        }}>
+          {checked ? "✓" : ""}
+        </div>
+        <div style={{
+          fontSize: 12, color: checked ? C.muted : C.charcoal,
+          textDecoration: checked ? "line-through" : "none",
+          lineHeight: 1.4, transition: "all 0.15s",
+        }}>
+          {label}
+        </div>
+      </button>
+      {isCustom && (
+        <button
+          onClick={onRemove}
+          style={{
+            background: "none", border: "none", color: C.muted, cursor: "pointer",
+            fontSize: 14, padding: "4px 8px", flexShrink: 0,
+          }}
+          title="Remove"
+        >
+          ✕
+        </button>
+      )}
+    </div>
   );
 }

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useReminders } from "../hooks/useReminders.js";
 import { useWebPush } from "../hooks/useWebPush.js";
+import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
 function Toggle({ on, onChange, label, desc }) {
   return (
@@ -13,27 +15,66 @@ function Toggle({ on, onChange, label, desc }) {
       <button
         onClick={() => onChange(!on)}
         style={{
-          width: 46, height: 26, borderRadius: 13, border: "none",
-          background: on ? C.sage : "#d1d5db",
+          width: 46, height: 44, borderRadius: 13, border: "none",
+          background: "transparent",
           cursor: "pointer", position: "relative", flexShrink: 0,
-          transition: "background 0.2s",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 0,
         }}
       >
         <div style={{
-          width: 20, height: 20, borderRadius: "50%", background: "#fff",
-          position: "absolute", top: 3,
-          left: on ? 23 : 3,
-          transition: "left 0.2s",
-          boxShadow: "0 1px 4px #00000030",
-        }} />
+          width: 46, height: 26, borderRadius: 13,
+          background: on ? C.sage : "#d1d5db",
+          position: "relative", transition: "background 0.2s",
+        }}>
+          <div style={{
+            width: 20, height: 20, borderRadius: "50%", background: "#fff",
+            position: "absolute", top: 3,
+            left: on ? 23 : 3,
+            transition: "left 0.2s",
+            boxShadow: "0 1px 4px #00000030",
+          }} />
+        </div>
       </button>
     </div>
   );
 }
 
+const HOUR_OPTIONS = [
+  { value: 4, label: "4:00 am" },
+  { value: 5, label: "5:00 am" },
+  { value: 6, label: "6:00 am (default)" },
+  { value: 7, label: "7:00 am" },
+  { value: 8, label: "8:00 am" },
+  { value: 9, label: "9:00 am" },
+  { value: 10, label: "10:00 am" },
+];
+
 export default function ReminderSettings({ authUser }) {
   const { settings, updateSetting } = useReminders();
-  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe } = useWebPush(authUser);
+  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime } = useWebPush(authUser);
+  const [morningHour, setMorningHour] = useLocalStorage("cs_morning_hour", 6);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleHourChange = async (hour) => {
+    setMorningHour(hour);
+    if (subscribed) {
+      setSaving(true);
+      setSaved(false);
+      await updateMorningTime(hour).catch(() => {});
+      setSaving(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  };
+
+  const handleSubscribe = () => subscribe(morningHour);
+
+  // Compute what times the user will get based on their morning hour
+  const lemonTime = `${morningHour}:00 am`;
+  const celeryTime = `${morningHour + 1}:00 am`;
+  const hmdsTime = `${morningHour + 2}:00 am`;
 
   return (
     <Card>
@@ -69,6 +110,36 @@ export default function ReminderSettings({ authUser }) {
           Get healing reminders even when the app is closed — lemon water, celery juice, adrenal snacks, and evening wind-down. Works best when you add CelerySync to your home screen.
         </div>
 
+        {/* Morning time picker — shown always so they can set before subscribing */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.charcoal, fontWeight: 600, marginBottom: 6, fontFamily: "Georgia,serif" }}>
+            What time do you wake up?
+          </div>
+          <select
+            value={morningHour}
+            onChange={(e) => handleHourChange(Number(e.target.value))}
+            style={{
+              border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 12px",
+              fontSize: 13, color: C.charcoal, background: "#fff",
+              fontFamily: "Georgia,serif", cursor: "pointer", width: "100%",
+            }}
+          >
+            {HOUR_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          {subscribed && (
+            <div style={{ fontSize: 11, color: saving ? C.muted : saved ? C.sage : C.muted, marginTop: 5, transition: "color 0.3s" }}>
+              {saving ? "Saving…" : saved ? "✓ Saved — reminders updated" : `Lemon water at ${lemonTime} · Celery juice at ${celeryTime} · HMDS at ${hmdsTime}`}
+            </div>
+          )}
+          {!subscribed && (
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>
+              Lemon water at {lemonTime} · Celery juice at {celeryTime} · HMDS at {hmdsTime}
+            </div>
+          )}
+        </div>
+
         {!supported ? (
           <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>
             Push notifications aren't supported in this browser. Add to Home Screen on iPhone first (Share → Add to Home Screen).
@@ -81,9 +152,6 @@ export default function ReminderSettings({ authUser }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>
               ✓ Background notifications active
-            </div>
-            <div style={{ fontSize: 11, color: C.muted }}>
-              You'll receive healing reminders at: 6am (lemon water), 7am (celery juice), 8am (HMDS), 10am / 12pm / 2pm / 4pm (snacks), 7pm (evening)
             </div>
             <button
               onClick={unsubscribe}
@@ -98,7 +166,7 @@ export default function ReminderSettings({ authUser }) {
             </button>
           </div>
         ) : (
-          <Btn full onClick={subscribe} color={C.sage} disabled={loading}>
+          <Btn full onClick={handleSubscribe} color={C.sage} disabled={loading}>
             {loading ? "Setting up…" : "🔔 Enable Background Notifications"}
           </Btn>
         )}

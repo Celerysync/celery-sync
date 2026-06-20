@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import C from "../lib/colors.js";
-import { useVoice, ELEVENLABS_VOICES } from "../hooks/useVoice.js";
+import { useVoice, ELEVENLABS_VOICES, srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { Btn } from "./ui.jsx";
@@ -739,38 +739,41 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             background: C.white,
           }}
         />
-        <button
-          onClick={() => {
-            if (listening) {
-              voiceModeRef.current = false;
-              stopListening();
-            } else {
-              voiceModeRef.current = true;
-              startListening((t) => {
-                const lower = t.trim().toLowerCase();
-                if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
-                  stopSpeaking();
-                } else {
-                  send(t);
-                }
-              });
-            }
-          }}
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: "50%",
-            border: "none",
-            cursor: "pointer",
-            background: listening ? "#E74C3C" : C.sage,
-            color: C.white,
-            fontSize: 22,
-            flexShrink: 0,
-            boxShadow: "0 2px 12px #0000001a",
-          }}
-        >
-          {listening ? "⏹" : "🎙"}
-        </button>
+        {srSupported && (
+          <button
+            onClick={() => {
+              if (listening) {
+                voiceModeRef.current = false;
+                stopListening();
+              } else {
+                voiceModeRef.current = true;
+                startListening((t) => {
+                  const lower = t.trim().toLowerCase();
+                  if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
+                    stopSpeaking();
+                  } else {
+                    send(t);
+                  }
+                });
+              }
+            }}
+            title="Voice input"
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: "50%",
+              border: "none",
+              cursor: "pointer",
+              background: listening ? "#E74C3C" : C.sage,
+              color: C.white,
+              fontSize: 22,
+              flexShrink: 0,
+              boxShadow: "0 2px 12px #0000001a",
+            }}
+          >
+            {listening ? "⏹" : "🎙"}
+          </button>
+        )}
         <button
           onClick={() => send(input)}
           style={{
