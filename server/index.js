@@ -9,7 +9,7 @@ import elevenLabsRoutes from './routes/elevenlabs.js'
 import booksRoutes from './routes/books.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
-import analyticsRoutes, { generateWeeklyDigest } from './routes/analytics.js'
+import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 
@@ -118,8 +118,10 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   // Anniversary letters — daily at 9am UTC, checks for today's anniversaries
   cron.schedule('0 9 * * *', async () => {
     try { await generateAnniversaryLetters(); } catch (err) { console.warn('Anniversary letters error:', err.message); }
+    try { await checkTrialUserAlert(); } catch (err) { console.warn('Trial alert error:', err.message); }
   });
   console.log('💌 Anniversary letter scheduler active')
+  console.log('📱 Trial user SMS alert active (every 50 users)')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

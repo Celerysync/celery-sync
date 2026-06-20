@@ -557,5 +557,15 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ═══════════════════════════════════════════════════════════════════
+-- system_settings: key-value store for server-side flags
+-- Used for things like tracking last SMS alert threshold
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS system_settings (
+  key        text PRIMARY KEY,
+  value      text,
+  updated_at timestamptz DEFAULT now()
+);
+
+-- ═══════════════════════════════════════════════════════════════════
 -- Done!
 -- ═══════════════════════════════════════════════════════════════════

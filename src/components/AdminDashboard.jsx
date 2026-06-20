@@ -108,8 +108,10 @@ export default function AdminDashboard({ authUser }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <StatCard value={data.users.total} label="Total profiles" color={C.leaf} bg={C.sageLight} />
+          <StatCard value={data.users.onTrial ?? "—"} label="On free trial" color={C.gold} bg={C.goldLight} />
+          <StatCard value={data.users.paid ?? "—"} label="Paid subscribers" color={C.sageDark} bg={C.sageLight} />
+          <StatCard value={`${data.users.conversionRate ?? "0.0"}%`} label="Conversion rate" color={C.plum} bg={C.plumLight} />
           <StatCard value={data.users.activeWeek} label="Active this week" color={C.sage} bg="#f0fdf4" />
-          <StatCard value={data.users.activeMonth} label="Active this month" color="#7c6fcd" bg={C.plumLight} />
         </div>
       </Card>
 

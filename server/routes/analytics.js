@@ -1,9 +1,12 @@
 import { Router } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import twilio from 'twilio'
 
 const router = Router()
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'allij@live.com.au'
+const TRIAL_DAYS = 7
+const ALERT_EVERY = 50  // SMS every 50 trial users
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -39,10 +42,13 @@ router.get('/admin/:userId', async (req, res) => {
   const day30 = new Date(now - 30 * 86400000).toISOString()
 
   // Run all queries in parallel
+  const trialCutoff = new Date(now - TRIAL_DAYS * 86400000).toISOString()
+
   const [
     totalUsersRes,
     activeWeekRes,
     activeMonthRes,
+    trialUsersRes,
     eventCountsRes,
     dailyCheckinsRes,
     tabViewsRes,
@@ -55,6 +61,8 @@ router.get('/admin/:userId', async (req, res) => {
       .gte('created_at', day7).not('user_id', 'is', null),
     supabaseAdmin.from('analytics_events').select('user_id', { count: 'exact', head: true })
       .gte('created_at', day30).not('user_id', 'is', null),
+    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true })
+      .gte('created_at', trialCutoff),
     supabaseAdmin.from('analytics_events').select('event_type').gte('created_at', day7),
     supabaseAdmin.from('daily_checkins').select('check_date').gte('check_date', day7.split('T')[0]),
     supabaseAdmin.from('analytics_events').select('properties').eq('event_type', 'tab_view').gte('created_at', day7),
@@ -90,11 +98,18 @@ router.get('/admin/:userId', async (req, res) => {
     subBreakdown[plan] = (subBreakdown[plan] || 0) + 1
   }
 
+  const totalSubs = (subRes.data || []).length
+
   res.json({
     users: {
       total: totalUsersRes.count || 0,
       activeWeek: activeWeekRes.count || 0,
       activeMonth: activeMonthRes.count || 0,
+      onTrial: trialUsersRes.count || 0,
+      paid: totalSubs,
+      conversionRate: totalUsersRes.count > 0
+        ? ((totalSubs / totalUsersRes.count) * 100).toFixed(1)
+        : '0.0',
     },
     subscriptions: subBreakdown,
     revenue: {
@@ -157,6 +172,54 @@ export async function generateWeeklyDigest() {
   })
 
   console.log('📊 Weekly digest generated')
+}
+
+// ── SMS alert via Twilio ────────────────────────────────────────────────────
+
+async function sendAdminSMS(message) {
+  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, ADMIN_PHONE } = process.env
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER || !ADMIN_PHONE) {
+    console.log('📱 SMS skipped — Twilio env vars not set')
+    return
+  }
+  try {
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    await client.messages.create({ body: message, from: TWILIO_FROM_NUMBER, to: ADMIN_PHONE })
+    console.log('📱 Admin SMS sent:', message)
+  } catch (err) {
+    console.warn('📱 SMS failed:', err.message)
+  }
+}
+
+// ── Trial user alert — called by daily cron ────────────────────────────────
+
+export async function checkTrialUserAlert() {
+  try {
+    const trialCutoff = new Date(Date.now() - TRIAL_DAYS * 86400000).toISOString()
+
+    const [trialRes, subRes, settingRes] = await Promise.all([
+      supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', trialCutoff),
+      supabaseAdmin.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      supabaseAdmin.from('system_settings').select('value').eq('key', 'trial_alert_last_threshold').single(),
+    ])
+
+    const trialCount = trialRes.count || 0
+    const paidCount = subRes.count || 0
+    const lastThreshold = parseInt(settingRes.data?.value || '0', 10)
+    const nextThreshold = lastThreshold + ALERT_EVERY
+
+    if (trialCount >= nextThreshold) {
+      const msg = `🌿 CelerySync: ${trialCount} free trial users reached! ${paidCount} have subscribed (${trialCount > 0 ? ((paidCount / trialCount) * 100).toFixed(0) : 0}% conversion). Check your admin dashboard.`
+      await sendAdminSMS(msg)
+
+      await supabaseAdmin.from('system_settings').upsert(
+        { key: 'trial_alert_last_threshold', value: String(nextThreshold), updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+    }
+  } catch (err) {
+    console.warn('Trial alert check failed:', err.message)
+  }
 }
 
 export default router
