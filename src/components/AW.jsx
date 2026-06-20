@@ -1,5 +1,7 @@
+import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { callClaude } from "../lib/api.js";
 
 const IHERB_CODE = "CELERYSYNC";
 
@@ -40,6 +42,330 @@ const LINKS = [
   { label: "🎙 Podcast",               url: "https://medicalmedium.com/medical-medium-podcast",                desc: "Free episodes — deep dives on conditions, foods, supplements, and healing" },
   { label: "📘 Facebook",              url: "https://facebook.com/medicalmedium",                              desc: "Community groups and daily posts" },
 ];
+
+function HealingStorySection() {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState({ how_long: "", conditions: "", changes: "", message: "" });
+  const [story, setStory] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const QUESTIONS = [
+    { key: "how_long",   label: "How long have you been following Medical Medium?", placeholder: "e.g. 3 years, since 2020…" },
+    { key: "conditions", label: "What conditions or symptoms brought you to Anthony William's work?", placeholder: "e.g. chronic fatigue, EBV, thyroid issues…" },
+    { key: "changes",    label: "What has improved or changed for you?", placeholder: "e.g. energy levels, brain fog lifted, test results improved…" },
+    { key: "message",    label: "What would you say to someone just discovering Medical Medium?", placeholder: "From your heart…" },
+  ];
+
+  const generate = async () => {
+    setLoading(true);
+    const text = await callClaude({
+      tier: "quick", maxTokens: 350,
+      messages: [{ role: "user", content: `Write a heartfelt, genuine healing testimony for Anthony William's website based on these answers. Write in first person, warm and personal, 3-4 short paragraphs. Do NOT include any medical claims or promises of cure — keep it personal experience only. End with genuine gratitude to Anthony William.\n\nHow long following MM: ${answers.how_long}\nConditions/symptoms: ${answers.conditions}\nWhat changed: ${answers.changes}\nMessage to others: ${answers.message}` }],
+    }).catch(() => null);
+    setStory((text || "").replace(/\*\*/g, "").replace(/[*_`#]/g, "").trim());
+    setLoading(false);
+    setStep(5);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard?.writeText(story).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!open) return (
+    <Card style={{ border: `1.5px solid ${C.sage}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 28 }}>💚</div>
+        <div>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>Share your healing story</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            AW collects healing testimonials — your story could give someone hope. Takes 2 minutes.
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", color: C.sage, fontSize: 20 }}>›</div>
+      </div>
+    </Card>
+  );
+
+  return (
+    <Card style={{ border: `1.5px solid ${C.sage}50` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark }}>💚 Your healing story</div>
+        <button onClick={() => { setOpen(false); setStep(0); setStory(""); }} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
+      </div>
+
+      {step < 4 && (
+        <>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Question {step + 1} of 4</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 10, lineHeight: 1.5 }}>
+            {QUESTIONS[step].label}
+          </div>
+          <textarea
+            value={answers[QUESTIONS[step].key]}
+            onChange={e => setAnswers(a => ({ ...a, [QUESTIONS[step].key]: e.target.value }))}
+            placeholder={QUESTIONS[step].placeholder}
+            rows={3}
+            style={{
+              width: "100%", border: `1px solid ${C.border}`, borderRadius: 10,
+              padding: "10px 12px", fontSize: 13, fontFamily: "Georgia,serif",
+              resize: "none", boxSizing: "border-box", color: C.charcoal,
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            {step > 0 && (
+              <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: "9px", borderRadius: 30, border: `1px solid ${C.border}`, background: "none", fontSize: 13, color: C.muted, cursor: "pointer" }}>← Back</button>
+            )}
+            <button
+              onClick={() => step === 3 ? generate() : setStep(s => s + 1)}
+              disabled={!answers[QUESTIONS[step].key].trim()}
+              style={{
+                flex: 2, padding: "9px", borderRadius: 30, border: "none",
+                background: answers[QUESTIONS[step].key].trim() ? C.sage : C.border,
+                color: C.white, fontSize: 13, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              {step === 3 ? "✨ Generate my story" : "Next →"}
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 5 && loading && (
+        <div style={{ textAlign: "center", color: C.muted, fontSize: 13, padding: "20px 0" }}>✨ Writing your story…</div>
+      )}
+
+      {step === 5 && !loading && story && (
+        <>
+          <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.6 }}>
+            Here's your story — read it, make it yours, then copy and submit to Anthony William's website.
+          </div>
+          <div style={{
+            background: C.mist, borderRadius: 12, padding: "14px 16px",
+            fontSize: 13, color: C.charcoal, lineHeight: 1.8, marginBottom: 12,
+            whiteSpace: "pre-wrap",
+          }}>
+            {story}
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={handleCopy} style={{
+              flex: 1, background: copied ? C.sage : C.white, color: copied ? C.white : C.sageDark,
+              border: `1.5px solid ${C.sage}`, borderRadius: 30, padding: "8px 14px",
+              fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+            }}>
+              {copied ? "✓ Copied!" : "📋 Copy story"}
+            </button>
+            <a
+              href="https://medicalmedium.com/contact"
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                flex: 1, background: C.sageDark, color: C.white, textDecoration: "none",
+                border: "none", borderRadius: 30, padding: "8px 14px",
+                fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+                cursor: "pointer", textAlign: "center",
+              }}
+            >
+              Submit to AW's team →
+            </a>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+function IntroduceSection() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const message = (n) => `Hi${n ? " " + n : ""},
+
+I wanted to share something that has genuinely changed my life — Anthony William, the Medical Medium.
+
+He's a New York Times #1 bestselling author who has spent decades helping people with chronic illness, mystery symptoms, fatigue, brain fog, autoimmune conditions, and things doctors can't explain.
+
+His books explain the real causes behind conditions like EBV, thyroid disease, anxiety, and so much more — and give exact protocols to actually heal.
+
+If you've been suffering and not getting answers, please look him up. His website has a huge amount of free content too.
+
+🌿 medicalmedium.com
+
+I also use an app called CelerySync that helps me follow his protocols daily — but start with his books. They will change how you see everything.
+
+With love`;
+
+  const handleCopy = () => {
+    navigator.clipboard?.writeText(message(name)).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ text: message(name) }).catch(() => {});
+    } else handleCopy();
+  };
+
+  if (!open) return (
+    <Card style={{ border: `1.5px solid ${C.gold}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 28 }}>💛</div>
+        <div>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>Introduce someone to AW</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            Know someone who is suffering and hasn't found his work yet? Send them a personal message.
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", color: C.gold, fontSize: 20 }}>›</div>
+      </div>
+    </Card>
+  );
+
+  return (
+    <Card style={{ border: `1.5px solid ${C.gold}50` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>💛 Introduce someone to AW</div>
+        <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>Personalise with their name (optional):</div>
+      <input
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Their name…"
+        style={{
+          width: "100%", border: `1px solid ${C.border}`, borderRadius: 10,
+          padding: "8px 12px", fontSize: 13, fontFamily: "Georgia,serif",
+          boxSizing: "border-box", marginBottom: 12, color: C.charcoal,
+        }}
+      />
+      <div style={{
+        background: C.mist, borderRadius: 12, padding: "12px 14px",
+        fontSize: 12.5, color: C.charcoal, lineHeight: 1.8, marginBottom: 12,
+        whiteSpace: "pre-wrap", maxHeight: 180, overflowY: "auto",
+      }}>
+        {message(name)}
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={handleCopy} style={{
+          flex: 1, background: copied ? C.sage : C.white, color: copied ? C.white : C.mid,
+          border: `1px solid ${C.border}`, borderRadius: 30, padding: "8px",
+          fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+        }}>
+          {copied ? "✓ Copied!" : "📋 Copy"}
+        </button>
+        <button onClick={handleShare} style={{
+          flex: 2, background: C.gold, color: C.white, border: "none",
+          borderRadius: 30, padding: "8px",
+          fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+        }}>
+          Share via…
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+function GiftBookSection() {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ recipient: "", book: "Medical Medium", reason: "" });
+  const [sent, setSent] = useState(false);
+
+  const BOOK_TITLES = [
+    "Medical Medium", "Life-Changing Foods", "Thyroid Healing",
+    "Liver Rescue", "Celery Juice", "Cleanse to Heal",
+    "Brain Saver", "Brain Saver Protocols, Cleanses & Recipes",
+  ];
+
+  const handleSend = () => {
+    const subject = encodeURIComponent(`Book Gift Request — ${form.book}`);
+    const body = encodeURIComponent(`Hi CelerySync team,\n\nI'd like to gift an Anthony William book to someone in need.\n\nRecipient / situation: ${form.recipient}\nBook: ${form.book}\nWhy they need it: ${form.reason}\n\nPlease let me know how I can help make this happen.\n\nThank you`);
+    window.open(`mailto:healing@celerysync.com?subject=${subject}&body=${body}`);
+    setSent(true);
+  };
+
+  if (!open) return (
+    <Card style={{ border: `1.5px solid ${C.plum}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 28 }}>📖</div>
+        <div>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>Gift someone an AW book</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            Know someone who needs his books but can't afford them? The Healing Access Fund will help.
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", color: C.plum, fontSize: 20 }}>›</div>
+      </div>
+    </Card>
+  );
+
+  if (sent) return (
+    <Card style={{ border: `1.5px solid ${C.sage}50`, textAlign: "center" }}>
+      <div style={{ fontSize: 32, marginBottom: 8 }}>💚</div>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 6 }}>Request sent</div>
+      <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+        We'll be in touch to arrange the gift. Thank you for your generosity — this is exactly what the Healing Access Fund exists for.
+      </div>
+    </Card>
+  );
+
+  return (
+    <Card style={{ border: `1.5px solid ${C.plum}50` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>📖 Gift an AW book</div>
+        <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
+        Tell us who needs it and why. The Healing Access Fund covers the cost — we'll sort the rest.
+      </div>
+      {[
+        { key: "recipient", label: "Who is this for?", placeholder: "Name or brief description of their situation…" },
+        { key: "reason",    label: "Why do they need this book?", placeholder: "Their health situation, why they can't afford it…" },
+      ].map(({ key, label, placeholder }) => (
+        <div key={key} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 4 }}>{label}</div>
+          <input
+            value={form[key]}
+            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+            placeholder={placeholder}
+            style={{
+              width: "100%", border: `1px solid ${C.border}`, borderRadius: 10,
+              padding: "8px 12px", fontSize: 13, fontFamily: "Georgia,serif",
+              boxSizing: "border-box", color: C.charcoal,
+            }}
+          />
+        </div>
+      ))}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 4 }}>Which book?</div>
+        <select
+          value={form.book}
+          onChange={e => setForm(f => ({ ...f, book: e.target.value }))}
+          style={{
+            width: "100%", border: `1px solid ${C.border}`, borderRadius: 10,
+            padding: "8px 12px", fontSize: 13, fontFamily: "Georgia,serif",
+            background: C.white, color: C.charcoal,
+          }}
+        >
+          {BOOK_TITLES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <button
+        onClick={handleSend}
+        disabled={!form.recipient.trim() || !form.reason.trim()}
+        style={{
+          width: "100%", background: form.recipient.trim() && form.reason.trim() ? C.plum : C.border,
+          color: C.white, border: "none", borderRadius: 30, padding: "10px",
+          fontSize: 13, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+        }}
+      >
+        Send request →
+      </button>
+    </Card>
+  );
+}
 
 export default function AW({ onNavigate }) {
   return (
@@ -310,6 +636,15 @@ export default function AW({ onNavigate }) {
           healing@celerysync.com
         </div>
       </Card>
+
+      {/* ── Share your healing story ── */}
+      <HealingStorySection />
+
+      {/* ── Introduce someone ── */}
+      <IntroduceSection />
+
+      {/* ── Gift a book ── */}
+      <GiftBookSection />
 
       {/* Legal disclaimer */}
       <div style={{ background: C.mist, borderRadius: 16, padding: 16 }}>

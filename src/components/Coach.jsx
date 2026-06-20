@@ -924,6 +924,33 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         </div>
       )}
 
+      {/* Free AW content link — shown after each exchange */}
+      {messages.length > 1 && !loading && (() => {
+        const lastUser = [...messages].reverse().find(m => m.role === "user");
+        if (!lastUser) return null;
+        const query = encodeURIComponent(lastUser.content.slice(0, 60));
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
+            <span style={{ fontSize: 10, color: C.muted, flexShrink: 0 }}>Go deeper:</span>
+            <a
+              href={`https://www.youtube.com/results?search_query=medical+medium+${query}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 11, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+            >
+              ▶ AW on YouTube
+            </a>
+            <span style={{ color: C.border }}>·</span>
+            <a
+              href="https://medicalmedium.com/podcast"
+              target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 11, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+            >
+              🎙 MM Podcast
+            </a>
+          </div>
+        );
+      })()}
+
       {/* Quick questions — shown when no follow-ups yet */}
       {followUps.length === 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
