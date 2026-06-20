@@ -31,6 +31,23 @@ function buildConditionsIndex() {
     .join("\n");
 }
 
+const GREETINGS = {
+  es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu guía de sanación Medical Medium, entrenado con todos los libros de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
+  pt: (name) => `Olá${name ? ", " + name : ""}! 🌿 Sou seu guia de cura Medical Medium, treinado com todos os livros de Anthony William. Você pode falar comigo ou escrever abaixo. Como posso ajudá-lo hoje?`,
+  fr: (name) => `Bonjour${name ? ", " + name : ""} ! 🌿 Je suis votre guide de guérison Medical Medium, formé sur tous les livres d'Anthony William. Vous pouvez me parler ou écrire ci-dessous. Comment puis-je vous aider aujourd'hui ?`,
+  de: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ich bin Ihr Medical Medium Heilungsbegleiter, ausgebildet mit allen Büchern von Anthony William. Sie können mit mir sprechen oder unten schreiben. Wie kann ich Ihnen heute helfen?`,
+  it: (name) => `Ciao${name ? ", " + name : ""}! 🌿 Sono la tua guida di guarigione Medical Medium, formata su tutti i libri di Anthony William. Puoi parlarmi o scrivere qui sotto. Come posso aiutarti oggi?`,
+  nl: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ik ben uw Medical Medium healingsgids, getraind op alle boeken van Anthony William. U kunt met me praten of hieronder schrijven. Hoe kan ik u vandaag helpen?`,
+  pl: (name) => `Cześć${name ? ", " + name : ""}! 🌿 Jestem Twoim przewodnikiem uzdrawiania Medical Medium, przeszkolonym na wszystkich książkach Anthony'ego Williama. Możesz do mnie mówić lub pisać poniżej. Jak mogę Ci dzisiaj pomóc?`,
+  zh: (name) => `你好${name ? "，" + name : ""}！🌿 我是您的医疗灵媒康复向导，基于安东尼·威廉的所有书籍训练而成。您可以对我说话或在下方输入。今天我能帮您什么？`,
+  ja: (name) => `こんにちは${name ? "、" + name : ""}！🌿 私はあなたのメディカルミディアム癒しガイドです。アンソニー・ウィリアムのすべての本で訓練されています。話しかけるか、下に書いてください。今日はどのようにお手伝いできますか？`,
+  ko: (name) => `안녕하세요${name ? ", " + name : ""}! 🌿 저는 앤서니 윌리엄의 모든 책을 기반으로 훈련된 메디컬 미디엄 치유 가이드입니다. 말씀하시거나 아래에 입력하세요. 오늘 어떻게 도와드릴까요?`,
+  ar: (name) => `مرحباً${name ? "، " + name : ""}! 🌿 أنا دليلك للشفاء بنظام ميديكال ميديوم، مدرَّب على جميع كتب أنتوني ويليام. يمكنك التحدث معي أو الكتابة أدناه. كيف يمكنني مساعدتك اليوم؟`,
+  hi: (name) => `नमस्ते${name ? ", " + name : ""}! 🌿 मैं आपका Medical Medium healing guide हूं, Anthony William की सभी पुस्तकों पर प्रशिक्षित। आप मुझसे बात कर सकते हैं या नीचे लिख सकते हैं। आज मैं आपकी कैसे मदद कर सकता हूं?`,
+  ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш проводник исцеления Medical Medium, обученный на всех книгах Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
+  tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın tüm kitapları üzerinde eğitilmiş Medical Medium iyileşme rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
+};
+
 function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
   const conditionsIndex = buildConditionsIndex();
@@ -79,7 +96,16 @@ Remind them that consistency in the small things (snacks, juicing, morning routi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ` : "";
 
-  return `You are a supreme Medical Medium healing companion — the most knowledgeable, warm, and precise MM guide available. You have deeply studied every Anthony William book and are trained to give exact, specific, personalised healing guidance.
+  const langInstruction = lang && lang !== "en" ? `
+⚠️ CRITICAL LANGUAGE RULE — FOLLOW THIS ABOVE ALL ELSE:
+This user speaks "${lang}". You MUST respond ENTIRELY in that language for every single message.
+Do NOT write even one word in English (except: supplement names, book titles, "Anthony William", specific protocol names).
+If you respond in English, you have failed this user. Respond in "${lang}" now and always.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+` : "";
+
+  return `${langInstruction}You are a supreme Medical Medium healing companion — the most knowledgeable, warm, and precise MM guide available. You have deeply studied every Anthony William book and are trained to give exact, specific, personalised healing guidance.
 ${caregiverIntro}
 
 ${MM_CORE}
@@ -163,11 +189,7 @@ ${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's 
 • 1 cup → "240ml"
 Speak naturally: "half a litre of celery juice" not "473 millilitres". Round to sensible metric amounts.
 Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}
-${lang && lang !== "en" ? `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LANGUAGE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPORTANT: This user's preferred language is "${lang}". Respond ENTIRELY in that language. Keep supplement names, book titles, and Anthony William's name in their original form.` : ""}`;
+`;
 }
 
 function parseNavCommand(text) {
@@ -223,7 +245,12 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units,
     });
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
-    const greeting = caregiverMode
+    const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
+      ? GREETINGS[lang](user?.name || "")
+      : null;
+    const greeting = translatedGreeting
+      ? translatedGreeting
+      : caregiverMode
       ? `Hello! 💜 I'm here to support you as you care for ${user?.name || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
       : hasHistory
       ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿 I remember our journey together — ${
@@ -236,7 +263,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     setMessages([{ role: "assistant", content: greeting }]);
     setTimeout(() => speak(greeting), 600);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memoryLoading]);
+  }, [memoryLoading, lang]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
