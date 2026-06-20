@@ -16,19 +16,36 @@ const TRANSFORMATION = [
   { before: "Drowning in books, unsure what applies to you", after: "Your exact protocol, personalised to your conditions and symptoms" },
   { before: "Alone with questions no one around you can answer", after: "An AI that speaks your language, any time you need it" },
   { before: "Starting cleanses, falling off, starting again", after: "Guided through every single day with reminders and support" },
-  { before: "No idea if you're actually getting better", after: "Charts that show your energy, celery streak, and healing progress" },
+  { before: "No idea if you're actually getting better", after: "Weekly summaries that track your energy, progress, and patterns over time" },
+  { before: "No way to show your doctor what you've been doing", after: "A professional health report — one tap, ready to hand to any practitioner" },
+  { before: "Doing it alone, nobody around you truly understands", after: "Invite a carer to see your journey — and get a personal letter on every healing anniversary" },
 ];
 
 const FEATURES = [
   {
     emoji: "🎙",
-    title: "AI Guide that truly understands",
-    desc: "Speak to it or type — it answers with exact dosages, exact protocols, and references which Anthony William book to read. It remembers your conditions, your wins, your setbacks.",
+    title: "AI Guide that never forgets you",
+    desc: "Speaks your language, answers with exact dosages, and permanently remembers your conditions, milestones, setbacks, and wins — building deeper understanding with every single session.",
+  },
+  {
+    emoji: "🧠",
+    title: "Healing memory that lasts forever",
+    desc: "Every conversation is distilled into milestones — insights your AI keeps permanently. Years from now it still knows your full story. Nothing is ever lost.",
   },
   {
     emoji: "📊",
     title: "See your healing in numbers",
     desc: "Track energy, mood, celery juice, symptoms, morning protocol. Your charts reveal patterns you'd never spot otherwise — including die-off reactions.",
+  },
+  {
+    emoji: "📋",
+    title: "Weekly summary + doctor report",
+    desc: "Every Sunday your AI writes a personal summary of your week. One tap generates a professional PDF for any medical appointment — energy trends, supplements, symptoms, timeline.",
+  },
+  {
+    emoji: "💌",
+    title: "Your healing anniversary letter",
+    desc: "Each year on your healing anniversary, your AI writes you a personal letter — reflecting on how far you've come and what it sees ahead. Yours to keep forever.",
   },
   {
     emoji: "⏰",
@@ -56,9 +73,14 @@ const FEATURES = [
     desc: "Upload your purchased MM books and AW YouTube videos. The entire app gets smarter. Your AI quotes your actual books back to you.",
   },
   {
+    emoji: "💜",
+    title: "Invite a carer to see your progress",
+    desc: "Share your healing journey with someone who supports you. They see your energy trends, check-ins, and milestones — so they can show up for you better.",
+  },
+  {
     emoji: "👨‍👩‍👧‍👦",
     title: "Your whole family, one subscription",
-    desc: "Separate profiles for every family member. Each person gets their own healing journey, AI memory, and daily journal.",
+    desc: "Separate profiles for every family member. Each person gets their own healing journey, AI memory, weekly summaries, and daily journal.",
   },
 ];
 
@@ -418,7 +440,7 @@ export default function Landing({ onGetStarted }) {
             An AI that actually knows Medical Medium
           </h2>
           <p style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.8, marginBottom: 20, textAlign: "center" }}>
-            Not a generic chatbot with a prompt. CelerySync's AI is built on Anthony William's full knowledge base — every book, every protocol, every supplement dosage. It then learns from <em>your</em> uploaded books and videos, making it more specific to you with every session.
+            Not a generic chatbot with a prompt. CelerySync's AI is built on Anthony William's full knowledge base — every book, every protocol, every supplement dosage. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation, for as long as you heal.
           </p>
 
           {/* Mock AI conversation */}
@@ -440,7 +462,7 @@ export default function Landing({ onGetStarted }) {
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["100 exact condition protocols", "Remembers your journey", "Speaks & listens", "Quotes your own books"].map((t) => (
+            {["100 exact condition protocols", "Permanent healing memory", "Speaks & listens", "Quotes your own books", "Weekly summaries", "Doctor reports"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",
