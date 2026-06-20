@@ -35,14 +35,14 @@ const WELCOME_TEXT_EN =
   "You're in exactly the right place. I'm here for you. Feel free to ask me anything — I'm listening.";
 
 const STEPS = [
-  { emoji: "🏠", label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
-  { emoji: "🎙", label: "AI Guide",   desc: "Talk hands-free — mic auto-listens after every reply" },
-  { emoji: "🔍", label: "Symptoms",   desc: "100 conditions with exact supplement protocols" },
-  { emoji: "🍽", label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
-  { emoji: "🌿", label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
-  { emoji: "🫁", label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },
-  { emoji: "💚", label: "Circles",    desc: "Anonymous community — people healing the same conditions" },
-  { emoji: "📖", label: "My Books",   desc: "Upload your MM books — I'll reference them in every answer" },
+  { emoji: "🏠", tab: "home",      label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
+  { emoji: "🎙", tab: "coach",     label: "AI Guide",   desc: "Talk hands-free — mic auto-listens after every reply" },
+  { emoji: "🔍", tab: "symptoms",  label: "Symptoms",   desc: "100 conditions with exact supplement protocols" },
+  { emoji: "🍽", tab: "recipes",   label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
+  { emoji: "🌿", tab: "cleanses",  label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
+  { emoji: "🫁", tab: "body",      label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },
+  { emoji: "💚", tab: "community", label: "Circles",    desc: "Anonymous community — people healing the same conditions" },
+  { emoji: "📖", tab: "knowledge", label: "My Books",   desc: "Upload your MM books — I'll reference them in every answer" },
 ];
 
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL";
@@ -62,7 +62,7 @@ const STYLE = `
   }
 `;
 
-export default function WelcomeVoice({ userId, onDone }) {
+export default function WelcomeVoice({ userId, onDone, onNavigate }) {
   const savedVoice = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
   const savedLang  = localStorage.getItem("cs_lang")      || "en";
 
@@ -96,6 +96,18 @@ export default function WelcomeVoice({ userId, onDone }) {
     recogRef.current?.stop();
     onDone();
   }, [userId, onDone]);
+
+  const dismissTo = useCallback((tabId) => {
+    clearTimeout(idleTimerRef.current);
+    localStorage.setItem("cs_voiceName", voiceRef.current);
+    localStorage.setItem("cs_lang",      langRef.current);
+    if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    window.speechSynthesis?.cancel();
+    recogRef.current?.stop();
+    onNavigate?.(tabId);
+    onDone();
+  }, [userId, onNavigate, onDone]);
 
   const startIdleTimer = useCallback((ms) => {
     clearTimeout(idleTimerRef.current);
@@ -337,13 +349,19 @@ export default function WelcomeVoice({ userId, onDone }) {
               padding: "16px 20px", marginBottom: 16, textAlign: "left",
             }}>
               {STEPS.map((s, i) => (
-                <div key={s.label} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  padding: "8px 0",
-                  borderBottom: i < STEPS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none",
-                }}>
+                <button
+                  key={s.label}
+                  onClick={() => dismissTo(s.tab)}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 12,
+                    padding: "8px 0", width: "100%",
+                    background: "none", border: "none", cursor: "pointer",
+                    borderBottom: i < STEPS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                    textAlign: "left",
+                  }}
+                >
                   <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{s.emoji}</span>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.white }}>
                       {s.label}
                     </div>
@@ -351,7 +369,8 @@ export default function WelcomeVoice({ userId, onDone }) {
                       {s.desc}
                     </div>
                   </div>
-                </div>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", alignSelf: "center", flexShrink: 0 }}>›</span>
+                </button>
               ))}
             </div>
 

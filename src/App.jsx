@@ -455,7 +455,11 @@ export default function App() {
 
       {showWelcome && (
         <Suspense fallback={null}>
-          <WelcomeVoice userId={authUser?.id} onDone={() => setShowWelcome(false)} />
+          <WelcomeVoice
+            userId={authUser?.id}
+            onDone={() => setShowWelcome(false)}
+            onNavigate={(tabId) => setTab(tabId)}
+          />
         </Suspense>
       )}
       <GlobalVoice currentTab={tab} user={activeProfile} />
