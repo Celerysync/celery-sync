@@ -47,21 +47,26 @@ const STEPS = [
 
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL"; // Sarah
 
-export default function WelcomeVoice({ onDone }) {
+export default function WelcomeVoice({ userId, onDone }) {
   const savedVoice = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
   const savedLang = localStorage.getItem("cs_lang") || "en";
 
   const [selectedVoice, setSelectedVoice] = useState(savedVoice);
   const [selectedLang, setSelectedLang] = useState(savedLang);
-  const [phase, setPhase] = useState("idle"); // idle | loading | playing
+  const [phase, setPhase] = useState("idle"); // idle | loading | playing | error
   const audioRef = useRef(null);
 
   const saveAndDismiss = () => {
     localStorage.setItem("cs_voiceName", selectedVoice);
     localStorage.setItem("cs_lang", selectedLang);
-    localStorage.setItem("cs_welcomed", "1");
+    if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     onDone();
+  };
+
+  const handleError = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPhase("error");
   };
 
   const handleVoiceChange = (e) => {
@@ -103,11 +108,11 @@ export default function WelcomeVoice({ onDone }) {
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = saveAndDismiss;
-      audio.onerror = saveAndDismiss;
+      audio.onerror = handleError;
       setPhase("playing");
-      audio.play().catch(saveAndDismiss);
+      audio.play().catch(handleError);
     } catch {
-      saveAndDismiss();
+      handleError();
     }
   };
 
@@ -236,6 +241,17 @@ export default function WelcomeVoice({ onDone }) {
             fontFamily: "Georgia,serif", marginBottom: 14, padding: 16,
           }}>
             🎙 Speaking… your tour has begun
+          </div>
+        )}
+
+        {phase === "error" && (
+          <div style={{
+            background: "rgba(255,255,255,0.15)", borderRadius: 12,
+            padding: "12px 16px", marginBottom: 14,
+            color: "rgba(255,255,255,0.9)", fontSize: 13,
+            fontFamily: "Georgia,serif", lineHeight: 1.5,
+          }}>
+            Voice unavailable right now — tap below to enter the app.
           </div>
         )}
 

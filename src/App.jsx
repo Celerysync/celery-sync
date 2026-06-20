@@ -135,7 +135,8 @@ export default function App() {
   const [videoNotes, setVideoNotes] = useLocalStorage("cs_videoNotes", []);
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
+  const welcomeKey = `cs_welcomed_${authUser?.id}`;
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [darkMode] = useLocalStorage("cs_darkMode", false);
@@ -454,7 +455,7 @@ export default function App() {
 
       {showWelcome && (
         <Suspense fallback={null}>
-          <WelcomeVoice onDone={() => setShowWelcome(false)} />
+          <WelcomeVoice userId={authUser?.id} onDone={() => setShowWelcome(false)} />
         </Suspense>
       )}
       <GlobalVoice currentTab={tab} user={activeProfile} />
