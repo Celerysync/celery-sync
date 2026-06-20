@@ -562,7 +562,7 @@ export default function Landing({ onGetStarted }) {
             or $119/year — save $61
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
-            Less than one naturopath visit per year. Unlimited family members included.
+            Powered by the world's most advanced AI · Unlimited family members included
           </div>
 
           <button

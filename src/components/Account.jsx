@@ -123,7 +123,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             }}>
               ✨ Try free for 7 days
             </div>
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>Cancel anytime · No lock-in</div>
+            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>Powered by the world's most advanced AI · Cancel anytime</div>
           </div>
 
           {/* Features */}
