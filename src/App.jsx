@@ -18,6 +18,7 @@ import Home from "./components/Home.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
 import ReminderSettings from "./components/ReminderSettings.jsx";
 import WelcomeVoice from "./components/WelcomeVoice.jsx";
+import GlobalVoice from "./components/GlobalVoice.jsx";
 
 // Lazy-loaded: only fetched when the user first taps that tab
 const Coach            = lazy(() => import("./components/Coach.jsx"));
@@ -391,6 +392,7 @@ export default function App() {
       </div>
 
       {showWelcome && <WelcomeVoice onDone={() => setShowWelcome(false)} />}
+      <GlobalVoice currentTab={tab} user={activeProfile} />
     </div>
   );
 }

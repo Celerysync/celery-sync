@@ -40,6 +40,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
   const [units, setUnits] = useLocalStorage("cs_units", "metric")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
+  const [globalVoice, setGlobalVoice] = useLocalStorage("cs_globalVoice", true)
 
   const subscribe = async () => {
     setLoading(true)
@@ -403,6 +404,34 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             ✓ "500ml of celery juice" · "half a litre" · "milligrams"
           </div>
         )}
+      </Card>
+
+      {/* Global voice toggle */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
+          🎙 Voice on Every Page
+        </div>
+        <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
+          A floating mic button lets you ask the AI Guide anything from any page — Symptoms, Recipes, Body, wherever you are.
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn
+            full
+            onClick={() => setGlobalVoice(true)}
+            color={globalVoice ? C.sage : C.muted}
+            style={{ opacity: globalVoice ? 1 : 0.6 }}
+          >
+            🎙 On
+          </Btn>
+          <Btn
+            full
+            onClick={() => setGlobalVoice(false)}
+            color={!globalVoice ? C.sageDark : C.muted}
+            style={{ opacity: !globalVoice ? 1 : 0.6 }}
+          >
+            Off
+          </Btn>
+        </div>
       </Card>
 
       {/* Sign out — always visible */}

@@ -1,8 +1,27 @@
 import { useState, useRef } from "react";
 import C from "../lib/colors.js";
 import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
+import { callClaude } from "../lib/api.js";
 
-const WELCOME_TEXT =
+const LANGUAGES = [
+  { code: "en", label: "English", native: "English" },
+  { code: "es", label: "Spanish", native: "Español" },
+  { code: "pt", label: "Portuguese", native: "Português" },
+  { code: "fr", label: "French", native: "Français" },
+  { code: "de", label: "German", native: "Deutsch" },
+  { code: "it", label: "Italian", native: "Italiano" },
+  { code: "nl", label: "Dutch", native: "Nederlands" },
+  { code: "pl", label: "Polish", native: "Polski" },
+  { code: "zh", label: "Chinese", native: "中文" },
+  { code: "ja", label: "Japanese", native: "日本語" },
+  { code: "ko", label: "Korean", native: "한국어" },
+  { code: "ar", label: "Arabic", native: "العربية" },
+  { code: "hi", label: "Hindi", native: "हिन्दी" },
+  { code: "ru", label: "Russian", native: "Русский" },
+  { code: "tr", label: "Turkish", native: "Türkçe" },
+];
+
+const WELCOME_TEXT_EN =
   "Welcome to CelerySync — your personal Medical Medium healing companion. I'm so glad you're here. " +
   "Let me give you a quick tour. " +
   "Your Today tab is your daily home — morning protocol, supplement tracker, and healing reminders. " +
@@ -29,13 +48,17 @@ const STEPS = [
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL"; // Sarah
 
 export default function WelcomeVoice({ onDone }) {
-  const saved = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
-  const [selectedVoice, setSelectedVoice] = useState(saved);
+  const savedVoice = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
+  const savedLang = localStorage.getItem("cs_lang") || "en";
+
+  const [selectedVoice, setSelectedVoice] = useState(savedVoice);
+  const [selectedLang, setSelectedLang] = useState(savedLang);
   const [phase, setPhase] = useState("idle"); // idle | loading | playing
   const audioRef = useRef(null);
 
-  const saveVoiceAndDismiss = () => {
+  const saveAndDismiss = () => {
     localStorage.setItem("cs_voiceName", selectedVoice);
+    localStorage.setItem("cs_lang", selectedLang);
     localStorage.setItem("cs_welcomed", "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     onDone();
@@ -47,25 +70,44 @@ export default function WelcomeVoice({ onDone }) {
     localStorage.setItem("cs_voiceName", v);
   };
 
+  const handleLangChange = (e) => {
+    const l = e.target.value;
+    setSelectedLang(l);
+    localStorage.setItem("cs_lang", l);
+  };
+
+  const getWelcomeText = async () => {
+    if (selectedLang === "en") return WELCOME_TEXT_EN;
+    const langLabel = LANGUAGES.find(l => l.code === selectedLang)?.label || selectedLang;
+    const result = await callClaude({
+      system: `You are adapting a welcome message for a Medical Medium healing app into ${langLabel}. Write it as a warm, native ${langLabel} speaker would — not a direct translation. Keep it natural and flowing. Keep "Anthony William", "Medical Medium", "3-6-9", supplement names (spirulina, celery juice, etc.) in their original form. Keep the same structure and warmth.`,
+      prompt: `Adapt this welcome message into natural ${langLabel}:\n\n${WELCOME_TEXT_EN}`,
+      tier: "quick",
+      maxTokens: 600,
+    });
+    return result || WELCOME_TEXT_EN;
+  };
+
   const play = async () => {
     setPhase("loading");
     const voiceId = selectedVoice.startsWith("el:") ? selectedVoice.slice(3) : "EXAVITQu4vr4xnSDxMaL";
     try {
+      const text = await getWelcomeText();
       const res = await fetch("/api/elevenlabs/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: WELCOME_TEXT, voiceId }),
+        body: JSON.stringify({ text, voiceId }),
       });
       if (!res.ok) throw new Error("audio error");
       const { url } = await res.json();
       const audio = new Audio(url);
       audioRef.current = audio;
-      audio.onended = saveVoiceAndDismiss;
-      audio.onerror = saveVoiceAndDismiss;
+      audio.onended = saveAndDismiss;
+      audio.onerror = saveAndDismiss;
       setPhase("playing");
-      audio.play().catch(saveVoiceAndDismiss);
+      audio.play().catch(saveAndDismiss);
     } catch {
-      saveVoiceAndDismiss();
+      saveAndDismiss();
     }
   };
 
@@ -94,7 +136,7 @@ export default function WelcomeVoice({ onDone }) {
         {/* Feature list */}
         <div style={{
           background: "rgba(255,255,255,0.12)", borderRadius: 16,
-          padding: "16px 20px", marginBottom: 20, textAlign: "left",
+          padding: "16px 20px", marginBottom: 16, textAlign: "left",
         }}>
           {STEPS.map((s, i) => (
             <div key={s.label} style={{
@@ -115,16 +157,37 @@ export default function WelcomeVoice({ onDone }) {
           ))}
         </div>
 
+        {/* Language picker */}
+        <div style={{
+          background: "rgba(255,255,255,0.12)", borderRadius: 12,
+          padding: "12px 16px", marginBottom: 12, textAlign: "left",
+        }}>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontFamily: "Georgia,serif", marginBottom: 8 }}>
+            🌏 Your language
+          </div>
+          <select
+            value={selectedLang}
+            onChange={handleLangChange}
+            style={{
+              width: "100%", fontFamily: "Georgia,serif", fontSize: 13,
+              color: C.charcoal, background: C.white,
+              border: "none", borderRadius: 8, padding: "8px 10px",
+              outline: "none", cursor: "pointer",
+            }}
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.native} — {l.label}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Voice picker */}
         <div style={{
           background: "rgba(255,255,255,0.12)", borderRadius: 12,
           padding: "12px 16px", marginBottom: 20, textAlign: "left",
         }}>
-          <div style={{
-            fontSize: 12, color: "rgba(255,255,255,0.8)",
-            fontFamily: "Georgia,serif", marginBottom: 8,
-          }}>
-            Choose your companion's voice
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontFamily: "Georgia,serif", marginBottom: 8 }}>
+            🎙 Choose your companion's voice
           </div>
           <select
             value={selectedVoice}
@@ -154,7 +217,7 @@ export default function WelcomeVoice({ onDone }) {
               boxShadow: "0 4px 24px rgba(0,0,0,0.2)", marginBottom: 14,
             }}
           >
-            🎙 Hear My Welcome
+            🎙 Hear My Welcome{selectedLang !== "en" ? ` in ${LANGUAGES.find(l => l.code === selectedLang)?.native}` : ""}
           </button>
         )}
 
@@ -163,7 +226,7 @@ export default function WelcomeVoice({ onDone }) {
             color: "rgba(255,255,255,0.8)", fontSize: 14,
             fontFamily: "Georgia,serif", marginBottom: 14, padding: 16,
           }}>
-            🌿 Preparing your welcome…
+            🌿 {selectedLang !== "en" ? "Preparing your welcome in your language…" : "Preparing your welcome…"}
           </div>
         )}
 
@@ -177,7 +240,7 @@ export default function WelcomeVoice({ onDone }) {
         )}
 
         <button
-          onClick={saveVoiceAndDismiss}
+          onClick={saveAndDismiss}
           style={{
             background: "transparent", border: "1px solid rgba(255,255,255,0.35)",
             color: "rgba(255,255,255,0.7)", borderRadius: 50,
