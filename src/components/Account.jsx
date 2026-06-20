@@ -34,7 +34,9 @@ const FEATURES = [
 
 export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, onSignOut, onReplayWelcome }) {
   const [loading, setLoading] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [cancelPending, setCancelPending] = useState(subData?.cancel_at_period_end || false)
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
 
@@ -192,10 +194,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               {isPractitioner ? 'Practitioner Plan — Active' : 'Healer Plan — Active'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
-              {subData?.status === 'trialing' ? '🎉 Free trial active' : '🌿 Subscription active'}
+              {subData?.status === 'trialing' ? '🎉 Free trial active' : cancelPending ? '⚠️ Cancelling at period end' : '🌿 Subscription active'}
               {subData?.current_period_end && (
                 <span>
-                  {' '}· {subData.status === 'trialing' ? 'trial ends' : 'renews'}{' '}
+                  {' '}· {subData.status === 'trialing' ? 'trial ends' : cancelPending ? 'access until' : 'renews'}{' '}
                   {new Date(subData.current_period_end).toLocaleDateString('en-AU', {
                     day: 'numeric', month: 'long', year: 'numeric'
                   })}
@@ -212,6 +214,63 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             <Btn full onClick={openPortal} color={C.sage} disabled={loading}>
               {loading ? '🌿 Opening…' : 'Manage Billing & Subscription'}
             </Btn>
+          </Card>
+
+          {/* Cancel / Resume subscription */}
+          <Card style={{ border: `1px solid ${cancelPending ? C.terracotta + '40' : C.border}`, background: cancelPending ? C.terracottaLight : C.white }}>
+            {cancelPending ? (
+              <>
+                <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.terracotta, marginBottom: 6 }}>
+                  ⚠️ Subscription cancelling
+                </div>
+                <div style={{ fontSize: 13, color: C.mid, marginBottom: 14, lineHeight: 1.5 }}>
+                  Your access continues until{' '}
+                  <strong>{subData?.current_period_end ? new Date(subData.current_period_end).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'your renewal date'}</strong>.
+                  Changed your mind? Resume anytime before then.
+                </div>
+                <Btn full onClick={async () => {
+                  setCancelLoading(true)
+                  setError(null)
+                  try {
+                    const res = await fetch('/api/stripe/resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: authUser.id }) })
+                    const data = await res.json()
+                    if (data.error) throw new Error(data.error)
+                    setCancelPending(false)
+                  } catch (err) { setError(err.message) }
+                  setCancelLoading(false)
+                }} color={C.sage} disabled={cancelLoading}>
+                  {cancelLoading ? '🌿 Please wait…' : 'Resume My Subscription →'}
+                </Btn>
+              </>
+            ) : (
+              <>
+                <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
+                  Cancel subscription
+                </div>
+                <div style={{ fontSize: 13, color: C.mid, marginBottom: 14, lineHeight: 1.5 }}>
+                  You'll keep full access until the end of your current billing period. No charges after that.
+                </div>
+                <button onClick={async () => {
+                  if (!confirm('Cancel your subscription? You keep access until your renewal date.')) return
+                  setCancelLoading(true)
+                  setError(null)
+                  try {
+                    const res = await fetch('/api/stripe/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: authUser.id }) })
+                    const data = await res.json()
+                    if (data.error) throw new Error(data.error)
+                    setCancelPending(true)
+                  } catch (err) { setError(err.message) }
+                  setCancelLoading(false)
+                }} disabled={cancelLoading} style={{
+                  background: 'none', border: `1px solid ${C.border}`, borderRadius: 30,
+                  padding: '9px 18px', fontSize: 13, color: C.muted,
+                  cursor: cancelLoading ? 'default' : 'pointer', fontFamily: 'Georgia,serif',
+                  touchAction: 'manipulation',
+                }}>
+                  {cancelLoading ? 'Please wait…' : 'Cancel subscription'}
+                </button>
+              </>
+            )}
           </Card>
 
           {/* Practitioner upgrade */}
