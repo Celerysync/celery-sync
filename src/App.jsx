@@ -9,18 +9,18 @@ import { useBooks } from "./hooks/useBooks.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
 
-// Always-loaded: auth, onboarding, home, account (needed immediately)
+// Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
-import Account from "./components/Account.jsx";
-import ProfileManager from "./components/ProfileManager.jsx";
-import Onboarding from "./components/Onboarding.jsx";
 import Home from "./components/Home.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
-import ReminderSettings from "./components/ReminderSettings.jsx";
-import WelcomeVoice from "./components/WelcomeVoice.jsx";
 import GlobalVoice from "./components/GlobalVoice.jsx";
 
-// Lazy-loaded: only fetched when the user first taps that tab
+// Lazy-loaded: only fetched when first needed
+const Onboarding       = lazy(() => import("./components/Onboarding.jsx"));
+const Account          = lazy(() => import("./components/Account.jsx"));
+const ProfileManager   = lazy(() => import("./components/ProfileManager.jsx"));
+const ReminderSettings = lazy(() => import("./components/ReminderSettings.jsx"));
+const WelcomeVoice     = lazy(() => import("./components/WelcomeVoice.jsx"));
 const Coach            = lazy(() => import("./components/Coach.jsx"));
 const Journal          = lazy(() => import("./components/Journal.jsx"));
 const Recipes          = lazy(() => import("./components/Recipes.jsx"));
@@ -191,17 +191,19 @@ export default function App() {
   // No profiles yet = first time setup
   if (profiles.length === 0) {
     return (
-      <Onboarding
-        onDone={async (data) => {
-          const created = await createProfile({
-            name: data.name,
-            symptoms: data.symptoms,
-            goal: data.goal,
-            avatar_emoji: "🌿",
-          });
-          if (created) switchProfile(created.id);
-        }}
-      />
+      <Suspense fallback={<LoadingScreen message="Setting up your journey…" />}>
+        <Onboarding
+          onDone={async (data) => {
+            const created = await createProfile({
+              name: data.name,
+              symptoms: data.symptoms,
+              goal: data.goal,
+              avatar_emoji: "🌿",
+            });
+            if (created) switchProfile(created.id);
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -412,7 +414,11 @@ export default function App() {
         </div>
       </div>
 
-      {showWelcome && <WelcomeVoice onDone={() => setShowWelcome(false)} />}
+      {showWelcome && (
+        <Suspense fallback={null}>
+          <WelcomeVoice onDone={() => setShowWelcome(false)} />
+        </Suspense>
+      )}
       <GlobalVoice currentTab={tab} user={activeProfile} />
     </div>
   );

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
-import { CONDITIONS } from "../data/conditions.js";
 
 const CORE_SUPPS = [
   { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
@@ -24,7 +23,8 @@ function todayKey() {
   return `cs_supps_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-function getSuppsForConditions(conditions = []) {
+function getSuppsForConditions(conditions = [], CONDITIONS) {
+  if (!CONDITIONS) return [];
   const seen = new Set();
   const result = [];
   for (const cond of conditions) {
@@ -50,6 +50,7 @@ export default function SupplementTracker({ userConditions = [] }) {
   const [customSupps, setCustomSupps] = useState([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
+  const [CONDITIONS, setCONDITIONS] = useState(null);
 
   const key = todayKey();
 
@@ -61,6 +62,10 @@ export default function SupplementTracker({ userConditions = [] }) {
       setCustomSupps(JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"));
     } catch { setCustomSupps([]); }
   }, [key]);
+
+  useEffect(() => {
+    import("../data/conditions.js").then(m => setCONDITIONS(m.CONDITIONS));
+  }, []);
 
   const toggle = (id) => {
     setChecked((prev) => {
@@ -96,7 +101,7 @@ export default function SupplementTracker({ userConditions = [] }) {
     });
   };
 
-  const conditionSupps = getSuppsForConditions(userConditions);
+  const conditionSupps = getSuppsForConditions(userConditions, CONDITIONS);
   const allSupps = [...CORE_SUPPS, ...conditionSupps, ...customSupps];
   const doneCount = allSupps.filter((s) => checked[s.id]).length;
   const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;
