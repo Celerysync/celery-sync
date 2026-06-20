@@ -220,7 +220,7 @@ export default function Home({ user, authUser, profileId }) {
       </div>
 
       {/* Weekly healing report — shows Sundays */}
-      <WeeklyReport last7={last7} celeryStreak={celeryStreak} avgEnergy7={avgEnergy7} protocolDays={protocolDays} user={user} />
+      <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
 
       {/* Celery streak milestone */}
       {(() => {

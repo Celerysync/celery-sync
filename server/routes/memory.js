@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import PDFDocument from 'pdfkit'
+import { Resend } from 'resend'
 
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -9,6 +11,8 @@ const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 // ── Save milestones extracted from a Coach conversation exchange ──
 router.post('/milestone', async (req, res) => {
@@ -224,7 +228,14 @@ Write the 3-sentence observation now:`,
     .select()
     .single()
 
-  return saved || row
+  const result = saved || row
+
+  // Send email (fire-and-forget — don't block the response)
+  if (saved && !saved.email_sent) {
+    sendWeeklySummaryEmail(userId, saved).catch(e => console.warn('Email error:', e.message))
+  }
+
+  return result
 }
 
 // ── Cron: generate summaries for all active profiles ──
@@ -262,6 +273,439 @@ export async function generateAllWeeklySummaries() {
   }
 
   console.log('📊 Weekly summaries complete')
+}
+
+// ── Weekly summary PDF download ──
+router.get('/weekly/:profileId/pdf', async (req, res) => {
+  const { profileId } = req.params
+  try {
+    const { data: summaries } = await supabaseAdmin
+      .from('weekly_summaries')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('week_start', { ascending: false })
+      .limit(1)
+
+    if (!summaries?.length) return res.status(404).json({ error: 'No summary found' })
+
+    const summary = summaries[0]
+    const pdfBuffer = await buildWeeklyPDF(summary, false)
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="healing-summary-${summary.week_start}.pdf"`)
+    res.send(pdfBuffer)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Doctor report PDF download ──
+router.get('/doctor/:profileId/pdf', async (req, res) => {
+  const { profileId } = req.params
+  const { months = 3 } = req.query
+  try {
+    const cutoff = new Date()
+    cutoff.setMonth(cutoff.getMonth() - Number(months))
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+
+    const [summariesRes, milestonesRes, profileRes] = await Promise.all([
+      supabaseAdmin
+        .from('weekly_summaries')
+        .select('*')
+        .eq('profile_id', profileId)
+        .gte('week_start', cutoffStr)
+        .order('week_start', { ascending: true }),
+      supabaseAdmin
+        .from('healing_milestones')
+        .select('insight, category, session_date')
+        .eq('profile_id', profileId)
+        .gte('session_date', cutoffStr)
+        .order('session_date', { ascending: true }),
+      supabaseAdmin
+        .from('healing_profiles')
+        .select('healing_summary')
+        .eq('profile_id', profileId)
+        .maybeSingle(),
+    ])
+
+    const pdfBuffer = await buildDoctorPDF({
+      summaries: summariesRes.data || [],
+      milestones: milestonesRes.data || [],
+      healingSummary: profileRes.data?.healing_summary || '',
+      profileId,
+      months: Number(months),
+    })
+
+    const dateStr = new Date().toISOString().split('T')[0]
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="health-report-${dateStr}.pdf"`)
+    res.send(pdfBuffer)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Build weekly healing summary PDF ──
+async function buildWeeklyPDF(summary, forEmail = false) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'CelerySync Weekly Healing Summary' } })
+    const chunks = []
+    doc.on('data', c => chunks.push(c))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    const GREEN = '#3D6B44'
+    const GOLD = '#C8973A'
+    const CREAM = '#F7F9F4'
+    const CHARCOAL = '#1e2a1e'
+    const MUTED = '#6b7c6b'
+    const pageW = doc.page.width - 100
+
+    // ── Header ──
+    doc.rect(0, 0, doc.page.width, 110).fill(GREEN)
+    doc.fillColor('#fff').fontSize(28).font('Helvetica-Bold').text('🌿 CelerySync', 50, 28)
+    doc.fontSize(13).font('Helvetica').text('Weekly Healing Summary', 50, 60)
+    doc.fontSize(11).fillColor('rgba(255,255,255,0.8)').text(
+      `${fmtDate(summary.week_start)} — ${fmtDate(summary.week_end)}`,
+      50, 80
+    )
+
+    // ── Metrics grid ──
+    doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('This Week', 50, 130)
+
+    const metrics = [
+      { label: 'Celery Juice', value: `${summary.celery_days}/7 days`, max: 7, current: summary.celery_days, emoji: '🥬' },
+      { label: 'Avg Energy', value: `${summary.avg_energy ?? '—'}/10`, max: 10, current: summary.avg_energy, emoji: '⚡' },
+      { label: 'Morning Protocol', value: `${summary.protocol_days}/7 days`, max: 7, current: summary.protocol_days, emoji: '☀️' },
+      { label: 'Avg Mood', value: `${summary.avg_mood ?? '—'}/5`, max: 5, current: summary.avg_mood, emoji: '😊' },
+    ]
+
+    let y = 155
+    metrics.forEach((m, i) => {
+      const x = i % 2 === 0 ? 50 : 310
+      if (i === 2) y += 70
+
+      doc.rect(x, y, 220, 55).fill(CREAM).stroke('#e0e8db')
+      doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica-Bold').text(`${m.emoji}  ${m.label}`, x + 10, y + 10)
+      doc.fillColor(GREEN).fontSize(16).font('Helvetica-Bold').text(m.value, x + 10, y + 28)
+
+      // Progress bar
+      const barW = 200
+      const filled = m.current ? Math.min((m.current / m.max) * barW, barW) : 0
+      doc.rect(x + 10, y + 48, barW, 4).fill('#e0e8db')
+      if (filled > 0) doc.rect(x + 10, y + 48, filled, 4).fill(GREEN)
+    })
+
+    y += 90
+
+    // ── AI Observations ──
+    if (summary.ai_observations) {
+      doc.rect(50, y, pageW, 8).fill(GREEN)
+      y += 20
+      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('Your Healing Companion's Observations', 50, y)
+      y += 22
+      doc.rect(50, y, pageW, 1).fill('#e0e8db')
+      y += 12
+      doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica').text(summary.ai_observations, 50, y, { width: pageW, lineGap: 4 })
+      y = doc.y + 20
+    }
+
+    // ── Milestones this week ──
+    const milestones = Array.isArray(summary.milestones_this_week) ? summary.milestones_this_week : []
+    if (milestones.length) {
+      doc.rect(50, y, pageW, 8).fill(GOLD)
+      y += 20
+      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('Key Moments This Week', 50, y)
+      y += 22
+      milestones.forEach(m => {
+        doc.fillColor(GREEN).fontSize(11).font('Helvetica-Bold').text('•', 50, y)
+        doc.fillColor(CHARCOAL).font('Helvetica').text(m.insight || m, 65, y, { width: pageW - 15 })
+        y = doc.y + 4
+      })
+      y += 10
+    }
+
+    // ── Footer ──
+    doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill(GREEN)
+    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+      .text(
+        'CelerySync — Inspired by the teachings of Anthony William · Medical Medium  |  This is a personal health tracking record, not medical advice.',
+        50, doc.page.height - 35, { width: pageW, align: 'center' }
+      )
+
+    doc.end()
+  })
+}
+
+// ── Build doctor report PDF ──
+async function buildDoctorPDF({ summaries, milestones, healingSummary, months }) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Personal Health Tracking Report' } })
+    const chunks = []
+    doc.on('data', c => chunks.push(c))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    const BLUE = '#1a365d'
+    const CHARCOAL = '#1e2a1e'
+    const MUTED = '#6b7c6b'
+    const pageW = doc.page.width - 100
+    const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    const periodStart = summaries[0]?.week_start ? fmtDate(summaries[0].week_start) : `${months} months ago`
+    const periodEnd = summaries[summaries.length - 1]?.week_end ? fmtDate(summaries[summaries.length - 1].week_end) : 'present'
+
+    // ── Header ──
+    doc.fontSize(20).font('Helvetica-Bold').fillColor(BLUE).text('PERSONAL HEALTH TRACKING REPORT', 50, 50)
+    doc.fontSize(11).font('Helvetica').fillColor(MUTED).text(`Prepared by CelerySync Health Companion  |  Generated: ${today}`, 50, 80)
+    doc.rect(50, 95, pageW, 1).fill('#ccc')
+
+    // ── Report period ──
+    doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica-Bold').text('Report Period:', 50, 110)
+    doc.font('Helvetica').text(`${periodStart} — ${periodEnd}  (${months} months)`, 155, 110)
+
+    // ── Disclaimer ──
+    doc.rect(50, 130, pageW, 48).fill('#fff8f0').stroke('#f0c090')
+    doc.fillColor('#7a4800').fontSize(9).font('Helvetica-Bold').text('IMPORTANT NOTICE', 58, 138)
+    doc.font('Helvetica').text(
+      'This report contains self-reported personal health tracking data only. It is not a medical record and does not constitute medical advice. Please discuss all supplements and dietary changes with your healthcare provider, particularly regarding potential medication interactions.',
+      58, 150, { width: pageW - 16 }
+    )
+
+    let y = 195
+
+    // ── Average weekly metrics ──
+    const weeks = summaries.length
+    const avgEnergy = weeks ? (summaries.reduce((s, w) => s + (w.avg_energy || 0), 0) / weeks).toFixed(1) : null
+    const avgMood = weeks ? (summaries.reduce((s, w) => s + (w.avg_mood || 0), 0) / weeks).toFixed(1) : null
+    const totalCelery = summaries.reduce((s, w) => s + (w.celery_days || 0), 0)
+    const totalProtocol = summaries.reduce((s, w) => s + (w.protocol_days || 0), 0)
+    const totalDays = weeks * 7
+
+    doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('HEALTH METRICS (self-reported)', 50, y)
+    y += 18
+    doc.rect(50, y, pageW, 1).fill('#ccc')
+    y += 12
+
+    const metricRows = [
+      ['Energy level (1–10 scale)', avgEnergy ? `${avgEnergy}/10 average over period` : 'Not logged'],
+      ['Mood (1–5 scale)', avgMood ? `${avgMood}/5 average over period` : 'Not logged'],
+      ['Celery juice days', `${totalCelery} of ${totalDays} days (${Math.round(totalCelery / totalDays * 100)}%)`],
+      ['Morning protocol days', `${totalProtocol} of ${totalDays} days (${Math.round(totalProtocol / totalDays * 100)}%)`],
+      ['Weekly data points', `${weeks} weeks of daily tracking`],
+    ]
+
+    metricRows.forEach(([label, value]) => {
+      doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica-Bold').text(label, 50, y)
+      doc.font('Helvetica').text(value, 280, y)
+      y += 18
+    })
+
+    y += 10
+    doc.rect(50, y, pageW, 1).fill('#eee')
+    y += 16
+
+    // ── Supplement milestones ──
+    const suppMilestones = milestones.filter(m => m.category === 'supplement')
+    if (suppMilestones.length) {
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('SUPPLEMENTS & PROTOCOL NOTES', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 10
+      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(
+        'The following supplement notes were self-reported during the tracking period. Please review for potential interactions with prescribed medications.',
+        50, y, { width: pageW }
+      )
+      y = doc.y + 10
+
+      suppMilestones.forEach(m => {
+        doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(`• [${m.session_date}]  ${m.insight}`, 50, y, { width: pageW })
+        y = doc.y + 4
+      })
+      y += 10
+      doc.rect(50, y, pageW, 1).fill('#eee')
+      y += 16
+    }
+
+    // ── Symptom notes ──
+    const symptomMilestones = milestones.filter(m => m.category === 'symptom' || m.category === 'pattern')
+    if (symptomMilestones.length) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('SYMPTOM OBSERVATIONS', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 12
+      symptomMilestones.forEach(m => {
+        doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(`• [${m.session_date}]  ${m.insight}`, 50, y, { width: pageW })
+        y = doc.y + 4
+      })
+      y += 10
+      doc.rect(50, y, pageW, 1).fill('#eee')
+      y += 16
+    }
+
+    // ── Weekly energy trend ──
+    if (summaries.length > 1) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('ENERGY TREND (weekly averages)', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 12
+
+      summaries.slice(-12).forEach(w => {
+        const label = fmtDate(w.week_start)
+        const val = w.avg_energy || 0
+        const barW = val ? Math.round((val / 10) * (pageW - 120)) : 0
+        doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(label, 50, y, { width: 90 })
+        doc.rect(145, y + 1, pageW - 120, 10).fill('#f0f0f0')
+        if (barW > 0) doc.rect(145, y + 1, barW, 10).fill('#3D6B44')
+        doc.fillColor(CHARCOAL).fontSize(9).text(val ? `${val}/10` : '—', 145 + (pageW - 120) + 6, y)
+        y += 16
+      })
+      y += 10
+    }
+
+    // ── Footer ──
+    doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill('#1a365d')
+    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+      .text(
+        'CelerySync Personal Health Tracking  |  This document is for personal reference only and is not a medical record.',
+        50, doc.page.height - 33, { width: pageW, align: 'center' }
+      )
+
+    doc.end()
+  })
+}
+
+// ── Send weekly summary email via Resend ──
+async function sendWeeklySummaryEmail(userId, summary) {
+  if (!resend) return // No API key configured
+
+  try {
+    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId)
+    const email = userRes?.user?.email
+    if (!email) return
+
+    const name = email.split('@')[0]
+    const weekRange = `${fmtDate(summary.week_start)} — ${fmtDate(summary.week_end)}`
+    const celeryPct = Math.round((summary.celery_days / 7) * 100)
+    const protocolPct = Math.round((summary.protocol_days / 7) * 100)
+
+    const barHtml = (pct, color) => `
+      <div style="background:#e8f0e4;border-radius:4px;height:8px;width:100%;margin-top:4px;">
+        <div style="background:${color};border-radius:4px;height:8px;width:${pct}%;"></div>
+      </div>`
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f7f9f4;font-family:Georgia,serif;">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#3D6B44,#5a9a6a);padding:32px 28px;text-align:center;color:#fff;">
+    <div style="font-size:40px;margin-bottom:8px;">🌿</div>
+    <h1 style="margin:0;font-size:22px;font-weight:700;">Your Weekly Healing Summary</h1>
+    <p style="margin:8px 0 0;opacity:0.85;font-size:13px;">${weekRange}</p>
+  </div>
+
+  <!-- Metrics -->
+  <div style="padding:24px 28px;">
+    <h2 style="margin:0 0 16px;font-size:15px;color:#1e2a1e;">This week at a glance</h2>
+
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:8px 8px 8px 0;width:50%;vertical-align:top;">
+          <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">🥬 Celery Juice</div>
+            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.celery_days}/7 days</div>
+            ${barHtml(celeryPct, '#3D6B44')}
+          </div>
+        </td>
+        <td style="padding:8px 0 8px 8px;width:50%;vertical-align:top;">
+          <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">⚡ Avg Energy</div>
+            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.avg_energy ?? '—'}/10</div>
+            ${summary.avg_energy ? barHtml(Math.round(summary.avg_energy * 10), '#3D6B44') : ''}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 8px 0 0;width:50%;vertical-align:top;">
+          <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">☀️ Protocol</div>
+            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.protocol_days}/7 days</div>
+            ${barHtml(protocolPct, '#5a9a6a')}
+          </div>
+        </td>
+        <td style="padding:8px 0 0 8px;width:50%;vertical-align:top;">
+          <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">📔 Journal entries</div>
+            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.journal_entries}</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- AI Observations -->
+  ${summary.ai_observations ? `
+  <div style="margin:0 28px;background:#f0f7f0;border-radius:14px;padding:20px;border-left:4px solid #3D6B44;">
+    <div style="font-size:12px;color:#3D6B44;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Your healing companion's observations</div>
+    <p style="margin:0;font-size:13.5px;color:#1e2a1e;line-height:1.8;">${summary.ai_observations}</p>
+  </div>` : ''}
+
+  <!-- Milestones -->
+  ${Array.isArray(summary.milestones_this_week) && summary.milestones_this_week.length ? `
+  <div style="padding:20px 28px;">
+    <div style="font-size:12px;color:#C8973A;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">✨ Key moments this week</div>
+    ${summary.milestones_this_week.map(m => `
+    <div style="display:flex;gap:8px;margin-bottom:6px;">
+      <span style="color:#3D6B44;font-weight:700;">•</span>
+      <span style="font-size:13px;color:#1e2a1e;line-height:1.6;">${m.insight || m}</span>
+    </div>`).join('')}
+  </div>` : ''}
+
+  <!-- CTA -->
+  <div style="padding:24px 28px;text-align:center;">
+    <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:14px 32px;font-family:Georgia,serif;font-weight:700;font-size:15px;text-decoration:none;">Open CelerySync →</a>
+    <p style="margin:16px 0 0;font-size:12px;color:#6b7c6b;">Your healing matters. Keep going. 🌿</p>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#f7f9f4;padding:16px 28px;text-align:center;border-top:1px solid #e8f0e4;">
+    <p style="margin:0;font-size:11px;color:#aaa;line-height:1.6;">
+      CelerySync · Inspired by the teachings of Anthony William<br>
+      This is a personal health tracking record, not medical advice.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>`
+
+    await resend.emails.send({
+      from: 'CelerySync <healing@celerysync.com>',
+      to: email,
+      subject: `Your healing week — ${weekRange} 🌿`,
+      html,
+    })
+
+    // Mark as sent
+    await supabaseAdmin
+      .from('weekly_summaries')
+      .update({ email_sent: true })
+      .eq('id', summary.id)
+
+    console.log(`📧 Weekly email sent to ${email}`)
+  } catch (err) {
+    console.warn('Email send error:', err.message)
+  }
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function categorise(insight) {
