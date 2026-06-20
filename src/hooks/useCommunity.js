@@ -107,9 +107,35 @@ export function useCommunity(authUser) {
 
   const getMembership = (circleId) => myMemberships.find((m) => m.circle_id === circleId) || null;
 
+  const [replies, setReplies] = useState({});
+
+  const loadReplies = useCallback(async (postId) => {
+    const { data } = await supabase
+      .from("circle_post_replies")
+      .select("*")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    if (data) setReplies((prev) => ({ ...prev, [postId]: data }));
+  }, []);
+
+  const createReply = useCallback(async ({ postId, content, alias, avatarEmoji }) => {
+    if (!authUser?.id) return;
+    const { data, error } = await supabase
+      .from("circle_post_replies")
+      .insert({ post_id: postId, user_id: authUser.id, alias, avatar_emoji: avatarEmoji, content })
+      .select().single();
+    if (!error && data) {
+      setReplies((prev) => ({ ...prev, [postId]: [...(prev[postId] || []), data] }));
+      await supabase.from("circle_posts").update({ reply_count: (posts.find(p => p.id === postId)?.reply_count || 0) + 1 }).eq("id", postId);
+      setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, reply_count: (p.reply_count || 0) + 1 } : p));
+    }
+    return data;
+  }, [authUser?.id, posts]);
+
   return {
-    circles, myMemberships, posts, myLikes, loading,
+    circles, myMemberships, posts, myLikes, replies, loading,
     loadCircles, loadMyMemberships, joinCircle, leaveCircle,
     loadPosts, createPost, toggleLike, deletePost, getMembership,
+    loadReplies, createReply,
   };
 }

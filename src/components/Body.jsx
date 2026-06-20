@@ -2,10 +2,21 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { ORGANS } from "../data/bodyEducation.js";
+import { useVoice } from "../hooks/useVoice.js";
 
 function OrganDetail({ organ, onBack, searchBooks }) {
   const [section, setSection] = useState("overview");
   const [bookPassages, setBookPassages] = useState([]);
+  const voiceName = localStorage.getItem("cs_voiceName") || "";
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName);
+
+  const getSectionText = () => {
+    if (section === "overview") return organ.overview;
+    if (section === "teachings") return organ.awTeachings.join(". ");
+    if (section === "healing") return `Best healing foods: ${organ.healingFoods.join(", ")}. Foods to avoid: ${organ.avoid.join(", ")}. Key supplements: ${organ.supplements.join(", ")}.`;
+    if (section === "protocol") return organ.protocol;
+    return "";
+  };
 
   useEffect(() => {
     if (!searchBooks) return;
@@ -47,6 +58,18 @@ function OrganDetail({ organ, onBack, searchBooks }) {
         <div style={{ marginTop: 10, fontSize: 11, background: organ.color, color: "#fff", display: "inline-block", padding: "3px 10px", borderRadius: 20, fontFamily: "Georgia,serif" }}>
           📚 {organ.book}
         </div>
+        <button
+          onClick={() => speaking ? stopSpeaking() : speak(getSectionText())}
+          style={{
+            marginTop: 12, background: speaking ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.2)",
+            border: "1px solid rgba(255,255,255,0.5)", color: "#fff",
+            borderRadius: 30, padding: "7px 16px", fontSize: 12,
+            cursor: "pointer", fontFamily: "Georgia,serif", fontWeight: 700,
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}
+        >
+          {speaking ? "⏹ Stop" : "🔊 Read this aloud"}
+        </button>
       </div>
 
       {/* Section tabs */}
@@ -54,7 +77,7 @@ function OrganDetail({ organ, onBack, searchBooks }) {
         {SECTIONS.map((s) => (
           <button
             key={s.id}
-            onClick={() => setSection(s.id)}
+            onClick={() => { stopSpeaking(); setSection(s.id); }}
             style={{
               flexShrink: 0, padding: "7px 14px", borderRadius: 20,
               border: `1.5px solid ${section === s.id ? organ.color : C.border}`,

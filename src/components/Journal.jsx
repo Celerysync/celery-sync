@@ -12,11 +12,12 @@ const MOODS = [
   { val: 5, emoji: "✨", label: "Great" },
 ];
 
+const metric = localStorage.getItem("cs_units") !== "imperial";
 const CELERY = [
-  { val: 0, label: "Skipped", color: "#e5e7eb" },
-  { val: 8, label: "8 oz", color: "#86efac" },
-  { val: 16, label: "16 oz", color: "#4ade80" },
-  { val: 32, label: "32 oz+", color: "#16a34a" },
+  { val: 0,  label: "Skipped",                     color: "#e5e7eb" },
+  { val: 8,  label: metric ? "240ml" : "8 oz",     color: "#86efac" },
+  { val: 16, label: metric ? "500ml" : "16 oz",    color: "#4ade80" },
+  { val: 32, label: metric ? "1 litre+" : "32 oz+",color: "#16a34a" },
 ];
 
 const SYMPTOMS = [

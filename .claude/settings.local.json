@@ -30,7 +30,20 @@
       "Bash(sed -i '' 's/viewBox=\"0 0 192 192\"/viewBox=\"0 0 512 512\"/' /Users/alli/celerysync/public/icons/icon-512.svg)",
       "Bash(sed -i '' 's/width=\"192\" height=\"192\"/width=\"512\" height=\"512\"/' /Users/alli/celerysync/public/icons/icon-512.svg)",
       "Bash(sed -i '' 's/font-size=\"110\"/font-size=\"300\"/' /Users/alli/celerysync/public/icons/icon-512.svg)",
-      "Bash(sed -i '' 's/x=\"96\" y=\"130\"/x=\"256\" y=\"350\"/' /Users/alli/celerysync/public/icons/icon-512.svg)"
+      "Bash(sed -i '' 's/x=\"96\" y=\"130\"/x=\"256\" y=\"350\"/' /Users/alli/celerysync/public/icons/icon-512.svg)",
+      "Bash(sed -i '' 's/Search 74 conditions/Search 80 conditions/g' /Users/alli/celerysync/src/components/Onboarding.jsx /Users/alli/celerysync/src/components/Symptom.jsx /Users/alli/celerysync/src/components/ProfileManager.jsx)",
+      "Bash(sed -i '' 's/Showing all 74 conditions/Showing all 80 conditions/g' /Users/alli/celerysync/src/components/Symptom.jsx)",
+      "Bash(awk '/^export const SHOTS/,/^export/' src/data/juices.js)",
+      "Bash(awk *)",
+      "Bash(grep -n \"^  {$\\\\|id:\\\\|name:\" src/data/bodyEducation.js)",
+      "Bash(code *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('dependencies',{}\\), indent=2\\)\\)\")",
+      "Bash(git config *)",
+      "Bash(git *)",
+      "mcp__plugin_stripe_stripe__stripe_api_write",
+      "mcp__plugin_stripe_stripe__stripe_api_search",
+      "mcp__plugin_stripe_stripe__stripe_api_read",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

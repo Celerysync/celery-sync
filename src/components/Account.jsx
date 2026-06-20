@@ -41,6 +41,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [units, setUnits] = useLocalStorage("cs_units", "metric")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
   const [globalVoice, setGlobalVoice] = useLocalStorage("cs_globalVoice", true)
+  const [darkMode, setDarkMode] = useLocalStorage("cs_darkMode", false)
+  const [largeText, setLargeText] = useLocalStorage("cs_largeText", false)
 
   const subscribe = async () => {
     setLoading(true)
@@ -431,6 +433,34 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
           >
             Off
           </Btn>
+        </div>
+      </Card>
+
+      {/* Eye comfort / dark mode */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
+          🌙 Eye Comfort Mode
+        </div>
+        <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
+          Dims the screen and reduces blue light — ideal for photosensitivity, migraines, or evening use.
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn full onClick={() => { setDarkMode(false); document.documentElement.setAttribute("data-dark","false"); }} color={!darkMode ? C.sage : C.muted} style={{ opacity: !darkMode ? 1 : 0.6 }}>☀️ Normal</Btn>
+          <Btn full onClick={() => { setDarkMode(true); document.documentElement.setAttribute("data-dark","true"); }} color={darkMode ? C.sageDark : C.muted} style={{ opacity: darkMode ? 1 : 0.6 }}>🌙 Dim</Btn>
+        </div>
+      </Card>
+
+      {/* Large text */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
+          🔤 Text Size
+        </div>
+        <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
+          Larger text helps with brain fog and visual fatigue — everything scales up by 25%.
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn full onClick={() => { setLargeText(false); document.documentElement.setAttribute("data-large","false"); }} color={!largeText ? C.sage : C.muted} style={{ opacity: !largeText ? 1 : 0.6 }}>A Normal</Btn>
+          <Btn full onClick={() => { setLargeText(true); document.documentElement.setAttribute("data-large","true"); }} color={largeText ? C.sageDark : C.muted} style={{ opacity: largeText ? 1 : 0.6 }}>A+ Large</Btn>
         </div>
       </Card>
 

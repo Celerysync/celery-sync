@@ -133,8 +133,15 @@ export default function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("cs_welcomed"));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
+  const [darkMode] = useLocalStorage("cs_darkMode", false);
+  const [largeText] = useLocalStorage("cs_largeText", false);
   const { track } = useAnalytics(authUser);
   const isAdmin = authUser?.email === "allij@live.com.au";
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-dark", darkMode ? "true" : "false");
+    document.documentElement.setAttribute("data-large", largeText ? "true" : "false");
+  }, [darkMode, largeText]);
 
   const handleNavigate = (tabId, query) => {
     setNavQuery(query || null);

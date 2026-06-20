@@ -7,6 +7,7 @@ import { Tag, Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
+import WeeklyReport from "./WeeklyReport.jsx";
 
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
@@ -96,6 +97,8 @@ function getNowFood() {
 export default function Home({ user, authUser, profileId }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
+  const voiceName = localStorage.getItem("cs_voiceName") || "";
 
   const [checklist, setChecklist] = useLocalStorage("cs_checklist", {
     date: TODAY,
@@ -103,6 +106,7 @@ export default function Home({ user, authUser, profileId }) {
   });
   const [lastSnack, setLastSnack] = useLocalStorage("cs_lastSnack", null);
   const [snackCount, setSnackCount] = useLocalStorage("cs_snackCount_" + TODAY, 0);
+  const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
   const [now, setNow] = useState(Date.now());
   const [savingCheckin, setSavingCheckin] = useState(false);
 
@@ -127,7 +131,7 @@ export default function Home({ user, authUser, profileId }) {
   };
 
   const done = Object.values(checks).every(Boolean);
-  const { speak, speaking, stopSpeaking } = useVoice();
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName, units);
 
   // Healing score (0–100): morning protocol 60pts + check-in 25pts + snacks 15pts
   const protocolScore = Object.values(checks).filter(Boolean).length * 20;
@@ -138,7 +142,9 @@ export default function Home({ user, authUser, profileId }) {
   // Streak protection — warn if evening and check-in not done
   const streakAtRisk = h >= 19 && celeryStreak > 2 && !todaysCheckin?.celery_juice;
 
-  const morningScript = `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 16 to 32 ounces. After 15 to 30 minutes, drink your fresh celery juice — 16 ounces of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`;
+  const morningScript = units === "metric"
+    ? `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 500 millilitres to 1 litre. After 15 to 30 minutes, drink your fresh celery juice — 500 millilitres of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`
+    : `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 16 to 32 ounces. After 15 to 30 minutes, drink your fresh celery juice — 16 ounces of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`;
 
   const nowFood = getNowFood();
 
@@ -212,6 +218,9 @@ export default function Home({ user, authUser, profileId }) {
           </button>
         </div>
       </div>
+
+      {/* Weekly healing report — shows Sundays */}
+      <WeeklyReport last7={last7} celeryStreak={celeryStreak} avgEnergy7={avgEnergy7} protocolDays={protocolDays} user={user} />
 
       {/* Celery streak milestone */}
       {(() => {
@@ -373,14 +382,54 @@ export default function Home({ user, authUser, profileId }) {
         </div>
       )}
 
+      {/* Water tracker */}
+      <div style={{
+        background: "#EFF6FF", border: "2px solid #BFDBFE60",
+        borderRadius: 16, padding: "14px 16px",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
+        <div style={{ fontSize: 26, flexShrink: 0 }}>💧</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#1e40af" }}>
+            Water today — {waterCount} {waterCount === 1 ? "glass" : "glasses"}
+          </div>
+          <div style={{ fontSize: 12, color: "#3b82f6", marginTop: 2 }}>
+            {waterCount < 8 ? `${8 - waterCount} more to reach Anthony William's recommended 8 glasses` : "Beautifully hydrated today ✓"}
+          </div>
+          <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: i < waterCount ? "#3b82f6" : "#BFDBFE",
+                transition: "background 0.2s",
+              }} />
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+          <button onClick={() => setWaterCount(n => n + 1)} style={{
+            background: "#3b82f6", color: "#fff", border: "none",
+            borderRadius: 20, padding: "6px 14px", fontSize: 18,
+            cursor: "pointer", fontWeight: 700, lineHeight: 1,
+          }}>+</button>
+          {waterCount > 0 && (
+            <button onClick={() => setWaterCount(n => Math.max(0, n - 1))} style={{
+              background: "transparent", color: "#93c5fd", border: "1px solid #93c5fd",
+              borderRadius: 20, padding: "4px 14px", fontSize: 13,
+              cursor: "pointer",
+            }}>−</button>
+          )}
+        </div>
+      </div>
+
       {/* Morning checklist */}
       <Card>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal, marginBottom: 14 }}>
           🌅 Morning Healing Routine
         </div>
         {[
-          { k: "lemon", label: "Lemon Water (16–32oz)", sub: "First thing — empty stomach. Nothing before this." },
-          { k: "celery", label: "Celery Juice (16oz pure fresh)", sub: "Wait 15–30 min after lemon water. Pure celery only." },
+          { k: "lemon", label: units === "metric" ? "Lemon Water (500ml–1 litre)" : "Lemon Water (16–32oz)", sub: "First thing — empty stomach. Nothing before this." },
+          { k: "celery", label: units === "metric" ? "Celery Juice (500ml pure fresh)" : "Celery Juice (16oz pure fresh)", sub: "Wait 15–30 min after lemon water. Pure celery only." },
           { k: "hmd", label: "Heavy Metal Detox Smoothie", sub: "Wait 15–30 min after celery juice. All Big 5 together." },
         ].map(({ k, label, sub }) => (
           <div

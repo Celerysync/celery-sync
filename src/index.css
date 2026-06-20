@@ -37,3 +37,23 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Dark / Eye-Comfort Mode ─────────────────────────────────────── */
+html[data-dark="true"] body {
+  background: #0a0e0a;
+}
+html[data-dark="true"] #root > div {
+  filter: brightness(0.55) sepia(0.18) contrast(0.92);
+  background: #0a0e0a;
+}
+
+/* ── Large Text Mode ─────────────────────────────────────────────── */
+html[data-large="true"] #root {
+  zoom: 1.25;
+}
+
+/* ── Pulse animation for listening indicator ─────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

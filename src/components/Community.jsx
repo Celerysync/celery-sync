@@ -21,9 +21,26 @@ function timeAgo(ts) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function PostCard({ post, myLikes, onLike, onDelete, isOwn }) {
+function PostCard({ post, myLikes, onLike, onDelete, isOwn, replies, onLoadReplies, onReply, membership }) {
   const liked = myLikes.has(post.id);
   const type = POST_TYPES.find((t) => t.id === post.post_type) || POST_TYPES[0];
+  const [showReplies, setShowReplies] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replying, setReplying] = useState(false);
+  const postReplies = replies?.[post.id] || [];
+
+  const toggleReplies = () => {
+    if (!showReplies && postReplies.length === 0) onLoadReplies(post.id);
+    setShowReplies((v) => !v);
+  };
+
+  const submitReply = async () => {
+    if (!replyText.trim() || !membership) return;
+    setReplying(true);
+    await onReply({ postId: post.id, content: replyText.trim(), alias: membership.alias, avatarEmoji: membership.avatar_emoji });
+    setReplyText("");
+    setReplying(false);
+  };
 
   return (
     <div style={{
@@ -54,7 +71,7 @@ function PostCard({ post, myLikes, onLike, onDelete, isOwn }) {
         {post.content}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <button
           onClick={() => onLike(post.id)}
           style={{
@@ -68,6 +85,21 @@ function PostCard({ post, myLikes, onLike, onDelete, isOwn }) {
         >
           💚 {post.likes || 0}
         </button>
+        {membership && (
+          <button
+            onClick={toggleReplies}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: showReplies ? C.sageLight : "transparent",
+              border: `1px solid ${showReplies ? C.sage : C.border}`,
+              borderRadius: 20, padding: "5px 12px", cursor: "pointer",
+              fontSize: 12, color: showReplies ? C.sage : C.muted,
+              fontFamily: "Georgia,serif",
+            }}
+          >
+            💬 {post.reply_count || postReplies.length || 0}
+          </button>
+        )}
         {isOwn && (
           <button
             onClick={() => onDelete(post.id)}
@@ -80,6 +112,50 @@ function PostCard({ post, myLikes, onLike, onDelete, isOwn }) {
           </button>
         )}
       </div>
+
+      {/* Replies section */}
+      {showReplies && (
+        <div style={{ marginTop: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+          {postReplies.map((r) => (
+            <div key={r.id} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <div style={{ fontSize: 18, flexShrink: 0 }}>{r.avatar_emoji}</div>
+              <div style={{ flex: 1, background: C.mist, borderRadius: 10, padding: "8px 12px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.sageDark, marginBottom: 2, fontFamily: "Georgia,serif" }}>
+                  {r.alias} · {timeAgo(r.created_at)}
+                </div>
+                <div style={{ fontSize: 12.5, color: C.charcoal, lineHeight: 1.5 }}>{r.content}</div>
+              </div>
+            </div>
+          ))}
+          {membership && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "flex-end" }}>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Reply with love…"
+                rows={2}
+                style={{
+                  flex: 1, borderRadius: 10, border: `1.5px solid ${C.border}`,
+                  padding: "8px 12px", fontFamily: "Georgia,serif", fontSize: 12.5,
+                  color: C.charcoal, resize: "none", outline: "none",
+                }}
+              />
+              <button
+                onClick={submitReply}
+                disabled={replying || !replyText.trim()}
+                style={{
+                  background: C.sage, color: C.white, border: "none",
+                  borderRadius: 10, padding: "10px 14px", cursor: "pointer",
+                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  opacity: replyText.trim() ? 1 : 0.5,
+                }}
+              >
+                {replying ? "…" : "Reply"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -283,7 +359,7 @@ function NewPostModal({ circle, membership, onPost, onClose }) {
 }
 
 function CircleView({ circle, authUser, useCom, onBack }) {
-  const { posts, myLikes, loading, loadPosts, createPost, toggleLike, deletePost, getMembership, joinCircle, leaveCircle } = useCom;
+  const { posts, myLikes, replies, loading, loadPosts, createPost, toggleLike, deletePost, getMembership, joinCircle, leaveCircle, loadReplies, createReply } = useCom;
   const membership = getMembership(circle.id);
   const [showJoin, setShowJoin] = useState(false);
   const [showPost, setShowPost] = useState(false);
@@ -374,6 +450,10 @@ function CircleView({ circle, authUser, useCom, onBack }) {
             onLike={toggleLike}
             onDelete={deletePost}
             isOwn={post.user_id === authUser?.id}
+            replies={replies}
+            onLoadReplies={loadReplies}
+            onReply={createReply}
+            membership={membership}
           />
         ))
       )}

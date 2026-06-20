@@ -9,6 +9,7 @@ import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useBooks } from "../hooks/useBooks.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
+import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -48,7 +49,7 @@ const GREETINGS = {
   tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın tüm kitapları üzerinde eğitilmiş Medical Medium iyileşme rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units }) {
+function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
   const conditionsIndex = buildConditionsIndex();
 
@@ -123,6 +124,15 @@ THIS USER'S PROFILE:
 Name: ${user?.name || "friend"}
 Symptoms: ${user?.symptoms?.join(", ") || "general healing"}
 Goal: ${user?.goal || "healing and wellness"}
+Celery juice streak: ${celeryStreak > 0 ? `${celeryStreak} days in a row` : "not yet started today"}
+${todaysCheckin ? `
+TODAY'S CHECK-IN (logged earlier today):
+• Energy: ${todaysCheckin.energy ?? "not logged"}/10
+• Mood: ${todaysCheckin.mood ?? "not logged"}/5
+• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}
+• Symptoms today: ${todaysCheckin.symptoms?.join(", ") || "none logged"}
+• Sleep: ${todaysCheckin.sleep_hours ? `${todaysCheckin.sleep_hours}h` : "not logged"}
+Use this to personalise your response — acknowledge how they're feeling today.` : "No check-in logged yet today."}
 ${historySection}${booksSection}${videosSection}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -219,6 +229,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     useVoice(selectedVoiceName, units);
   const { healingProfile, priorMessages, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
+  const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const endRef = useRef(null);
   const systemPromptRef = useRef("");
   const voiceModeRef = useRef(false);
@@ -238,6 +249,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     if (!profileId) return;
     setMessages([]);
     loadMemory();
+    loadCheckins();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
 
@@ -245,22 +257,27 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   useEffect(() => {
     if (memoryLoading) return;
     systemPromptRef.current = buildSystemPrompt({
-      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units,
+      user, bookNotes, videoNotes, healingProfile, priorMessages, lang, caregiverMode, units, todaysCheckin, celeryStreak,
     });
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
       ? GREETINGS[lang](user?.name || "")
       : null;
+
+    // Evolving greeting based on user's current state
+    const streakNote = celeryStreak >= 7 ? ` Your ${celeryStreak}-day celery streak is extraordinary.` : celeryStreak >= 3 ? ` ${celeryStreak} days of celery juice in a row — keep going!` : "";
+    const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
+
     const greeting = translatedGreeting
       ? translatedGreeting
       : caregiverMode
       ? `Hello! 💜 I'm here to support you as you care for ${user?.name || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
       : hasHistory
-      ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿 I remember our journey together — ${
+      ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿${streakNote}${energyNote} ${
           healingProfile?.healing_summary
             ? "I've been keeping your healing notes safe and I'm ready to pick up where we left off."
-            : `we've had ${Math.ceil(priorMessages.length / 2)} conversations before.`
-        } What's happening with your healing today? You can speak to me or type below.`
+            : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
+        } What's on your mind today?`
       : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your Medical Medium healing guide — trained on all of Anthony William's books with exact supplement dosages, cleanse protocols, and healing wisdom. I can speak to you too — press the microphone button anytime. I'm here for you fully. What would you like help with today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
@@ -364,7 +381,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             }
             saveExchange(text, clean);
             systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode, units,
+              user, bookNotes, videoNotes, healingProfile, lang, caregiverMode, units, todaysCheckin, celeryStreak,
               priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
             });
             if (nav && onNavigate) {

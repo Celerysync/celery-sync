@@ -423,6 +423,41 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
+-- ───────────────────────────────────────────────────────────────────
+-- PART 9: Community Replies + reply_count column
+-- ───────────────────────────────────────────────────────────────────
+
+-- Add reply_count to circle_posts
+DO $$ BEGIN
+  ALTER TABLE circle_posts ADD COLUMN reply_count integer DEFAULT 0;
+EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+-- Replies table
+CREATE TABLE IF NOT EXISTS circle_post_replies (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id     uuid REFERENCES circle_posts(id) ON DELETE CASCADE NOT NULL,
+  user_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  alias       text NOT NULL DEFAULT 'Healer',
+  avatar_emoji text DEFAULT '🌿',
+  content     text NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS circle_post_replies_post_idx ON circle_post_replies (post_id, created_at ASC);
+ALTER TABLE circle_post_replies ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Members can read replies"
+    ON circle_post_replies FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can post replies"
+    ON circle_post_replies FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE POLICY "Users delete own replies"
+    ON circle_post_replies FOR DELETE USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ═══════════════════════════════════════════════════════════════════
--- Done! All 8 parts complete.
+-- Done! All 9 parts complete.
 -- ═══════════════════════════════════════════════════════════════════
