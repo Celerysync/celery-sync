@@ -402,7 +402,9 @@ export default function App() {
             🌿 Loading…
           </div>
         }>
-          {renderTab()}
+          <div key={tab} className="cs-tab-content">
+            {renderTab()}
+          </div>
         </Suspense>
       </div>
 

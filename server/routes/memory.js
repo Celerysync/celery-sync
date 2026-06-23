@@ -452,7 +452,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     if (summary.ai_observations) {
       doc.rect(50, y, pageW, 8).fill(GREEN)
       y += 20
-      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('Your Healing Companion's Observations', 50, y)
+      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text("Your Healing Companion's Observations", 50, y)
       y += 22
       doc.rect(50, y, pageW, 1).fill('#e0e8db')
       y += 12

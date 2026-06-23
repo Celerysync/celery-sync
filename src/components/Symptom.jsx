@@ -113,6 +113,7 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
   const [conditionSearch, setConditionSearch] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [showDrNote, setShowDrNote] = useState(false);
   const [bookEnhanced, setBookEnhanced] = useState(false);
   const { speak, speaking, stopSpeaking } = useVoice();
@@ -129,6 +130,7 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
     if (!sel.length && !custom.trim()) return;
     setLoading(true);
     setResult(null);
+    setStreaming(false);
     setBookEnhanced(false);
 
     const all = [...sel, ...(custom.trim() ? [custom.trim()] : [])];
@@ -166,17 +168,10 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
       }
     }
 
-    try {
-      const text = await callClaude({
-        tier: 'standard',
-        maxTokens: 1100,
-        messages: [
-          {
-            role: "user",
-            content: `You are a compassionate Medical Medium healing companion with deep knowledge from Anthony William's books.
+    const prompt = `You are a compassionate Medical Medium healing companion with deep knowledge from Anthony William's books.
 
 Person: ${user?.name || "friend"}
-Their existing conditions: ${(user?.conditions || []).join(", ") || "not previously specified"}
+Their existing conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
 Conditions/symptoms they're asking about now: ${all.join(", ")}
 
 EXACT DATA FROM ANTHONY WILLIAM'S BOOKS:
@@ -210,13 +205,17 @@ One genuine, heartfelt paragraph. This person is doing the hard work of healing.
 
 Always frame all claims as "Anthony William teaches…" or "Per [Book]…" — never as your own medical claims.
 
-End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always work alongside your healthcare provider.`,
-          },
-        ],
+End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always work alongside your healthcare provider.`;
+
+    try {
+      const text = await callClaude({
+        tier: 'standard',
+        maxTokens: 2000,
+        messages: [{ role: "user", content: prompt }],
       });
       setResult(text);
     } catch (err) {
-      setResult(`Connection error: ${err.message}. Please check your API key in .env and try again.`);
+      setResult(`Connection error: ${err.message}. Please check your API key and try again.`);
     }
     setLoading(false);
   };
@@ -330,7 +329,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
         {loading ? "🌿 Looking it up…" : "Understand & Heal This Symptom"}
       </Btn>
 
-      {result && (
+      {result !== null && (
         <Card style={{ background: C.mist }}>
           <div
             style={{
@@ -410,6 +409,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
             }}
           >
             {result}
+            {streaming && <span className="cs-cursor">▋</span>}
           </div>
         </Card>
       )}

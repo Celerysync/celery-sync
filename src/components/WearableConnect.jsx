@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const TODAY = new Date().toISOString().split("T")[0];
 
 const WEARABLES = [
@@ -84,7 +83,7 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
     if (form.steps) payload.steps = form.steps;
     if (form.readiness_score) payload.readiness_score = form.readiness_score;
     try {
-      const res = await fetch(`${API}/api/wearable/manual`, {
+      const res = await fetch(`/api/wearable/manual`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -155,7 +154,7 @@ export default function WearableConnect({ authUser }) {
   const loadStatus = useCallback(async () => {
     if (!authUser?.id) return;
     try {
-      const res = await fetch(`${API}/api/wearable/status/${authUser.id}`);
+      const res = await fetch(`/api/wearable/status/${authUser.id}`);
       const data = await res.json();
       setStatus(data.tokens || []);
     } catch {
@@ -172,7 +171,7 @@ export default function WearableConnect({ authUser }) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/api/wearable/oura/token`, {
+      const res = await fetch(`/api/wearable/oura/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: authUser.id, token: token.trim() }),
@@ -192,7 +191,7 @@ export default function WearableConnect({ authUser }) {
 
   const disconnectOura = async () => {
     setSaving(true);
-    await fetch(`${API}/api/wearable/oura/token`, {
+    await fetch(`/api/wearable/oura/token`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: authUser.id }),
@@ -206,7 +205,7 @@ export default function WearableConnect({ authUser }) {
     setSyncing(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/api/wearable/oura/sync`, {
+      const res = await fetch(`/api/wearable/oura/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: authUser.id }),

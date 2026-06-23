@@ -140,7 +140,7 @@ export default function Home({ user, authUser, profileId }) {
   const healingScore = protocolScore + checkinScore + snackScore;
 
   // Streak protection — warn if evening and check-in not done
-  const streakAtRisk = h >= 19 && celeryStreak > 2 && !todaysCheckin?.celery_juice;
+  const streakAtRisk = h >= 19 && celeryStreak > 2 && (todaysCheckin?.celery_oz ?? 0) === 0;
 
   const morningScript = units === "metric"
     ? `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 500 millilitres to 1 litre. After 15 to 30 minutes, drink your fresh celery juice — 500 millilitres of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`

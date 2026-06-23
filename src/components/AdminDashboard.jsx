@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 const TAB_LABELS = {
   home: "Today", coach: "AI Guide", journal: "Journal", recipes: "Recipes",
@@ -49,7 +48,7 @@ export default function AdminDashboard({ authUser }) {
 
   useEffect(() => {
     if (!authUser?.id) return;
-    fetch(`${API}/api/analytics/admin/${authUser.id}`)
+    fetch(`/api/analytics/admin/${authUser.id}`)
       .then((r) => r.json())
       .then((d) => { if (d.error) throw new Error(d.error); setData(d); })
       .catch((e) => setError(e.message))

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import C from "../lib/colors.js";
 import { callClaude } from "../lib/api.js";
 
@@ -150,7 +150,7 @@ function MorningGameActivity({ onBack }) {
 
 function HealingFoodsActivity({ onBack }) {
   const { good, bad } = ACTIVITIES[1];
-  const allFoods = [...good.map(f => ({ text: f, isGood: true })), ...bad.map(f => ({ text: f, isGood: false }))].sort(() => Math.random() - 0.5);
+  const allFoods = useMemo(() => [...good.map(f => ({ text: f, isGood: true })), ...bad.map(f => ({ text: f, isGood: false }))].sort(() => Math.random() - 0.5), []);
   const [tapped, setTapped] = useState({});
   const [revealed, setRevealed] = useState(false);
 

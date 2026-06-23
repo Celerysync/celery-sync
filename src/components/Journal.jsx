@@ -166,7 +166,7 @@ export default function Journal({ authUser, user, profileId }) {
         content: `You are a compassionate Medical Medium healing companion helping someone understand what their body is going through today.
 
 Person: ${user?.name || "friend"}
-Their health conditions: ${(user?.conditions || []).join(", ") || "not specified"}
+Their health conditions: ${(user?.symptoms || []).join(", ") || "not specified"}
 Days on healing protocol: ${protocolDays}
 Today's energy: ${energy}/10
 Today's mood: ${mood}/5
@@ -206,7 +206,7 @@ Keep this warm, personal, and focused. Address ${user?.name || "them"} directly.
         content: `You are a warm Medical Medium healing companion writing a personalised weekly healing reflection for someone you care about deeply.
 
 Person: ${user?.name || "friend"}
-Their health conditions: ${(user?.conditions || []).join(", ") || "not specified"}
+Their health conditions: ${(user?.symptoms || []).join(", ") || "not specified"}
 Total protocol days: ${protocolDays}
 This week — average energy: ${avgE.toFixed(1)}/10
 Celery juice days this week: ${celeryDays}/7
