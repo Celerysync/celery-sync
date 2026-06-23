@@ -38,6 +38,7 @@ const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const KidsCorner       = lazy(() => import("./components/KidsCorner.jsx"));
+const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -139,6 +140,12 @@ export default function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
+  const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
+
+  const graduateToFullApp = () => {
+    localStorage.setItem("cs_journey_type", "experienced");
+    setIsBeginnerMode(false);
+  };
   const [darkMode] = useLocalStorage("cs_darkMode", false);
   const [largeText] = useLocalStorage("cs_largeText", false);
   const { track } = useAnalytics(authUser);
@@ -259,6 +266,8 @@ export default function App() {
       case "home":
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
+          : isBeginnerMode
+          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} />;
@@ -321,6 +330,8 @@ export default function App() {
       default:
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
+          : isBeginnerMode
+          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };
