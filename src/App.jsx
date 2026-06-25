@@ -37,6 +37,7 @@ const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
+const StartHere        = lazy(() => import("./components/StartHere.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -136,6 +137,7 @@ export default function App() {
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
+  const [startHereDone, setStartHereDone] = useLocalStorage("cs_start_here_done", false);
 
   const graduateToFullApp = () => {
     localStorage.setItem("cs_journey_type", "experienced");
@@ -258,6 +260,14 @@ export default function App() {
 
     switch (tab) {
       case "home":
+        if (!startHereDone && !caregiverMode) {
+          return (
+            <StartHere
+              user={activeProfile}
+              onDone={() => setStartHereDone(true)}
+            />
+          );
+        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
@@ -320,6 +330,14 @@ export default function App() {
           </div>
         );
       default:
+        if (!startHereDone && !caregiverMode) {
+          return (
+            <StartHere
+              user={activeProfile}
+              onDone={() => setStartHereDone(true)}
+            />
+          );
+        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode

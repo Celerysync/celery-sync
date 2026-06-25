@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import { useRhythm } from "../hooks/useRhythm.js";
 import { Tag, Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
+import RhythmView from "./RhythmView.jsx";
+
+const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
@@ -99,6 +103,28 @@ export default function Home({ user, authUser, profileId }) {
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
   const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
   const voiceName = localStorage.getItem("cs_voiceName") || "";
+
+  const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
+
+  const {
+    sequence,
+    baseItems,
+    anchorTime,
+    setAnchorTime,
+    activeProgram,
+    currentProgramDay,
+    hasMedicine,
+    hasRhythm,
+    completeItem,
+    uncompleteItem,
+    addItem,
+    updateItem,
+    removeItem,
+    reorderItems,
+    applyTemplate,
+    startProgram,
+    cancelProgram,
+  } = useRhythm();
 
   const [checklist, setChecklist] = useLocalStorage("cs_checklist", {
     date: TODAY,
@@ -218,6 +244,38 @@ export default function Home({ user, authUser, profileId }) {
           </button>
         </div>
       </div>
+
+      {/* Daily rhythm sequence */}
+      <RhythmView
+        sequence={sequence}
+        anchorTime={anchorTime}
+        hasMedicine={hasMedicine}
+        activeProgram={activeProgram}
+        currentProgramDay={currentProgramDay}
+        onComplete={completeItem}
+        onUncomplete={uncompleteItem}
+        onEdit={() => setShowRhythmBuilder(true)}
+      />
+
+      {/* Rhythm builder modal */}
+      {showRhythmBuilder && (
+        <Suspense fallback={null}>
+          <RhythmBuilder
+            baseItems={baseItems}
+            anchorTime={anchorTime}
+            activeProgram={activeProgram}
+            onClose={() => setShowRhythmBuilder(false)}
+            onApplyTemplate={applyTemplate}
+            onAddItem={addItem}
+            onUpdateItem={updateItem}
+            onRemoveItem={removeItem}
+            onReorder={reorderItems}
+            onSetAnchorTime={setAnchorTime}
+            onStartProgram={startProgram}
+            onCancelProgram={cancelProgram}
+          />
+        </Suspense>
+      )}
 
       {/* Weekly healing report — shows Sundays */}
       <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
