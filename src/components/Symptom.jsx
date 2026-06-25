@@ -107,7 +107,7 @@ function printDoctorSummary({ user, conditions, result }) {
   setTimeout(() => win.print(), 400);
 }
 
-export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
+export default function Symptom({ user, navQuery }) {
   const [sel, setSel] = useState([]);
   const [custom, setCustom] = useState("");
   const [conditionSearch, setConditionSearch] = useState("");
@@ -115,7 +115,6 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [showDrNote, setShowDrNote] = useState(false);
-  const [bookEnhanced, setBookEnhanced] = useState(false);
   const { speak, speaking, stopSpeaking } = useVoice();
 
   useEffect(() => {
@@ -131,7 +130,6 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
     setLoading(true);
     setResult(null);
     setStreaming(false);
-    setBookEnhanced(false);
 
     const all = [...sel, ...(custom.trim() ? [custom.trim()] : [])];
 
@@ -150,62 +148,46 @@ export default function Symptom({ user, bookNotes, searchBooks, navQuery }) {
       .filter(Boolean)
       .join("\n");
 
-    const notesCtx =
-      bookNotes.length > 0
-        ? `\nUser's personal book notes: ${bookNotes
-            .slice(0, 3)
-            .map((n) => n.content)
-            .join("; ")}`
-        : "";
-
-    // Search uploaded books for relevant passages
-    let bookChunksCtx = "";
-    if (searchBooks) {
-      const chunks = await searchBooks(all.join(" ")).catch(() => []);
-      if (chunks?.length > 0) {
-        bookChunksCtx = `\n\nFROM USER'S UPLOADED BOOKS:\n${chunks.slice(0, 3).map((c) => `[${c.user_books?.title || "Their library"}]: ${c.content}`).join("\n\n")}`;
-        setBookEnhanced(true);
-      }
-    }
-
-    const prompt = `You are a compassionate Medical Medium healing companion with deep knowledge from Anthony William's books.
+    const prompt = `You are a compassionate CelerySync companion helping an adult explore Anthony William's Medical Medium teachings.
 
 Person: ${user?.name || "friend"}
-Their existing conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
-Conditions/symptoms they're asking about now: ${all.join(", ")}
+Their conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
+Conditions/symptoms they're exploring now: ${all.join(", ")}
 
-EXACT DATA FROM ANTHONY WILLIAM'S BOOKS:
-${dbContext || "Draw from Anthony William's Medical Medium teachings."}
-${notesCtx}${bookChunksCtx}
+PARAPHRASED DATA (attributed to Anthony William's teachings):
+${dbContext || "Draw from Anthony William's publicly shared Medical Medium teachings."}
 
-This person may be suffering — be warm and compassionate while being specific. Address them by name (${user?.name || "friend"}).
+Be warm and compassionate. Address them by name (${user?.name || "friend"}).
+Frame everything as "Anthony William teaches…" or "According to Anthony William…" — not as your own medical claims.
+For supplement amounts, say "Anthony William generally suggests…" and point to the specific book for full detail — never state yourself as the dosing authority.
+This is not medical advice. Always encourage working with a licensed practitioner.
 
-Provide these sections clearly:
+⚠️ IMPORTANT: NEVER diagnose or claim to treat, cure, or heal any condition. Use "understand", "support", and "track" framing throughout.
 
-## 🦠 True Cause
-What Anthony William teaches is actually causing this — be specific. Name the pathogen (EBV, streptococcus, etc.) or toxic load (heavy metals, etc.) where relevant. Cite the specific book.
+Provide these sections:
 
-## 🌿 Best Cleanse to Start
-From Cleanse to Heal by Anthony William — which cleanse level and which specific foods. Be concrete.
+## 🦠 What Anthony William Associates This With
+What he teaches is the likely underlying cause — pathogen (EBV, streptococcus, etc.) or toxic load (heavy metals, etc.). Attribute clearly and cite the relevant book.
 
-## 💊 Exact Supplements
-With dosages exactly as Anthony William teaches. Don't be vague — give actual amounts where available. Note which book/protocol these come from.
+## 🌿 Suggested Starting Point
+Based on Anthony William's teachings — which cleanse or approach he generally recommends. Point to Cleanse to Heal for the full protocol.
 
-## 🍎 Healing Foods
-What to eat daily for this condition specifically — per Anthony William. Include any specific timing (with/without meals, time of day, etc.)
+## 💊 Supplement Guidance (see book for full detail)
+General supplements Anthony William associates with this, paraphrased from his teachings. Note the relevant book. For precise amounts and protocols, refer to the book directly.
 
-## 🚫 Must Avoid
-The key foods and substances that feed the pathogens causing this — per Anthony William. Be direct.
+## 🍎 Supportive Foods
+Foods Anthony William highlights for this condition — per his teachings. Include any general timing notes.
 
-## 📚 Read Next
-The most important Anthony William book for this specific situation, and what chapter to start with.
+## 🚫 Foods to Reduce or Avoid
+Key foods he says feed the pathogens involved — per his teachings.
+
+## 📚 Recommended Reading
+The most relevant Anthony William book for this situation.
 
 ## 💛 Encouragement
-One genuine, heartfelt paragraph. This person is doing the hard work of healing. Honour that.
+One warm paragraph acknowledging this person's commitment to their wellbeing.
 
-Always frame all claims as "Anthony William teaches…" or "Per [Book]…" — never as your own medical claims.
-
-End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always work alongside your healthcare provider.`;
+End with: ⚠️ This is based on Anthony William's Medical Medium teachings, paraphrased and attributed. This is not medical advice — always work with your healthcare provider. See Anthony William's books for complete protocols and supplement specifics.`;
 
     try {
       const text = await callClaude({
@@ -326,7 +308,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
         disabled={loading || (!sel.length && !custom.trim())}
         color={C.plum}
       >
-        {loading ? "🌿 Looking it up…" : "Understand & Heal This Symptom"}
+        {loading ? "🌿 Looking it up…" : "Explore This Symptom"}
       </Btn>
 
       {result !== null && (
@@ -343,18 +325,8 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                Your Healing Protocol
+                Protocol Overview
               </div>
-              {bookEnhanced && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700,
-                  padding: "2px 9px", borderRadius: 20,
-                  background: "#e8f5e9", color: C.sageDark,
-                  border: `1px solid ${C.sage}50`,
-                }}>
-                  📚 Enhanced by your library
-                </span>
-              )}
             </div>
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
               <Btn

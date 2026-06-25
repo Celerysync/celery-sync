@@ -25,7 +25,7 @@ const FEATURES = [
   {
     emoji: "🎙",
     title: "AI Guide that never forgets you",
-    desc: "Speaks your language, answers with exact dosages, and permanently remembers your conditions, milestones, setbacks, and wins — building deeper understanding with every single session.",
+    desc: "Speaks your language, paraphrases Anthony William's teachings attributed to the source, and permanently remembers your conditions, milestones, setbacks, and wins — building deeper understanding with every single session.",
   },
   {
     emoji: "🧠",
@@ -54,8 +54,8 @@ const FEATURES = [
   },
   {
     emoji: "🔍",
-    title: "Symptom search with exact protocols",
-    desc: "Select your symptoms and get the true cause, exact supplements with dosages, healing foods, and what to avoid — all from Anthony William's books.",
+    title: "Symptom search with protocol guidance",
+    desc: "Select your symptoms and get the likely cause, supplement guidance, healing foods, and what to avoid — paraphrased from Anthony William's teachings. See the books for full protocols.",
   },
   {
     emoji: "🌿",
@@ -68,9 +68,9 @@ const FEATURES = [
     desc: "50+ healing recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
   },
   {
-    emoji: "📚",
-    title: "Upload your books — they come alive",
-    desc: "Upload your purchased MM books and AW YouTube videos. The entire app gets smarter. Your AI quotes your actual books back to you.",
+    emoji: "🔗",
+    title: "Resources that point to the source",
+    desc: "Direct links to Anthony William's official website, YouTube channel, podcast, and books — so you can always go deeper at the source.",
   },
   {
     emoji: "💜",
@@ -113,8 +113,8 @@ const HOW_IT_WORKS = [
   },
   {
     step: "2",
-    title: "Upload your books",
-    desc: "Add the MM books you own and Anthony William YouTube videos. The app reads them privately and becomes smarter with every addition.",
+    title: "Tell it what's going on",
+    desc: "Select your symptoms and conditions. Get a clear, personalised starting plan — the likely cause, the first things to focus on, and where to go deeper in Anthony William's work.",
   },
   {
     step: "3",
@@ -448,7 +448,7 @@ export default function Landing({ onGetStarted }) {
             An AI that actually knows Medical Medium
           </h2>
           <p style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.8, marginBottom: 20, textAlign: "center" }}>
-            Not a generic chatbot with a prompt. CelerySync's AI is built on Anthony William's full knowledge base — every book, every protocol, every supplement dosage. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation, for as long as you heal.
+            Not a generic chatbot with a prompt. CelerySync's AI is trained on Anthony William's publicly shared teachings — paraphrased, attributed, and always pointing you to the source. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation.
           </p>
 
           {/* Mock AI conversation */}
@@ -464,13 +464,13 @@ export default function Landing({ onGetStarted }) {
             <div style={{ display: "flex", gap: 8, marginBottom: 0 }}>
               <div style={{ fontSize: 18, flexShrink: 0 }}>🌿</div>
               <div style={{ background: C.mist, borderRadius: 14, padding: "10px 13px", fontSize: 12.5, color: C.charcoal, lineHeight: 1.7 }}>
-                Anthony William teaches in <em>Thyroid Healing</em> that hair loss with Hashimoto's is driven by EBV attacking the thyroid, combined with zinc deficiency. The two most important steps: zinc sulfate liquid (1 tsp twice daily) and L-lysine (500mg, 4 capsules twice daily) to slow viral replication. Avoid eggs — they feed EBV directly. Based on your history, I'd also check your adrenal snack consistency as adrenaline spikes worsen viral activity...
+                Anthony William associates hair loss with Hashimoto's with EBV activity and zinc deficiency — this is explored in depth in <em>Thyroid Healing</em>. He generally suggests zinc and L-lysine to support the immune system, alongside avoiding eggs, which he says feed EBV. For exact amounts, <em>Thyroid Healing</em> is your authority. Based on your history, I'd also look at your adrenal snack consistency — adrenaline surges can worsen viral activity...
               </div>
             </div>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["100 exact condition protocols", "Permanent healing memory", "Speaks & listens", "Quotes your own books", "Weekly summaries", "Doctor reports"].map((t) => (
+            {["100 condition protocols", "Permanent healing memory", "Speaks & listens", "Links to official AW sources", "Weekly summaries", "Doctor reports"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",

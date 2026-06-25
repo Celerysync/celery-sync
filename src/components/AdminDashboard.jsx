@@ -5,7 +5,7 @@ import { Card } from "./ui.jsx";
 
 const TAB_LABELS = {
   home: "Today", coach: "AI Guide", journal: "Journal", recipes: "Recipes",
-  cleanses: "Cleanses", symptoms: "Symptoms", knowledge: "My Books",
+  cleanses: "Cleanses", symptoms: "Symptoms", knowledge: "Resources",
   body: "The Body", community: "Circles", practice: "Practice",
   aw: "Support AW", account: "Account",
 };
@@ -81,7 +81,7 @@ export default function AdminDashboard({ authUser }) {
     circle_post_created: "Posts created",
     wearable_connected: "Wearables connected",
     protocol_generated: "Practitioner protocols",
-    book_added: "Books uploaded",
+    book_added: "Videos saved",
     subscription_started: "New subscriptions",
   };
 

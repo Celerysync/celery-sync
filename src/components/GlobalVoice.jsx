@@ -10,12 +10,11 @@ const TAB_CONTEXT = {
   journal:   "The user is on the Journal tab — they may want to reflect, log symptoms, or get journaling prompts.",
   recipes:   "The user is on the Recipes tab — healing foods, juices, smoothies, meal planner, shopping list.",
   cleanses:  "The user is on the Cleanses tab — 3:6:9, Heavy Metal Detox, and other Anthony William cleanse protocols.",
-  symptoms:  "The user is on the Symptom Checker tab — looking up symptoms, conditions, and supplement protocols.",
-  knowledge: "The user is on the My Books tab — their uploaded Medical Medium books and saved videos.",
+  symptoms:  "The user is on the Symptom Checker tab — looking up symptoms, conditions, and protocol guidance.",
+  knowledge: "The user is on the Resources tab — links to Anthony William's official books, YouTube, and podcast.",
   body:      "The user is on the Body tab — exploring organs like liver, thyroid, brain, kidneys, and what Anthony William teaches about each.",
-  community: "The user is on the Healing Circles tab — connecting with others healing the same conditions.",
-  kids:      "The user is on the Kids Corner tab — healing activities and guidance for children.",
-  aw:        "The user is on the Support AW tab — Anthony William content and support.",
+  community: "The user is on the Healing Circles tab — connecting with others following the same protocols.",
+  aw:        "The user is on the Support AW tab — Anthony William official content and support.",
   account:   "The user is on the Account tab — subscription, settings, profile.",
 };
 
@@ -215,6 +214,6 @@ Never give conventional medical advice. Always attribute to Anthony William.`;
 
 const TAB_NAMES = {
   home: "Today", journal: "Journal", recipes: "Recipes",
-  cleanses: "Cleanses", symptoms: "Symptoms", knowledge: "My Books",
-  body: "The Body", community: "Circles", kids: "Kids", aw: "Support AW", account: "Account",
+  cleanses: "Cleanses", symptoms: "Symptoms", knowledge: "Resources",
+  body: "The Body", community: "Circles", aw: "Support AW", account: "Account",
 };

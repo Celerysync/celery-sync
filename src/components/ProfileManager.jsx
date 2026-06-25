@@ -5,14 +5,13 @@ import { AVATAR_OPTIONS } from "../hooks/useProfiles.js";
 import { CONDITIONS } from "../data/conditions.js";
 
 const GOALS = [
-  "Heal a specific condition",
+  "Support a specific condition",
   "Heavy metal detox",
-  "Liver healing",
-  "Thyroid healing",
+  "Liver support",
+  "Thyroid support",
   "More energy & clarity",
   "Prevention & wellness",
-  "Supporting a family member",
-  "Children's health",
+  "Supporting a family member (carer)",
 ];
 
 function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
@@ -171,8 +170,11 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
   if (mode === "add") {
     return (
       <Card>
-        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 14 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
           Add Family Member
+        </div>
+        <div style={{ fontSize: 11.5, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
+          Profiles are for adults (18+). For supporting a loved one, use Carer mode in Account settings.
         </div>
         <ProfileForm onSave={handleCreate} onCancel={() => setMode(null)} saving={saving} />
       </Card>

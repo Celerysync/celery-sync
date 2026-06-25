@@ -669,7 +669,7 @@ export default function AW({ onNavigate }) {
         </div>
         {[
           { emoji: "📚", title: "Every answer points to his books", desc: "The AI always says which Anthony William book to read and why. We are a referral engine for his work, not a replacement for it." },
-          { emoji: "🚫", title: "We never reproduce his content", desc: "Users bring their own purchased books. We don't copy, paste, or paraphrase his text. The Bring Your Own Books model is our core principle." },
+          { emoji: "🚫", title: "We never reproduce his content", desc: "All teachings in this app are paraphrased in our own words and attributed to Anthony William. We never reproduce his text, and we always point users to his books for the full, authoritative detail." },
           { emoji: "💰", title: "Book sales go straight to his team", desc: "We link directly to medicalmedium.com for books — his team earns every commission. iHerb supplement commissions fund the Healing Access Fund." },
           { emoji: "🏷", title: "Clear attribution always", desc: "Every teaching in this app is explicitly attributed to Anthony William by name, with the specific book it comes from. He always gets the credit." },
           { emoji: "🌍", title: "We amplify his reach", desc: "Every subscriber who discovers a protocol through this app is a person who will buy more of his books, follow his social, and share his teachings with others." },
@@ -696,12 +696,12 @@ export default function AW({ onNavigate }) {
         borderRadius: 16, padding: "16px 18px",
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
-          How it works with CelerySync
+          Buying his books
         </div>
         {[
           { n: "1", label: "Buy from Anthony William's website", desc: "All purchases go directly to his team — he chooses the retailers and earns from every sale." },
-          { n: "2", label: "Upload your book to My Books", desc: "Once you have a digital copy, upload it in the My Books tab — it becomes part of your personal AI library." },
-          { n: "3", label: "Your AI quotes your copy directly", desc: "The AI guide now draws on your exact edition when answering — real page references, your book, his words." },
+          { n: "2", label: "Read the book directly", desc: "His books contain complete protocols, exact guidance, and the full depth of his teachings — they are the authoritative source." },
+          { n: "3", label: "Use Resources in this app", desc: "The Resources tab links directly to his official books, YouTube, and podcast so you can always access his official content." },
         ].map(({ n, label, desc }) => (
           <div key={n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
             <div style={{
@@ -724,7 +724,7 @@ export default function AW({ onNavigate }) {
             cursor: "pointer", marginTop: 4,
           }}
         >
-          Go to My Books →
+          Go to Resources →
         </button>
       </div>
 
