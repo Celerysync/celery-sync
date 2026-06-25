@@ -236,7 +236,7 @@ End with: ⚠️ Based on Anthony William's Medical Medium teachings. Always wor
           color: C.sageDark,
         }}
       >
-        📚 Powered by exact data from <strong>Cleanse to Heal Ch. 29</strong> by Anthony William
+        📚 Protocols based on <strong>Anthony William's Medical Medium</strong> teachings — independently researched
       </div>
 
       {/* Condition search + chips */}

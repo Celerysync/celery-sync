@@ -201,8 +201,16 @@ export default function Landing({ onGetStarted }) {
           CelerySync is the only companion built for Medical Medium followers — an AI that speaks your language, remembers your journey, and guides you through every single day.
         </p>
 
-        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 28, fontStyle: "italic" }}>
-          Inspired by the teachings of Anthony William
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          background: "rgba(255,255,255,0.15)",
+          border: "1px solid rgba(255,255,255,0.3)",
+          borderRadius: 20, padding: "6px 14px",
+          marginBottom: 28,
+        }}>
+          <span style={{ fontSize: 11, opacity: 0.95, letterSpacing: 0.3 }}>
+            🌿 Independent app · Inspired by Anthony William's teachings · Not affiliated with or endorsed by Medical Medium LLC
+          </span>
         </div>
 
         <button
@@ -597,9 +605,19 @@ export default function Landing({ onGetStarted }) {
       </div>
 
       {/* Disclaimer */}
-      <div style={{ padding: "20px 24px 48px", textAlign: "center" }}>
-        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.7, maxWidth: 420, margin: "0 auto" }}>
-          CelerySync is an independent companion app, not affiliated with Anthony William or Medical Medium Inc. "Medical Medium" is a registered trademark of Anthony William, Inc. This app is for educational and personal reference purposes only and is not a substitute for professional medical advice.
+      <div style={{ padding: "24px 24px 52px", maxWidth: 500, margin: "0 auto" }}>
+        <div style={{
+          background: "#f9f9f7",
+          border: `1px solid ${C.border}`,
+          borderRadius: 16, padding: "16px 18px",
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 6, fontFamily: "Georgia,serif" }}>
+            Independent App — Important Notice
+          </div>
+          <div style={{ fontSize: 11.5, color: C.mid, lineHeight: 1.75 }}>
+            CelerySync is an <strong>independent</strong> companion app created by a Medical Medium community member. It is <strong>not affiliated with, endorsed by, or connected to</strong> Anthony William or Medical Medium LLC in any way. "Medical Medium" is a registered trademark of Anthony William, Inc. All health information in this app is for <strong>educational and personal reference only</strong> and is not a substitute for professional medical advice. Always work with your healthcare provider.
+          </div>
         </div>
       </div>
 

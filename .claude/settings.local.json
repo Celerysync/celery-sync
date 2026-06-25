@@ -52,7 +52,11 @@
       "WebFetch(domain:www.youtube.com)",
       "WebFetch(domain:medicalmedium.com)",
       "Bash(sort -t'│' -k2 -rh)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in {**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}.items\\(\\)]\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in {**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}.items\\(\\)]\")",
+      "WebSearch",
+      "Bash(grep -rn \"9\\\\.97\\\\|49\\\\b\\\\|\\\\$9\\\\|\\\\$49\\\\|price\\\\|Price\" /Users/alli/celerysync/src/components/Landing.jsx)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\),**p.get\\('devDependencies',{}\\)}; [print\\(k\\) for k in deps]\")",
+      "Bash(python3 *)"
     ]
   }
 }

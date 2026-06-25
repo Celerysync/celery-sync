@@ -539,9 +539,18 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
         </Btn>
       </Card>
 
-      <div style={{ fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 1.7 }}>
-        CelerySync is an independent tool, not affiliated with Anthony William or Medical Medium Inc.
-        "Medical Medium" is a registered trademark of Anthony William, Inc.
+      <div style={{
+        background: "#f9f9f7",
+        border: `1px solid ${C.border}`,
+        borderRadius: 16, padding: "14px 16px",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.charcoal, marginBottom: 5, fontFamily: "Georgia,serif" }}>
+          Independent App — Not Affiliated with Anthony William
+        </div>
+        <div style={{ fontSize: 11, color: C.mid, lineHeight: 1.75 }}>
+          CelerySync is an independent app created by a Medical Medium community member. It is not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc. All content is for educational and personal reference only — not a substitute for medical advice.
+        </div>
       </div>
     </div>
   )
