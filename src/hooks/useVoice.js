@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { cleanForSpeech } from "../lib/ttsClean.js";
+import { ttsProvider } from "../lib/voiceService.js";
 
 export const ELEVENLABS_VOICES = [
   // Warm & healing — best for this app
@@ -41,8 +42,8 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
   // ── Sentence-streaming queue ─────────────────────────────────────
   // Each message gets a new "generation" so stale promises self-discard.
   const generationRef = useRef(0);
-  const sentenceQueue = useRef([]);  // [{promise: Promise<string|null>}]
-  const queueActive = useRef(false); // true while playing or awaiting audio URL
+  const sentenceQueue = useRef([]);
+  const queueActive = useRef(false);
   const queueFinished = useRef(false);
   const queueOnDone = useRef(null);
 
@@ -58,7 +59,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     }
     const { promise } = sentenceQueue.current.shift();
     promise.then((url) => {
-      if (gen !== generationRef.current) return; // stale — new message started
+      if (gen !== generationRef.current) return;
       if (!url) { _playNext(); return; }
       const audio = new Audio(url);
       audioRef.current = audio;
@@ -81,20 +82,13 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Add a sentence to the ElevenLabs queue — fires the fetch immediately.
+  // Add a sentence to the TTS queue — fires the provider fetch immediately.
   const queueSentence = useCallback((text) => {
     const voice = preferredVoiceRef.current;
-    if (!voice.startsWith("el:")) return;
-    const voiceId = voice.slice(3);
+    if (!ttsProvider.isElVoice(voice)) return;
+    const voiceId = ttsProvider.extractVoiceId(voice);
     const cleaned = cleanForSpeech(text, units);
-    const promise = fetch("/api/elevenlabs/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: cleaned, voiceId }),
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.url || null)
-      .catch(() => null);
+    const promise = ttsProvider.fetchAudioUrl(cleaned, voiceId);
 
     sentenceQueue.current.push({ promise });
     setSpeaking(true);
@@ -102,7 +96,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
       queueActive.current = true;
       _playNext();
     }
-  }, [_playNext]);
+  }, [_playNext, units]);
 
   // Signal that no more sentences are coming.
   const endQueue = useCallback((onDone) => {
@@ -135,7 +129,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     setSpeaking(false);
   }, [resetQueue]);
 
-  // Browser TTS — used as primary for non-ElevenLabs voices and as fallback
+  // Browser TTS — fallback for non-provider voices
   const browserSpeak = useCallback((text, voiceName, onDone) => {
     const clean = cleanForSpeech(text, units);
     const chunks = clean.match(/.{1,200}(?:[.!?,\s]|$)/g) ?? [clean];
@@ -153,102 +147,116 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
       const voices = window.speechSynthesis.getVoices();
       const chosen = voiceName ? voices.find((v) => v.name === voiceName) : null;
       const fallback = voices.find(
-        (v) =>
-          v.name.includes("Samantha") ||
-          v.name.includes("Karen") ||
-          v.name.includes("Moira")
+        (v) => v.name.includes("Samantha") || v.name.includes("Karen") || v.name.includes("Moira")
       );
       u.voice = chosen ?? fallback ?? null;
       u.onend = next;
       window.speechSynthesis.speak(u);
     };
     setTimeout(next, 100);
-  }, []);
+  }, [units]);
 
   const speak = useCallback(
     async (text, onDone) => {
       stopSpeaking();
       const voice = preferredVoiceRef.current;
 
-      if (voice.startsWith("el:")) {
-        // ── ElevenLabs path (with server-side caching) ────
-        const voiceId = voice.slice(3);
+      if (ttsProvider.isElVoice(voice)) {
+        const voiceId = ttsProvider.extractVoiceId(voice);
         setSpeaking(true);
-        try {
-          const res = await fetch("/api/elevenlabs/speak", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text, voiceId }),
-          });
+        const url = await ttsProvider.fetchAudioUrl(text, voiceId);
 
-          if (!res.ok) {
-            setSpeaking(false);
-            browserSpeak(text, "", onDone);
-            return;
-          }
-
-          const { url } = await res.json();
-          if (!url) {
-            setSpeaking(false);
-            browserSpeak(text, "", onDone);
-            return;
-          }
-
-          const audio = new Audio(url);
-          audioRef.current = audio;
-
-          audio.onended = () => {
-            setSpeaking(false);
-            audioRef.current = null;
-            onDone?.();
-          };
-
-          audio.onerror = () => {
-            setSpeaking(false);
-            audioRef.current = null;
-            browserSpeak(text, "", onDone);
-          };
-
-          audio.play().catch(() => {
-            setSpeaking(false);
-            audioRef.current = null;
-            browserSpeak(text, "", onDone);
-          });
-        } catch {
+        if (!url) {
           setSpeaking(false);
           browserSpeak(text, "", onDone);
+          return;
         }
+
+        const audio = new Audio(url);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setSpeaking(false);
+          audioRef.current = null;
+          onDone?.();
+        };
+        audio.onerror = () => {
+          setSpeaking(false);
+          audioRef.current = null;
+          browserSpeak(text, "", onDone);
+        };
+        audio.play().catch(() => {
+          setSpeaking(false);
+          audioRef.current = null;
+          browserSpeak(text, "", onDone);
+        });
       } else {
-        // ── Browser TTS path ──────────────────────────────
         browserSpeak(text, voice, onDone);
       }
     },
     [stopSpeaking, browserSpeak]
   );
 
-  const startListening = useCallback((onResult, onUnsupported) => {
+  // startListening — two call signatures for backward compatibility:
+  //   startListening(onResult, onUnsupported)        — legacy, one-shot
+  //   startListening(onResult, { silenceMs, lang })  — new, with tunable VAD
+  //
+  // When silenceMs > 0, continuous mode is used: onspeechend starts a timer;
+  // onspeechstart cancels it. After silenceMs of silence, the transcript is committed.
+  const startListening = useCallback((onResult, optionsOrUnsupported = {}) => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const isLegacy = typeof optionsOrUnsupported === 'function';
+    const onUnsupported = isLegacy ? optionsOrUnsupported : undefined;
+    const { silenceMs = 0, lang = 'en-US' } = isLegacy ? {} : (optionsOrUnsupported || {});
+
     if (!SR) {
       onUnsupported?.();
       return;
     }
+
     const r = new SR();
-    r.continuous = false;
+    r.continuous = silenceMs > 0;
     r.interimResults = true;
-    r.lang = "en-US";
+    r.lang = lang;
+
+    let finalTranscript = '';
+    let silenceTimer = null;
+
     r.onstart = () => setListening(true);
+
     r.onresult = (e) => {
-      const t = Array.from(e.results)
-        .map((x) => x[0].transcript)
-        .join("");
+      const t = Array.from(e.results).map((x) => x[0].transcript).join('');
       setTranscript(t);
-      if (e.results[e.results.length - 1].isFinal) onResult(t);
+      if (e.results[e.results.length - 1].isFinal) {
+        finalTranscript = t;
+        if (!silenceMs) onResult(t); // non-VAD: fire immediately on final result
+      }
     };
+
+    if (silenceMs > 0) {
+      // VAD: wait for silence before committing
+      r.onspeechend = () => {
+        clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (finalTranscript.trim()) {
+            r.stop();
+            onResult(finalTranscript);
+          }
+        }, silenceMs);
+      };
+      r.onspeechstart = () => clearTimeout(silenceTimer);
+    }
+
     r.onend = () => {
       setListening(false);
-      setTranscript("");
+      setTranscript('');
+      clearTimeout(silenceTimer);
     };
-    r.onerror = () => setListening(false);
+    r.onerror = () => {
+      setListening(false);
+      clearTimeout(silenceTimer);
+    };
+
     recogRef.current = r;
     r.start();
   }, []);

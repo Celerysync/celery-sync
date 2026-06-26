@@ -227,6 +227,9 @@ ${unitsSection}
 `;
 }
 
+// Voice session timeout — after this much silence the hands-free loop closes politely
+const SESSION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
 function parseNavCommand(text) {
   const match = text.match(/\[\[GO:([a-z]+)(?::([^\]]*))?\]\]/i);
   if (!match) return { clean: text, nav: null };
@@ -259,6 +262,9 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
+  const audioUnlockedRef = useRef(false);
+  const pendingGreetingRef = useRef(null);
+  const sessionTimerRef = useRef(null);
   const { track } = useAnalytics(authUser);
 
   // Keep voiceModeRef in sync with handsFree preference
@@ -311,7 +317,15 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — a warm guide for Anthony William's Medical Medium protocols. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
-    setTimeout(() => speak(greeting), 600);
+    // Autoplay is blocked until a user gesture — queue the greeting and speak it
+    // the moment the user first taps/clicks anywhere in the Coach panel.
+    pendingGreetingRef.current = greeting;
+    setTimeout(() => {
+      if (audioUnlockedRef.current) {
+        speak(greeting);
+        pendingGreetingRef.current = null;
+      }
+    }, 600);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryLoading, lang]);
 
@@ -331,6 +345,8 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       setMessages(newMsgs);
       setInput("");
       setLoading(true);
+      stopListening();              // stop mic immediately — prevent AI hearing itself
+      clearTimeout(sessionTimerRef.current);
       try {
         let firstToken = true;
         let streamBuffer = "";
@@ -383,14 +399,26 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               if (!last || last.role !== "assistant") return m;
               return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
-            const autoListen = voiceModeRef.current ? () => startListening((t) => {
-            const lower = t.trim().toLowerCase();
-            if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
-              stopSpeaking();
-            } else {
-              send(t);
-            }
-          }) : undefined;
+            const autoListen = voiceModeRef.current ? () => {
+              // Session timeout — if user goes silent for SESSION_TIMEOUT_MS, close politely
+              sessionTimerRef.current = setTimeout(() => {
+                stopListening();
+                setHandsFree(false);
+                setMessages((m) => [...m, {
+                  role: 'assistant',
+                  content: "I'm here when you need me — tap 🎙 to continue, or just type below. Take good care 💚",
+                }]);
+              }, SESSION_TIMEOUT_MS);
+              startListening((t) => {
+                clearTimeout(sessionTimerRef.current);
+                const lower = t.trim().toLowerCase();
+                if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
+                  stopSpeaking();
+                } else {
+                  send(t);
+                }
+              }, { silenceMs: 1200 });
+            } : undefined;
             if (isElVoice) {
               // Flush any remaining text after the last sentence boundary
               const rem = sentenceBuffer
@@ -457,8 +485,18 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     return aEn - bEn || a.name.localeCompare(b.name);
   });
 
+  // Unlock audio context on first user gesture — browsers block autoplay before interaction
+  const unlockAudio = () => {
+    if (audioUnlockedRef.current) return;
+    audioUnlockedRef.current = true;
+    if (pendingGreetingRef.current) {
+      speak(pendingGreetingRef.current);
+      pendingGreetingRef.current = null;
+    }
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }} onClick={unlockAudio}>
       {/* Header */}
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
