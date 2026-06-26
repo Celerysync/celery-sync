@@ -16,28 +16,28 @@ const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 const TODAY = new Date().toISOString().split("T")[0];
 const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
 
-const AW_QUOTES = [
-  { text: "Be proud of using your free will to make your own choice to work on your healing. Have compassion for yourself and know that your suffering is not your fault. I believe you can heal. More than believe — I know.", source: "Cleanse to Heal" },
-  { text: "Celery juice is a medical discovery waiting to be made by science. Its sodium cluster salts are some of the most powerful natural antiseptics and antiviral compounds on earth.", source: "Celery Juice" },
-  { text: "Your liver works incredibly hard to protect you every day. When you give it the support it needs, it will reward you with energy, clarity, and healing beyond what you imagined possible.", source: "Liver Rescue" },
-  { text: "The brain is not aging. The brain is being burdened by toxic heavy metals and viral neurotoxins. Remove these and the brain heals. That is the truth of what is called brain ageing.", source: "Brain Saver" },
-  { text: "The thyroid is not attacking itself. The immune system is not confused. The body is fighting a very real pathogen — Epstein-Barr virus. And when you know your enemy, you can win.", source: "Thyroid Healing" },
-  { text: "Wild blueberries are the most powerful food on the planet for healing the brain. No other food can do what wild blueberries do for the brain tissue that has been damaged by heavy metals.", source: "Brain Saver" },
-  { text: "Your fatigue is not laziness. Your brain fog is not weakness. Your pain is not in your head. You are fighting something real, and this information can help you win.", source: "Medical Medium" },
-  { text: "The 3:6:9 Cleanse is the most advanced healing protocol I have ever received. It gives the liver the rest and support it needs to perform the deepest cleanse of your lifetime.", source: "Cleanse to Heal" },
-  { text: "Anxiety is not a character flaw. It is a physical condition — adrenaline surges caused by blood sugar instability, viral neurotoxins, and heavy metals affecting the emotional centres of the brain.", source: "Brain Saver Protocols" },
-  { text: "Your body wants to heal. Every cell in your body is on your side. The protocols and the foods and the supplements are simply giving your body what it needs to do the work it already knows how to do.", source: "Medical Medium" },
-  { text: "Lemon water prepares the liver for its most important morning function — cleansing. The organic acids from the lemon directly support hepatic cell function. There is nothing else like it.", source: "Liver Rescue" },
-  { text: "Heavy metals don't stay where they land. They migrate through the body over years and decades. That is why symptoms change. That is why the brain is affected. That is why the HMDS is so important.", source: "Cleanse to Heal" },
-  { text: "Adrenal fatigue is real — more real than most medicine currently acknowledges. Your adrenals are like two small walnut-shaped glands carrying the weight of your entire survival system. Honour them.", source: "Medical Medium" },
-  { text: "You are not broken. You are not weak. You are not to blame. Your body is fighting something very real that medicine has not yet discovered. Keep going. Keep healing. You are not alone.", source: "Medical Medium" },
-  { text: "Zinc is the number one mineral deficiency on the planet. Without zinc, the immune system cannot fight viral and bacterial infections. It is the great protector — the shield your body needs.", source: "Brain Saver Protocols" },
-  { text: "The liver is like a best friend who never stops working for you. When you understand what your liver does for you every day — without thanks — you will want to take care of it with everything you have.", source: "Liver Rescue" },
-  { text: "EBV is behind more chronic illness than science currently knows. When science finally catches up with what I share, millions of people will have answers they have been waiting decades for.", source: "Thyroid Healing" },
-  { text: "Sleep is not a luxury — it is the time when your liver does its most critical work, when neurotoxins are processed, when the brain heals. Prioritise your sleep as if your healing depends on it. Because it does.", source: "Brain Saver" },
-  { text: "Spirulina is a gift from the earth. It is the most bioavailable source of protein on the planet and it binds to heavy metals in a way nothing else can, drawing them safely out of your body.", source: "Cleanse to Heal" },
-  { text: "Depression is not caused by a serotonin deficiency. It is caused by neurotoxins from viral activity, heavy metals disrupting brain chemistry, and adrenaline exhausting the nervous system. It is a physical condition.", source: "Brain Saver" },
-  { text: "The celery juice movement exists because people are healing conditions that have had no answers for decades. When something helps this many people, the world has a responsibility to pay attention.", source: "Celery Juice" },
+const DAILY_TEACHINGS = [
+  "Anthony William teaches that your suffering has a real, physical cause — pathogens, heavy metals, and toxins your body has been quietly fighting, often for years. Your symptoms are not imaginary and you are not to blame.",
+  "Anthony William has long shared that fresh celery juice, taken alone on an empty stomach, provides what he calls sodium cluster salts — compounds he says are deeply supportive for the gut lining, liver, and immune system.",
+  "Anthony William teaches that the liver is the body's central protective organ, quietly processing pathogens, toxins, and excess hormones around the clock. When you give it the support it needs, the whole body responds.",
+  "According to Anthony William, heavy metals that accumulate in brain tissue over years are a key driver behind brain fog, anxiety, depression, and many neurological symptoms — and they can be progressively cleared with the right foods.",
+  "Anthony William teaches that most thyroid conditions — including Hashimoto's and hypothyroidism — are driven by Epstein-Barr virus living in thyroid tissue, not by the immune system attacking itself. Knowing the true cause changes the path forward.",
+  "Anthony William calls wild blueberries one of the most important foods for the brain, sharing that their unique compounds help address damage caused by heavy metals in a way no other food can replicate.",
+  "Anthony William teaches that chronic fatigue, brain fog, and pain are not signs of weakness or laziness. They are signs that the body is fighting something real — and understanding that is the first step to supporting it.",
+  "Anthony William describes the 3:6:9 Cleanse as a structured way to give the liver dedicated rest and support over nine days, cycling through progressive phases to help the body clear pathogens and accumulated toxins more deeply.",
+  "Anthony William teaches that anxiety has physical roots — adrenaline surges from blood sugar instability, viral neurotoxins, and heavy metals affecting the brain's chemistry. It is a physical condition that can be supported, not just managed.",
+  "Anthony William teaches that the body is always working to restore balance. Every clean meal, every morning practice, every supplement gives it more of what it needs to do the repair work it is always trying to do.",
+  "Anthony William shares that warm lemon water — taken first thing on an empty stomach before anything else — supports the liver's early-morning cleansing function and helps gently flush the lymphatic system.",
+  "Anthony William teaches that heavy metals don't stay in one place. They migrate through the body over years, accumulating in different tissues — which is why symptoms often shift and change, and why daily Heavy Metal Detox support matters.",
+  "Anthony William teaches that the adrenal glands are often overburdened in chronic illness, taxed by viral loads, blood sugar crashes, and emotional stress. Consistently supporting them — with the adrenal snack and steady meals — changes how the whole body functions.",
+  "Anthony William teaches that your body is not broken and is not attacking itself. You are carrying real, physical burdens — and when those burdens reduce, the body's natural resilience and vitality can return.",
+  "Anthony William has shared extensively that zinc is critical for immune function and antiviral defence, and that most people with chronic illness have depleted zinc reserves. Restoring them is a key part of supporting recovery.",
+  "Anthony William teaches that the liver performs over 2,000 functions silently on our behalf, every single day. Morning practices — lemon water, celery juice, clean food — are some of the most meaningful things we can do to support it.",
+  "Anthony William has dedicated years of teaching to explaining Epstein-Barr virus as a root driver behind many chronic, mystery, and so-called autoimmune conditions — giving answers to people who had been told none existed.",
+  "Anthony William teaches that sleep is when the liver does some of its most important processing — and that prioritising quality rest is a central, non-optional part of supporting the body's recovery, not a luxury.",
+  "Anthony William explains that spirulina is one of five core ingredients in the Heavy Metal Detox Smoothie. Each ingredient performs a specific step in the extraction process, and all five together form a complete chain.",
+  "Anthony William teaches that depression has physical roots — neurotoxins from viral activity, heavy metals affecting brain chemistry, and exhausted adrenals — and that addressing those roots, not just the symptoms, is the path forward.",
+  "Anthony William has observed that celery juice and the Medical Medium protocols have helped people with conditions that had no answers for decades. When enough people experience something, it becomes important to pay attention.",
 ];
 
 const STREAK_MILESTONES = [
@@ -47,9 +47,9 @@ const STREAK_MILESTONES = [
   { days: 28, emoji: "🏆", title: "One full month!", msg: "A full lunar cycle of healing. Your liver has had a month of daily sodium cluster salts. This is the kind of sustained effort that produces lasting transformation.", color: C.gold },
 ];
 
-function getTodaysQuote() {
+function getTodaysTeaching() {
   const dayNum = Math.floor(Date.now() / 86400000);
-  return AW_QUOTES[dayNum % AW_QUOTES.length];
+  return DAILY_TEACHINGS[dayNum % DAILY_TEACHINGS.length];
 }
 
 function getNowFood() {
@@ -636,9 +636,9 @@ export default function Home({ user, authUser, profileId }) {
         </div>
       </Card>
 
-      {/* AW daily quote — rotates each day */}
+      {/* Daily teaching — rotates each day */}
       {(() => {
-        const q = getTodaysQuote();
+        const teaching = getTodaysTeaching();
         return (
           <div style={{
             background: C.goldLight,
@@ -647,13 +647,13 @@ export default function Home({ user, authUser, profileId }) {
             padding: 18,
           }}>
             <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
-              Today's healing teaching
+              Today's learning
             </div>
-            <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
-              💛 "{q.text}"
+            <div style={{ fontFamily: "Georgia,serif", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
+              💛 {teaching}
             </div>
-            <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginTop: 8 }}>
-              — Anthony William, {q.source}
+            <div style={{ fontSize: 11, color: C.gold, marginTop: 8 }}>
+              Paraphrased from Anthony William's publicly shared teachings
             </div>
             <a
               href="https://medicalmedium.com"

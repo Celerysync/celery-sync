@@ -344,6 +344,19 @@ How to make it: [brief instructions]
         </div>
       </div>
 
+      {/* Teaching attribution */}
+      <div style={{
+        background: "#f0f9f0",
+        border: "1px solid rgba(107,142,90,0.25)",
+        borderRadius: 12,
+        padding: "10px 12px",
+        fontSize: 12,
+        color: "#4a7a5a",
+        lineHeight: 1.5,
+      }}>
+        📖 Recipes are inspired by and paraphrased from Anthony William's publicly shared teachings. This is not medical advice — always work with your healthcare provider. See his books and more in the <strong>Resources</strong> tab.
+      </div>
+
       {/* View switcher */}
       <div style={{ display: "flex", background: C.mist, borderRadius: 12, padding: 4, gap: 4 }}>
         {[

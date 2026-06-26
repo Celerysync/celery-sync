@@ -392,7 +392,7 @@ I wanted to share something that has genuinely changed my life — Anthony Willi
 
 He's a New York Times #1 bestselling author who has spent decades helping people with chronic illness, mystery symptoms, fatigue, brain fog, autoimmune conditions, and things doctors can't explain.
 
-His books explain the real causes behind conditions like EBV, thyroid disease, anxiety, and so much more — and give exact protocols to actually heal.
+His books explain the real causes behind conditions like EBV, thyroid disease, anxiety, and so much more — and give full protocols for supporting the body.
 
 If you've been suffering and not getting answers, please look him up. His website has a huge amount of free content too.
 
@@ -763,7 +763,7 @@ export default function AW({ onNavigate }) {
                     fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
                   }}
                 >
-                  Already have it? Upload →
+                  See in Resources →
                 </button>
               </div>
             </div>

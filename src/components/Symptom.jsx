@@ -96,7 +96,7 @@ function printDoctorSummary({ user, conditions, result }) {
   ${aiSection}
 
   <footer>
-    ⚠️ <strong>Important Notice for Healthcare Providers:</strong> This document summarises protocols from Anthony William's Medical Medium book series. These are <em>complementary</em> wellness recommendations, not a replacement for medical diagnosis or treatment. Anthony William is not a licensed medical professional. All supplement use should be discussed with the patient's treating physician, particularly where medications or existing conditions may interact. The information is drawn from: <em>Medical Medium</em>, <em>Thyroid Healing</em>, <em>Liver Rescue</em>, <em>Cleanse to Heal</em>, and <em>Brain Saver</em> by Anthony William.
+    ⚠️ <strong>Important Notice for Healthcare Providers:</strong> This document summarises information paraphrased from Anthony William's publicly shared Medical Medium teachings. These are <em>complementary</em> wellness suggestions, not a replacement for medical diagnosis or treatment. Anthony William is not a licensed medical professional. All supplement use should be discussed with the patient's treating physician, particularly where medications or existing conditions may interact. For complete protocols and specific amounts, refer to Anthony William's books and medicalmedium.com.
   </footer>
 </body>
 </html>`;
@@ -218,7 +218,7 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
           color: C.sageDark,
         }}
       >
-        📚 Protocols based on <strong>Anthony William's Medical Medium</strong> teachings — independently researched
+        📖 Paraphrased from Anthony William's publicly shared teachings — attributed to him. Not medical advice; always work with your healthcare provider. See his books in the <strong>Resources</strong> tab for full detail.
       </div>
 
       {/* Condition search + chips */}

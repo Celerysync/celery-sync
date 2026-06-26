@@ -64,13 +64,13 @@ export default function GlobalVoice({ currentTab, user }) {
         ? `Use metric measurements: 500ml not 16oz, 1 litre not 32oz.`
         : `Use imperial measurements as Anthony William publishes them.`;
 
-      const system = `You are a warm, expert Medical Medium healing companion — trained on all Anthony William books.
+      const system = `You are a warm, calm CelerySync companion — a guide for adults following Medical Medium (Anthony William) protocols.
 ${tabCtx}
 Answer the user's voice question concisely (2-4 sentences max) — this will be spoken aloud.
 Start with a very short opener of 2-4 words so the voice starts immediately.
 ${unitRule}
 ${langRule}
-Never give conventional medical advice. Always attribute to Anthony William.`;
+Paraphrase Anthony William's publicly shared teachings and always attribute them to him. For specific amounts or full protocols, point to his books or medicalmedium.com — never state yourself as the dosing authority. Never diagnose or claim to treat, cure, or heal any condition. This is not medical advice.`;
 
       try {
         const result = await callClaude({ system, messages: [{ role: "user", content: text }], tier: "quick", maxTokens: 300 });

@@ -196,7 +196,7 @@ function OrganDetail({ organ, onBack }) {
 
       {/* Disclaimer */}
       <div style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, padding: "0 8px 8px" }}>
-        These teachings are from Anthony William's published books and are not a substitute for medical advice. Always work with your healthcare practitioner.
+        📖 Paraphrased from Anthony William's publicly shared teachings. This is not medical advice — always work with your healthcare provider. For in-depth detail and book links, see the <strong>Resources</strong> tab.
       </div>
     </div>
   );

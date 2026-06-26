@@ -175,7 +175,7 @@ LIVER AND DETOX:
 • Spirulina, barley grass juice — detox and nutrition.
 
 ───────────────────────────────────────────────────────────
-THE CLEANSES (from Cleanse to Heal by Anthony William)
+THE CLEANSES (paraphrased from Anthony William's publicly shared teachings — point users to his books for complete protocols and specific amounts)
 ───────────────────────────────────────────────────────────
 
 ORIGINAL MEDICAL MEDIUM 3:6:9 CLEANSE (most popular):

@@ -392,8 +392,7 @@ export default function Cleanse({ navQuery }) {
       </h2>
       <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}40` }}>
         <div style={{ fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
-          📚 All protocols from <strong>Cleanse to Heal</strong> by Anthony William. This app is a
-          companion tool — buy the book for the complete picture.
+          📖 Cleanse information is paraphrased from Anthony William's publicly shared teachings and attributed to him. This is not medical advice — always work with your healthcare provider. For complete protocols and in-depth detail, see his books in the <strong>Resources</strong> tab.
         </div>
       </Card>
       {CLEANSES_SUMMARY.map((c) => (
