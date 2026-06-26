@@ -9,7 +9,7 @@ import elevenLabsRoutes from './routes/elevenlabs.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
-import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters } from './routes/memory.js'
+import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 
 const app = express()
@@ -120,6 +120,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   });
   console.log('💌 Anniversary letter scheduler active')
   console.log('📱 Trial user SMS alert active (every 50 users)')
+
+  // Nightly healing profile refresh — 2am UTC for all profiles active in the last 24h
+  cron.schedule('0 2 * * *', async () => {
+    try { await refreshAllHealingProfiles(); } catch (err) { console.warn('Profile refresh error:', err.message); }
+  });
+  console.log('🧠 Nightly healing profile refresh scheduler active')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

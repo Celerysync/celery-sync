@@ -5,54 +5,66 @@ const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const MODELS = {
-  quick:    'claude-sonnet-4-6',  // summaries, welcome replies, recipes
-  standard: 'claude-opus-4-8',   // complex health guidance, symptoms, protocols
-  deep:     'claude-opus-4-8',   // practitioner protocol generation
+  quick:    'claude-haiku-4-5-20251001', // daily check-ins, follow-ups, short lookups
+  standard: 'claude-sonnet-4-6',         // most conversation turns (resolveModel picks this for health queries)
+  deep:     'claude-opus-4-8',           // practitioner protocol generation only
 }
 
-// Keywords that signal a question needs Opus-level reasoning
-const OPUS_SIGNALS = /symptom|protocol|supplement|dosage|cleanse|detox|condition|thyroid|liver|kidney|adrenal|virus|bacteria|epstein|barr|autoimmune|heavy.?metal|spirulina|celery|zinc|b12|deficien|diagnos|chronic|fibromyalgia|lyme|candida|eczema|psoriasis|shingles|streptococ|nervous.?system|fatigue|brain.?fog|joint|inflam|heal|treatment|cause|why.*(feel|tired|pain|sick)|what.*(wrong|causing|help)/i
+// Keywords that escalate a standard-tier request to Opus-class reasoning.
+// Sonnet handles the vast majority; only genuinely complex multi-condition or
+// longitudinal queries need the stronger model.
+const DEEP_SIGNALS = /interpret.*week|weeks? of (data|symptoms?|history)|multi.?condition|complex.*protocol|why (am i|is my|are my).*still|progress over|trend|pattern over|not improving|getting worse|compare.*months?|analyse my|analyse my journey/i
 
-// Smart routing — picks Opus or Sonnet based on actual message content.
-// Short follow-ups and simple questions use Sonnet (~5x cheaper).
-// Complex health queries, symptoms, and protocols always use Opus.
+// Lightweight router — picks the cheapest model that can do the job.
+// quick tier: forced Haiku (summaries, follow-up chips, welcome replies, short voice)
+// deep tier: forced Opus (practitioner portal only)
+// standard: smart routing — Sonnet for health questions, Haiku for trivial messages
 function resolveModel(tier, messages = []) {
   if (tier === 'quick') return MODELS.quick
   if (tier === 'deep')  return MODELS.deep
 
-  // Analyse the last user message for complexity signals
   const lastUser = [...messages].reverse().find(m => m.role === 'user')
   const text = typeof lastUser?.content === 'string'
     ? lastUser.content
     : (lastUser?.content?.find?.(b => b.type === 'text')?.text ?? '')
   const words = text.trim().split(/\s+/).length
 
-  // Very short messages are always conversational follow-ups → Sonnet
-  if (words <= 12) return MODELS.quick
+  // Very short messages are always conversational → Haiku
+  if (words <= 10) return MODELS.quick
 
-  // Any health/healing terminology → Opus regardless of length
-  if (OPUS_SIGNALS.test(text)) return MODELS.standard
+  // Longitudinal / multi-condition reasoning → escalate to Opus
+  if (DEEP_SIGNALS.test(text)) return MODELS.deep
 
-  // Medium questions with no medical content → Sonnet
-  if (words <= 40) return MODELS.quick
-
-  // Long questions default to Opus
+  // Everything else with medical content → Sonnet
   return MODELS.standard
 }
 
+// Build the system param: when a static/dynamic split is provided, mark the
+// static block for prompt caching so the large knowledge base is paid for once.
+function buildSystemParam({ system, staticSystem, dynamicSystem }) {
+  if (staticSystem) {
+    const parts = [{ type: 'text', text: staticSystem, cache_control: { type: 'ephemeral' } }]
+    if (dynamicSystem) parts.push({ type: 'text', text: dynamicSystem })
+    return parts
+  }
+  return system || undefined
+}
+
+const CACHE_HEADERS = { 'anthropic-beta': 'prompt-caching-2024-07-31' }
+
 router.post('/', async (req, res) => {
-  const { system, messages, maxTokens = 900, tier = 'standard' } = req.body
+  const { system, staticSystem, dynamicSystem, messages, maxTokens = 900, tier = 'standard' } = req.body
   if (!messages?.length) return res.status(400).json({ error: 'messages required' })
 
   try {
     const model = resolveModel(tier, messages)
-    console.log(`🤖 [${tier}] → ${model.split('-').slice(1,3).join('-')} (${messages[messages.length-1]?.content?.slice?.(0,60) ?? ''}…)`)
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      messages,
-      ...(system ? { system } : {}),
-    })
+    const systemParam = buildSystemParam({ system, staticSystem, dynamicSystem })
+    console.log(`🤖 [${tier}] → ${model.split('-').slice(1,3).join('-')} | cache=${!!staticSystem} (${messages[messages.length-1]?.content?.slice?.(0,60) ?? ''}…)`)
+
+    const response = await anthropic.messages.create(
+      { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
+      { headers: CACHE_HEADERS }
+    )
     res.json({ text: response.content.find(b => b.type === 'text')?.text ?? '' })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -60,7 +72,7 @@ router.post('/', async (req, res) => {
 })
 
 router.post('/stream', async (req, res) => {
-  const { system, messages, maxTokens = 900, tier = 'standard' } = req.body
+  const { system, staticSystem, dynamicSystem, messages, maxTokens = 900, tier = 'standard' } = req.body
   if (!messages?.length) return res.status(400).json({ error: 'messages required' })
 
   res.setHeader('Content-Type', 'text/event-stream')
@@ -71,13 +83,13 @@ router.post('/stream', async (req, res) => {
 
   try {
     const model = resolveModel(tier, messages)
-    console.log(`🤖 [stream/${tier}] → ${model.split('-').slice(1,3).join('-')}`)
-    const stream = anthropic.messages.stream({
-      model,
-      max_tokens: maxTokens,
-      messages,
-      ...(system ? { system } : {}),
-    })
+    const systemParam = buildSystemParam({ system, staticSystem, dynamicSystem })
+    console.log(`🤖 [stream/${tier}] → ${model.split('-').slice(1,3).join('-')} | cache=${!!staticSystem}`)
+
+    const stream = anthropic.messages.stream(
+      { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
+      { headers: CACHE_HEADERS }
+    )
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

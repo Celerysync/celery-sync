@@ -1023,6 +1023,78 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// ── Nightly: refresh healing profile summaries for all profiles active in the last 24h ──
+export async function refreshAllHealingProfiles() {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: activeConvs } = await supabaseAdmin
+    .from('conversations')
+    .select('profile_id, user_id')
+    .gte('created_at', oneDayAgo)
+
+  if (!activeConvs?.length) {
+    console.log('🧠 No active profiles for nightly summary refresh')
+    return
+  }
+
+  const seen = new Set()
+  const profiles = activeConvs.filter(c => {
+    if (seen.has(c.profile_id)) return false
+    seen.add(c.profile_id)
+    return true
+  })
+
+  console.log(`🧠 Nightly profile refresh for ${profiles.length} active profiles`)
+
+  for (const { profile_id, user_id } of profiles) {
+    try {
+      const { data: recent } = await supabaseAdmin
+        .from('conversations')
+        .select('role, content')
+        .eq('profile_id', profile_id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+
+      if (!recent?.length) continue
+
+      const transcript = [...recent]
+        .reverse()
+        .map(m => `${m.role === 'user' ? 'User' : 'Guide'}: ${m.content.slice(0, 300)}`)
+        .join('\n')
+
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 350,
+        messages: [{
+          role: 'user',
+          content: `Summarise this person's healing journey in 200 words max from their Medical Medium conversation log.
+Capture: main conditions, supplements they're taking, recent wins, current challenges, emotional state, patterns.
+Warm flowing notes — not bullet points. Start with their name if mentioned.
+
+Conversation:
+${transcript}`,
+        }],
+      })
+
+      const summary = response.content.find(b => b.type === 'text')?.text?.trim()
+      if (!summary) continue
+
+      await supabaseAdmin
+        .from('healing_profiles')
+        .upsert(
+          { profile_id, user_id, healing_summary: summary, updated_at: new Date().toISOString() },
+          { onConflict: 'profile_id' }
+        )
+
+      console.log(`✓ Profile refreshed: ${profile_id}`)
+    } catch (err) {
+      console.warn(`✗ Profile refresh failed for ${profile_id}:`, err.message)
+    }
+  }
+
+  console.log('🧠 Nightly profile refresh complete')
+}
+
 function categorise(insight) {
   const lower = insight.toLowerCase()
   if (/supplement|zinc|b12|spirulina|vitamin|lysine|magnesium|dose|mg|tsp/.test(lower)) return 'supplement'
