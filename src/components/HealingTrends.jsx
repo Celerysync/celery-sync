@@ -75,24 +75,6 @@ function ChartRow({ label, dot, points, min, max, days }) {
 }
 
 const INSIGHT_KEY = "cs_weekly_insight_";
-const VITALS_KEY = "cs_vitals_insight_";
-
-function mmHrvNote(avgHrv) {
-  if (!avgHrv) return null;
-  if (avgHrv < 30) return "Your HRV suggests your nervous system is under significant load — Anthony William links low HRV to heavy metal accumulation and active viral replication. Prioritise rest, zinc, and B12.";
-  if (avgHrv < 50) return "Your HRV is in a cautious range. According to Anthony William, this often reflects the vagus nerve under strain from EBV activity. Lemon balm and deep rest support recovery here.";
-  if (avgHrv < 75) return "Good HRV range — your nervous system resilience is building. Anthony William's HMDS and heavy metal detox protocols support continued improvement.";
-  return "Strong HRV — your nervous system is healing well. Anthony William attributes this kind of resilience to a clean, toxin-free body and consistent protocol adherence.";
-}
-
-function mmSleepNote(avgSleep, avgQuality) {
-  if (!avgSleep && !avgQuality) return null;
-  const parts = [];
-  if (avgSleep && avgSleep < 6.5) parts.push("Under 7 hours of sleep limits your liver's 1–3am detox window — Anthony William says this is the liver's most active cleansing period.");
-  if (avgQuality && avgQuality <= 2) parts.push("Poor sleep quality often reflects heavy metals disrupting brain chemistry and EBV activity — lemon balm and magnesium glycinate can support deeper sleep.");
-  if (avgSleep && avgSleep >= 8 && avgQuality && avgQuality >= 4) parts.push("Your sleep is supporting healing well — the liver is getting its full cleansing window each night.");
-  return parts.length > 0 ? parts[0] : null;
-}
 
 export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEnergy7 }) {
   const [insight, setInsight] = useState(null);
@@ -117,8 +99,8 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
       tier: 'quick',
       messages: [{
         role: "user",
-        content: `You are a Medical Medium healing companion. Based on this user's 7-day check-in data: ${summary}.
-Write a 2-3 sentence warm, encouraging healing insight. Mention any positive trend (energy, sleep, or celery streak) — or gentle encouragement if struggling. Reference Anthony William's teachings. Under 70 words. No headers, just the insight.`,
+        content: `Based on this person's 7-day self-logged data: ${summary}.
+Write 2-3 sentences describing what the data shows — trends in energy, celery juice intake, and sleep. Describe only what was logged; do not add medical interpretations, causes, or health advice. Warm and factual. Under 70 words. No headers.`,
       }],
     }).then((text) => {
       localStorage.setItem(key, text);
@@ -150,8 +132,6 @@ Write a 2-3 sentence warm, encouraging healing insight. Mention any positive tre
     return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
   })();
 
-  const sleepNote = mmSleepNote(avgSleep ? parseFloat(avgSleep) : null, avgSleepQual);
-  const hrvNote = mmHrvNote(avgHrv);
 
   return (
     <Card>
@@ -205,20 +185,6 @@ Write a 2-3 sentence warm, encouraging healing insight. Mention any positive tre
                 ? <div style={{ fontSize: 12, color: C.mid }}>Generating your insight…</div>
                 : <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, fontStyle: "italic" }}>{insight}</div>
               }
-            </div>
-          )}
-
-          {/* MM vitals interpretation */}
-          {sleepNote && (
-            <div style={{ background: C.plumLight, border: `1px solid ${C.plum}30`, borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.plum, marginBottom: 5 }}>🌙 Sleep & Liver Health</div>
-              <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.65 }}>{sleepNote}</div>
-            </div>
-          )}
-          {hrvNote && (
-            <div style={{ background: "#fff5f5", border: "1px solid #fca5a530", borderRadius: 12, padding: "12px 14px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#e05252", marginBottom: 5 }}>💓 HRV & Nervous System</div>
-              <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.65 }}>{hrvNote}</div>
             </div>
           )}
 

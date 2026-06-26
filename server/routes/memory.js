@@ -1106,4 +1106,24 @@ function categorise(insight) {
   return 'general'
 }
 
+// GET /checkins/:profileId — last N days of daily check-ins for the daily report view
+router.get('/checkins/:profileId', async (req, res) => {
+  const { profileId } = req.params
+  const days = Math.min(Number(req.query.days) || 30, 180)
+  try {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    const { data, error } = await supabaseAdmin
+      .from('daily_checkins')
+      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, sleep_hours, sleep_quality, hrv, notes')
+      .eq('profile_id', profileId)
+      .gte('check_date', cutoff.toISOString().split('T')[0])
+      .order('check_date', { ascending: false })
+    if (error) throw error
+    res.json({ checkins: data || [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 export default router

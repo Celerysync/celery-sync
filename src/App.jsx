@@ -38,6 +38,7 @@ const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
 const StartHere        = lazy(() => import("./components/StartHere.jsx"));
+const Reports          = lazy(() => import("./components/Reports.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -46,6 +47,7 @@ const TABS = [
   { id: "recipes",   label: "Recipes",    emoji: "🍽", free: false },
   { id: "cleanses",  label: "Cleanses",   emoji: "🌿", free: false },
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
+  { id: "reports",   label: "Reports",    emoji: "📋", free: false },
   { id: "knowledge", label: "Resources",  emoji: "🔗", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
   { id: "community",    label: "Circles",   emoji: "💚", free: false },
@@ -283,6 +285,8 @@ export default function App() {
         return <Cleanse navQuery={navQuery} />;
       case "symptoms":
         return <Symptom user={activeProfile} navQuery={navQuery} />;
+      case "reports":
+        return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
       case "knowledge":
         return <Knowledge authUser={authUser} />;
       case "body":
