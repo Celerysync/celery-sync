@@ -16,8 +16,8 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
-          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
-          if (id.includes('node_modules/react/')) return 'vendor-react';
+          // React 19 requires react + react-dom in the same chunk (shared ReactSharedInternals)
+          if (id.includes('node_modules/react')) return 'vendor-react';
         },
       },
     },

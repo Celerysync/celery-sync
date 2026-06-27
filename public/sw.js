@@ -1,6 +1,6 @@
 // CelerySync Service Worker — push notifications + offline app shell cache
 
-const CACHE_NAME = "celerysync-shell-v1";
+const CACHE_NAME = "celerysync-shell-v2";
 const OFFLINE_URL = "/offline.html";
 
 // App shell: index.html + offline fallback. JS/CSS are content-hashed by Vite
@@ -43,9 +43,12 @@ self.addEventListener("fetch", (event) => {
   }
 
   // For JS/CSS/images (Vite hashed assets): cache-first
+  // Exclude Vite dev server paths (node_modules, .vite) to avoid caching dev bundles
   if (
-    url.pathname.startsWith("/assets/") ||
-    url.pathname.match(/\.(js|css|png|svg|woff2?|ico)$/)
+    (url.pathname.startsWith("/assets/") ||
+    url.pathname.match(/\.(js|css|png|svg|woff2?|ico)$/)) &&
+    !url.pathname.includes("/node_modules/") &&
+    !url.pathname.includes("/.vite/")
   ) {
     event.respondWith(
       caches.match(request).then(
