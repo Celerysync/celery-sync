@@ -7,6 +7,7 @@ import { useSubscription } from "./hooks/useSubscription.js";
 import { useProfiles } from "./hooks/useProfiles.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
+import { VoiceProvider } from "./context/VoiceContext.jsx";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -351,6 +352,7 @@ export default function App() {
   };
 
   return (
+    <VoiceProvider authUser={authUser}>
     <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
       <div style={{
@@ -494,5 +496,6 @@ export default function App() {
       )}
       <GlobalVoice currentTab={tab} user={activeProfile} />
     </div>
+    </VoiceProvider>
   );
 }

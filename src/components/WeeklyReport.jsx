@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 function Bar({ value, max, color = C.sage }) {
   const pct = value && max ? Math.min((value / max) * 100, 100) : 0;
@@ -29,7 +30,7 @@ function MetricCard({ emoji, label, value, display, max, color }) {
 }
 
 function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
-  const voiceName = localStorage.getItem("cs_voiceName") || "";
+  const { voiceName } = useVoicePrefs();
   const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
   const { speak, speaking, stopSpeaking } = useVoice(voiceName, units);
   const [expanded, setExpanded] = useState(isLatest);

@@ -9,6 +9,7 @@ import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -248,10 +249,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [tappedMsg, setTappedMsg] = useState(null);
   const [copied, setCopied] = useState(false);
   const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
-  const [selectedVoiceName, setSelectedVoiceName] = useLocalStorage(
-    "cs_voiceName",
-    "el:EXAVITQu4vr4xnSDxMaL"
-  );
+  const { voiceName: selectedVoiceName, setVoiceName: setSelectedVoiceName } = useVoicePrefs();
   const [lang] = useLocalStorage("cs_lang", "en");
   const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } =

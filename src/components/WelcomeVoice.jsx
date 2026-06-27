@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import C from "../lib/colors.js";
 import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 const LANGUAGES = [
   { code: "en", label: "English",    native: "English"    },
@@ -64,10 +65,10 @@ const STYLE = `
 `;
 
 export default function WelcomeVoice({ userId, onDone, onNavigate }) {
-  const savedVoice = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
-  const savedLang  = localStorage.getItem("cs_lang")      || "en";
+  const { voiceName: contextVoice, setVoiceName: saveVoiceName } = useVoicePrefs();
+  const savedLang = localStorage.getItem("cs_lang") || "en";
 
-  const [selectedVoice, setSelectedVoice] = useState(savedVoice);
+  const [selectedVoice, setSelectedVoice] = useState(contextVoice || DEFAULT_VOICE_ID);
   const [selectedLang,  setSelectedLang]  = useState(savedLang);
   const [phase,     setPhase]     = useState("loading");
   const [userText,  setUserText]  = useState("");
@@ -89,19 +90,19 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
   // ── Dismiss ──────────────────────────────────────────────────────────────
   const dismiss = useCallback(() => {
     clearTimeout(idleTimerRef.current);
-    localStorage.setItem("cs_voiceName", voiceRef.current);
-    localStorage.setItem("cs_lang",      langRef.current);
+    saveVoiceName(voiceRef.current);
+    localStorage.setItem("cs_lang", langRef.current);
     if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     window.speechSynthesis?.cancel();
     recogRef.current?.stop();
     onDone();
-  }, [userId, onDone]);
+  }, [userId, onDone, saveVoiceName]);
 
   const dismissTo = useCallback((tabId) => {
     clearTimeout(idleTimerRef.current);
-    localStorage.setItem("cs_voiceName", voiceRef.current);
-    localStorage.setItem("cs_lang",      langRef.current);
+    saveVoiceName(voiceRef.current);
+    localStorage.setItem("cs_lang", langRef.current);
     if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     window.speechSynthesis?.cancel();

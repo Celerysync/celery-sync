@@ -3,10 +3,11 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { ORGANS } from "../data/bodyEducation.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 function OrganDetail({ organ, onBack }) {
   const [section, setSection] = useState("overview");
-  const voiceName = localStorage.getItem("cs_voiceName") || "";
+  const { voiceName } = useVoicePrefs();
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
   const getSectionText = () => {
