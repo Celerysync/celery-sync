@@ -47,6 +47,62 @@ const STREAK_MILESTONES = [
   { days: 28, emoji: "🏆", title: "One full month!", msg: "A full lunar cycle of healing. Your liver has had a month of daily sodium cluster salts. This is the kind of sustained effort that produces lasting transformation.", color: C.gold },
 ];
 
+function StreakMilestone({ celeryStreak }) {
+  const milestone = [...STREAK_MILESTONES].reverse().find(
+    (m) => celeryStreak >= m.days && celeryStreak % m.days < 3
+  );
+  const [shareCopied, setShareCopied] = useState(false);
+
+  if (!milestone) return null;
+
+  const shareText = `🥬 Day ${celeryStreak} of my Medical Medium healing journey!\n\nI've been drinking fresh celery juice every single day and following Anthony William's protocols.\n\nIf you're dealing with chronic illness, fatigue, or mystery symptoms — his books changed my life.\n\n🌿 medicalmedium.com\n\n#celeryjuice #medicalmedium #healing #anthonywilliam #celerysync`;
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(shareText).catch(() => {});
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{
+      background: `linear-gradient(135deg,${milestone.color}22,${milestone.color}10)`,
+      border: `2px solid ${milestone.color}60`,
+      borderRadius: 18,
+      padding: "16px 18px",
+    }}>
+      <div style={{ fontSize: 32, marginBottom: 6, textAlign: "center" }}>{milestone.emoji}</div>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: milestone.color, textAlign: "center", marginBottom: 6 }}>
+        {milestone.title}
+      </div>
+      <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, textAlign: "center" }}>
+        {milestone.msg}
+      </div>
+      <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
+        🥬 {celeryStreak}-day celery streak — Anthony William
+      </div>
+      <button
+        onClick={handleShare}
+        style={{
+          display: "block", margin: "12px auto 0",
+          background: milestone.color, color: C.white,
+          border: "none", borderRadius: 30, padding: "8px 20px",
+          fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        {shareCopied ? "✓ Copied — paste & share!" : "🌿 Share this milestone"}
+      </button>
+      <div style={{ fontSize: 10, color: C.muted, textAlign: "center", marginTop: 6 }}>
+        Spreads AW's message to people who need it
+      </div>
+    </div>
+  );
+}
+
 function getTodaysTeaching() {
   const dayNum = Math.floor(Date.now() / 86400000);
   return DAILY_TEACHINGS[dayNum % DAILY_TEACHINGS.length];
@@ -281,55 +337,7 @@ export default function Home({ user, authUser, profileId }) {
       <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
 
       {/* Celery streak milestone */}
-      {(() => {
-        const milestone = [...STREAK_MILESTONES].reverse().find((m) => celeryStreak >= m.days && celeryStreak % m.days < 3);
-        if (!milestone) return null;
-        const shareText = `🥬 Day ${celeryStreak} of my Medical Medium healing journey!\n\nI've been drinking fresh celery juice every single day and following Anthony William's protocols.\n\nIf you're dealing with chronic illness, fatigue, or mystery symptoms — his books changed my life.\n\n🌿 medicalmedium.com\n\n#celeryjuice #medicalmedium #healing #anthonywilliam #celerysync`;
-        const [shareCopied, setShareCopied] = useState(false);
-        const handleShare = () => {
-          if (navigator.share) {
-            navigator.share({ text: shareText }).catch(() => {});
-          } else {
-            navigator.clipboard?.writeText(shareText).catch(() => {});
-            setShareCopied(true);
-            setTimeout(() => setShareCopied(false), 2000);
-          }
-        };
-        return (
-          <div style={{
-            background: `linear-gradient(135deg,${milestone.color}22,${milestone.color}10)`,
-            border: `2px solid ${milestone.color}60`,
-            borderRadius: 18,
-            padding: "16px 18px",
-          }}>
-            <div style={{ fontSize: 32, marginBottom: 6, textAlign: "center" }}>{milestone.emoji}</div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: milestone.color, textAlign: "center", marginBottom: 6 }}>
-              {milestone.title}
-            </div>
-            <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, textAlign: "center" }}>
-              {milestone.msg}
-            </div>
-            <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
-              🥬 {celeryStreak}-day celery streak — Anthony William
-            </div>
-            <button
-              onClick={handleShare}
-              style={{
-                display: "block", margin: "12px auto 0",
-                background: milestone.color, color: C.white,
-                border: "none", borderRadius: 30, padding: "8px 20px",
-                fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              {shareCopied ? "✓ Copied — paste & share!" : "🌿 Share this milestone"}
-            </button>
-            <div style={{ fontSize: 10, color: C.muted, textAlign: "center", marginTop: 6 }}>
-              Spreads AW's message to people who need it
-            </div>
-          </div>
-        );
-      })()}
+      <StreakMilestone celeryStreak={celeryStreak} />
 
       {/* 7-day habit grid */}
       {last7 && last7.length > 0 && (
