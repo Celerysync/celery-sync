@@ -2,6 +2,7 @@ import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
+import { supabase } from "../lib/supabase.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -25,10 +26,19 @@ const BLANK_ITEM = {
   sortOrder: 999,
 };
 
+// Group programs by category for display
+const PROGRAM_GROUPS = [
+  { label: "3:6:9 Cleanses", ids: ["369-cleanse", "369-simplified", "369-advanced"] },
+  { label: "Detox Programs", ids: ["hmd-program", "morning-cleanse", "mono-eating"] },
+  { label: "Organ Support", ids: ["liver-rescue-morning"] },
+];
+
 export default function RhythmBuilder({
   baseItems,
   anchorTime,
   activeProgram,
+  profileId,
+  authUser,
   onClose,
   onApplyTemplate,
   onAddItem,
@@ -39,7 +49,7 @@ export default function RhythmBuilder({
   onStartProgram,
   onCancelProgram,
 }) {
-  const [level, setLevel] = useState("templates"); // templates | edit | add
+  const [level, setLevel] = useState("templates"); // templates | programs | edit | add | save-template
   const [editingId, setEditingId] = useState(null);
   const [addForm, setAddForm] = useState(BLANK_ITEM);
   const [localAnchor, setLocalAnchor] = useState(anchorTime || "07:00");
@@ -47,6 +57,10 @@ export default function RhythmBuilder({
     new Date().toISOString().split("T")[0]
   );
   const [confirmClearId, setConfirmClearId] = useState(null);
+  const [saveTemplateName, setSaveTemplateName] = useState("");
+  const [saveTemplateEmoji, setSaveTemplateEmoji] = useState("✨");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [savedTemplateMsg, setSavedTemplateMsg] = useState("");
 
   const editingItem = editingId ? baseItems.find((i) => i.id === editingId) : null;
   const [editForm, setEditForm] = useState({});
@@ -117,9 +131,10 @@ export default function RhythmBuilder({
           </div>
 
           {/* Level tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
             {[
-              { id: "templates", label: "Templates" },
+              { id: "templates", label: "Day Templates" },
+              { id: "programs", label: "Programs" },
               { id: "edit", label: "My Rhythm" },
               { id: "add", label: "+ Add Item" },
             ].map((t) => (
@@ -130,7 +145,8 @@ export default function RhythmBuilder({
                   flex: 1, padding: "8px 4px", border: "none", borderRadius: 20,
                   background: level === t.id ? C.sageDark : C.mist,
                   color: level === t.id ? C.white : C.mid,
-                  fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                  fontSize: 11, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                  minWidth: "fit-content",
                 }}
               >
                 {t.label}
@@ -141,7 +157,7 @@ export default function RhythmBuilder({
 
         <div style={{ padding: "0 18px 32px", display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* ── LEVEL: TEMPLATES ──────────────────────────────────────────────── */}
+          {/* ── LEVEL: DAY TEMPLATES ─────────────────────────────────────────── */}
           {level === "templates" && (
             <>
               {/* Wake anchor */}
@@ -150,7 +166,7 @@ export default function RhythmBuilder({
                   ⏰ Your wake anchor
                 </div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
-                  Set your usual wake time — the app calculates your whole day's sequence from this one anchor.
+                  Set your usual wake time — the app maps your whole day's sequence from this one anchor.
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <input
@@ -173,12 +189,11 @@ export default function RhythmBuilder({
                 )}
               </Card>
 
-              {/* Preset templates */}
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                Start from a template
+                AW day templates
               </div>
               <div style={{ fontSize: 12, color: C.muted }}>
-                Choosing a template replaces your current rhythm items. You can edit every item after.
+                Tap a template to load it into your rhythm. You can customise every item after.
               </div>
 
               {RHYTHM_PRESETS.map((preset) => (
@@ -223,68 +238,99 @@ export default function RhythmBuilder({
                   </button>
                 </Card>
               ))}
+            </>
+          )}
 
-              {/* Multi-day programs */}
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginTop: 4 }}>
-                Multi-day programs
+          {/* ── LEVEL: MULTI-DAY PROGRAMS ─────────────────────────────────────── */}
+          {level === "programs" && (
+            <>
+              {activeProgram && (
+                <div style={{
+                  background: `linear-gradient(135deg,${C.plum}22,${C.plumLight})`,
+                  border: `2px solid ${C.plum}60`, borderRadius: 14, padding: "14px 16px",
+                }}>
+                  <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
+                    ✨ Active: {activeProgram.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.plum, opacity: 0.8, marginTop: 4 }}>
+                    Started {activeProgram.startDate} · {activeProgram.totalDays} days
+                  </div>
+                  <button
+                    onClick={onCancelProgram}
+                    style={{
+                      marginTop: 10, background: `${C.plum}15`, color: C.plum,
+                      border: `1.5px solid ${C.plum}40`, borderRadius: 10,
+                      padding: "7px 14px", fontSize: 12, cursor: "pointer",
+                    }}
+                  >
+                    End program early
+                  </button>
+                </div>
+              )}
+
+              <div style={{ fontSize: 12, color: C.muted }}>
+                Start a multi-day program and the app tracks your progress day by day — and tells your healing companion where you are.
               </div>
 
-              {ALL_PROGRAMS.map((prog) => {
-                const isActive = activeProgram?.id === prog.id;
+              {PROGRAM_GROUPS.map((group) => {
+                const groupPrograms = ALL_PROGRAMS.filter(p => group.ids.includes(p.id));
+                if (!groupPrograms.length) return null;
                 return (
-                  <Card key={prog.id} style={{ border: isActive ? `2px solid ${C.plum}` : undefined }}>
-                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                      <div style={{ fontSize: 26, flexShrink: 0 }}>{prog.emoji}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                          {prog.name}
-                        </div>
-                        <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
-                          {prog.description}
-                        </div>
-                        <div style={{ fontSize: 11, color: C.plum, marginTop: 4 }}>
-                          📖 {prog.awSource}
-                        </div>
-                      </div>
+                  <div key={group.label}>
+                    <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 8, marginTop: 4 }}>
+                      {group.label}
                     </div>
+                    {groupPrograms.map((prog) => {
+                      const isActive = activeProgram?.id === prog.id;
+                      return (
+                        <Card key={prog.id} style={{ border: isActive ? `2px solid ${C.plum}` : undefined, marginBottom: 10 }}>
+                          <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                            <div style={{ fontSize: 26, flexShrink: 0 }}>{prog.emoji}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+                                  {prog.name}
+                                </div>
+                                <span style={{ fontSize: 10, background: `${C.plum}15`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
+                                  {prog.totalDays} days
+                                </span>
+                              </div>
+                              <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
+                                {prog.description}
+                              </div>
+                              <div style={{ fontSize: 11, color: C.plum, marginTop: 4 }}>
+                                📖 {prog.awSource}
+                              </div>
+                            </div>
+                          </div>
 
-                    {isActive ? (
-                      <div style={{ marginTop: 12 }}>
-                        <div style={{ fontSize: 12, color: C.plum, fontWeight: 700, marginBottom: 8 }}>
-                          ✨ Program active — started {activeProgram.startDate}
-                        </div>
-                        <button
-                          onClick={onCancelProgram}
-                          style={{
-                            background: `${C.plum}15`, color: C.plum,
-                            border: `1.5px solid ${C.plum}40`, borderRadius: 10,
-                            padding: "8px 16px", fontSize: 12, cursor: "pointer",
-                          }}
-                        >
-                          End program early
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ marginTop: 12 }}>
-                        <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Start date:</div>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input
-                            type="date"
-                            value={programStartDate}
-                            onChange={(e) => setProgramStartDate(e.target.value)}
-                            style={{
-                              border: `1.5px solid ${C.border}`, borderRadius: 8,
-                              padding: "6px 10px", fontSize: 13, color: C.charcoal,
-                              background: C.white, outline: "none",
-                            }}
-                          />
-                          <Btn small color={C.plum} onClick={() => onStartProgram(prog.id, programStartDate)}>
-                            Start
-                          </Btn>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
+                          {!isActive && (
+                            <div style={{ marginTop: 12 }}>
+                              <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Start date:</div>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <input
+                                  type="date"
+                                  value={programStartDate}
+                                  onChange={(e) => setProgramStartDate(e.target.value)}
+                                  style={{
+                                    border: `1.5px solid ${C.border}`, borderRadius: 8,
+                                    padding: "6px 10px", fontSize: 13, color: C.charcoal,
+                                    background: C.white, outline: "none",
+                                  }}
+                                />
+                                <Btn small color={C.plum} onClick={() => {
+                                  onStartProgram(prog.id, programStartDate);
+                                  setLevel("edit");
+                                }}>
+                                  Start →
+                                </Btn>
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </>
@@ -391,6 +437,19 @@ export default function RhythmBuilder({
               )}
 
               <Btn full color={C.sageDark} onClick={() => setLevel("add")}>+ Add an item</Btn>
+
+              {baseItems.length > 0 && (
+                <button
+                  onClick={() => { setSaveTemplateName(""); setSaveTemplateEmoji("✨"); setLevel("save-template"); }}
+                  style={{
+                    background: "none", border: `1.5px solid ${C.sage}`, color: C.sageDark,
+                    borderRadius: 20, padding: "9px", width: "100%",
+                    fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  💾 Save as my custom template
+                </button>
+              )}
             </>
           )}
 
@@ -414,6 +473,76 @@ export default function RhythmBuilder({
               onCancel={() => setLevel("edit")}
               title="Add new item"
             />
+          )}
+
+          {/* ── LEVEL: SAVE CUSTOM TEMPLATE ───────────────────────────────────── */}
+          {level === "save-template" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
+                  Save as my template
+                </div>
+                <button onClick={() => setLevel("edit")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer" }}>
+                  Cancel
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                Save your current rhythm as a reusable template — so you can reload it any time, or use it as your starting point after a cleanse.
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  value={saveTemplateEmoji}
+                  onChange={(e) => setSaveTemplateEmoji(e.target.value)}
+                  maxLength={2}
+                  style={{
+                    width: 52, border: `2px solid ${C.border}`, borderRadius: 10,
+                    padding: "10px 8px", fontSize: 22, textAlign: "center",
+                    background: C.white, outline: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={saveTemplateName}
+                  onChange={(e) => setSaveTemplateName(e.target.value)}
+                  placeholder="e.g. My Thyroid Protocol"
+                  style={{
+                    flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
+                    padding: "10px 14px", fontSize: 14, color: C.charcoal,
+                    background: C.white, outline: "none",
+                  }}
+                />
+              </div>
+
+              {savedTemplateMsg && (
+                <div style={{ fontSize: 13, color: C.sage, fontFamily: "Georgia,serif" }}>
+                  {savedTemplateMsg}
+                </div>
+              )}
+
+              <Btn
+                full
+                color={C.sageDark}
+                disabled={!saveTemplateName.trim() || savingTemplate}
+                onClick={async () => {
+                  if (!saveTemplateName.trim() || !profileId) return;
+                  setSavingTemplate(true);
+                  await supabase.from("saved_rhythms").insert({
+                    profile_id: profileId,
+                    name: saveTemplateName.trim(),
+                    emoji: saveTemplateEmoji || "✨",
+                    items: baseItems,
+                  });
+                  setSavingTemplate(false);
+                  setSavedTemplateMsg(`✓ "${saveTemplateName}" saved! Find it in My Rhythm.`);
+                  setTimeout(() => { setSavedTemplateMsg(""); setLevel("edit"); }, 1800);
+                }}
+              >
+                {savingTemplate ? "Saving…" : "Save template"}
+              </Btn>
+            </div>
           )}
         </div>
       </div>

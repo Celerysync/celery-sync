@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { cleanForSpeech } from "../lib/ttsClean.js";
 import { ttsProvider } from "../lib/voiceService.js";
 
@@ -29,6 +29,19 @@ export const ELEVENLABS_VOICES = [
 ];
 
 export const srSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+// Module-level singleton — one audio element playing at a time across all tabs/components.
+// Any new speak() call stops this before starting, and unmounting components clear it.
+let _globalAudio = null;
+
+function _stopGlobalAudio() {
+  if (_globalAudio) {
+    _globalAudio.pause();
+    _globalAudio.src = "";
+    _globalAudio = null;
+  }
+  window.speechSynthesis?.cancel();
+}
 
 export function useVoice(preferredVoiceName = "", units = "metric") {
   const [listening, setListening] = useState(false);
@@ -63,18 +76,22 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
       if (!url) { _playNext(); return; }
       const audio = new Audio(url);
       audioRef.current = audio;
+      _globalAudio = audio;
       audio.onended = () => {
         if (gen !== generationRef.current) return;
+        if (_globalAudio === audio) _globalAudio = null;
         audioRef.current = null;
         _playNext();
       };
       audio.onerror = () => {
         if (gen !== generationRef.current) return;
+        if (_globalAudio === audio) _globalAudio = null;
         audioRef.current = null;
         _playNext();
       };
       audio.play().catch(() => {
         if (gen !== generationRef.current) return;
+        if (_globalAudio === audio) _globalAudio = null;
         audioRef.current = null;
         _playNext();
       });
@@ -119,15 +136,30 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
   // ────────────────────────────────────────────────────────────────
 
   const stopSpeaking = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
-      audioRef.current = null;
-    }
-    window.speechSynthesis.cancel();
+    _stopGlobalAudio();
+    audioRef.current = null;
     resetQueue();
     setSpeaking(false);
   }, [resetQueue]);
+
+  // Stop all audio when this component unmounts (tab navigation, modal close, etc.)
+  useEffect(() => {
+    return () => {
+      // Discard queued sentences so in-flight ElevenLabs fetches don't play back
+      generationRef.current++;
+      sentenceQueue.current = [];
+      queueActive.current = false;
+      // Stop audio only if this instance owns the global slot
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        if (_globalAudio === audioRef.current) _globalAudio = null;
+        audioRef.current = null;
+      }
+      window.speechSynthesis?.cancel();
+      recogRef.current?.stop();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Browser TTS — fallback for non-provider voices
   const browserSpeak = useCallback((text, voiceName, onDone) => {
@@ -158,7 +190,12 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
 
   const speak = useCallback(
     async (text, onDone) => {
-      stopSpeaking();
+      // Cancel whatever is playing globally before starting anything new
+      _stopGlobalAudio();
+      audioRef.current = null;
+      resetQueue();
+      setSpeaking(false);
+
       const voice = preferredVoiceRef.current;
 
       if (ttsProvider.isElVoice(voice)) {
@@ -174,19 +211,23 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
 
         const audio = new Audio(url);
         audioRef.current = audio;
+        _globalAudio = audio;
 
         audio.onended = () => {
           setSpeaking(false);
+          if (_globalAudio === audio) _globalAudio = null;
           audioRef.current = null;
           onDone?.();
         };
         audio.onerror = () => {
           setSpeaking(false);
+          if (_globalAudio === audio) _globalAudio = null;
           audioRef.current = null;
           browserSpeak(text, "", onDone);
         };
         audio.play().catch(() => {
           setSpeaking(false);
+          if (_globalAudio === audio) _globalAudio = null;
           audioRef.current = null;
           browserSpeak(text, "", onDone);
         });
@@ -194,7 +235,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
         browserSpeak(text, voice, onDone);
       }
     },
-    [stopSpeaking, browserSpeak]
+    [stopSpeaking, browserSpeak, resetQueue]
   );
 
   // startListening — two call signatures for backward compatibility:

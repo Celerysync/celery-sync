@@ -181,7 +181,7 @@ export default function Home({ user, authUser, profileId }) {
     applyTemplate,
     startProgram,
     cancelProgram,
-  } = useRhythm();
+  } = useRhythm(authUser, profileId);
 
   const [checklist, setChecklist] = useLocalStorage("cs_checklist", {
     date: TODAY,
@@ -321,6 +321,8 @@ export default function Home({ user, authUser, profileId }) {
             baseItems={baseItems}
             anchorTime={anchorTime}
             activeProgram={activeProgram}
+            profileId={profileId}
+            authUser={authUser}
             onClose={() => setShowRhythmBuilder(false)}
             onApplyTemplate={applyTemplate}
             onAddItem={addItem}

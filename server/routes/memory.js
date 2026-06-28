@@ -142,7 +142,7 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
   const [checkinsRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
       .from('daily_checkins')
-      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms')
+      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, mental_clarity, emotional_state, healing_reaction, healing_reaction_notes, win_today, water_oz, pain_level, rhythm_completed, rhythm_total, active_protocol_day, notes')
       .eq('profile_id', profileId)
       .gte('check_date', weekStartStr)
       .lte('check_date', weekEndStr),
@@ -173,6 +173,34 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
     ? parseFloat((moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1))
     : null
 
+  // New fields
+  const clarities = checkins.map(c => c.mental_clarity).filter(Boolean)
+  const avgMentalClarity = clarities.length
+    ? parseFloat((clarities.reduce((a, b) => a + b, 0) / clarities.length).toFixed(1))
+    : null
+  const healingReactionDays = checkins.filter(c => c.healing_reaction).length
+  const waters = checkins.map(c => c.water_oz).filter(Boolean)
+  const avgWaterOz = waters.length
+    ? parseFloat((waters.reduce((a, b) => a + b, 0) / waters.length).toFixed(0))
+    : null
+  const pains = checkins.map(c => c.pain_level).filter(Boolean)
+  const avgPainLevel = pains.length
+    ? parseFloat((pains.reduce((a, b) => a + b, 0) / pains.length).toFixed(1))
+    : null
+
+  // Rhythm completion %
+  const rhythmCheckins = checkins.filter(c => c.rhythm_total > 0)
+  const rhythmCompletionPct = rhythmCheckins.length
+    ? parseFloat((rhythmCheckins.reduce((s, c) => s + (c.rhythm_completed / c.rhythm_total), 0) / rhythmCheckins.length * 100).toFixed(0))
+    : null
+
+  // Active protocol — use most recent day that had a protocol day logged
+  const latestProtocolCheckin = [...checkins].reverse().find(c => c.active_protocol_day)
+  const activeProtocolDay = latestProtocolCheckin?.active_protocol_day ?? null
+
+  // Wins logged this week
+  const wins = checkins.map(c => c.win_today).filter(Boolean)
+
   // Generate AI observations (Haiku — cheap)
   const milestonesText = milestones.length
     ? milestones.map(m => `• ${m.insight}`).join('\n')
@@ -182,26 +210,34 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
 
   const aiObs = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 250,
+    max_tokens: 300,
     messages: [{
       role: 'user',
-      content: `Write a warm, personalised 3-sentence weekly healing observation for a Medical Medium follower.
-Be specific about their numbers. Notice patterns. Be encouraging but honest.
-Start with their biggest win. End with one gentle focus for next week.
+      content: `Write a warm, personalised 3-4 sentence weekly healing observation for a Medical Medium follower.
+Be specific about their data. Notice patterns. Be encouraging but honest.
+Start with their biggest win or positive trend. End with one gentle focus for next week.
+If they had healing reactions, acknowledge them as part of the process.
 
 This week's data:
 - Celery juice: ${celeryDays}/7 days
 - Morning protocol: ${protocolDays}/7 days
 - Average energy: ${avgEnergy ?? 'not logged'}/10
 - Average mood: ${avgMood ?? 'not logged'}/5
-- Journal entries: ${checkins.length}
+- Mental clarity average: ${avgMentalClarity ? `${avgMentalClarity}/5` : 'not logged'}
+- Pain level average: ${avgPainLevel ? `${avgPainLevel}/5` : 'not logged'}
+- Water intake average: ${avgWaterOz ? `${avgWaterOz}oz/day` : 'not logged'}
+- Healing reaction days: ${healingReactionDays}
+- Daily rhythm completion: ${rhythmCompletionPct != null ? `${rhythmCompletionPct}%` : 'not tracked'}
+${activeProtocolDay ? `- Protocol day reached: day ${activeProtocolDay}` : ''}
+${wins.length ? `- Wins they logged: ${wins.map(w => `"${w}"`).join(', ')}` : ''}
+- Check-in days logged: ${checkins.length}
 
 Key moments this week:
 ${milestonesText}
 
 Healing background: ${healingSummary.slice(0, 300) || 'New subscriber'}
 
-Write the 3-sentence observation now:`,
+Write the observation now:`,
     }],
   })
 
@@ -220,6 +256,13 @@ Write the 3-sentence observation now:`,
     journal_entries: checkins.length,
     ai_observations: observations,
     milestones_this_week: milestones,
+    avg_mental_clarity: avgMentalClarity,
+    healing_reaction_days: healingReactionDays,
+    avg_water_oz: avgWaterOz,
+    avg_pain_level: avgPainLevel,
+    rhythm_completion_pct: rhythmCompletionPct,
+    active_protocol_days_completed: activeProtocolDay,
+    wins,
   }
 
   const { data: saved } = await supabaseAdmin

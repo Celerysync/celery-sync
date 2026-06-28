@@ -5,9 +5,8 @@ import { ORGANS } from "../data/bodyEducation.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
-function OrganDetail({ organ, onBack }) {
+function OrganDetail({ organ, onBack, voiceName }) {
   const [section, setSection] = useState("overview");
-  const { voiceName } = useVoicePrefs();
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
   const getSectionText = () => {
@@ -205,6 +204,7 @@ function OrganDetail({ organ, onBack }) {
 
 export default function Body({ navQuery }) {
   const [selected, setSelected] = useState(null);
+  const { voiceName } = useVoicePrefs();
 
   useEffect(() => {
     if (!navQuery) return;
@@ -214,7 +214,7 @@ export default function Body({ navQuery }) {
   }, [navQuery]);
 
   if (selected) {
-    return <OrganDetail organ={selected} onBack={() => setSelected(null)} />;
+    return <OrganDetail organ={selected} onBack={() => setSelected(null)} voiceName={voiceName} />;
   }
 
   return (

@@ -142,7 +142,7 @@ const GREETINGS = {
   tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın öğretilerine dayalı Medical Medium sağlık rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
 
-// Dynamic section only — user profile, check-in, history, lang, units (~200–500 tokens)
+// Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
 function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
 
@@ -208,6 +208,37 @@ ${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's 
 Speak naturally: "half a litre of celery juice" not "473 millilitres". Round to sensible metric amounts.
 Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}`;
 
+  // Build the richest possible today's picture for the AI
+  const checkinSection = todaysCheckin ? (() => {
+    const clarityLabels = { 1: "severe brain fog", 2: "foggy", 3: "patchy clarity", 4: "mostly clear", 5: "clear-headed" };
+    const painLabels = { 1: "none", 2: "mild", 3: "moderate", 4: "significant", 5: "severe" };
+    const lines = [
+      `• Energy: ${todaysCheckin.energy ?? "not logged"}/10`,
+      todaysCheckin.mental_clarity ? `• Mental clarity: ${clarityLabels[todaysCheckin.mental_clarity]} (${todaysCheckin.mental_clarity}/5)` : null,
+      `• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}`,
+      todaysCheckin.morning_protocol ? "• Morning protocol: completed ✓" : null,
+      todaysCheckin.emotional_state?.length ? `• Emotional state: ${todaysCheckin.emotional_state.join(", ")}` : null,
+      todaysCheckin.healing_reaction ? `• HEALING REACTION flagged${todaysCheckin.healing_reaction_notes ? `: "${todaysCheckin.healing_reaction_notes}"` : " — they believe they are detoxing/die-off today"}` : null,
+      todaysCheckin.win_today ? `• Today's win: "${todaysCheckin.win_today}"` : null,
+      todaysCheckin.symptoms?.length ? `• Symptoms today: ${todaysCheckin.symptoms.join(", ")}` : null,
+      todaysCheckin.sleep_hours ? `• Sleep: ${todaysCheckin.sleep_hours}h${todaysCheckin.sleep_quality ? ` (quality ${todaysCheckin.sleep_quality}/5)` : ""}` : null,
+      todaysCheckin.water_oz ? `• Water intake: ~${todaysCheckin.water_oz}oz` : null,
+      todaysCheckin.pain_level ? `• Pain level: ${painLabels[todaysCheckin.pain_level] ?? todaysCheckin.pain_level}/5` : null,
+      todaysCheckin.bowel_movements != null ? `• Bowel movements: ${todaysCheckin.bowel_movements}` : null,
+      (todaysCheckin.rhythm_completed != null && todaysCheckin.rhythm_total) ?
+        `• Daily rhythm: ${todaysCheckin.rhythm_completed}/${todaysCheckin.rhythm_total} items completed (${Math.round(todaysCheckin.rhythm_completed / todaysCheckin.rhythm_total * 100)}%)` : null,
+      todaysCheckin.active_protocol_day ? `• Active protocol: day ${todaysCheckin.active_protocol_day}` : null,
+      todaysCheckin.notes ? `• Their note: "${todaysCheckin.notes}"` : null,
+    ].filter(Boolean);
+
+    return `
+TODAY'S CHECK-IN — USE THIS TO PERSONALISE EVERY RESPONSE:
+${lines.join("\n")}
+${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged a healing reaction. Respond with extra warmth. Validate that worsening symptoms during a protocol can be a positive sign. Do not alarm them. Remind them of the signs that would need a doctor." : ""}
+${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep your response SHORT, clear, and actionable. No long lists. One thing at a time." : ""}
+${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
+  })() : "No check-in logged yet today.";
+
   return `${langInstruction}${caregiverIntro}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THIS USER'S PROFILE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -215,14 +246,7 @@ Name: ${user?.name || "friend"}
 Symptoms: ${user?.symptoms?.join(", ") || "general wellness"}
 Goal: ${user?.goal || "wellness and clarity"}
 Celery juice streak: ${celeryStreak > 0 ? `${celeryStreak} days in a row` : "not yet started today"}
-${todaysCheckin ? `
-TODAY'S CHECK-IN (logged earlier today):
-• Energy: ${todaysCheckin.energy ?? "not logged"}/10
-• Mood: ${todaysCheckin.mood ?? "not logged"}/5
-• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}
-• Symptoms today: ${todaysCheckin.symptoms?.join(", ") || "none logged"}
-• Sleep: ${todaysCheckin.sleep_hours ? `${todaysCheckin.sleep_hours}h` : "not logged"}
-Use this to personalise your response — acknowledge how they're feeling today.` : "No check-in logged yet today."}
+${checkinSection}
 ${historySection}
 ${unitsSection}
 `;
