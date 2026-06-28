@@ -23,10 +23,10 @@ const LANGUAGES = [
 ];
 
 const FEATURES = [
-  { emoji: '🎙', label: 'Voice AI Healing Guide', desc: 'Speak to it, it speaks back — personalised to you and your books' },
+  { emoji: '🎙', label: 'Voice AI Wellness Guide', desc: 'Speak to it, it speaks back — warm companion that remembers your journey' },
   { emoji: '🌿', label: 'Complete Cleanse Protocols', desc: 'Every day of every cleanse with audio read-aloud' },
-  { emoji: '🔍', label: 'Symptom Checker', desc: 'Exact supplements, dosages & causes from Anthony William\'s books' },
-  { emoji: '📖', label: 'My Books — Upload & Learn', desc: 'Upload your MM PDFs, save videos, the AI learns your personal journey' },
+  { emoji: '🔍', label: 'Symptom Checker', desc: 'Protocol guidance for 100+ conditions, paraphrased from Anthony William\'s teachings' },
+  { emoji: '🔗', label: 'Resources — Official AW Links', desc: 'Direct links to Anthony William\'s books, YouTube, podcast, and website' },
   { emoji: '💓', label: 'Wearable Integration', desc: 'Connect Oura Ring for automatic sleep & HRV data — interpreted through Anthony William\'s teachings' },
   { emoji: '⏰', label: 'Adrenal Snack Reminders', desc: 'Never miss a 2-hour snack window — keeps blood sugar and adrenals stable' },
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
@@ -143,16 +143,16 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             ))}
           </Card>
 
-          {/* BYOB explanation */}
+          {/* Source policy */}
           <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}40` }}>
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.sageDark, marginBottom: 6 }}>
-              📚 Bring Your Own Books
+              🔗 Always attributed. Always at the source.
             </div>
             <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-              CelerySync doesn't reproduce Anthony William's content — instead, you upload your
-              own purchased MM books as PDFs. The AI reads <em>your</em> books and builds a
-              healing guide personalised to what you own and have studied. This keeps his work
-              protected while making the app more powerful the more books you add.
+              CelerySync paraphrases and attributes Anthony William's publicly shared teachings.
+              For complete protocols, exact wording, and full healing plans, we always point you
+              directly to his official books, YouTube, and podcast — the Resources tab links straight there.
+              This app is not affiliated with or endorsed by Anthony William or Medical Medium LLC.
             </div>
           </Card>
 

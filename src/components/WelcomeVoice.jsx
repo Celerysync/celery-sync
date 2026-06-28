@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import C from "../lib/colors.js";
 import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 const LANGUAGES = [
   { code: "en", label: "English",    native: "English"    },
@@ -22,27 +23,28 @@ const LANGUAGES = [
 ];
 
 const WELCOME_TEXT_EN =
-  "Welcome to CelerySync — your personal Medical Medium healing companion. I'm so glad you're here. " +
+  "Welcome to CelerySync — your personal Medical Medium companion. I'm so glad you're here. " +
   "Let me give you a quick tour. " +
-  "Your Today tab is your daily home — morning protocol, supplement tracker, and healing reminders. " +
-  "The AI Guide is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. " +
-  "The Symptom Checker helps you understand what your body is communicating and how to heal it, with exact supplement protocols for 100 conditions. " +
+  "Your Today tab is your daily home — morning protocol, supplement tracker, and wellness reminders. " +
+  "The AI Guide is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. I always point you to Anthony William's official sources for full protocols and specific amounts. " +
+  "The Symptom Checker helps you understand what Anthony William associates with your symptoms, with protocol guidance for over 100 conditions. " +
   "Recipes gives you 50 healing meals, juices, shots, and a full meal planner with a shopping list. " +
-  "Cleanses walks you through Anthony William's full cleanse protocols step by step, including the 3-6-9. " +
-  "The Body tab lets you explore each organ — liver, thyroid, brain, kidneys, skin and more — and understand what Anthony William teaches about healing each one. " +
-  "Healing Circles connects you anonymously with others healing the same conditions — a real community on the same path. " +
-  "And My Books is your secret weapon — upload any Medical Medium book and I'll draw on it personally in every single answer. " +
+  "Cleanses walks you through Anthony William's cleanse protocols step by step, including the 3-6-9. " +
+  "The Body tab lets you explore each organ — liver, thyroid, brain, kidneys, skin and more — and understand what Anthony William teaches about each one. " +
+  "Circles connects you with others following the same protocols — a real community on the same path. " +
+  "And Resources has direct links to Anthony William's official books, YouTube channel, and podcast — so you can always go to the source. " +
+  "This app is not medical advice — always work alongside your doctor or licensed practitioner. " +
   "You're in exactly the right place. I'm here for you. Feel free to ask me anything — I'm listening.";
 
 const STEPS = [
   { emoji: "🏠", tab: "home",      label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
-  { emoji: "🎙", tab: "coach",     label: "AI Guide",   desc: "Talk hands-free — mic auto-listens after every reply" },
-  { emoji: "🔍", tab: "symptoms",  label: "Symptoms",   desc: "100 conditions with exact supplement protocols" },
+  { emoji: "🎙", tab: "coach",     label: "AI Guide",   desc: "Talk hands-free — warm MM companion, always points to official sources" },
+  { emoji: "🔍", tab: "symptoms",  label: "Symptoms",   desc: "100 conditions with protocol guidance attributed to Anthony William" },
   { emoji: "🍽", tab: "recipes",   label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
   { emoji: "🌿", tab: "cleanses",  label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
   { emoji: "🫁", tab: "body",      label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },
-  { emoji: "💚", tab: "community", label: "Circles",    desc: "Anonymous community — people healing the same conditions" },
-  { emoji: "📖", tab: "knowledge", label: "My Books",   desc: "Upload your MM books — I'll reference them in every answer" },
+  { emoji: "💚", tab: "community", label: "Circles",    desc: "Community — people following the same protocols" },
+  { emoji: "🔗", tab: "knowledge", label: "Resources",  desc: "Official AW books, YouTube, podcast — links to the source" },
 ];
 
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL";
@@ -63,10 +65,10 @@ const STYLE = `
 `;
 
 export default function WelcomeVoice({ userId, onDone, onNavigate }) {
-  const savedVoice = localStorage.getItem("cs_voiceName") || DEFAULT_VOICE_ID;
-  const savedLang  = localStorage.getItem("cs_lang")      || "en";
+  const { voiceName: contextVoice, setVoiceName: saveVoiceName } = useVoicePrefs();
+  const savedLang = localStorage.getItem("cs_lang") || "en";
 
-  const [selectedVoice, setSelectedVoice] = useState(savedVoice);
+  const [selectedVoice, setSelectedVoice] = useState(contextVoice || DEFAULT_VOICE_ID);
   const [selectedLang,  setSelectedLang]  = useState(savedLang);
   const [phase,     setPhase]     = useState("loading");
   const [userText,  setUserText]  = useState("");
@@ -88,19 +90,19 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
   // ── Dismiss ──────────────────────────────────────────────────────────────
   const dismiss = useCallback(() => {
     clearTimeout(idleTimerRef.current);
-    localStorage.setItem("cs_voiceName", voiceRef.current);
-    localStorage.setItem("cs_lang",      langRef.current);
+    saveVoiceName(voiceRef.current);
+    localStorage.setItem("cs_lang", langRef.current);
     if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     window.speechSynthesis?.cancel();
     recogRef.current?.stop();
     onDone();
-  }, [userId, onDone]);
+  }, [userId, onDone, saveVoiceName]);
 
   const dismissTo = useCallback((tabId) => {
     clearTimeout(idleTimerRef.current);
-    localStorage.setItem("cs_voiceName", voiceRef.current);
-    localStorage.setItem("cs_lang",      langRef.current);
+    saveVoiceName(voiceRef.current);
+    localStorage.setItem("cs_lang", langRef.current);
     if (userId) localStorage.setItem(`cs_welcomed_${userId}`, "1");
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     window.speechSynthesis?.cancel();

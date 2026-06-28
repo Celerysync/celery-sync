@@ -323,7 +323,7 @@ export default function Juices() {
         color: C.sageDark,
         lineHeight: 1.5,
       }}>
-        📖 All content based on AW's freely shared YouTube, podcast, and medicalmedium.com teachings. Upload your purchased books in <strong>My Books</strong> to enrich your AI Guide with fuller detail.
+        📖 All content is paraphrased and attributed to Anthony William's publicly shared YouTube, podcast, and medicalmedium.com teachings. See the <strong>Resources</strong> tab for links to his official books and channels.
       </div>
 
       {/* Morning protocol sequence */}

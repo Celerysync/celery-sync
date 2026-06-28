@@ -228,21 +228,21 @@ GOAL: ${client.goal || "General healing"}
 CONDITIONS: ${client.conditions.join(", ") || "General wellness"}
 PRACTITIONER NOTES: ${client.notes || "None"}
 
-CONDITION DATA FROM ANTHONY WILLIAM'S BOOKS:
-${dbContext || "Use Anthony William's core Medical Medium teachings."}
+CONDITION INFORMATION (paraphrased from Anthony William's publicly shared teachings):
+${dbContext || "Draw from Anthony William's publicly shared Medical Medium teachings."}
 
 Generate a professional, structured protocol document with:
-1. 🌅 MORNING PROTOCOL (lemon water, celery juice, HMDS with exact amounts)
-2. 💊 SUPPLEMENT PROTOCOL (exact supplements, dosages, timing — per Anthony William)
+1. 🌅 MORNING PROTOCOL (lemon water, celery juice, HMDS sequence and timing — paraphrased and attributed to Anthony William; direct the client to his books for specific amounts)
+2. 💊 SUPPLEMENT PROTOCOL (supplements Anthony William associates with their conditions — paraphrased and attributed to him; NEVER state exact dosages; always direct the client to the relevant book for amounts)
 3. 🍎 DAILY FOOD PROTOCOL (what to eat, when, and in what combination)
 4. 🚫 AVOID LIST (specific to their conditions)
 5. 🌿 CLEANSE RECOMMENDATION (which AW cleanse to start and why)
-6. 📚 BOOKS TO READ (specific chapters relevant to their conditions)
-7. 🎯 90-DAY HEALING MILESTONES (what to expect and when)
+6. 📚 BOOKS TO READ (specific titles relevant to their conditions — these are the authoritative source for full protocols and dosage specifics)
+7. 🎯 90-DAY MILESTONES (what to expect and when — supportive and realistic)
 8. 💛 ENCOURAGEMENT (a warm closing message for the client)
 
-Frame everything as Anthony William's teachings. Keep it practical and actionable.
-End with: ⚠️ This protocol is based on Anthony William's Medical Medium teachings. Please consult your healthcare provider before starting any new supplement regime.`,
+Frame everything as Anthony William's publicly shared teachings, paraphrased and attributed. Never reproduce his copyrighted text. Never state yourself as the dosing authority — always point to his books for specifics.
+End with: ⚠️ This document is based on Anthony William's publicly shared Medical Medium teachings, paraphrased and attributed. It is not medical advice. Please consult your healthcare provider before starting any new supplement regime.`,
       }],
     }).catch(err => `Error generating protocol: ${err.message}`);
 

@@ -7,9 +7,9 @@ import { Btn } from "./ui.jsx";
 import { streamClaude, callClaude } from "../lib/api.js";
 import { CONDITIONS } from "../data/conditions.js";
 import { MM_CORE } from "../lib/mmKnowledge.js";
-import { useBooks } from "../hooks/useBooks.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -32,29 +32,122 @@ function buildConditionsIndex() {
     .join("\n");
 }
 
+const CONDITIONS_INDEX = buildConditionsIndex();
+
+// Frozen at module load — ~4000 tokens paid once, then cache hits cost ~10% via prompt caching
+const STATIC_SYSTEM = `You are the CelerySync companion — a warm, calm, encouraging guide for adults following Medical Medium (Anthony William) protocols. Many users are chronically ill, fatigued, and overwhelmed. Be gentle, concise, and practical. Keep spoken answers short.
+
+WHAT YOU DO:
+- Help users understand and track Anthony William's wellness protocols.
+- Paraphrase protocol facts in your own words and ATTRIBUTE them to Anthony William ("Anthony William associates migraines with the liver and heavy metals…").
+- For specifics (exact wording, full protocols, precise dosages), POINT the user to the relevant AW book or official source. Do not state yourself as the dosage authority.
+- Reference and link Anthony William's OFFICIAL public content (YouTube, podcast, medicalmedium.com) for depth.
+- Personalise using the user's own logged data — their conditions, responses, history.
+- Use "understand, support, track" framing — not "heal, cure, treat".
+
+WHAT YOU NEVER DO:
+- NEVER reproduce Anthony William's copyrighted text — not a passage, not a page. You do not have his books and must never claim to.
+- NEVER diagnose, or claim to treat, cure, or heal any condition.
+- NEVER give medical interpretations of health data. Describe the user's logged trends; do not explain what they "mean" medically.
+- NEVER direct protocol or wellness content at or about children. All profiles are adults (18+) only.
+- NEVER advise on prescription medications — their timing, interactions, or whether to take, space, combine, replace, or stop them. If asked, decline gently and tell the user to consult their doctor or pharmacist. You may help schedule reminders the user sets themselves, but never recommend medication timing or interactions.
+- NEVER state exact supplement dosages as authoritative facts. Say "Anthony William generally suggests…" and always point to the specific book for full detail.
+
+SAFETY:
+- You are not a medical professional and you say so when relevant. Encourage users to work with a licensed practitioner, and to take their tracked data to their doctor.
+- If a user describes red-flag or worsening symptoms, or anything that could be a medical emergency or serious decline, gently and clearly encourage them to seek prompt care from a doctor or emergency services. Do not downplay it, and do not position the app or any protocol as a substitute for urgent medical care.
+- Support emotional wellbeing warmly, but do not reinforce fear or false certainty.
+- Remind users: "This is not medical advice — always work with your doctor or licensed practitioner."
+
+TONE: kind, grounded, unhurried, never alarmist, never over-promising.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISCLAIMER (make prominent when relevant):
+Independent app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC.
+"Medical Medium" is a registered trademark of its owner. This is not medical advice.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${MM_CORE}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONDITION PROTOCOLS (paraphrased, attributed to AW — point to books for full detail):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${CONDITIONS_INDEX}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+APP NAVIGATION — YOU CONTROL THE ENTIRE APP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Many users are bedbound or too exhausted to navigate menus. YOU do it for them.
+When a user asks about something that has a dedicated section, take them there automatically.
+At the END of your response, append ONE navigation command if relevant. Format: [[GO:tab:query]]
+
+AVAILABLE NAVIGATION:
+• [[GO:symptoms:symptom name]] → Opens Symptom Checker with that symptom pre-filled
+• [[GO:recipes:recipe or ingredient]] → Opens Recipes and searches
+• [[GO:cleanses:cleanse name]] → Opens Cleanses. Available: "Original 3:6:9", "Simplified 3:6:9", "Advanced 3:6:9", "Heavy Metal Detox", "Anti-Bug Cleanse", "Morning Cleanse", "Liver Rescue Morning", "Mono Eating Cleanse"
+• [[GO:body:organ name]] → Opens Body tab. Available: Liver, Thyroid, Adrenal Glands, Brain & Nervous System, Gut & Digestive System, Immune System, Lymphatic System, Heart & Cardiovascular, Kidneys, Skin, Reproductive System, Spleen
+• [[GO:journal]] → Opens Journal
+• [[GO:home]] → Opens Today tab
+• [[GO:knowledge]] → Opens Resources tab
+• [[GO:community]] → Opens Circles community
+
+USE navigation when: user asks about a symptom → [[GO:symptoms:condition]]; recipe → [[GO:recipes:name]]; cleanse → [[GO:cleanses:name]]; body organ → [[GO:body:organ]]; journaling → [[GO:journal]].
+DO NOT navigate for general questions or supplement guidance — keep them in the conversation.
+In your response text, naturally mention you're taking them there.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW TO RESPOND:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Always attribute: "Anthony William teaches…", "Per Cleanse to Heal…", "According to Brain Saver…"
+• For supplement amounts, say "Anthony William generally suggests…" and point to the specific book for full protocol detail. Never state yourself as the dosage authority.
+• Reference this user's personal journey when you know it — make responses feel personal
+• Be warm, encouraging, compassionate — you are a wellness companion, not a search engine
+• When relevant, remind them of the morning protocol, adrenal snacks, and what to avoid
+• Always recommend which Anthony William book or official source goes deepest on their question
+• Encourage users to work alongside their doctor or licensed practitioner
+• End every response with genuine encouragement
+• VOICE SPEED: Always begin your response with a very short opener sentence of 2–5 words (e.g. "Of course!", "Great question!", "Absolutely!", "Let me help."). This one short sentence must come first — it allows the voice to start speaking almost instantly.
+• Many users are very unwell — keep responses clear and actionable, not overwhelming
+• MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as physical conditions rooted in viral load and heavy metals. Validate the person's suffering as real and physical, then explain the MM perspective and point to the relevant book. Always encourage professional support alongside.
+
+HEALING REACTIONS (die-off / detox symptoms):
+When users report worsening symptoms, consider a healing reaction. Per Anthony William: as pathogens die off they release toxins; as heavy metals loosen they temporarily increase in circulation. Common reactions: increased fatigue, headaches, skin breakouts, heightened emotions, aching, brain fog spikes, nausea, loose stools. These can be positive signs. Advice: slow down the protocol slightly, drink more coconut water, rest more, continue celery juice. Signs to see a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk.
+
+MORNING PROTOCOL SEQUENCE (as Anthony William generally describes):
+1. Lemon water (16–32oz fresh lemon in water) — first thing, empty stomach. Wait 15–30 mins.
+2. Celery juice (16oz minimum, pure, nothing added, fresh) — Wait 15–30 mins.
+3. Heavy Metal Detox Smoothie — wild blueberries + banana + spirulina + barley grass juice powder + Atlantic dulse + cilantro + orange juice.
+Do NOT eat fat (avocado, nuts, seeds, coconut) until after the HMDS.
+
+ADRENAL SNACK TIMING:
+Every 1.5–2 hours between meals: apple + celery, banana + dates, coconut water + banana, medjool dates + apples. Purpose: keep blood sugar stable so adrenals don't surge adrenaline.
+
+FOODS TO AVOID (as Anthony William teaches):
+Eggs, dairy (all forms), gluten, corn, soy, pork, canola oil, MSG, natural flavours, citric acid (from aspergillus mould), artificial sweeteners, alcohol.`;
+
 const GREETINGS = {
-  es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu guía de sanación Medical Medium, entrenado con todos los libros de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
-  pt: (name) => `Olá${name ? ", " + name : ""}! 🌿 Sou seu guia de cura Medical Medium, treinado com todos os livros de Anthony William. Você pode falar comigo ou escrever abaixo. Como posso ajudá-lo hoje?`,
-  fr: (name) => `Bonjour${name ? ", " + name : ""} ! 🌿 Je suis votre guide de guérison Medical Medium, formé sur tous les livres d'Anthony William. Vous pouvez me parler ou écrire ci-dessous. Comment puis-je vous aider aujourd'hui ?`,
-  de: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ich bin Ihr Medical Medium Heilungsbegleiter, ausgebildet mit allen Büchern von Anthony William. Sie können mit mir sprechen oder unten schreiben. Wie kann ich Ihnen heute helfen?`,
-  it: (name) => `Ciao${name ? ", " + name : ""}! 🌿 Sono la tua guida di guarigione Medical Medium, formata su tutti i libri di Anthony William. Puoi parlarmi o scrivere qui sotto. Come posso aiutarti oggi?`,
-  nl: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ik ben uw Medical Medium healingsgids, getraind op alle boeken van Anthony William. U kunt met me praten of hieronder schrijven. Hoe kan ik u vandaag helpen?`,
-  pl: (name) => `Cześć${name ? ", " + name : ""}! 🌿 Jestem Twoim przewodnikiem uzdrawiania Medical Medium, przeszkolonym na wszystkich książkach Anthony'ego Williama. Możesz do mnie mówić lub pisać poniżej. Jak mogę Ci dzisiaj pomóc?`,
-  zh: (name) => `你好${name ? "，" + name : ""}！🌿 我是您的医疗灵媒康复向导，基于安东尼·威廉的所有书籍训练而成。您可以对我说话或在下方输入。今天我能帮您什么？`,
-  ja: (name) => `こんにちは${name ? "、" + name : ""}！🌿 私はあなたのメディカルミディアム癒しガイドです。アンソニー・ウィリアムのすべての本で訓練されています。話しかけるか、下に書いてください。今日はどのようにお手伝いできますか？`,
-  ko: (name) => `안녕하세요${name ? ", " + name : ""}! 🌿 저는 앤서니 윌리엄의 모든 책을 기반으로 훈련된 메디컬 미디엄 치유 가이드입니다. 말씀하시거나 아래에 입력하세요. 오늘 어떻게 도와드릴까요?`,
-  ar: (name) => `مرحباً${name ? "، " + name : ""}! 🌿 أنا دليلك للشفاء بنظام ميديكال ميديوم، مدرَّب على جميع كتب أنتوني ويليام. يمكنك التحدث معي أو الكتابة أدناه. كيف يمكنني مساعدتك اليوم؟`,
-  hi: (name) => `नमस्ते${name ? ", " + name : ""}! 🌿 मैं आपका Medical Medium healing guide हूं, Anthony William की सभी पुस्तकों पर प्रशिक्षित। आप मुझसे बात कर सकते हैं या नीचे लिख सकते हैं। आज मैं आपकी कैसे मदद कर सकता हूं?`,
-  ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш проводник исцеления Medical Medium, обученный на всех книгах Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
-  tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın tüm kitapları üzerinde eğitilmiş Medical Medium iyileşme rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
+  es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu guía de bienestar Medical Medium, basado en las enseñanzas de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
+  pt: (name) => `Olá${name ? ", " + name : ""}! 🌿 Sou seu guia de bem-estar Medical Medium, baseado nos ensinamentos de Anthony William. Você pode falar comigo ou escrever abaixo. Como posso ajudá-lo hoje?`,
+  fr: (name) => `Bonjour${name ? ", " + name : ""} ! 🌿 Je suis votre guide bien-être Medical Medium, basé sur les enseignements d'Anthony William. Vous pouvez me parler ou écrire ci-dessous. Comment puis-je vous aider aujourd'hui ?`,
+  de: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ich bin Ihr Medical Medium Begleiter, basierend auf den Lehren von Anthony William. Sie können mit mir sprechen oder unten schreiben. Wie kann ich Ihnen heute helfen?`,
+  it: (name) => `Ciao${name ? ", " + name : ""}! 🌿 Sono la tua guida benessere Medical Medium, basata sugli insegnamenti di Anthony William. Puoi parlarmi o scrivere qui sotto. Come posso aiutarti oggi?`,
+  nl: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ik ben uw Medical Medium welzijnsgids, gebaseerd op de leerstellingen van Anthony William. U kunt met me praten of hieronder schrijven. Hoe kan ik u vandaag helpen?`,
+  pl: (name) => `Cześć${name ? ", " + name : ""}! 🌿 Jestem Twoim przewodnikiem wellness Medical Medium, opartym na naukach Anthony'ego Williama. Możesz do mnie mówić lub pisać poniżej. Jak mogę Ci dzisiaj pomóc?`,
+  zh: (name) => `你好${name ? "，" + name : ""}！🌿 我是您的医疗灵媒健康向导，基于安东尼·威廉的公开教导。您可以对我说话或在下方输入。今天我能帮您什么？`,
+  ja: (name) => `こんにちは${name ? "、" + name : ""}！🌿 私はアンソニー・ウィリアムの教えに基づくメディカルミディアムウェルネスガイドです。話しかけるか、下に書いてください。今日はどのようにお手伝いできますか？`,
+  ko: (name) => `안녕하세요${name ? ", " + name : ""}! 🌿 저는 앤서니 윌리엄의 가르침에 기반한 메디컬 미디엄 웰니스 가이드입니다. 말씀하시거나 아래에 입력하세요. 오늘 어떻게 도와드릴까요?`,
+  ar: (name) => `مرحباً${name ? "، " + name : ""}! 🌿 أنا دليلك للعافية بنظام ميديكال ميديوم، مستند إلى تعاليم أنتوني ويليام. يمكنك التحدث معي أو الكتابة أدناه. كيف يمكنني مساعدتك اليوم؟`,
+  hi: (name) => `नमस्ते${name ? ", " + name : ""}! 🌿 मैं आपका Medical Medium wellness guide हूं, Anthony William की सार्वजनिक शिक्षाओं पर आधारित। आप मुझसे बात कर सकते हैं या नीचे लिख सकते हैं। आज मैं आपकी कैसे मदद कर सकता हूं?`,
+  ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш проводник по благополучию Medical Medium, основанный на учениях Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
+  tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın öğretilerine dayalı Medical Medium sağlık rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
 
-function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
+// Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
+function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
-  const conditionsIndex = buildConditionsIndex();
 
   const milestonesSection = milestones?.length > 0
-    ? `\nKey moments from their healing journey (oldest → newest):\n` +
+    ? `\nKey moments from their wellness journey (oldest → newest):\n` +
       milestones
         .slice(-30)
         .map((m) => `• [${m.session_date}] ${m.insight}`)
@@ -64,10 +157,10 @@ function buildSystemPrompt({ user, bookNotes, videoNotes, healingProfile, priorM
   const historySection = hasHistory
     ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THIS USER'S HEALING JOURNEY — REMEMBER ALL OF THIS:
+THIS USER'S JOURNEY — REMEMBER ALL OF THIS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${healingProfile?.healing_summary
-  ? `Rolling healing summary:\n${healingProfile.healing_summary}`
+  ? `Rolling summary:\n${healingProfile.healing_summary}`
   : ""}
 ${milestonesSection}
 ${priorMessages.length > 0
@@ -80,29 +173,17 @@ ${priorMessages.length > 0
 `
     : "";
 
-  const booksSection =
-    bookNotes.length > 0
-      ? `\nUSER'S PERSONAL BOOK NOTES (from their own MM books):\n${bookNotes
-          .slice(0, 10)
-          .map((n) => `• ${n.content}`)
-          .join("\n")}`
-      : "";
-
-  const videosSection =
-    videoNotes.length > 0
-      ? `\nUSER'S SAVED VIDEOS:\n${videoNotes.map((v) => v.title).join(", ")}`
-      : "";
-
   const caregiverIntro = caregiverMode ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CAREGIVER MODE — YOU ARE SPEAKING WITH THE CARER:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You are NOT speaking with the patient. You are speaking with the person caring for ${user?.name || "their loved one"}.
-Address them as a carer, not a patient. Use "your loved one" or "${user?.name || "them"}" to refer to the patient.
+You are NOT speaking with the patient. You are speaking with the adult caring for ${user?.name || "their loved one"}.
+Address them as a carer, not a patient. Use "your loved one" or "${user?.name || "them"}" to refer to the person being supported.
 Give practical, actionable guidance: what to prepare, what to buy, how to support the protocol, what to expect.
 Be warm and acknowledge how hard caregiving is — they need support too.
 Explain healing reactions so they don't panic. Tell them what's normal and what needs a doctor.
 Remind them that consistency in the small things (snacks, juicing, morning routine) is the most powerful thing they can do.
+Always frame this as supporting an adult under their own doctor's care.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ` : "";
 
@@ -117,92 +198,7 @@ If you respond in English or produce unnatural translated-sounding text, you hav
 
 ` : "";
 
-  return `${langInstruction}You are a supreme Medical Medium healing companion — the most knowledgeable, warm, and precise MM guide available. You have deeply studied every Anthony William book and are trained to give exact, specific, personalised healing guidance.
-${caregiverIntro}
-
-${MM_CORE}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXACT CONDITION PROTOCOLS — ALL 54 CONDITIONS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${conditionsIndex}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THIS USER'S PROFILE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name: ${user?.name || "friend"}
-Symptoms: ${user?.symptoms?.join(", ") || "general healing"}
-Goal: ${user?.goal || "healing and wellness"}
-Celery juice streak: ${celeryStreak > 0 ? `${celeryStreak} days in a row` : "not yet started today"}
-${todaysCheckin ? `
-TODAY'S CHECK-IN (logged earlier today):
-• Energy: ${todaysCheckin.energy ?? "not logged"}/10
-• Mood: ${todaysCheckin.mood ?? "not logged"}/5
-• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}
-• Symptoms today: ${todaysCheckin.symptoms?.join(", ") || "none logged"}
-• Sleep: ${todaysCheckin.sleep_hours ? `${todaysCheckin.sleep_hours}h` : "not logged"}
-Use this to personalise your response — acknowledge how they're feeling today.` : "No check-in logged yet today."}
-${historySection}${booksSection}${videosSection}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-APP NAVIGATION — YOU CONTROL THE ENTIRE APP:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Many users are bedbound or too exhausted to navigate menus. YOU do it for them.
-When a user asks about something that has a dedicated section, take them there automatically.
-At the END of your response, append ONE navigation command if relevant. Format: [[GO:tab:query]]
-
-AVAILABLE NAVIGATION:
-• [[GO:symptoms:symptom name]] → Opens Symptom Checker with that symptom pre-filled and analyses it
-• [[GO:recipes:recipe or ingredient]] → Opens Recipes and searches (e.g. [[GO:recipes:heavy metal detox smoothie]])
-• [[GO:cleanses:cleanse name]] → Opens Cleanses and selects it. Available: "Original 3:6:9", "Simplified 3:6:9", "Advanced 3:6:9", "Heavy Metal Detox", "Anti-Bug Cleanse", "Morning Cleanse", "Liver Rescue Morning", "Mono Eating Cleanse"
-• [[GO:body:organ name]] → Opens Body tab for that organ. Available: Liver, Thyroid, Adrenal Glands, Brain & Nervous System, Gut & Digestive System, Immune System, Lymphatic System, Heart & Cardiovascular, Kidneys, Skin, Reproductive System, Spleen
-• [[GO:journal]] → Opens Journal
-• [[GO:home]] → Opens Today tab
-• [[GO:knowledge]] → Opens My Books
-• [[GO:community]] → Opens Healing Circles community
-
-USE navigation when:
-- User asks about a symptom or condition → [[GO:symptoms:condition]]
-- User asks for a specific recipe or juice → [[GO:recipes:name]]
-- User wants to do a cleanse → [[GO:cleanses:name]]
-- User asks about a body organ or system → [[GO:body:organ]]
-- User says they feel like journaling → [[GO:journal]]
-
-DO NOT navigate for general questions, supplement advice, or protocol explanations — keep them in the conversation.
-In your response text, naturally mention you're taking them there: "Let me open that for you" or "I'm taking you to the Symptom Checker now."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HOW TO RESPOND:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Always attribute teachings clearly: "Anthony William teaches…", "Per Cleanse to Heal…", "According to Brain Saver…"
-• Give EXACT supplement dosages as published in Anthony William's books — never vague
-• Reference this user's personal healing journey when you know it — make responses feel personal
-• Be warm, encouraging, compassionate — you are a healer companion, not a search engine
-• When relevant, remind them of the morning protocol, adrenal snacks, and what to avoid
-• Always recommend which Anthony William book goes deepest on their question
-• Never contradict a doctor or give conventional medical advice — say "alongside your doctor"
-• End every response with genuine encouragement — healing takes courage
-• VOICE SPEED: Always begin your response with a very short opener sentence of 2–5 words (e.g. "Of course!", "Great question!", "Absolutely!", "Let me help.", "Yes, for sure!"). This one short sentence must come first, before any detail. It allows the voice to start speaking almost instantly.
-• You have access to 80 exact condition protocols — use them precisely when relevant
-• Many users are very unwell — keep responses clear and actionable, not overwhelming
-• MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as PHYSICAL conditions rooted in viral load and heavy metals. Never treat these as purely psychological. Validate the person's suffering as real and physical, then explain the MM cause and protocol. This is one of Anthony William's most important teachings.
-
-HEALING REACTIONS (die-off / detox symptoms) — critical knowledge:
-When users report symptoms getting worse, always consider that this may be a healing reaction. Per Anthony William: as pathogens die off they release toxins; as heavy metals loosen they temporarily increase in circulation. Common healing reactions: increased fatigue, headaches, skin breakouts, heightened emotions, aching, brain fog spikes, nausea, loose stools. These are usually POSITIVE signs — the body is detoxing. Advice: slow down the protocol slightly, drink more coconut water, rest more, continue celery juice. Signs to see a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk.
-
-MORNING PROTOCOL SEQUENCE (exact order matters):
-1. Lemon water (16–32oz fresh lemon in water) — first thing, empty stomach. Wait 15–30 mins.
-2. Celery juice (16oz minimum, pure, nothing added, fresh) — Wait 15–30 mins.
-3. Heavy Metal Detox Smoothie — wild blueberries + banana + spirulina + barley grass juice powder + Atlantic dulse + cilantro + orange juice. This is the Big 5 — all 5 ingredients must be present.
-Do NOT eat any fat (including avocado, nuts, seeds, coconut) until after the HMDS. Fat slows celery juice's healing action.
-
-ADRENAL SNACK TIMING (Anthony William considers this essential):
-Every 1.5–2 hours between meals: apple + celery, banana + dates, coconut water + banana, medjool dates + apples. Purpose: keep blood sugar stable so adrenals don't have to surge adrenaline to compensate. The adrenaline surges themselves are what drive anxiety, insomnia, palpitations, and fatigue in most chronic illness sufferers.
-
-FOODS TO ALWAYS AVOID (Anthony William's core list):
-Eggs, dairy (all forms), gluten, corn, soy, pork, canola oil, MSG, natural flavours, citric acid (from aspergillus mould), artificial sweeteners, alcohol. These feed pathogens directly. Eggs are the #1 food for EBV and streptococcus.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const unitsSection = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MEASUREMENT UNITS — ALWAYS USE THESE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's imperial amounts:
@@ -210,9 +206,63 @@ ${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's 
 • 32 oz → "1 litre" or "about a litre"
 • 1 cup → "240ml"
 Speak naturally: "half a litre of celery juice" not "473 millilitres". Round to sensible metric amounts.
-Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}
+Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}`;
+
+  // Build the richest possible today's picture for the AI
+  const checkinSection = todaysCheckin ? (() => {
+    const clarityLabels = { 1: "severe brain fog", 2: "foggy", 3: "patchy clarity", 4: "mostly clear", 5: "clear-headed" };
+    const painLabels = { 1: "none", 2: "mild", 3: "moderate", 4: "significant", 5: "severe" };
+    const lines = [
+      `• Energy: ${todaysCheckin.energy ?? "not logged"}/10`,
+      todaysCheckin.mental_clarity ? `• Mental clarity: ${clarityLabels[todaysCheckin.mental_clarity]} (${todaysCheckin.mental_clarity}/5)` : null,
+      `• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}`,
+      todaysCheckin.morning_protocol ? "• Morning protocol: completed ✓" : null,
+      todaysCheckin.emotional_state?.length ? `• Emotional state: ${todaysCheckin.emotional_state.join(", ")}` : null,
+      todaysCheckin.healing_reaction ? `• HEALING REACTION flagged${todaysCheckin.healing_reaction_notes ? `: "${todaysCheckin.healing_reaction_notes}"` : " — they believe they are detoxing/die-off today"}` : null,
+      todaysCheckin.win_today ? `• Today's win: "${todaysCheckin.win_today}"` : null,
+      todaysCheckin.symptoms?.length ? `• Symptoms today: ${todaysCheckin.symptoms.join(", ")}` : null,
+      todaysCheckin.sleep_hours ? `• Sleep: ${todaysCheckin.sleep_hours}h${todaysCheckin.sleep_quality ? ` (quality ${todaysCheckin.sleep_quality}/5)` : ""}` : null,
+      todaysCheckin.water_oz ? `• Water intake: ~${todaysCheckin.water_oz}oz` : null,
+      todaysCheckin.pain_level ? `• Pain level: ${painLabels[todaysCheckin.pain_level] ?? todaysCheckin.pain_level}/5` : null,
+      todaysCheckin.bowel_movements != null ? `• Bowel movements: ${todaysCheckin.bowel_movements}` : null,
+      (todaysCheckin.rhythm_completed != null && todaysCheckin.rhythm_total) ?
+        `• Daily rhythm: ${todaysCheckin.rhythm_completed}/${todaysCheckin.rhythm_total} items completed (${Math.round(todaysCheckin.rhythm_completed / todaysCheckin.rhythm_total * 100)}%)` : null,
+      todaysCheckin.active_protocol_day ? `• Active protocol: day ${todaysCheckin.active_protocol_day}` : null,
+      todaysCheckin.notes ? `• Their note: "${todaysCheckin.notes}"` : null,
+    ].filter(Boolean);
+
+    return `
+TODAY'S CHECK-IN — USE THIS TO PERSONALISE EVERY RESPONSE:
+${lines.join("\n")}
+${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged a healing reaction. Respond with extra warmth. Validate that worsening symptoms during a protocol can be a positive sign. Do not alarm them. Remind them of the signs that would need a doctor." : ""}
+${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep your response SHORT, clear, and actionable. No long lists. One thing at a time." : ""}
+${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
+  })() : "No check-in logged yet today.";
+
+  const pageContextSection = pageContext ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT THE USER WAS JUST LOOKING AT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Page: ${pageContext.label}
+${pageContext.detail ? `Context: ${pageContext.detail}` : ""}
+Reference this naturally when relevant — e.g. "I see you were just looking at ${pageContext.label}…"
+` : "";
+
+  return `${langInstruction}${caregiverIntro}${pageContextSection}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THIS USER'S PROFILE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: ${user?.name || "friend"}
+Symptoms: ${user?.symptoms?.join(", ") || "general wellness"}
+Goal: ${user?.goal || "wellness and clarity"}
+Celery juice streak: ${celeryStreak > 0 ? `${celeryStreak} days in a row` : "not yet started today"}
+${checkinSection}
+${historySection}
+${unitsSection}
 `;
 }
+
+// Voice session timeout — after this much silence the hands-free loop closes politely
+const SESSION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 function parseNavCommand(text) {
   const match = text.match(/\[\[GO:([a-z]+)(?::([^\]]*))?\]\]/i);
@@ -221,7 +271,7 @@ function parseNavCommand(text) {
   return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
 }
 
-export default function Coach({ authUser, user, profileId, bookNotes, videoNotes, searchBooks, onNavigate, caregiverMode, units = 'metric' }) {
+export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -232,10 +282,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   const [tappedMsg, setTappedMsg] = useState(null);
   const [copied, setCopied] = useState(false);
   const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
-  const [selectedVoiceName, setSelectedVoiceName] = useLocalStorage(
-    "cs_voiceName",
-    "el:EXAVITQu4vr4xnSDxMaL"
-  );
+  const { voiceName: selectedVoiceName, setVoiceName: setSelectedVoiceName } = useVoicePrefs();
   const [lang] = useLocalStorage("cs_lang", "en");
   const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } =
@@ -244,8 +291,11 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const endRef = useRef(null);
-  const systemPromptRef = useRef("");
+  const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
+  const audioUnlockedRef = useRef(false);
+  const pendingGreetingRef = useRef(null);
+  const sessionTimerRef = useRef(null);
   const { track } = useAnalytics(authUser);
 
   // Keep voiceModeRef in sync with handsFree preference
@@ -272,9 +322,10 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
   // Once memory is loaded, build system prompt and start the conversation
   useEffect(() => {
     if (memoryLoading) return;
-    systemPromptRef.current = buildSystemPrompt({
-      user, bookNotes, videoNotes, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak,
-    });
+    systemRef.current = {
+      staticSystem: STATIC_SYSTEM,
+      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }),
+    };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
       ? GREETINGS[lang](user?.name || "")
@@ -294,10 +345,18 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
             ? "I've been keeping your healing notes safe and I'm ready to pick up where we left off."
             : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
         } What's on your mind today?`
-      : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your Medical Medium healing guide — trained on all of Anthony William's books with exact supplement dosages, cleanse protocols, and healing wisdom. I can speak to you too — press the microphone button anytime. I'm here for you fully. What would you like help with today?`;
+      : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — a warm guide for Anthony William's Medical Medium protocols. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
-    setTimeout(() => speak(greeting), 600);
+    // Autoplay is blocked until a user gesture — queue the greeting and speak it
+    // the moment the user first taps/clicks anywhere in the Coach panel.
+    pendingGreetingRef.current = greeting;
+    setTimeout(() => {
+      if (audioUnlockedRef.current) {
+        speak(greeting);
+        pendingGreetingRef.current = null;
+      }
+    }, 600);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryLoading, lang]);
 
@@ -317,26 +376,19 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
       setMessages(newMsgs);
       setInput("");
       setLoading(true);
+      stopListening();              // stop mic immediately — prevent AI hearing itself
+      clearTimeout(sessionTimerRef.current);
       try {
-        // Search user's uploaded books for relevant passages
-        let bookContext = "";
-        if (searchBooks) {
-          const chunks = await searchBooks(text);
-          if (chunks?.length > 0) {
-            bookContext = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nFROM THIS USER'S PERSONAL BOOK & VIDEO LIBRARY:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-              chunks.map((c) => `[From: ${c.user_books?.title || "their library"}]\n${c.content}`).join("\n\n");
-          }
-        }
-        const systemWithBooks = systemPromptRef.current + bookContext;
         let firstToken = true;
         let streamBuffer = "";
         let sentenceBuffer = "";
         const isElVoice = selectedVoiceName.startsWith("el:");
         resetQueue();
         const reply = await streamClaude({
-          system: systemWithBooks,
-          messages: newMsgs,
-          maxTokens: 1100,
+          staticSystem: systemRef.current.staticSystem,
+          dynamicSystem: systemRef.current.dynamicSystem,
+          messages: newMsgs.slice(-8),
+          maxTokens: voiceModeRef.current ? 350 : 700,
           onDelta: (delta, full) => {
             streamBuffer = full;
             const { clean } = parseNavCommand(full);
@@ -378,14 +430,26 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               if (!last || last.role !== "assistant") return m;
               return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
-            const autoListen = voiceModeRef.current ? () => startListening((t) => {
-            const lower = t.trim().toLowerCase();
-            if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
-              stopSpeaking();
-            } else {
-              send(t);
-            }
-          }) : undefined;
+            const autoListen = voiceModeRef.current ? () => {
+              // Session timeout — if user goes silent for SESSION_TIMEOUT_MS, close politely
+              sessionTimerRef.current = setTimeout(() => {
+                stopListening();
+                setHandsFree(false);
+                setMessages((m) => [...m, {
+                  role: 'assistant',
+                  content: "I'm here when you need me — tap 🎙 to continue, or just type below. Take good care 💚",
+                }]);
+              }, SESSION_TIMEOUT_MS);
+              startListening((t) => {
+                clearTimeout(sessionTimerRef.current);
+                const lower = t.trim().toLowerCase();
+                if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
+                  stopSpeaking();
+                } else {
+                  send(t);
+                }
+              }, { silenceMs: 1200 });
+            } : undefined;
             if (isElVoice) {
               // Flush any remaining text after the last sentence boundary
               const rem = sentenceBuffer
@@ -398,10 +462,13 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
               speak(clean, autoListen);
             }
             saveExchange(text, clean);
-            systemPromptRef.current = buildSystemPrompt({
-              user, bookNotes, videoNotes, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak,
-              priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
-            });
+            systemRef.current = {
+              staticSystem: STATIC_SYSTEM,
+              dynamicSystem: buildDynamicSystem({
+                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext,
+                priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
+              }),
+            };
             if (nav && onNavigate) {
               setTimeout(() => onNavigate(nav.tab, nav.query), 2500);
             }
@@ -429,7 +496,7 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
         setLoading(false);
       }
     },
-    [messages, loading, speak, saveExchange, user, bookNotes, videoNotes, healingProfile, priorMessages]
+    [messages, loading, speak, saveExchange, user, healingProfile, priorMessages]
   );
 
   const quickQuestions = [
@@ -449,15 +516,28 @@ export default function Coach({ authUser, user, profileId, bookNotes, videoNotes
     return aEn - bEn || a.name.localeCompare(b.name);
   });
 
+  // Unlock audio context on first user gesture — browsers block autoplay before interaction
+  const unlockAudio = () => {
+    if (audioUnlockedRef.current) return;
+    audioUnlockedRef.current = true;
+    if (pendingGreetingRef.current) {
+      speak(pendingGreetingRef.current);
+      pendingGreetingRef.current = null;
+    }
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }} onClick={unlockAudio}>
       {/* Header */}
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
           🎙 Your Healing Guide
         </h2>
         <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-          Trained on all Anthony William books · 54 exact protocols · Remembers your journey
+          Warm MM companion · Paraphrased & attributed teachings · Remembers your journey
+        </div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+          Not medical advice — always work with your doctor or licensed practitioner
         </div>
       </div>
 

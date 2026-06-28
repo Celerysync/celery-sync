@@ -87,26 +87,21 @@ export default function Onboarding({ onDone }) {
     {
       title: "Welcome to\nCelerySync 🌿",
       type: "intro",
-      sub: "Your personal Medical Medium healing companion.\nSpeak to it. Listen to it. Heal with it.",
+      sub: "Your personal Medical Medium companion.\nSpeak to it. Listen to it. Track your journey.",
     },
     { title: "What's your name?", type: "text", placeholder: "Your first name" },
     { title: "Your main symptoms?", type: "multi", options: Object.keys(CONDITIONS) },
     {
-      title: "Your healing goal?",
+      title: "Your wellness goal?",
       type: "single",
       options: [
-        "Heal a specific condition",
+        "Support a specific condition",
         "Heavy metal detox",
-        "Liver healing",
-        "Thyroid healing",
+        "Liver support",
+        "Thyroid support",
         "More energy & clarity",
         "Prevention & wellness",
       ],
-    },
-    {
-      title: "Your secret weapon 📚",
-      type: "byob",
-      sub: "This makes CelerySync 10× more powerful for you personally.",
     },
   ];
 
@@ -189,10 +184,16 @@ export default function Onboarding({ onDone }) {
               <div style={{ fontSize: 52 }}>🌿</div>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.9, marginTop: 8 }}>
                 🎙 Speak to it · 🔊 It speaks back<br />
-                📖 Upload your MM books<br />
-                ▶️ Save your MM videos<br />
-                💊 Exact protocols from Cleanse to Heal<br />
-                🌿 All cleanses day by day
+                🔍 Symptom checker with 100+ conditions<br />
+                💊 Protocol guidance from Anthony William's teachings<br />
+                🌿 All cleanses, day by day<br />
+                📊 Track energy, mood, and symptoms
+              </div>
+              <div style={{ marginTop: 14, padding: "8px 12px", background: C.sageLight, borderRadius: 10, fontSize: 11.5, color: C.sageDark, lineHeight: 1.6 }}>
+                👤 Profiles are for adults (18+). For supporting a loved one, use Carer mode.
+              </div>
+              <div style={{ marginTop: 8, fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
+                This app is not medical advice. Always work with a licensed practitioner.
               </div>
             </div>
           )}
@@ -300,58 +301,6 @@ export default function Onboarding({ onDone }) {
                   </div>
                 );
               })}
-            </div>
-          )}
-
-          {cur.type === "byob" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{
-                background: "#f0f7f0",
-                borderRadius: 14,
-                padding: "14px 16px",
-                border: `1px solid ${C.sage}40`,
-              }}>
-                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.sageDark, marginBottom: 8 }}>
-                  Bring Your Own Books (BYOB)
-                </div>
-                <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.7 }}>
-                  CelerySync is already trained on Anthony William's publicly shared teachings.<br /><br />
-                  But your purchased MM books? Those go 10× deeper — full protocols, exact dosages, personalised healing plans specific to your conditions.
-                </div>
-              </div>
-
-              {[
-                { emoji: "📘", text: "Upload a PDF of any AW book you own", detail: "Text extracted instantly, PDF never stored" },
-                { emoji: "▶️", text: "Paste any AW YouTube video link", detail: "Transcript indexed automatically" },
-                { emoji: "📝", text: "Paste notes from books or podcasts", detail: "Plain text, whatever you've saved" },
-              ].map(({ emoji, text, detail }) => (
-                <div key={text} style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 12,
-                  padding: "10px 12px",
-                  background: C.mist,
-                  borderRadius: 12,
-                  border: `1px solid ${C.border}`,
-                }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{emoji}</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.charcoal, lineHeight: 1.4 }}>{text}</div>
-                    <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>{detail}</div>
-                  </div>
-                </div>
-              ))}
-
-              <div style={{
-                background: C.sage + "22",
-                borderRadius: 10,
-                padding: "10px 12px",
-                fontSize: 12,
-                color: C.sageDark,
-                lineHeight: 1.5,
-              }}>
-                💡 After setup, go to <strong>My Books</strong> tab to add your first book. Your AI Guide, Body organ pages, and Symptom checker all get smarter the moment you upload.
-              </div>
             </div>
           )}
 

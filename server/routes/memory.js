@@ -142,7 +142,7 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
   const [checkinsRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
       .from('daily_checkins')
-      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms')
+      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, mental_clarity, emotional_state, healing_reaction, healing_reaction_notes, win_today, water_oz, pain_level, rhythm_completed, rhythm_total, active_protocol_day, notes')
       .eq('profile_id', profileId)
       .gte('check_date', weekStartStr)
       .lte('check_date', weekEndStr),
@@ -173,6 +173,34 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
     ? parseFloat((moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1))
     : null
 
+  // New fields
+  const clarities = checkins.map(c => c.mental_clarity).filter(Boolean)
+  const avgMentalClarity = clarities.length
+    ? parseFloat((clarities.reduce((a, b) => a + b, 0) / clarities.length).toFixed(1))
+    : null
+  const healingReactionDays = checkins.filter(c => c.healing_reaction).length
+  const waters = checkins.map(c => c.water_oz).filter(Boolean)
+  const avgWaterOz = waters.length
+    ? parseFloat((waters.reduce((a, b) => a + b, 0) / waters.length).toFixed(0))
+    : null
+  const pains = checkins.map(c => c.pain_level).filter(Boolean)
+  const avgPainLevel = pains.length
+    ? parseFloat((pains.reduce((a, b) => a + b, 0) / pains.length).toFixed(1))
+    : null
+
+  // Rhythm completion %
+  const rhythmCheckins = checkins.filter(c => c.rhythm_total > 0)
+  const rhythmCompletionPct = rhythmCheckins.length
+    ? parseFloat((rhythmCheckins.reduce((s, c) => s + (c.rhythm_completed / c.rhythm_total), 0) / rhythmCheckins.length * 100).toFixed(0))
+    : null
+
+  // Active protocol — use most recent day that had a protocol day logged
+  const latestProtocolCheckin = [...checkins].reverse().find(c => c.active_protocol_day)
+  const activeProtocolDay = latestProtocolCheckin?.active_protocol_day ?? null
+
+  // Wins logged this week
+  const wins = checkins.map(c => c.win_today).filter(Boolean)
+
   // Generate AI observations (Haiku — cheap)
   const milestonesText = milestones.length
     ? milestones.map(m => `• ${m.insight}`).join('\n')
@@ -182,26 +210,34 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
 
   const aiObs = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 250,
+    max_tokens: 300,
     messages: [{
       role: 'user',
-      content: `Write a warm, personalised 3-sentence weekly healing observation for a Medical Medium follower.
-Be specific about their numbers. Notice patterns. Be encouraging but honest.
-Start with their biggest win. End with one gentle focus for next week.
+      content: `Write a warm, personalised 3-4 sentence weekly healing observation for a Medical Medium follower.
+Be specific about their data. Notice patterns. Be encouraging but honest.
+Start with their biggest win or positive trend. End with one gentle focus for next week.
+If they had healing reactions, acknowledge them as part of the process.
 
 This week's data:
 - Celery juice: ${celeryDays}/7 days
 - Morning protocol: ${protocolDays}/7 days
 - Average energy: ${avgEnergy ?? 'not logged'}/10
 - Average mood: ${avgMood ?? 'not logged'}/5
-- Journal entries: ${checkins.length}
+- Mental clarity average: ${avgMentalClarity ? `${avgMentalClarity}/5` : 'not logged'}
+- Pain level average: ${avgPainLevel ? `${avgPainLevel}/5` : 'not logged'}
+- Water intake average: ${avgWaterOz ? `${avgWaterOz}oz/day` : 'not logged'}
+- Healing reaction days: ${healingReactionDays}
+- Daily rhythm completion: ${rhythmCompletionPct != null ? `${rhythmCompletionPct}%` : 'not tracked'}
+${activeProtocolDay ? `- Protocol day reached: day ${activeProtocolDay}` : ''}
+${wins.length ? `- Wins they logged: ${wins.map(w => `"${w}"`).join(', ')}` : ''}
+- Check-in days logged: ${checkins.length}
 
 Key moments this week:
 ${milestonesText}
 
 Healing background: ${healingSummary.slice(0, 300) || 'New subscriber'}
 
-Write the 3-sentence observation now:`,
+Write the observation now:`,
     }],
   })
 
@@ -220,6 +256,13 @@ Write the 3-sentence observation now:`,
     journal_entries: checkins.length,
     ai_observations: observations,
     milestones_this_week: milestones,
+    avg_mental_clarity: avgMentalClarity,
+    healing_reaction_days: healingReactionDays,
+    avg_water_oz: avgWaterOz,
+    avg_pain_level: avgPainLevel,
+    rhythm_completion_pct: rhythmCompletionPct,
+    active_protocol_days_completed: activeProtocolDay,
+    wins,
   }
 
   const { data: saved } = await supabaseAdmin
@@ -1023,6 +1066,78 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// ── Nightly: refresh healing profile summaries for all profiles active in the last 24h ──
+export async function refreshAllHealingProfiles() {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: activeConvs } = await supabaseAdmin
+    .from('conversations')
+    .select('profile_id, user_id')
+    .gte('created_at', oneDayAgo)
+
+  if (!activeConvs?.length) {
+    console.log('🧠 No active profiles for nightly summary refresh')
+    return
+  }
+
+  const seen = new Set()
+  const profiles = activeConvs.filter(c => {
+    if (seen.has(c.profile_id)) return false
+    seen.add(c.profile_id)
+    return true
+  })
+
+  console.log(`🧠 Nightly profile refresh for ${profiles.length} active profiles`)
+
+  for (const { profile_id, user_id } of profiles) {
+    try {
+      const { data: recent } = await supabaseAdmin
+        .from('conversations')
+        .select('role, content')
+        .eq('profile_id', profile_id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+
+      if (!recent?.length) continue
+
+      const transcript = [...recent]
+        .reverse()
+        .map(m => `${m.role === 'user' ? 'User' : 'Guide'}: ${m.content.slice(0, 300)}`)
+        .join('\n')
+
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 350,
+        messages: [{
+          role: 'user',
+          content: `Summarise this person's healing journey in 200 words max from their Medical Medium conversation log.
+Capture: main conditions, supplements they're taking, recent wins, current challenges, emotional state, patterns.
+Warm flowing notes — not bullet points. Start with their name if mentioned.
+
+Conversation:
+${transcript}`,
+        }],
+      })
+
+      const summary = response.content.find(b => b.type === 'text')?.text?.trim()
+      if (!summary) continue
+
+      await supabaseAdmin
+        .from('healing_profiles')
+        .upsert(
+          { profile_id, user_id, healing_summary: summary, updated_at: new Date().toISOString() },
+          { onConflict: 'profile_id' }
+        )
+
+      console.log(`✓ Profile refreshed: ${profile_id}`)
+    } catch (err) {
+      console.warn(`✗ Profile refresh failed for ${profile_id}:`, err.message)
+    }
+  }
+
+  console.log('🧠 Nightly profile refresh complete')
+}
+
 function categorise(insight) {
   const lower = insight.toLowerCase()
   if (/supplement|zinc|b12|spirulina|vitamin|lysine|magnesium|dose|mg|tsp/.test(lower)) return 'supplement'
@@ -1033,5 +1148,25 @@ function categorise(insight) {
   if (/cleanse|protocol|3:6:9|heavy metal|detox|mono/.test(lower)) return 'protocol'
   return 'general'
 }
+
+// GET /checkins/:profileId — last N days of daily check-ins for the daily report view
+router.get('/checkins/:profileId', async (req, res) => {
+  const { profileId } = req.params
+  const days = Math.min(Number(req.query.days) || 30, 180)
+  try {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    const { data, error } = await supabaseAdmin
+      .from('daily_checkins')
+      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, sleep_hours, sleep_quality, hrv, notes')
+      .eq('profile_id', profileId)
+      .gte('check_date', cutoff.toISOString().split('T')[0])
+      .order('check_date', { ascending: false })
+    if (error) throw error
+    res.json({ checkins: data || [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 export default router

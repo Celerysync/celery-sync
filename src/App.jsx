@@ -5,9 +5,9 @@ import { useLocalStorage } from "./hooks/useLocalStorage.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useSubscription } from "./hooks/useSubscription.js";
 import { useProfiles } from "./hooks/useProfiles.js";
-import { useBooks } from "./hooks/useBooks.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
+import { VoiceProvider } from "./context/VoiceContext.jsx";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -37,8 +37,9 @@ const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
-const KidsCorner       = lazy(() => import("./components/KidsCorner.jsx"));
 const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
+const StartHere        = lazy(() => import("./components/StartHere.jsx"));
+const Reports          = lazy(() => import("./components/Reports.jsx"));
 
 const TABS = [
   { id: "home",      label: "Today",      emoji: "🏠", free: true  },
@@ -47,12 +48,12 @@ const TABS = [
   { id: "recipes",   label: "Recipes",    emoji: "🍽", free: false },
   { id: "cleanses",  label: "Cleanses",   emoji: "🌿", free: false },
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
-  { id: "knowledge", label: "My Books",   emoji: "📖", free: false },
+  { id: "reports",   label: "Reports",    emoji: "📋", free: false },
+  { id: "knowledge", label: "Resources",  emoji: "🔗", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
   { id: "community",    label: "Circles",   emoji: "💚", free: false },
   { id: "carers",      label: "Carers",    emoji: "💜", free: true  },
   { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
-  { id: "kids",         label: "Kids",       emoji: "🌈", free: false },
   { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
   { id: "account",   label: "Account",    emoji: "👤", free: true  },
   { id: "admin",     label: "Admin",      emoji: "📊", free: true, adminOnly: true },
@@ -132,15 +133,15 @@ export default function App() {
     profilesLoading, loadProfiles,
     createProfile, updateProfile, deleteProfile, switchProfile,
   } = useProfiles(authUser);
-  const [bookNotes, setBookNotes] = useLocalStorage("cs_bookNotes", []);
-  const [videoNotes, setVideoNotes] = useLocalStorage("cs_videoNotes", []);
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [pageContext, setPageContext] = useState(null);
   const welcomeKey = `cs_welcomed_${authUser?.id}`;
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
+  const [startHereDone, setStartHereDone] = useLocalStorage("cs_start_here_done", false);
 
   const graduateToFullApp = () => {
     localStorage.setItem("cs_journey_type", "experienced");
@@ -174,7 +175,6 @@ export default function App() {
     setTab(tabId);
   };
   const { activeReminder, dismiss: dismissReminder, snooze: snoozeReminder } = useReminders();
-  const { searchBooks } = useBooks(authUser);
 
   // Load profiles once authenticated
   useEffect(() => {
@@ -264,33 +264,41 @@ export default function App() {
 
     switch (tab) {
       case "home":
+        if (!startHereDone && !caregiverMode) {
+          return (
+            <StartHere
+              user={activeProfile}
+              onDone={() => setStartHereDone(true)}
+            />
+          );
+        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} bookNotes={bookNotes} videoNotes={videoNotes} searchBooks={searchBooks} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
       case "journal":
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":
-        return <Recipes user={activeProfile} navQuery={navQuery} />;
+        return <Recipes user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
       case "cleanses":
-        return <Cleanse navQuery={navQuery} />;
+        return <Cleanse navQuery={navQuery} authUser={authUser} profileId={activeProfileId} onPageContext={setPageContext} />;
       case "symptoms":
-        return <Symptom user={activeProfile} bookNotes={bookNotes} searchBooks={searchBooks} navQuery={navQuery} />;
+        return <Symptom user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
+      case "reports":
+        return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
       case "knowledge":
-        return <Knowledge authUser={authUser} bookNotes={bookNotes} setBookNotes={setBookNotes} videoNotes={videoNotes} setVideoNotes={setVideoNotes} />;
+        return <Knowledge authUser={authUser} />;
       case "body":
-        return <Body searchBooks={searchBooks} navQuery={navQuery} />;
+        return <Body navQuery={navQuery} onPageContext={setPageContext} />;
       case "community":
         return <Community authUser={authUser} userProfile={activeProfile} />;
       case "carers":
         return <CarerView authUser={authUser} />;
       case "practice":
         return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} isInTrial={isInTrial} trialDaysLeft={trialDaysLeft} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
-      case "kids":
-        return <KidsCorner parentProfile={activeProfile} />;
       case "aw":
         return <AW onNavigate={handleNavigate} />;
       case "admin":
@@ -328,6 +336,14 @@ export default function App() {
           </div>
         );
       default:
+        if (!startHereDone && !caregiverMode) {
+          return (
+            <StartHere
+              user={activeProfile}
+              onDone={() => setStartHereDone(true)}
+            />
+          );
+        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
@@ -337,6 +353,7 @@ export default function App() {
   };
 
   return (
+    <VoiceProvider authUser={authUser}>
     <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
       <div style={{
@@ -480,5 +497,6 @@ export default function App() {
       )}
       <GlobalVoice currentTab={tab} user={activeProfile} />
     </div>
+    </VoiceProvider>
   );
 }

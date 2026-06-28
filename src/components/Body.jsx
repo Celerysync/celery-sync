@@ -3,11 +3,10 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { ORGANS } from "../data/bodyEducation.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
-function OrganDetail({ organ, onBack, searchBooks }) {
+function OrganDetail({ organ, onBack, voiceName }) {
   const [section, setSection] = useState("overview");
-  const [bookPassages, setBookPassages] = useState([]);
-  const voiceName = localStorage.getItem("cs_voiceName") || "";
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
   const getSectionText = () => {
@@ -17,13 +16,6 @@ function OrganDetail({ organ, onBack, searchBooks }) {
     if (section === "protocol") return organ.protocol;
     return "";
   };
-
-  useEffect(() => {
-    if (!searchBooks) return;
-    searchBooks(organ.name).then((chunks) => {
-      if (chunks?.length > 0) setBookPassages(chunks.slice(0, 3));
-    });
-  }, [organ.name]);
 
   const SECTIONS = [
     { id: "overview", label: "Overview" },
@@ -202,45 +194,27 @@ function OrganDetail({ organ, onBack, searchBooks }) {
         </Card>
       )}
 
-      {/* From your books */}
-      {bookPassages.length > 0 && (
-        <Card>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
-            📚 From your uploaded books
-          </div>
-          {bookPassages.map((p, i) => (
-            <div key={i} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: i < bookPassages.length - 1 ? `1px solid ${C.border}` : "none" }}>
-              <div style={{ fontSize: 10, color: C.muted, fontFamily: "Georgia,serif", marginBottom: 4 }}>
-                {p.user_books?.title || "Your library"}
-              </div>
-              <div style={{ fontSize: 12.5, color: C.charcoal, lineHeight: 1.7 }}>
-                {p.content.slice(0, 280)}{p.content.length > 280 ? "…" : ""}
-              </div>
-            </div>
-          ))}
-        </Card>
-      )}
-
       {/* Disclaimer */}
       <div style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, padding: "0 8px 8px" }}>
-        These teachings are from Anthony William's published books and are not a substitute for medical advice. Always work with your healthcare practitioner.
+        📖 Paraphrased from Anthony William's publicly shared teachings. This is not medical advice — always work with your healthcare provider. For in-depth detail and book links, see the <strong>Resources</strong> tab.
       </div>
     </div>
   );
 }
 
-export default function Body({ searchBooks, navQuery }) {
+export default function Body({ navQuery, onPageContext }) {
   const [selected, setSelected] = useState(null);
+  const { voiceName } = useVoicePrefs();
 
   useEffect(() => {
     if (!navQuery) return;
     const q = navQuery.toLowerCase();
     const match = ORGANS.find(o => o.name.toLowerCase().includes(q) || q.includes(o.name.toLowerCase().split(" ")[0]));
-    if (match) setSelected(match);
+    if (match) { setSelected(match); onPageContext?.({ tab: "body", label: match.name, detail: match.overview?.slice(0, 300) }); }
   }, [navQuery]);
 
   if (selected) {
-    return <OrganDetail organ={selected} onBack={() => setSelected(null)} searchBooks={searchBooks} />;
+    return <OrganDetail organ={selected} onBack={() => setSelected(null)} voiceName={voiceName} />;
   }
 
   return (
@@ -273,7 +247,7 @@ export default function Body({ searchBooks, navQuery }) {
         {ORGANS.map((organ) => (
           <button
             key={organ.id}
-            onClick={() => setSelected(organ)}
+            onClick={() => { setSelected(organ); onPageContext?.({ tab: "body", label: organ.name, detail: organ.overview?.slice(0, 300) }); }}
             style={{
               background: organ.lightColor,
               border: `1.5px solid ${organ.color}33`,

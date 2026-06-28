@@ -70,6 +70,12 @@ export function useDailyCheckins(authUser, profileId) {
         sleep_hours: found?.sleep_hours ?? 0,
         hrv: found?.hrv ?? 0,
         resting_hr: found?.resting_hr ?? 0,
+        mental_clarity: found?.mental_clarity ?? 0,
+        pain_level: found?.pain_level ?? 0,
+        water_oz: found?.water_oz ?? 0,
+        healing_reaction: found?.healing_reaction ?? false,
+        rhythm_completed: found?.rhythm_completed ?? 0,
+        rhythm_total: found?.rhythm_total ?? 0,
       });
     }
     return days;
