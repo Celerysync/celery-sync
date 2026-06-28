@@ -22,7 +22,7 @@ const HMDS_INGREDIENTS = [
   { emoji: "🌊", item: "1 cup water" },
 ];
 
-export default function BeginnerHome({ user, onGraduate }) {
+export default function BeginnerHome({ user, onGraduate, onNavigate }) {
   const { day, week } = useMemo(getDayInfo, []);
   const todayKey = getTodayKey();
   const checkKey = `cs_beginner_check_${todayKey}`;
@@ -134,6 +134,12 @@ export default function BeginnerHome({ user, onGraduate }) {
           time="First thing — before getting up"
           desc="Half a lemon in 500ml of water. Drink it before coffee, before food, before brushing your teeth. This wakes your liver."
         />
+        {onNavigate && (
+          <button onClick={() => onNavigate("learn")} style={{ background: "none", border: "none", color: C.sage, fontSize: 12, cursor: "pointer", padding: "0 0 8px 32px", textAlign: "left", fontFamily: "Georgia,serif" }}>
+            📖 Why does this work? →
+          </button>
+        )}
+
         <CheckItem
           id="celery"
           emoji="🥬"
@@ -141,15 +147,27 @@ export default function BeginnerHome({ user, onGraduate }) {
           time="30 minutes after lemon water"
           desc="500ml of pure celery — nothing added. Juice it fresh. This is the one thing Anthony William says changes everything."
         />
+        {onNavigate && (
+          <button onClick={() => onNavigate("learn")} style={{ background: "none", border: "none", color: C.sage, fontSize: 12, cursor: "pointer", padding: "0 0 8px 32px", textAlign: "left", fontFamily: "Georgia,serif" }}>
+            📖 Why does this work? →
+          </button>
+        )}
 
         {week >= 2 && (
-          <CheckItem
-            id="hmds"
-            emoji="🫐"
-            title="Heavy Metal Detox Smoothie"
-            time="As breakfast, after celery juice"
-            desc="Five ingredients that work together to draw heavy metals out of your brain and body. See ingredients below."
-          />
+          <>
+            <CheckItem
+              id="hmds"
+              emoji="🫐"
+              title="Heavy Metal Detox Smoothie"
+              time="As breakfast, after celery juice"
+              desc="Five ingredients that work together to draw heavy metals out of your brain and body. See ingredients below."
+            />
+            {onNavigate && (
+              <button onClick={() => onNavigate("learn")} style={{ background: "none", border: "none", color: C.sage, fontSize: 12, cursor: "pointer", padding: "0 0 8px 32px", textAlign: "left", fontFamily: "Georgia,serif" }}>
+                📖 Why does this work? →
+              </button>
+            )}
+          </>
         )}
 
         {week < 2 && (

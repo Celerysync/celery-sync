@@ -36,6 +36,7 @@ const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
 const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
 const Juices           = lazy(() => import("./components/Juices.jsx"));
+const Learn            = lazy(() => import("./components/Learn.jsx"));
 const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
@@ -51,6 +52,7 @@ const TABS = [
   { id: "cleanses",  label: "Cleanses",   emoji: "🌿", free: false },
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
   { id: "reports",   label: "Reports",    emoji: "📋", free: false },
+  { id: "learn",     label: "Learn",      emoji: "🌱", free: false },
   { id: "knowledge", label: "Resources",  emoji: "🔗", free: false },
   { id: "body",      label: "The Body",   emoji: "🫁", free: false },
   { id: "community",    label: "Circles",   emoji: "💚", free: false },
@@ -277,7 +279,7 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
+          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} onNavigate={setTab} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
@@ -293,6 +295,8 @@ export default function App() {
         return <Symptom user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
       case "reports":
         return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
+      case "learn":
+        return <Learn />;
       case "knowledge":
         return <Knowledge authUser={authUser} />;
       case "body":
@@ -351,7 +355,7 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
+          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} onNavigate={setTab} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };
