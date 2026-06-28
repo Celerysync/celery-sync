@@ -21,8 +21,19 @@ const SLOT_LABELS = {
   snacks: { emoji: "🍎", label: "Snacks" },
 };
 
-function RecipeCard({ recipe, onSave, saved, onAddToPlan, compact = false }) {
+function todayMealKey() {
+  const d = new Date();
+  return `cs_meals_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function RecipeCard({ recipe, onSave, saved, onAddToPlan, onLogMeal, compact = false }) {
   const [expanded, setExpanded] = useState(false);
+  const [logged, setLogged] = useState(() => {
+    try {
+      const meals = JSON.parse(localStorage.getItem(todayMealKey()) || "[]");
+      return meals.some((m) => m.id === recipe.id);
+    } catch { return false; }
+  });
 
   return (
     <div
@@ -130,6 +141,28 @@ function RecipeCard({ recipe, onSave, saved, onAddToPlan, compact = false }) {
           </div>
 
           {/* Actions */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: onAddToPlan ? 8 : 0 }}>
+            <button
+              onClick={() => {
+                if (logged) return;
+                setLogged(true);
+                onLogMeal?.(recipe);
+              }}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 20,
+                border: `1.5px solid ${logged ? C.sage : C.border}`,
+                background: logged ? C.sageLight : C.mist,
+                fontSize: 12,
+                color: logged ? C.sageDark : C.mid,
+                cursor: logged ? "default" : "pointer",
+                fontFamily: "Georgia,serif",
+                fontWeight: logged ? 700 : 400,
+              }}
+            >
+              {logged ? "✓ Logged today" : "🍽 I ate this"}
+            </button>
+          </div>
           {onAddToPlan && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {["breakfast", "lunch", "dinner", "snacks"].map((slot) => (
@@ -210,6 +243,27 @@ export default function Recipes({ user, navQuery }) {
     toggleSave, isSaved, assignToSlot, clearSlot,
     buildShoppingList, toggleShoppingItem, addShoppingItem, clearShoppingList,
   } = useRecipes();
+
+  const [mealLogCount, setMealLogCount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(todayMealKey()) || "[]").length; } catch { return 0; }
+  });
+
+  const logMeal = (recipe) => {
+    const key = todayMealKey();
+    try {
+      const existing = JSON.parse(localStorage.getItem(key) || "[]");
+      if (existing.some((m) => m.id === recipe.id)) return;
+      const updated = [...existing, {
+        id: recipe.id,
+        name: recipe.name,
+        emoji: recipe.emoji,
+        mealType: recipe.mealType,
+        loggedAt: new Date().toISOString(),
+      }];
+      localStorage.setItem(key, JSON.stringify(updated));
+      setMealLogCount(updated.length);
+    } catch {}
+  };
 
   // Personalised section — recipes for user's own conditions
   const userConditionTags = (user?.conditions || []).map((c) => c.toLowerCase().replace(/[^a-z0-9]/g, "-"));
@@ -361,7 +415,7 @@ How to make it: [brief instructions]
       <div style={{ display: "flex", background: C.mist, borderRadius: 12, padding: 4, gap: 4 }}>
         {[
           { id: "juices", label: "🥬 Juices" },
-          { id: "browse", label: "Recipes" },
+          { id: "browse", label: `Recipes${mealLogCount > 0 ? ` (${mealLogCount})` : ""}` },
           { id: "plan", label: "Plan" },
           { id: "shopping", label: `Shop${uncheckedCount > 0 ? ` (${uncheckedCount})` : ""}` },
         ].map((v) => (
@@ -446,7 +500,7 @@ How to make it: [brief instructions]
                 </div>
               )}
               {filtered.map((r) => (
-                <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} />
+                <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} onLogMeal={logMeal} />
               ))}
             </div>
           ) : (
@@ -485,7 +539,7 @@ How to make it: [brief instructions]
                     {/* Recipes in this section */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
                       {sectionRecipes.map((r) => (
-                        <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} />
+                        <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} onLogMeal={logMeal} />
                       ))}
                     </div>
                   </div>

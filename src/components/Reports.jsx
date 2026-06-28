@@ -246,6 +246,35 @@ export default function Reports({ authUser, profileId, user }) {
       {/* Daily view */}
       {view === "daily" && (
         <>
+          {/* Today's meals */}
+          {(() => {
+            const key = `cs_meals_${new Date().toISOString().split("T")[0]}`;
+            let meals = [];
+            try { meals = JSON.parse(localStorage.getItem(key) || "[]"); } catch {}
+            if (!meals.length) return null;
+            const MEAL_LABELS = { breakfast: "Breakfast", snack: "Snack", lunch: "Lunch", dinner: "Dinner" };
+            return (
+              <Card>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
+                  🍽 Today's Meals
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {meals.map((m, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: `1px solid ${C.border}40` }}>
+                      <span style={{ fontSize: 20 }}>{m.emoji}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{m.name}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>
+                          {MEAL_LABELS[m.mealType] || m.mealType} · {new Date(m.loggedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            );
+          })()}
+
           {!loadingCheckins && checkins.length > 0 && (() => {
             const last7 = checkins.slice(0, 7).reverse().map((c) => ({
               day: new Date(c.date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short" }),
