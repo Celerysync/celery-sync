@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
 
-const DEFAULT_VOICE = "el:EXAVITQu4vr4xnSDxMaL";
+const DEFAULT_VOICE = "el:IKne3meq5aSn9XLyUdCD"; // Charlie — friendly Aussie
 const LS_KEY = "cs_voiceName";
 
 const VoiceContext = createContext({
