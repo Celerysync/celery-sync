@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
+const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
 const DISCLAIMER =
   "All data is self-reported by the user. This document is not a medical record and does not constitute medical advice. Please share with your GP or licensed health practitioner for clinical interpretation.";
@@ -244,18 +245,42 @@ export default function Reports({ authUser, profileId, user }) {
 
       {/* Daily view */}
       {view === "daily" && (
-        <Card>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
-            Daily Log — Last 30 Days
-          </div>
-          <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>
-            Your self-reported data exactly as you entered it. No calculations or interpretations applied.
-          </div>
-          {loadingCheckins
-            ? <div style={{ color: C.muted, fontSize: 13, padding: "12px 0" }}>Loading…</div>
-            : <DailyTable checkins={checkins} />
-          }
-        </Card>
+        <>
+          {!loadingCheckins && checkins.length > 0 && (() => {
+            const last7 = checkins.slice(0, 7).reverse().map((c) => ({
+              day: new Date(c.date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short" }),
+              energy: c.energy || 0,
+              celery: c.celery_oz || 0,
+              sleep_hours: c.sleep_hours || 0,
+              sleep_quality: c.sleep_quality || 0,
+              hrv: c.hrv || 0,
+            }));
+            const energyVals = last7.filter((d) => d.energy > 0);
+            const avgEnergy7 = energyVals.length
+              ? Math.round((energyVals.reduce((s, d) => s + d.energy, 0) / energyVals.length) * 10) / 10
+              : null;
+            let celeryStreak = 0;
+            for (const c of checkins) { if (c.celery_oz > 0) celeryStreak++; else break; }
+            const protocolDays = checkins.filter((c) => c.protocol_done).length;
+            return (
+              <Suspense fallback={null}>
+                <HealingTrends last7={last7} celeryStreak={celeryStreak} protocolDays={protocolDays} avgEnergy7={avgEnergy7} />
+              </Suspense>
+            );
+          })()}
+          <Card>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
+              Daily Log — Last 30 Days
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>
+              Your self-reported data exactly as you entered it. No calculations or interpretations applied.
+            </div>
+            {loadingCheckins
+              ? <div style={{ color: C.muted, fontSize: 13, padding: "12px 0" }}>Loading…</div>
+              : <DailyTable checkins={checkins} />
+            }
+          </Card>
+        </>
       )}
 
       {/* Weekly view — reuses the existing WeeklyReport component */}
