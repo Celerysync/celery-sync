@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { supabase } from "../lib/supabase.js";
 
 const CORE_SUPPS = [
   { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
@@ -44,7 +45,12 @@ function getSuppsForConditions(conditions = [], CONDITIONS) {
 
 const BLANK_CUSTOM = { name: "", dose: "", timing: "morning_food" };
 
-export default function SupplementTracker({ userConditions = [] }) {
+function todayDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+export default function SupplementTracker({ userConditions = [], profileId }) {
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState(false);
   const [customSupps, setCustomSupps] = useState([]);
@@ -53,24 +59,54 @@ export default function SupplementTracker({ userConditions = [] }) {
   const [CONDITIONS, setCONDITIONS] = useState(null);
 
   const key = todayKey();
+  const date = todayDate();
 
+  // Load today's state — Supabase first if logged in, localStorage fallback
   useEffect(() => {
-    try {
-      setChecked(JSON.parse(localStorage.getItem(key) || "{}"));
-    } catch { setChecked({}); }
     try {
       setCustomSupps(JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"));
     } catch { setCustomSupps([]); }
-  }, [key]);
+
+    if (profileId) {
+      supabase
+        .from("supplement_logs")
+        .select("supplement_name, timing, taken")
+        .eq("profile_id", profileId)
+        .eq("date", date)
+        .then(({ data }) => {
+          if (data?.length) {
+            const fromDb = {};
+            for (const row of data) fromDb[`${row.supplement_name}__${row.timing}`] = row.taken;
+            setChecked(fromDb);
+            localStorage.setItem(key, JSON.stringify(fromDb));
+          } else {
+            try { setChecked(JSON.parse(localStorage.getItem(key) || "{}")); } catch { setChecked({}); }
+          }
+        });
+    } else {
+      try { setChecked(JSON.parse(localStorage.getItem(key) || "{}")); } catch { setChecked({}); }
+    }
+  }, [key, date, profileId]);
 
   useEffect(() => {
     import("../data/conditions.js").then(m => setCONDITIONS(m.CONDITIONS));
   }, []);
 
-  const toggle = (id) => {
+  const toggle = (supp) => {
+    const dbKey = `${supp.label}__${supp.timing}`;
     setChecked((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
+      const next = { ...prev, [dbKey]: !prev[dbKey] };
       localStorage.setItem(key, JSON.stringify(next));
+      if (profileId) {
+        supabase.from("supplement_logs").upsert({
+          profile_id: profileId,
+          date,
+          supplement_name: supp.label,
+          timing: supp.timing,
+          taken: next[dbKey],
+          taken_at: next[dbKey] ? new Date().toISOString() : null,
+        }, { onConflict: "profile_id,date,supplement_name,timing" }).catch(() => {});
+      }
       return next;
     });
   };
@@ -103,7 +139,8 @@ export default function SupplementTracker({ userConditions = [] }) {
 
   const conditionSupps = getSuppsForConditions(userConditions, CONDITIONS);
   const allSupps = [...CORE_SUPPS, ...conditionSupps, ...customSupps];
-  const doneCount = allSupps.filter((s) => checked[s.id]).length;
+  const suppKey = (s) => `${s.label}__${s.timing}`;
+  const doneCount = allSupps.filter((s) => checked[suppKey(s)]).length;
   const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;
 
   // Group by timing for ordered display
@@ -169,8 +206,8 @@ export default function SupplementTracker({ userConditions = [] }) {
                   <SuppRow
                     key={s.id}
                     label={s.label}
-                    checked={!!checked[s.id]}
-                    onToggle={() => toggle(s.id)}
+                    checked={!!checked[suppKey(s)]}
+                    onToggle={() => toggle(s)}
                     isCustom={s.id.startsWith("custom_")}
                     onRemove={() => removeCustom(s.id)}
                     timingColor={t.color}
