@@ -290,6 +290,7 @@ export default function Recipes({ user, navQuery }) {
     setAiLoading(true);
     setAiRecipe("");
     const result = await callClaude({
+      tier: 'standard',
       maxTokens: 700,
       messages: [{
         role: "user",
@@ -343,6 +344,7 @@ Keep it practical and mouth-watering.`,
     setPhotoLoading(true);
     setPhotoResult("");
     const result = await callClaude({
+      tier: 'standard',
       maxTokens: 700,
       messages: [{
         role: "user",
