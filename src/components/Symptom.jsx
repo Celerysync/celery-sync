@@ -301,23 +301,36 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
         {loading ? "🌿 Looking it up…" : "🌿 Get Support"}
       </Btn>
 
-      {/* Specific condition lookup — secondary, collapsed */}
-      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+      {/* Specific condition lookup — secondary banner */}
+      <div
+        style={{
+          border: `2px solid ${C.plum}30`,
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
         <div
           onClick={() => setShowConditions((v) => !v)}
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             cursor: "pointer", userSelect: "none",
+            padding: "14px 18px",
+            background: showConditions ? C.plumLight : `${C.plum}08`,
           }}
         >
-          <span style={{ fontSize: 13, color: C.mid, fontFamily: "Georgia,serif" }}>
-            🔍 Or look up a specific condition
-          </span>
-          <span style={{ fontSize: 13, color: C.muted }}>{showConditions ? "▲" : "▼"}</span>
+          <div>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
+              🔍 Look up a specific condition
+            </div>
+            <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+              Browse {Object.keys(CONDITIONS).length} conditions from Anthony William's teachings
+            </div>
+          </div>
+          <span style={{ fontSize: 18, color: C.plum, fontWeight: 700 }}>{showConditions ? "▲" : "▼"}</span>
         </div>
 
         {showConditions && (
-          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderTop: `1px solid ${C.plum}20` }}>
             <input
               value={conditionSearch}
               onChange={(e) => setConditionSearch(e.target.value)}
