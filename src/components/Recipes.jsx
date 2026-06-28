@@ -215,6 +215,8 @@ export default function Recipes({ user, navQuery }) {
   const [searchText, setSearchText] = useState("");
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [symptomFilter, setSymptomFilter] = useState(null);
+  const [pickingSlot, setPickingSlot] = useState(null);
+  const [planSearch, setPlanSearch] = useState({});
 
   useEffect(() => {
     if (!navQuery) return;
@@ -652,23 +654,29 @@ How to make it: [brief instructions]
       {/* ── PLAN VIEW ──────────────────────────────────────────── */}
       {view === "plan" && (
         <>
-          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-            Build today's meal plan. Tap any slot to browse recipes, or go to Browse and tap a recipe to add it.
-          </div>
-
           {Object.entries(SLOT_LABELS).map(([slot, { emoji, label }]) => {
             const isSnacks = slot === "snacks";
             const value = isSnacks ? mealPlan.snacks : mealPlan[slot];
             const hasValue = isSnacks ? value?.length > 0 : !!value;
+            const mealType = slot === "snacks" ? "snack" : slot;
+            const picking = pickingSlot === slot;
+            const slotRecipes = RECIPES.filter((r) => r.mealType === mealType);
+            const [slotSearch, setSlotSearch] = [
+              planSearch[slot] || "",
+              (q) => setPlanSearch((p) => ({ ...p, [slot]: q })),
+            ];
+            const visibleRecipes = slotSearch
+              ? slotRecipes.filter((r) => r.name.toLowerCase().includes(slotSearch.toLowerCase()))
+              : slotRecipes;
 
             return (
-              <Card key={slot}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: hasValue ? 10 : 0 }}>
+              <Card key={slot} style={{ border: picking ? `1.5px solid ${C.sage}` : undefined }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: hasValue ? 8 : 0 }}>
                   <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
                     {emoji} {label}
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {hasValue && (
+                    {hasValue && !picking && (
                       <button
                         onClick={() => clearSlot(slot)}
                         style={{ background: "none", border: "none", fontSize: 11, color: C.muted, cursor: "pointer" }}
@@ -677,40 +685,97 @@ How to make it: [brief instructions]
                       </button>
                     )}
                     <button
-                      onClick={() => { setView("browse"); setMealTypeFilter(slot === "snacks" ? "snack" : slot); }}
+                      onClick={() => setPickingSlot(picking ? null : slot)}
                       style={{
                         padding: "5px 12px",
                         borderRadius: 20,
-                        border: `1.5px solid ${C.sage}`,
-                        background: C.sageLight,
+                        border: `1.5px solid ${picking ? C.plum : C.sage}`,
+                        background: picking ? C.plumLight : C.sageLight,
                         fontSize: 11.5,
-                        color: C.sageDark,
+                        color: picking ? C.plum : C.sageDark,
                         cursor: "pointer",
                         fontFamily: "Georgia,serif",
+                        fontWeight: 700,
                       }}
                     >
-                      + Add
+                      {picking ? "✕ Done" : "+ Add"}
                     </button>
                   </div>
                 </div>
 
-                {!hasValue && (
-                  <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic", paddingBottom: 4 }}>
+                {/* Current selections */}
+                {!picking && !hasValue && (
+                  <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic", paddingBottom: 2 }}>
                     Nothing planned yet
                   </div>
                 )}
-
                 {isSnacks && value?.map((r) => (
-                  <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: `1px solid ${C.border}` }}>
+                  <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderTop: `1px solid ${C.border}40` }}>
                     <span style={{ fontSize: 13 }}>{r.emoji} {r.name}</span>
                     <button onClick={() => assignToSlot("snacks", r)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 11 }}>✕</button>
                   </div>
                 ))}
-
-                {!isSnacks && value && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                {!isSnacks && value && !picking && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
                     <span style={{ fontSize: 13 }}>{value.emoji} {value.name}</span>
                     <span style={{ fontSize: 11, color: C.muted }}>⏱ {value.prepTime} min</span>
+                  </div>
+                )}
+
+                {/* Inline recipe picker */}
+                {picking && (
+                  <div style={{ marginTop: 10, borderTop: `1px solid ${C.sage}30`, paddingTop: 10 }}>
+                    <input
+                      value={slotSearch}
+                      onChange={(e) => setSlotSearch(e.target.value)}
+                      placeholder={`Search ${label.toLowerCase()} recipes…`}
+                      autoFocus
+                      style={{
+                        width: "100%", boxSizing: "border-box",
+                        padding: "8px 12px", borderRadius: 20,
+                        border: `1.5px solid ${C.border}`,
+                        fontFamily: "Georgia,serif", fontSize: 13,
+                        outline: "none", background: C.mist,
+                        marginBottom: 8,
+                      }}
+                    />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 260, overflowY: "auto" }}>
+                      {visibleRecipes.map((r) => {
+                        const alreadyAdded = isSnacks
+                          ? value?.some((s) => s.id === r.id)
+                          : value?.id === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            onClick={() => {
+                              assignToSlot(slot, r);
+                              if (!isSnacks) setPickingSlot(null);
+                            }}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 10,
+                              padding: "9px 10px", borderRadius: 10,
+                              border: `1.5px solid ${alreadyAdded ? C.sage : C.border}`,
+                              background: alreadyAdded ? C.sageLight : C.white,
+                              cursor: "pointer", textAlign: "left", width: "100%",
+                            }}
+                          >
+                            <span style={{ fontSize: 18, flexShrink: 0 }}>{r.emoji}</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, fontWeight: alreadyAdded ? 700 : 400 }}>
+                                {r.name}
+                              </div>
+                              <div style={{ fontSize: 11, color: C.muted }}>⏱ {r.prepTime} min</div>
+                            </div>
+                            {alreadyAdded && <span style={{ fontSize: 13, color: C.sage }}>✓</span>}
+                          </button>
+                        );
+                      })}
+                      {visibleRecipes.length === 0 && (
+                        <div style={{ textAlign: "center", color: C.muted, fontSize: 12, padding: "12px 0" }}>
+                          No {label.toLowerCase()} recipes found
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </Card>
