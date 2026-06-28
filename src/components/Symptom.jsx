@@ -108,10 +108,19 @@ function printDoctorSummary({ user, conditions, result }) {
   setTimeout(() => win.print(), 400);
 }
 
+const FEELING_CHIPS = [
+  "Tired", "Foggy brain", "Headache", "Nausea", "Bloated",
+  "Anxious", "Can't sleep", "Low mood", "Aching", "Joint pain",
+  "No appetite", "Heart palpitations", "Dizziness", "Low energy",
+  "Skin issues", "Digestive issues",
+];
+
 export default function Symptom({ user, navQuery, onPageContext }) {
   const [sel, setSel] = useState([]);
+  const [feelings, setFeelings] = useState([]);
   const [custom, setCustom] = useState("");
   const [conditionSearch, setConditionSearch] = useState("");
+  const [showConditions, setShowConditions] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -133,7 +142,7 @@ export default function Symptom({ user, navQuery, onPageContext }) {
     setResult(null);
     setStreaming(false);
 
-    const all = [...sel, ...(custom.trim() ? [custom.trim()] : [])];
+    const all = [...feelings, ...sel, ...(custom.trim() ? [custom.trim()] : [])];
 
     const dbContext = all
       .map((s) => {
@@ -153,8 +162,10 @@ export default function Symptom({ user, navQuery, onPageContext }) {
     const prompt = `You are a compassionate CelerySync companion helping an adult explore Anthony William's Medical Medium teachings.
 
 Person: ${user?.name || "friend"}
-Their conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
-Conditions/symptoms they're exploring now: ${all.join(", ")}
+Their profile conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
+How they're feeling / what they're experiencing: ${all.join(", ")}
+
+Note: this person may not have a formal diagnosis — respond to their feelings and symptoms as described, warmly and practically, without requiring them to name a condition.
 
 PARAPHRASED DATA (attributed to Anthony William's teachings):
 ${dbContext || "Draw from Anthony William's publicly shared Medical Medium teachings."}
@@ -200,7 +211,7 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
       setResult(text);
       onPageContext?.({
         tab: 'symptoms',
-        label: `Symptom: ${all.join(", ")}`,
+        label: `Feeling: ${all.join(", ")}`,
         detail: text.slice(0, 600),
       });
     } catch (err) {
@@ -209,114 +220,168 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
     setLoading(false);
   };
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 22, color: C.charcoal }}>
-        🔍 Symptom Checker
-      </h2>
+  const toggleFeeling = (f) => {
+    setFeelings((p) => p.includes(f) ? p.filter((x) => x !== f) : [...p, f]);
+    setResult(null);
+  };
 
-      <div
-        style={{
-          background: C.sageLight,
-          border: `1px solid ${C.sage}40`,
-          borderRadius: 12,
-          padding: 10,
-          fontSize: 12,
-          color: C.sageDark,
-        }}
-      >
-        📖 Paraphrased from Anthony William's publicly shared teachings — attributed to him. Not medical advice; always work with your healthcare provider. See his books in the <strong>Resources</strong> tab for full detail.
+  const hasInput = feelings.length > 0 || sel.length > 0 || custom.trim().length > 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div>
+        <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 22, color: C.charcoal }}>
+          💚 How are you feeling?
+        </h2>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: C.mid, fontFamily: "Georgia,serif" }}>
+          No diagnosis needed — just describe what's going on for you
+        </p>
       </div>
 
-      {/* Condition search + chips */}
+      {/* Quick feeling chips */}
       <div>
-        <input
-          value={conditionSearch}
-          onChange={(e) => setConditionSearch(e.target.value)}
-          placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+          Tap what applies to you:
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {FEELING_CHIPS.map((f) => (
+            <div
+              key={f}
+              onClick={() => toggleFeeling(f)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 30,
+                fontSize: 13,
+                fontFamily: "Georgia,serif",
+                cursor: "pointer",
+                border: `2px solid ${feelings.includes(f) ? C.sage : C.border}`,
+                background: feelings.includes(f) ? C.sageLight : "transparent",
+                color: feelings.includes(f) ? C.sageDark : C.mid,
+                fontWeight: feelings.includes(f) ? 700 : 400,
+                transition: "all 0.15s",
+              }}
+            >
+              {feelings.includes(f) ? "✓ " : ""}{f}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Free text — primary input */}
+      <div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 6, fontFamily: "Georgia,serif" }}>
+          Or describe in your own words:
+        </div>
+        <textarea
+          value={custom}
+          onChange={(e) => { setCustom(e.target.value); setResult(null); }}
+          placeholder="e.g. tired all the time, foggy head in the mornings, bloated after eating, can't sleep well…"
+          rows={3}
           style={{
             width: "100%", boxSizing: "border-box",
-            padding: "9px 16px", borderRadius: 30,
+            padding: "12px 16px",
+            borderRadius: 14,
             border: `1.5px solid ${C.border}`,
-            fontFamily: "Georgia,serif", fontSize: 13,
-            outline: "none", background: C.mist,
-            marginBottom: 10,
+            fontFamily: "Georgia,serif",
+            fontSize: 13,
+            outline: "none",
+            background: C.mist,
+            resize: "vertical",
+            lineHeight: 1.6,
           }}
         />
-        {sel.length > 0 && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-            {sel.map((s) => (
-              <div
-                key={s}
-                onClick={() => { setSel((p) => p.filter((x) => x !== s)); setResult(null); }}
-                style={{
-                  padding: "5px 12px", borderRadius: 30, fontSize: 12,
-                  fontFamily: "Georgia,serif", cursor: "pointer",
-                  border: `2px solid ${C.plum}`,
-                  background: C.plumLight, color: C.plum, fontWeight: 700,
-                }}
-              >
-                {s} ✕
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, maxHeight: conditionSearch ? "none" : 180, overflowY: conditionSearch ? "visible" : "auto" }}>
-          {Object.keys(CONDITIONS)
-            .filter((s) => !conditionSearch || s.toLowerCase().includes(conditionSearch.toLowerCase()))
-            .map((s) => (
-              <div
-                key={s}
-                onClick={() => {
-                  setSel((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
-                  setResult(null);
-                }}
-                style={{
-                  padding: "7px 14px",
-                  borderRadius: 30,
-                  fontSize: 12,
-                  fontFamily: "Georgia,serif",
-                  cursor: "pointer",
-                  border: `2px solid ${sel.includes(s) ? C.plum : C.border}`,
-                  background: sel.includes(s) ? C.plumLight : "transparent",
-                  color: sel.includes(s) ? C.plum : C.mid,
-                  fontWeight: sel.includes(s) ? 700 : 400,
-                }}
-              >
-                {s}
-              </div>
-            ))}
-        </div>
-        {!conditionSearch && (
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, textAlign: "center" }}>
-            Showing all {Object.keys(CONDITIONS).length} conditions — search to filter
-          </div>
-        )}
       </div>
-
-      <input
-        value={custom}
-        onChange={(e) => setCustom(e.target.value)}
-        placeholder="Type another symptom…"
-        style={{
-          padding: "10px 16px",
-          borderRadius: 30,
-          border: `1.5px solid ${C.border}`,
-          fontFamily: "Georgia,serif",
-          fontSize: 14,
-          outline: "none",
-          background: C.mist,
-        }}
-      />
 
       <Btn
         full
         onClick={analyse}
-        disabled={loading || (!sel.length && !custom.trim())}
-        color={C.plum}
+        disabled={loading || !hasInput}
+        color={C.sage}
       >
-        {loading ? "🌿 Looking it up…" : "Explore This Symptom"}
+        {loading ? "🌿 Looking it up…" : "🌿 Get Support"}
       </Btn>
+
+      {/* Specific condition lookup — secondary, collapsed */}
+      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+        <div
+          onClick={() => setShowConditions((v) => !v)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            cursor: "pointer", userSelect: "none",
+          }}
+        >
+          <span style={{ fontSize: 13, color: C.mid, fontFamily: "Georgia,serif" }}>
+            🔍 Or look up a specific condition
+          </span>
+          <span style={{ fontSize: 13, color: C.muted }}>{showConditions ? "▲" : "▼"}</span>
+        </div>
+
+        {showConditions && (
+          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              value={conditionSearch}
+              onChange={(e) => setConditionSearch(e.target.value)}
+              placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
+              style={{
+                width: "100%", boxSizing: "border-box",
+                padding: "9px 16px", borderRadius: 30,
+                border: `1.5px solid ${C.border}`,
+                fontFamily: "Georgia,serif", fontSize: 13,
+                outline: "none", background: C.mist,
+              }}
+            />
+            {sel.length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {sel.map((s) => (
+                  <div
+                    key={s}
+                    onClick={() => { setSel((p) => p.filter((x) => x !== s)); setResult(null); }}
+                    style={{
+                      padding: "5px 12px", borderRadius: 30, fontSize: 12,
+                      fontFamily: "Georgia,serif", cursor: "pointer",
+                      border: `2px solid ${C.plum}`,
+                      background: C.plumLight, color: C.plum, fontWeight: 700,
+                    }}
+                  >
+                    {s} ✕
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, maxHeight: conditionSearch ? "none" : 180, overflowY: conditionSearch ? "visible" : "auto" }}>
+              {Object.keys(CONDITIONS)
+                .filter((s) => !conditionSearch || s.toLowerCase().includes(conditionSearch.toLowerCase()))
+                .map((s) => (
+                  <div
+                    key={s}
+                    onClick={() => {
+                      setSel((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+                      setResult(null);
+                    }}
+                    style={{
+                      padding: "7px 14px",
+                      borderRadius: 30,
+                      fontSize: 12,
+                      fontFamily: "Georgia,serif",
+                      cursor: "pointer",
+                      border: `2px solid ${sel.includes(s) ? C.plum : C.border}`,
+                      background: sel.includes(s) ? C.plumLight : "transparent",
+                      color: sel.includes(s) ? C.plum : C.mid,
+                      fontWeight: sel.includes(s) ? 700 : 400,
+                    }}
+                  >
+                    {s}
+                  </div>
+                ))}
+            </div>
+            {!conditionSearch && (
+              <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>
+                Showing all {Object.keys(CONDITIONS).length} conditions — search to filter
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {result !== null && (
         <Card style={{ background: C.mist }}>
@@ -392,6 +457,19 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
           </div>
         </Card>
       )}
+
+      <div
+        style={{
+          background: C.sageLight,
+          border: `1px solid ${C.sage}40`,
+          borderRadius: 12,
+          padding: 10,
+          fontSize: 11.5,
+          color: C.sageDark,
+        }}
+      >
+        📖 Paraphrased from Anthony William's publicly shared teachings. Not medical advice — always work with your healthcare provider. See his books in the <strong>Resources</strong> tab for full protocols.
+      </div>
     </div>
   );
 }
