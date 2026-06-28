@@ -7,6 +7,121 @@ import { Tag, Card, Btn } from "./ui.jsx";
 import { CLEANSES_SUMMARY, ORIGINAL_369 } from "../data/cleanses.js";
 import { AVOID_ALL } from "../data/avoidList.js";
 import { supabase } from "../lib/supabase.js";
+import { RECIPES } from "../data/recipes.js";
+
+// Recipe IDs relevant to each cleanse
+const CLEANSE_RECIPES = {
+  "Original 3:6:9": [
+    "lemon-water", "celery-juice", "liver-rescue-smoothie", "hmds",
+    "cleanse-apple-cucumber-juice", "cleanse-day9-asparagus",
+    "asparagus-lemon", "steamed-asparagus-brussels", "asparagus-soup",
+    "raw-zucchini-tomato", "liver-rescue-salad", "watermelon-juice",
+    "cucumber-juice", "sweet-potato-spinach",
+  ],
+  "Simplified 3:6:9": [
+    "lemon-water", "celery-juice", "liver-rescue-smoothie", "hmds",
+    "asparagus-lemon", "potato-leek-soup", "sweet-potato-mash",
+    "baked-potato-broccoli", "steamed-asparagus-brussels", "lentil-soup",
+  ],
+  "Advanced 3:6:9": [
+    "lemon-water", "celery-juice", "liver-rescue-smoothie",
+    "watermelon-juice", "cucumber-juice", "melon-plate",
+    "cleanse-day9-asparagus", "cleanse-apple-cucumber-juice", "steamed-asparagus-brussels",
+  ],
+  "Heavy Metal Detox": [
+    "hmds", "wild-blueberry-bowl", "celery-juice",
+    "spirulina-lemon-shot", "apple-spinach-smoothie",
+    "banana-date-smoothie", "mineral-broth",
+  ],
+  "Anti-Bug Cleanse": [
+    "celery-juice", "lemon-water", "thyme-antiviral-tea",
+    "cat-claw-tea", "lemon-balm-lemon-tea", "lemon-balm-tea",
+    "healing-herb-salad", "spinach-soup", "mineral-broth",
+  ],
+  "Morning Cleanse": [
+    "lemon-water", "celery-juice", "hmds",
+    "orange-juice-morning", "wild-blueberry-bowl", "banana-date-smoothie",
+  ],
+  "Liver Rescue Morning": [
+    "orange-juice-morning", "lemon-water", "celery-juice",
+    "liver-rescue-smoothie", "liver-rescue-salad",
+    "cherry-banana-liver-smoothie", "artichoke-lemon", "mango-papaya-bowl",
+  ],
+  "Mono Eating Cleanse": [
+    "melon-plate", "papaya-bowl", "papaya-mango-smoothie",
+    "mango-banana-bowl", "watermelon-juice", "apple-celery",
+    "mango-slices-snack", "baked-apple-cinnamon",
+  ],
+};
+
+function RecipeMini({ recipe }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      border: `1.5px solid ${open ? C.sage : C.border}`,
+      borderRadius: 14, overflow: "hidden",
+      background: C.white, transition: "border-color 0.2s",
+    }}>
+      <div
+        onClick={() => setOpen(v => !v)}
+        style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", cursor: "pointer" }}
+      >
+        <span style={{ fontSize: 20, flexShrink: 0 }}>{recipe.emoji}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>{recipe.name}</div>
+          <div style={{ fontSize: 11, color: C.muted }}>⏱ {recipe.prepTime} min</div>
+        </div>
+        <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div style={{ padding: "0 12px 12px", borderTop: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.sage, fontWeight: 600, margin: "10px 0 6px", fontFamily: "Georgia,serif" }}>
+            📚 {recipe.book}
+          </div>
+          <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.65, fontStyle: "italic", marginBottom: 10 }}>
+            🌿 {recipe.mmNote}
+          </div>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12, color: C.charcoal, marginBottom: 6 }}>Ingredients</div>
+          {recipe.ingredients.map((ing, i) => (
+            <div key={i} style={{ display: "flex", gap: 6, padding: "3px 0", fontSize: 12.5, color: C.charcoal }}>
+              <span style={{ color: C.sage, flexShrink: 0 }}>•</span>{ing}
+            </div>
+          ))}
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12, color: C.charcoal, margin: "10px 0 6px" }}>Method</div>
+          {recipe.steps.map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, padding: "4px 0", fontSize: 12.5, color: C.charcoal, lineHeight: 1.5 }}>
+              <span style={{
+                flexShrink: 0, width: 18, height: 18, background: C.sage, color: C.white,
+                borderRadius: "50%", fontSize: 10, display: "flex", alignItems: "center",
+                justifyContent: "center", fontWeight: 700, marginTop: 1,
+              }}>{i + 1}</span>
+              {step}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CleanseRecipes({ cleanseName }) {
+  const ids = CLEANSE_RECIPES[cleanseName] || [];
+  const recipes = ids.map(id => RECIPES.find(r => r.id === id)).filter(Boolean);
+  if (recipes.length === 0) return null;
+  return (
+    <Card>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
+        🍽 Recipes for this cleanse
+      </div>
+      <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
+        Tap any recipe to see ingredients and method
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {recipes.map(r => <RecipeMini key={r.id} recipe={r} />)}
+      </div>
+    </Card>
+  );
+}
 
 export default function Cleanse({ navQuery, authUser, profileId, onPageContext }) {
   const [sel, setSel] = useState(null);
@@ -260,6 +375,8 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
           )}
         </Card>
 
+        <CleanseRecipes cleanseName="Original 3:6:9" />
+
         {/* Avoid all */}
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
@@ -449,6 +566,8 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
             )}
           </>
         )}
+
+        <CleanseRecipes cleanseName={sel} />
 
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
