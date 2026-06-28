@@ -517,6 +517,359 @@ Most people report noticeably clearer thinking within 4–8 weeks of consistent 
   },
 };
 
+// ─── ADDITIONAL CONDITION EXPLAINERS ────────────────────────────────────────
+
+Object.assign(CONDITION_EXPLAINERS, {
+  "Fibromyalgia": {
+    emoji: "🔥",
+    headline: "Widespread pain that medicine struggles to explain — AW has a clear answer",
+    body: `Fibromyalgia is one of the conditions Anthony William has written about most passionately — because it's also one of the most dismissed. Patients are often told the pain is psychological, or that there's nothing to find. AW's teaching: there is something to find, and it's viral.
+
+**The EBV connection**
+AW teaches that fibromyalgia is caused by EBV (Epstein-Barr Virus) in its later, more aggressive stages — specifically Stage 3 and Stage 4, where the virus has moved from the bloodstream into organ and nerve tissue.
+
+When EBV takes up residence in nerve tissue, it produces viral byproduct (essentially viral waste) that inflames the nerves themselves. Inflamed nerves are hypersensitive nerves — they fire pain signals in response to light touch, temperature changes, and movement that wouldn't bother a healthy nervous system. This is the fibromyalgia pain experience.
+
+**Why it moves around**
+The pain of fibromyalgia is famously migratory — it appears in different places at different times. This is because EBV is not static. The virus moves through nerve pathways and settles in different areas of nerve tissue at different times, causing inflammation — and pain — in those locations.
+
+**The tender points**
+The classic fibromyalgia tender points map almost exactly onto the major nerve clusters and lymph node locations in the body — which is where EBV concentrates. This isn't coincidental per AW's teachings.
+
+**The fatigue connection**
+Most fibromyalgia patients also have profound fatigue — because the same EBV that's inflaming nerves is also burdening the liver and immune system. The body is fighting a constant low-level viral battle, which is exhausting.
+
+**The MM approach**
+• Heavy antiviral protocol (zinc, vitamin C, L-lysine, cat's claw — often at higher doses than usual)
+• B12 (adenosylcobalamin + methylcobalamin) to repair myelin and support nerve integrity
+• GABA and lemon balm for nervous system calming
+• Complete removal of the pathogen-feeding foods
+• Gentle movement (to move lymph and reduce viral hiding spots) rather than the "push through" advice that often makes fibromyalgia worse`,
+    bookRef: "Medical Medium — Anthony William; Cleanse to Heal — Anthony William",
+    relatedProtocols: ["Antiviral Protocol"],
+  },
+
+  "Eczema": {
+    emoji: "🌿",
+    headline: "A skin condition driven by what's happening inside — liver and pathogens",
+    body: `Anthony William teaches that eczema — and most chronic skin conditions — is an external sign of internal activity. The skin is the body's largest detox organ, and when the liver and lymphatic system are overwhelmed, the skin becomes the overflow pathway.
+
+**The liver connection**
+The liver is responsible for filtering toxins, processing hormones, and managing the byproducts of immune activity. When the liver is sluggish or overburdened, these substances accumulate in the bloodstream. The body then routes them out through the skin — which produces the inflammation, itching, and weeping characteristic of eczema.
+
+**The strep and EBV role**
+AW identifies streptococcus bacteria as a primary driver of eczema specifically. Strep produces waste products that, when the liver can't process them fast enough, exit through the skin and cause an inflammatory reaction.
+
+EBV can also contribute — its neurotoxins affect the nervous system in a way that makes the skin hypersensitive and reactive.
+
+**Why dairy and eggs make it worse**
+Dairy is strep's preferred fuel — consuming dairy actively feeds the bacterial population driving the skin reaction. Eggs feed EBV. This is why eczema so often flares after eating dairy or eggs, and why elimination diets (even when done without knowing the reason) so often help.
+
+**The external triggers**
+Soaps, detergents, environmental allergens — these are triggers, not root causes. They inflame skin that's already hypersensitive due to the internal pathogen/liver picture. Addressing the internal causes reduces the sensitivity to external triggers over time.
+
+**The MM approach**
+• Liver support (lemon water, celery juice, liver-supportive foods and herbs)
+• Remove dairy, eggs, and gluten completely
+• Antiviral and antibacterial protocol (zinc, vitamin C, cat's claw)
+• Topical: pure aloe vera gel, or diluted raw honey for acute flares
+• Avoid harsh soaps and synthetic fragrances while healing`,
+    bookRef: "Medical Medium — Anthony William; Cleanse to Heal — Anthony William",
+    relatedProtocols: ["Liver Support Protocol", "Antiviral Protocol"],
+  },
+
+  "Depression": {
+    emoji: "🌧️",
+    headline: "Often a physical condition affecting the brain — not just a chemical imbalance",
+    body: `Anthony William's approach to depression is compassionate and thorough — he absolutely validates the suffering, while also pointing to physical causes that conventional psychiatry typically doesn't explore.
+
+His core teaching: most depression has a significant physical component — specifically, a brain and nervous system under pressure from neurotoxins, heavy metals, and viral byproduct. "Chemical imbalance" is a description of a symptom, not an explanation of a cause.
+
+**What's actually happening in the brain**
+Several physical factors can produce the neurological state we call depression:
+
+🧠 **Neurotoxins from viral activity** — EBV and other viruses produce byproduct that crosses the blood-brain barrier and directly affects the neurotransmitter environment. This can suppress serotonin, dopamine, and other mood-regulating chemicals — not because of genetics, but because of ongoing viral inflammation.
+
+🔋 **Heavy metals** — Mercury, aluminium, and copper in brain tissue disrupt electrical signalling and interfere with the production and reuptake of neurotransmitters. People with depression often have higher heavy metal loads than average.
+
+💧 **Adrenal depletion** — Chronic stress depletes the adrenal glands. When the adrenals are exhausted, the body struggles to produce the hormones and neurotransmitters that regulate mood and motivation. This produces the flat, empty, "nothing matters" quality of depression.
+
+**Why antidepressants work (and why they have limits)**
+Antidepressants artificially increase neurotransmitter availability — SSRIs, for example, stop serotonin from being reabsorbed so more stays active. That's genuinely useful and AW doesn't dismiss medication for people who need it.
+
+But medication doesn't address the neurotoxins inflaming the brain, the metals disrupting signalling, or the depleted adrenals. This is why antidepressants work partially for many people, and why so many people feel better on them but never feel fully well.
+
+**The MM approach**
+• Heavy Metal Detox Smoothie daily (addresses a root neurological driver)
+• B12 (adenosylcobalamin + methylcobalamin) — critical for mood regulation and myelin repair
+• Zinc and vitamin C — antiviral, supports neurotransmitter production
+• Lemon balm and ashwagandha — nervous system support and adrenal recovery
+• Remove pathogen-feeding foods
+• Morning sunlight and gentle movement — AW emphasises these strongly for adrenal recovery`,
+    bookRef: "Medical Medium Brain Saver — Anthony William",
+    relatedProtocols: ["Heavy Metal Detox Smoothie", "Antiviral Protocol"],
+  },
+
+  "Insomnia": {
+    emoji: "🌙",
+    headline: "Usually a liver and nervous system issue — not a sleep problem",
+    body: `Anthony William's teaching on insomnia is one of the most immediately actionable in his body of work: most sleep problems are caused by the liver, not the brain.
+
+**The liver's night shift**
+The liver does its most intensive work between 1am and 3am — a window that falls in the middle of most people's sleep. If the liver is overburdened (with pathogens, toxins, or simply too much fat and protein to process), it struggles to do this work quietly. The effort produces heat, adrenaline, and biochemical activity that wakes people up or prevents deep sleep.
+
+This is why so many people wake between 1am and 3am — almost on a clock. It's the liver's work cycle coinciding with a burdened organ that can't do the work smoothly.
+
+**The adrenaline factor**
+A struggling liver also signals the adrenal glands to release adrenaline to help push through the processing work. Adrenaline at 2am produces the racing mind, the inability to get back to sleep, the heart-thumping wakefulness of classic insomnia.
+
+**The nervous system piece**
+EBV neurotoxins and heavy metals that affect the nervous system also disrupt the circadian rhythm by interfering with melatonin production and the parasympathetic nervous system's ability to shift into deep rest.
+
+**Why sleep medications have limits**
+Sleep medications suppress the brain's arousal systems — they force sleep, but they don't address the liver activity and adrenaline surges that are the actual problem. This is why many people find sleep medications lose effectiveness over time.
+
+**The MM approach**
+• Lemon water and celery juice to support liver processing (lightens the 1am–3am workload)
+• Reduce dietary fat at dinner — fat is the most liver-demanding food, and eating it at dinner means the liver is still processing it at 1am
+• Lemon balm tea before bed — directly calms the nervous system and supports sleep onset
+• Magnesium glycinate before bed — supports the parasympathetic nervous system
+• 5-HTP (from griffonia seed) — AW's preferred supplement for serotonin and melatonin production
+• Avoid eating within 2 hours of sleep — gives the liver less to process overnight`,
+    bookRef: "Liver Rescue — Anthony William",
+    relatedProtocols: ["Liver Support Protocol"],
+  },
+
+  "Migraines": {
+    emoji: "⚡",
+    headline: "A neurological event driven by the liver, pathogens, and neurotoxins",
+    body: `Anthony William has a very specific teaching on migraines that explains both why they happen and why they're so hard to treat with conventional approaches.
+
+**The liver trigger**
+The liver is the primary driver of migraines per AW's teachings. When the liver becomes sufficiently burdened, it produces a heat and toxic load that travels up through the body to the brain. The blood vessels in the brain respond to this toxic load by dilating — the dilation and the associated inflammation is the migraine.
+
+This explains the classic migraine triggers: alcohol (massively liver-burdening), stress (depletes the liver's reserves), hormonal shifts (the liver processes hormones — when hormone levels shift rapidly at menstruation, the liver is under sudden increased load), and certain foods.
+
+**The EBV neurotoxin piece**
+EBV produces neurotoxins that inflame the trigeminal nerve — the largest cranial nerve, which is directly involved in the migraine cascade. People with higher viral loads tend to have more frequent and more severe migraines.
+
+**Why the triggers vary**
+Different people have different migraine triggers because the underlying burden is different for each person. Someone with a heavily burdened liver will be triggered by foods that someone with a cleaner liver handles fine. Someone with high viral load will be triggered by stress (which reactivates viruses) in a way someone with low viral load isn't.
+
+**The hormonal migraine connection**
+Women who get menstrual migraines are experiencing a liver that's struggling to process the rapid hormonal shifts of the cycle. Supporting the liver reduces menstrual migraine frequency — often dramatically.
+
+**The MM approach**
+• Liver support as the primary focus (lemon water, celery juice, liver herbs)
+• Reduce or eliminate dietary fat (the liver's biggest burden)
+• Remove pathogen-feeding foods
+• During a migraine: wild blueberry juice, celery juice, and rest — these help the liver process the trigger faster
+• Avoid common trigger foods: eggs, dairy, gluten, alcohol, canola oil, corn
+• Magnesium glycinate daily — one of the most well-supported supplements for migraine prevention`,
+    bookRef: "Liver Rescue — Anthony William; Medical Medium — Anthony William",
+    relatedProtocols: ["Liver Support Protocol", "Antiviral Protocol"],
+  },
+
+  "Autoimmune": {
+    emoji: "🛡️",
+    headline: "The immune system isn't attacking itself — it's attacking a pathogen",
+    body: `Anthony William's reframe of autoimmune disease is one of his most significant and most controversial teachings — and also one that gives people the most hope, because it changes the question from "how do I suppress my immune system?" to "what is my immune system fighting?"
+
+**The standard model**
+Conventional medicine describes autoimmune disease as the immune system mistakenly attacking the body's own tissue. The treatment is therefore to suppress the immune system — reduce its activity so it does less damage.
+
+This approach manages symptoms but doesn't explain why the immune system is doing this, and often leaves people vulnerable to infection because their immunity is suppressed.
+
+**AW's reframe**
+AW teaches that autoimmune disease is not the immune system attacking itself. It is the immune system attacking a pathogen — usually EBV or streptococcus — that has taken up residence in specific tissue.
+
+The collateral damage from that immune attack on pathogen-laden tissue looks, under conventional testing, like the immune system attacking the tissue itself. But the target is the pathogen, not the body.
+
+This is why different autoimmune conditions affect different organs: rheumatoid arthritis (joint tissue where EBV has settled), lupus (connective tissue and organs), Hashimoto's (thyroid where EBV lives), MS (myelin where EBV attacks), and so on.
+
+**Why this changes the approach**
+If the immune system isn't attacking itself but is attacking a pathogen, then suppressing the immune system is counterproductive — it removes the body's only real defence against the pathogen.
+
+The MM approach focuses on reducing the pathogen load (so the immune system has less to fight) rather than suppressing the immune system's response.
+
+**The MM approach**
+• Antiviral protocol to reduce EBV and strep load
+• Remove pathogen-feeding foods (eggs, dairy, gluten)
+• Support the lymphatic system (where pathogens hide)
+• Heavy Metal Detox Smoothie (metals amplify viral activity in tissue)
+• Work with a practitioner who understands both conventional and functional approaches — don't stop prescribed medication without medical guidance`,
+    bookRef: "Medical Medium — Anthony William; Thyroid Healing — Anthony William",
+    relatedProtocols: ["Antiviral Protocol", "Heavy Metal Detox Smoothie"],
+  },
+
+  "Bloating": {
+    emoji: "🫧",
+    headline: "Usually a gut pathogen issue — not just food sensitivity",
+    body: `Bloating is one of the most common symptoms Anthony William addresses, and one of the most misunderstood. Most people are told it's about food intolerances, or eating too fast, or stress. AW points to a specific root cause: pathogen activity in the gut.
+
+**The strep and gut bacteria connection**
+AW teaches that chronic bloating is almost always caused by an overgrowth of pathogenic bacteria and sometimes fungi in the intestinal tract — particularly streptococcus strains, E. coli variants, and various other bacteria that have been allowed to proliferate when the gut's defence mechanisms are compromised.
+
+These pathogens produce gas as a byproduct of their feeding activity. The foods they feed on most actively produce the most gas — which is why certain foods seem to trigger bloating. The food isn't the root cause; it's the fuel for the pathogens that are the root cause.
+
+**Why low stomach acid matters**
+The first line of gut defence is hydrochloric acid in the stomach — it kills most pathogens before they reach the small intestine. AW teaches that the vast majority of people with chronic digestive issues have chronically low stomach acid, allowing pathogens to get through into the small intestine where they shouldn't be.
+
+Celery juice restores hydrochloric acid levels — this is one of its most important digestive effects, and why so many people notice dramatic digestive improvement from celery juice within a few weeks.
+
+**The liver-bile connection**
+Bile produced by the liver is the small intestine's second line of defence against pathogens. Thickened, sluggish bile (from a burdened liver or low-fat diet deficiency) means less antimicrobial action in the small intestine.
+
+**The MM approach**
+• Celery juice daily — restores HCl and directly kills gut pathogens
+• Remove pathogen-feeding foods (dairy, eggs, gluten, corn)
+• Ginger — powerfully antimicrobial for the gut
+• Zinc — supports the gut lining and immune function
+• L-glutamine — helps repair the gut lining
+• Aloe vera juice — soothes and heals the intestinal lining`,
+    bookRef: "Medical Medium — Anthony William; Cleanse to Heal — Anthony William",
+    relatedProtocols: ["Gut Healing Protocol"],
+  },
+
+  "High Blood Pressure": {
+    emoji: "❤️",
+    headline: "Often a liver and adrenal issue — the heart is usually a bystander",
+    body: `Anthony William's teaching on high blood pressure challenges the standard framing that it's primarily a heart or arterial problem. He traces most high blood pressure back to the liver and adrenal glands.
+
+**The liver connection**
+The liver produces a protein called angiotensinogen that is part of the body's blood pressure regulation system. When the liver is sluggish or burdened, it produces this protein in excess, pushing blood pressure up.
+
+More directly: a liver full of toxins, pathogens, and accumulated fat becomes physically enlarged and congested. This congestion affects blood flow through the portal vein (the major vessel connecting the gut to the liver), which in turn backs up pressure throughout the cardiovascular system.
+
+**The adrenal factor**
+The adrenal glands regulate blood pressure through adrenaline and cortisol release. Chronically stressed adrenals — from ongoing viral activity, emotional stress, or stimulant use — release excess adrenaline that keeps blood vessels in a state of constriction, driving blood pressure up.
+
+**The sodium myth**
+AW addresses the standard advice to reduce sodium. He agrees that refined table salt raises blood pressure — but he distinguishes this from the mineral salts in celery juice and fresh vegetables, which actually support healthy blood pressure by nourishing the adrenals and cardiovascular system.
+
+**The MM approach**
+• Celery juice — its mineral salts actively lower blood pressure through several mechanisms
+• Liver support — lemon water, liver-cleansing herbs, reduced dietary fat
+• Reduce or eliminate stimulants (coffee, tea) — these directly stress the adrenals
+• Remove pathogen burden from the liver (antiviral protocol)
+• Hibiscus tea — one of AW's specifically recommended teas for blood pressure
+• Do not stop prescribed blood pressure medication without medical guidance`,
+    bookRef: "Liver Rescue — Anthony William",
+    relatedProtocols: ["Liver Support Protocol"],
+  },
+
+  "Endometriosis": {
+    emoji: "🌸",
+    headline: "A condition of viral activity, liver burden, and hormonal disruption — not just 'bad periods'",
+    body: `Endometriosis is one of the most painful and most poorly understood conditions in conventional medicine. Anthony William offers a specific explanation that connects it to EBV, a burdened liver, and hormonal disruption.
+
+**The EBV connection**
+AW teaches that EBV is the central driver of endometriosis. The virus, when in its more advanced stages, can migrate into the reproductive system and produce inflammation in the tissue lining the uterus and beyond. This viral inflammation, combined with the monthly hormonal cycle, produces the severe pain, heavy bleeding, and tissue growth characteristic of endometriosis.
+
+**The liver's role in hormones**
+The liver processes oestrogen — when oestrogen is used, the liver breaks it down and routes it for elimination. When the liver is sluggish, oestrogen isn't cleared efficiently and accumulates. This oestrogen dominance inflames already-sensitive tissue, worsening endometriosis symptoms dramatically.
+
+This is why endometriosis often worsens when women eat high-fat diets (which burden the liver), take synthetic oestrogen (which adds to the liver's hormone processing load), or are under chronic stress (which further depletes the liver's capacity).
+
+**Why surgery has limits**
+Surgery removes endometrial tissue growth — but if the underlying viral and liver conditions remain unchanged, the tissue grows back. This is why endometriosis recurrence after surgery is so common.
+
+**The MM approach**
+• Liver support as the primary focus (the oestrogen clearance issue)
+• Antiviral protocol — targeted at the EBV driving the inflammation
+• Remove pathogen-feeding foods completely
+• Wild blueberries and other deep-pigmented berries — anti-inflammatory for reproductive tissue
+• Zinc — antiviral and supports reproductive health
+• Work with a gynaecologist for symptom management while addressing the root causes`,
+    bookRef: "Medical Medium — Anthony William; Cleanse to Heal — Anthony William",
+    relatedProtocols: ["Liver Support Protocol", "Antiviral Protocol"],
+  },
+
+  "Acne": {
+    emoji: "✨",
+    headline: "A strep and liver issue wearing a skin mask",
+    body: `Anthony William's teaching on acne is clear and specific: most persistent acne — particularly cystic acne — is caused by streptococcus bacteria working in combination with an overburdened liver.
+
+**The strep connection**
+Streptococcus bacteria aren't just in the throat and sinuses — strep strains live throughout the body, including in the digestive tract, lymph nodes, and bloodstream. When strep populations are high, their waste products (byproduct from strep feeding activity) enter the bloodstream and are routed out through the skin.
+
+The skin's response to strep byproduct is inflammation — which manifests as acne. Cystic acne specifically is often strep deep in the dermis, producing concentrated inflammation.
+
+**The liver connection**
+The liver is supposed to filter strep byproduct before it reaches the bloodstream in problematic concentrations. When the liver is sluggish — from poor diet, viral burden, or simply being overtaxed — it can't filter fast enough, and the excess ends up in the skin.
+
+This is why acne so often improves with liver-supportive protocols, even without any topical treatment.
+
+**Why dairy and eggs are the main food triggers**
+Dairy is strep's primary food — eating dairy consistently keeps strep populations high and keeps the byproduct flowing. Eggs feed EBV, which has its own contribution to skin inflammation. Eliminating both is often the single biggest dietary intervention for acne.
+
+**Why hormonal acne isn't just about hormones**
+Hormonal acne — the kind that worsens at certain points in the menstrual cycle — is driven by the hormonal fluctuations challenging a liver that's already struggling. When progesterone drops before menstruation, it triggers a brief surge in EBV activity, which combines with existing strep byproduct to produce the classic pre-period breakout.
+
+**The MM approach**
+• Remove dairy and eggs completely — the most impactful single dietary change
+• Celery juice — reduces strep populations and supports liver detox through the skin
+• Zinc — directly antibacterial and anti-inflammatory for skin
+• Vitamin C — supports skin healing and immune function
+• Burdock root tea — one of AW's specific recommendations for skin conditions`,
+    bookRef: "Medical Medium — Anthony William; Cleanse to Heal — Anthony William",
+    relatedProtocols: ["Antiviral Protocol", "Liver Support Protocol"],
+  },
+
+  "Lyme Disease": {
+    emoji: "🌲",
+    headline: "AW's controversial but compassionate take — co-infections and EBV together",
+    body: `Lyme disease is one of the most contested areas in both conventional medicine and the alternative health world. Anthony William's teaching on it is compassionate — he validates the suffering completely — while also pointing to a component that most Lyme treatment misses.
+
+**AW's teaching**
+AW acknowledges Borrelia burgdorferi (the tick-borne Lyme bacteria) as real and significant. But he teaches that the reason so many people with treated Lyme continue to suffer long after antibiotic treatment is because Lyme is almost always accompanied by co-infections — and the most significant co-infection is EBV.
+
+When EBV reactivates in the context of a compromised immune system (which the Lyme infection itself causes), it produces a second wave of neurological, inflammatory, and fatigue symptoms that look identical to Lyme. Standard Lyme treatment doesn't address EBV — so the person remains ill even when the Borrelia has been reduced.
+
+**The neurological picture**
+Many of the neurological symptoms attributed to Lyme — nerve pain, cognitive issues, brain fog, neuropathy — are actually EBV neurological symptoms, per AW's teaching. This is why they persist after antibiotic treatment and why they respond to antiviral protocols.
+
+**The immune system burden**
+Lyme (and any major infection) dramatically depletes zinc, vitamin C, B12, and other immune-critical nutrients. This depletion allows EBV to reactivate and adds a second burden on top of the primary Lyme infection.
+
+**The MM approach alongside conventional treatment**
+• Do not discontinue prescribed Lyme treatment — work with an LLMD (Lyme-literate MD)
+• Add heavy antiviral protocol alongside conventional treatment
+• Replenish aggressively: zinc, vitamin C, B12, magnesium, selenium
+• Heavy Metal Detox Smoothie — metals in tissue act as an amplifier for both Borrelia and EBV
+• Cat's claw — AW's most recommended herb specifically for Lyme and co-infections`,
+    bookRef: "Medical Medium — Anthony William",
+    relatedProtocols: ["Antiviral Protocol", "Heavy Metal Detox Smoothie"],
+  },
+
+  "Vertigo / Dizziness": {
+    emoji: "🌀",
+    headline: "Usually a viral attack on the inner ear and vagus nerve",
+    body: `Vertigo — the spinning, disorienting dizziness that can be debilitating — is one of the symptoms that conventional medicine often attributes to inner ear mechanics. Anthony William points to the underlying reason those inner ear mechanics get disrupted: viral activity.
+
+**The EBV and inner ear connection**
+AW teaches that EBV, in its neurological phase, frequently targets the vestibulocochlear nerve — the nerve that connects the inner ear to the brain and is responsible for balance and spatial orientation. When EBV inflames this nerve, the signals it sends to the brain become unreliable, producing the spinning, off-balance sensation of vertigo.
+
+This is also why vertigo so often occurs after a period of stress or illness — both of which trigger EBV reactivation.
+
+**The vagus nerve piece**
+The vagus nerve — the longest nerve in the body, running from the brainstem through the neck, chest, and abdomen — is also frequently targeted by EBV. Vagus nerve inflammation produces a range of symptoms including nausea, heart palpitations, and the "floaty," dissociated feeling that accompanies some forms of dizziness.
+
+**Streptococcus in the inner ear**
+Strep bacteria can also take up residence in the inner ear and sinuses, producing localised inflammation that affects the fluid dynamics of balance. This is why vertigo sometimes accompanies ear infections or sinus problems.
+
+**The MM approach**
+• Antiviral protocol — targeting EBV in the nervous system
+• B12 (adenosylcobalamin + methylcobalamin) — critical for nerve repair, including the vestibulocochlear nerve
+• Lemon balm — calms the vagus nerve and supports the nervous system
+• Zinc — antiviral support for the immune response to viral nerve inflammation
+• Avoid gluten — specifically inflammatory for the nervous system
+• Rest during acute episodes rather than forcing through them`,
+    bookRef: "Medical Medium Brain Saver — Anthony William",
+    relatedProtocols: ["Antiviral Protocol"],
+  },
+});
+
 export const SHAREABLES = {
   "lemon-water": {
     title: "Why lemon water every morning?",
@@ -560,6 +913,126 @@ This isn't about eggs being harmful to everyone in all contexts. It's specifical
 Eliminating eggs — alongside dairy and gluten — starves the pathogen of preferred fuel. Over weeks and months, the viral load drops and symptoms begin to ease.
 
 It's counterintuitive because eggs feel "clean" and protein-rich. But per AW's teachings, the protein in egg whites specifically is what viruses thrive on.
+
+— Based on Anthony William's teachings in *Cleanse to Heal*. Not medical advice.`,
+  },
+
+  "why-no-dairy": {
+    title: "Why does Medical Medium say to avoid dairy?",
+    subtitle: "The reasoning behind cutting out milk, cheese, butter, and yoghurt",
+    content: `Dairy is one of the hardest things for people to give up — it's in everything, and it seems so natural. Here's Anthony William's actual explanation for why he recommends removing it.
+
+The core reason: dairy is the primary fuel for streptococcus bacteria. Strep isn't just the bacteria behind strep throat — there are dozens of strep strains that AW links to: sinus problems, ear infections, UTIs, acne, SIBO, and the hormonal picture of PCOS. When you regularly eat dairy, you're continuously feeding these bacterial populations.
+
+There's also a secondary liver effect: the fat in dairy (particularly the combination of lactose and fat together) is one of the most liver-burdening food combinations. A liver that's constantly processing dairy fat has less capacity for everything else — hormone processing, toxin filtration, immune support.
+
+This doesn't mean dairy is poison for everyone at all times. But for someone with a chronic condition linked to strep or a sluggish liver, removing dairy consistently is one of the most impactful single changes they can make.
+
+Most people who remove dairy for 90 days report clearer sinuses, less bloating, clearer skin, and reduced inflammation — often without expecting it.
+
+— Based on Anthony William's teachings in *Cleanse to Heal*. Not medical advice.`,
+  },
+
+  "what-is-ebv": {
+    title: "What is EBV and why does Anthony William talk about it so much?",
+    subtitle: "The virus behind dozens of chronic conditions — explained simply",
+    content: `If you've spent any time in Medical Medium circles, you've heard a lot about EBV. Here's a plain-English explanation of what it is and why Anthony William focuses on it so heavily.
+
+EBV stands for Epstein-Barr Virus. It's the same virus that causes glandular fever (mono) — and most people have been exposed to it at some point in their life, often without knowing. Your immune system typically keeps it dormant.
+
+The issue Anthony William identifies: EBV doesn't just go away after the initial infection. It lives in the body long-term, and when the immune system is under enough stress — from poor diet, grief, another illness, or accumulated toxins — it reactivates. In this reactivated state, it migrates into organ tissue (particularly the thyroid, liver, and nervous system) where it produces inflammation and viral byproduct.
+
+AW links EBV to: thyroid conditions, ME/CFS, fibromyalgia, multiple sclerosis, rheumatoid arthritis, lupus, eczema, mystery fatigue, neurological symptoms, and many conditions labeled as "autoimmune."
+
+This sounds alarming, but the message is actually hopeful: if a virus is behind the condition, you can fight the virus. You can starve it of its food supply (eggs, dairy, gluten), you can support your immune system with targeted antivirals (zinc, vitamin C, L-lysine, cat's claw), and you can reduce the toxins that amplify its activity (heavy metals).
+
+Many people who've been told they have an untreatable condition have found significant improvement by addressing the underlying EBV.
+
+— Based on Anthony William's teachings in *Medical Medium*. Not medical advice.`,
+  },
+
+  "why-hmds": {
+    title: "Why the Heavy Metal Detox Smoothie — and why all five ingredients?",
+    subtitle: "The science behind AW's most famous recipe",
+    content: `The Heavy Metal Detox Smoothie is one of Anthony William's best-known recommendations — but it's also one of the most misunderstood. People try it with substitutions, or skip ingredients, and wonder why it's not working. Here's why the specific combination matters.
+
+Heavy metals — mercury, aluminium, copper, lead — accumulate in body tissue across a lifetime. They come from dental fillings, vaccines, cookware, water, and the environment. In brain and nerve tissue, they physically disrupt the electrical signalling between neurons, contributing to brain fog, ADHD, memory problems, anxiety, and neurological symptoms.
+
+The HMDS works because five specific ingredients each play a distinct role:
+
+Wild blueberries (frozen, from Maine) — draw metals out of deep brain tissue specifically. Regular blueberries don't have the same effect — the wild variety has been drawing minerals from the soil for thousands of years and has unique properties.
+
+Barley grass juice powder — pulls metals from the intestinal lining and spleen into the bloodstream, where spirulina can then capture them.
+
+Spirulina — crosses the blood-brain barrier and grabs metals from the brain and central nervous system.
+
+Atlantic dulse — binds to mercury and lead in the intestinal tract and carries them all the way out of the body without releasing them.
+
+Banana or mango — fuels the brain with glucose during the detox process. Without fruit, the detox can leave you more foggy, not less.
+
+You can't get this effect by taking them separately at different times, or by substituting similar ingredients. The sequencing and combination is what makes it work.
+
+Most people notice subtle brain clarity improvements within a few months of doing this daily. For deeper metal burdens, it takes longer — but people consistently notice the difference.
+
+— Based on Anthony William's teachings in *Medical Medium Brain Saver*. Not medical advice.`,
+  },
+
+  "why-liver-matters": {
+    title: "Why the liver is at the centre of almost everything",
+    subtitle: "The organ that conventional medicine underestimates — and AW puts first",
+    content: `Anthony William describes the liver as the body's most important and most underappreciated organ — and once you understand what it does, it becomes hard to disagree.
+
+The liver performs over 2,000 functions. That's not a typo. It filters every drop of blood in the body, processes every hormone, breaks down every toxin, produces bile for fat digestion, stores vitamins and minerals, regulates blood sugar, manages immune responses, and much more.
+
+AW's core teaching: most chronic illness begins with a burdened liver. When the liver is sluggish or overwhelmed, everything downstream suffers — hormones go unprocessed and accumulate, toxins recirculate instead of being eliminated, the immune system loses one of its key support systems, and skin/digestion/energy all deteriorate.
+
+What burdens the liver? The modern world is full of liver burden: processed fats, alcohol, medications, plastics, pesticides, heavy metals, viral toxins, and years of dietary fat and protein that require constant processing.
+
+The good news: the liver is also the body's most regenerative organ. It responds to support faster than almost any other tissue. Lemon water, celery juice, and liver-supportive herbs can produce noticeable improvements in energy and digestion within weeks.
+
+AW's morning protocol — lemon water first, then celery juice — is specifically designed to support the liver's natural detox cycle and give it the tools it needs to do its work properly.
+
+— Based on Anthony William's teachings in *Liver Rescue*. Not medical advice.`,
+  },
+
+  "thyroid-explained": {
+    title: "Why so many people have thyroid problems — and what's really behind it",
+    subtitle: "For someone who's been told their thyroid is underactive, overactive, or 'a bit off'",
+    content: `Thyroid disease has become so common that it barely raises eyebrows anymore — but it used to be rare. Something has changed, and Anthony William has a specific answer for what.
+
+His teaching: the vast majority of thyroid conditions — hypothyroid, Hashimoto's, Graves', thyroid nodules — are caused by the Epstein-Barr Virus living in thyroid tissue. Not by the thyroid itself failing. Not by genetics. By a virus.
+
+EBV is a herpes-family virus that most people carry in dormancy. When the immune system is under stress, EBV can reactivate and migrate into the thyroid gland, where it causes inflammation, disrupts hormone production, and over time triggers immune attacks on the inflamed tissue (which gets called "autoimmune thyroid disease").
+
+This reframes the whole picture. It means the thyroid isn't broken — it's under attack. And that means there's something to fight, not just symptoms to manage.
+
+Thyroid medication (T4, T3, or combination) helps by replacing the hormones the inflamed thyroid can't produce properly. That's genuinely useful. But it doesn't touch the virus in the tissue — which is why most people on thyroid medication still feel exhausted, still have brain fog and hair loss, even when their numbers look "normal."
+
+The approach that addresses the root cause: reduce the viral load in thyroid tissue through antiviral nutrition and supplements (zinc, vitamin C, L-lysine, cat's claw), remove the foods that feed EBV (eggs, dairy, gluten), and support the liver which processes thyroid hormones.
+
+This isn't a quick fix — but it's a path to actually feeling well, not just having better numbers.
+
+— Based on Anthony William's teachings in *Thyroid Healing*. Not medical advice.`,
+  },
+
+  "what-is-3-6-9-cleanse": {
+    title: "What is the 3:6:9 Cleanse and why does AW recommend it?",
+    subtitle: "A plain-English explanation of Anthony William's signature cleanse",
+    content: `The 3:6:9 Cleanse is Anthony William's signature protocol — named for its three phases of three days each. It's the cleanse he recommends most often as a starting point, and the one most people in the MM community have tried. Here's what it actually does and why.
+
+The cleanse works in three phases:
+
+Days 1–3 (the 3): Preparation. You gradually reduce the most liver-burdening foods (fat, protein, difficult-to-digest foods) and increase cleansing foods. The liver begins to prepare for deeper work.
+
+Days 4–6 (the 6): Intensification. Fat is reduced significantly. Fruit, leafy greens, and steamed vegetables become the focus. The liver begins to release stored toxins, pathogens, and accumulated debris that it's been holding in a "safe storage" mode when overwhelmed.
+
+Days 7–9 (the 9): Deep cleanse. The final three days involve the most cleansing foods — fresh juices, fruit, celery juice, and specific liver-healing foods. The liver is now actively flushing what it released in Phase 2.
+
+Why does it work? Most chronic health issues involve a liver that has been forced to "store" rather than "process" — it holds toxins, viral byproduct, and other debris in a protective mode when it's too overwhelmed to eliminate them properly. The 3:6:9 reduces the incoming burden enough that the liver can shift from storage mode to release mode.
+
+People commonly report: clearer skin, better energy, reduced bloating, clearer thinking, and reduced symptom intensity — even in the first round. More serious healing happens with repeated rounds over months.
+
+AW recommends doing the original 3:6:9, not modified versions, for the most consistent results.
 
 — Based on Anthony William's teachings in *Cleanse to Heal*. Not medical advice.`,
   },
