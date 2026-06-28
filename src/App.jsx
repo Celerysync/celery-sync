@@ -35,6 +35,7 @@ const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.js
 const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
 const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
+const Juices           = lazy(() => import("./components/Juices.jsx"));
 const CarerView        = lazy(() => import("./components/CarerView.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
@@ -46,6 +47,7 @@ const TABS = [
   { id: "coach",     label: "AI Guide",   emoji: "🎙", free: false },
   { id: "journal",   label: "Journal",    emoji: "📊", free: false },
   { id: "recipes",   label: "Recipes",    emoji: "🍽", free: false },
+  { id: "juices",    label: "Juices",     emoji: "🥤", free: false },
   { id: "cleanses",  label: "Cleanses",   emoji: "🌿", free: false },
   { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
   { id: "reports",   label: "Reports",    emoji: "📋", free: false },
@@ -283,6 +285,8 @@ export default function App() {
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":
         return <Recipes user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
+      case "juices":
+        return <Juices />;
       case "cleanses":
         return <Cleanse navQuery={navQuery} authUser={authUser} profileId={activeProfileId} onPageContext={setPageContext} />;
       case "symptoms":
