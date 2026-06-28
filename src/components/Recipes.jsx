@@ -394,140 +394,7 @@ How to make it: [brief instructions]
       {/* ── BROWSE VIEW ────────────────────────────────────────── */}
       {view === "browse" && (
         <>
-          {/* Right now */}
-          {timeOfDayRecipes.length > 0 && (
-            <Card>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
-                ⏰ Right now — {new Date().getHours() < 12 ? "morning ideas" : new Date().getHours() < 17 ? "afternoon ideas" : "evening ideas"}
-              </div>
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-                {timeOfDayRecipes.map((r) => (
-                  <div
-                    key={r.id}
-                    onClick={() => {
-                      setMealTypeFilter(r.mealType);
-                      setSearchText(r.name);
-                    }}
-                    style={{
-                      flexShrink: 0,
-                      background: C.sageLight,
-                      border: `1px solid ${C.sage}30`,
-                      borderRadius: 12,
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      textAlign: "center",
-                      minWidth: 90,
-                    }}
-                  >
-                    <div style={{ fontSize: 22 }}>{r.emoji}</div>
-                    <div style={{ fontSize: 11, color: C.sageDark, fontFamily: "Georgia,serif", marginTop: 4, lineHeight: 1.3 }}>
-                      {r.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Personalised — For Your Healing */}
-          {forYourHealing.length > 0 && !symptomFilter && !searchText && (
-            <Card style={{ border: `1.5px solid ${C.plum}25` }}>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
-                💜 For your healing
-              </div>
-              <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
-                Based on your health conditions
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {forYourHealing.map((r) => (
-                  <div
-                    key={r.id}
-                    onClick={() => setSearchText(r.name)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "8px 10px", borderRadius: 10,
-                      background: C.mist, cursor: "pointer",
-                      border: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <span style={{ fontSize: 20 }}>{r.emoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontFamily: "Georgia,serif", color: C.charcoal }}>{r.name}</div>
-                      <div style={{ fontSize: 10.5, color: C.muted }}>{MEAL_LABELS[r.mealType]} · {r.prepTime} min</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Symptom chips */}
-          <div style={{ overflowX: "auto", paddingBottom: 4 }}>
-            <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
-              {SYMPTOM_CHIPS.map((chip) => {
-                const active = symptomFilter === chip.tag;
-                return (
-                  <button
-                    key={chip.tag + chip.label}
-                    onClick={() => setSymptomFilter(active ? null : chip.tag)}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: 20,
-                      border: `1.5px solid ${active ? C.sage : C.border}`,
-                      background: active ? C.sageLight : "transparent",
-                      color: active ? C.sageDark : C.mid,
-                      fontSize: 11.5,
-                      fontFamily: "Georgia,serif",
-                      cursor: "pointer",
-                      fontWeight: active ? 700 : 400,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Meal type + saved filters */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {["all", ...MEAL_TYPES].map((t) => (
-              <button
-                key={t}
-                onClick={() => setMealTypeFilter(t)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  border: `1.5px solid ${mealTypeFilter === t ? C.sageDark : C.border}`,
-                  background: mealTypeFilter === t ? C.sageLight : "transparent",
-                  color: mealTypeFilter === t ? C.sageDark : C.mid,
-                  fontSize: 12,
-                  fontFamily: "Georgia,serif",
-                  cursor: "pointer",
-                  fontWeight: mealTypeFilter === t ? 700 : 400,
-                }}
-              >
-                {t === "all" ? "All" : MEAL_LABELS[t]}
-              </button>
-            ))}
-            <button
-              onClick={() => setShowSavedOnly((v) => !v)}
-              style={{
-                padding: "6px 14px",
-                borderRadius: 20,
-                border: `1.5px solid ${showSavedOnly ? C.plum : C.border}`,
-                background: showSavedOnly ? C.plumLight : "transparent",
-                color: showSavedOnly ? C.plum : C.mid,
-                fontSize: 12,
-                fontFamily: "Georgia,serif",
-                cursor: "pointer",
-              }}
-            >
-              ❤️ Saved
-            </button>
-          </div>
-
+          {/* Search bar */}
           <input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -543,23 +410,89 @@ How to make it: [brief instructions]
             }}
           />
 
-          {/* Recipe list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {filtered.map((r) => (
-              <RecipeCard
-                key={r.id}
-                recipe={r}
-                saved={isSaved(r.id)}
-                onSave={toggleSave}
-                onAddToPlan={assignToSlot}
-              />
-            ))}
-            {filtered.length === 0 && (
-              <div style={{ textAlign: "center", color: C.muted, padding: "30px 0", fontSize: 13 }}>
-                No recipes match that filter.
+          {/* Symptom filter chips — shown when searching */}
+          {searchText.trim() && (
+            <div style={{ overflowX: "auto", paddingBottom: 4 }}>
+              <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
+                {SYMPTOM_CHIPS.map((chip) => {
+                  const active = symptomFilter === chip.tag;
+                  return (
+                    <button
+                      key={chip.tag + chip.label}
+                      onClick={() => setSymptomFilter(active ? null : chip.tag)}
+                      style={{
+                        padding: "5px 12px", borderRadius: 20,
+                        border: `1.5px solid ${active ? C.sage : C.border}`,
+                        background: active ? C.sageLight : "transparent",
+                        color: active ? C.sageDark : C.mid,
+                        fontSize: 11.5, fontFamily: "Georgia,serif",
+                        cursor: "pointer", fontWeight: active ? 700 : 400, whiteSpace: "nowrap",
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Search results — flat list when searching */}
+          {searchText.trim() ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {filtered.length === 0 && (
+                <div style={{ textAlign: "center", color: C.muted, padding: "30px 0", fontSize: 13 }}>
+                  No recipes match that search.
+                </div>
+              )}
+              {filtered.map((r) => (
+                <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} />
+              ))}
+            </div>
+          ) : (
+            /* ── SECTIONED VIEW — default when not searching ── */
+            <>
+              {[
+                { id: "breakfast", emoji: "🌅", label: "Breakfast", note: "Start with lemon water → celery juice → then these" },
+                { id: "snack",     emoji: "🍎", label: "Adrenal Snacks", note: "Every 90 minutes between meals to keep blood sugar stable" },
+                { id: "lunch",     emoji: "☀️", label: "Lunch",     note: "Light on fat — fruit, salads, soups, simple meals" },
+                { id: "dinner",    emoji: "🌙", label: "Dinner",    note: "Warm, nourishing, liver-supportive before rest" },
+              ].map(({ id, emoji, label, note }) => {
+                const sectionRecipes = RECIPES.filter((r) => r.mealType === id);
+                if (sectionRecipes.length === 0) return null;
+                return (
+                  <div key={id}>
+                    {/* Section header */}
+                    <div style={{
+                      display: "flex", alignItems: "flex-end", gap: 8,
+                      marginBottom: 10, paddingBottom: 8,
+                      borderBottom: `2px solid ${C.sage}30`,
+                    }}>
+                      <span style={{ fontSize: 22 }}>{emoji}</span>
+                      <div>
+                        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{note}</div>
+                      </div>
+                      <div style={{
+                        marginLeft: "auto", fontSize: 11, color: C.sage,
+                        fontFamily: "Georgia,serif", fontWeight: 700, whiteSpace: "nowrap",
+                      }}>
+                        {sectionRecipes.length} recipes
+                      </div>
+                    </div>
+                    {/* Recipes in this section */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                      {sectionRecipes.map((r) => (
+                        <RecipeCard key={r.id} recipe={r} saved={isSaved(r.id)} onSave={toggleSave} onAddToPlan={assignToSlot} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
 
           {/* AI custom recipe */}
           <Card>
