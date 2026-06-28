@@ -56,7 +56,13 @@
       "WebSearch",
       "Bash(grep -rn \"9\\\\.97\\\\|49\\\\b\\\\|\\\\$9\\\\|\\\\$49\\\\|price\\\\|Price\" /Users/alli/celerysync/src/components/Landing.jsx)",
       "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\),**p.get\\('devDependencies',{}\\)}; [print\\(k\\) for k in deps]\")",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(grep *)",
+      "Bash(pkill -f \"vite.*5174\")",
+      "Bash(pkill -f \"concurrently.*vite\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(npm ls *)",
+      "Bash(supabase --version)"
     ]
   }
 }

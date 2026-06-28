@@ -1,23 +1,96 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { Tag, Card, Btn } from "./ui.jsx";
 import { CLEANSES_SUMMARY, ORIGINAL_369 } from "../data/cleanses.js";
 import { AVOID_ALL } from "../data/avoidList.js";
+import { supabase } from "../lib/supabase.js";
 
-export default function Cleanse({ navQuery }) {
+export default function Cleanse({ navQuery, authUser, profileId, onPageContext }) {
   const [sel, setSel] = useState(null);
   const [activeDay, setActiveDay] = useState(null);
   const [started, setStarted] = useLocalStorage("cs_started_cleanses", {});
-  const { speak, speaking, stopSpeaking } = useVoice();
+  const [startMsg, setStartMsg] = useState(null);
+  const { voiceName } = useVoicePrefs();
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName);
+
+  const startCleanse = async (cleanseName, totalDays) => {
+    const today = new Date().toISOString().split("T")[0];
+    setStarted(s => ({ ...s, [cleanseName]: today }));
+    setStartMsg("Cleanse started and recorded in your reports!");
+    setTimeout(() => setStartMsg(null), 3500);
+
+    if (profileId) {
+      const programId = `cleanse-${cleanseName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+      const endDate = totalDays > 0
+        ? new Date(Date.now() + totalDays * 86400000).toISOString().split("T")[0]
+        : null;
+      await supabase.from("active_protocols").insert({
+        profile_id: profileId,
+        program_id: programId,
+        program_name: cleanseName,
+        start_date: today,
+        end_date: endDate,
+        total_days: totalDays > 0 ? totalDays : 999,
+      });
+      if (totalDays > 0) {
+        await supabase.from("daily_checkins").upsert({
+          profile_id: profileId,
+          date: today,
+          active_protocol_day: 1,
+        }, { onConflict: "profile_id,date" });
+      }
+    }
+    onPageContext?.({
+      tab: "cleanses",
+      label: `Cleanse started: ${cleanseName}`,
+      detail: `User just started the ${cleanseName}${totalDays > 0 ? ` (${totalDays} days)` : " (ongoing practice)"}. Day 1.`,
+    });
+  };
 
   useEffect(() => {
     if (!navQuery) return;
     const q = navQuery.toLowerCase();
     const match = CLEANSES_SUMMARY.find(c => c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase().split(" ")[0]));
-    if (match) setSel(match.name);
+    if (match) { setSel(match.name); onPageContext?.({ tab: "cleanses", label: match.name, detail: match.desc }); }
   }, [navQuery]);
+
+  const CLEANSE_WHY = {
+    "Original 3:6:9": {
+      why: "The liver works on a natural 9-day cycle. Anthony William teaches that strategically reducing dietary fat over these 9 days gives the liver its first real rest in years — allowing it to purge stored pathogens, heavy metals, and toxic debris it has been holding. Most chronic illness, per AW, originates in an overburdened liver.",
+      when: "Best when you're feeling stuck, fatigued, or when symptoms have plateaued. Many people do it quarterly. Do not do while pregnant or breastfeeding. Ideal to do with a support person.",
+    },
+    "Simplified 3:6:9": {
+      why: "Same liver-restoration principle as the Original but with cooked food allowed and no all-liquid day. It delivers ~70% of the healing power and is far more sustainable for people who are working, parenting, or new to cleansing.",
+      when: "Your first cleanse, or anytime life doesn't allow for strict raw eating. Also excellent for those with extreme fatigue who need food for stability.",
+    },
+    "Advanced 3:6:9": {
+      why: "Zero fat — not even avocado or coconut — gives the liver complete rest from fat processing. The healing acceleration is significant. Per AW, this is where deep chronic conditions begin to genuinely shift after months of preparation.",
+      when: "Only after completing the Original or Simplified at least once. Not for beginners. Have medical support in place first.",
+    },
+    "Heavy Metal Detox": {
+      why: "Anthony William teaches that heavy metals — mercury, lead, aluminium, arsenic, copper — accumulate in brain tissue and are the root cause of neurological symptoms including anxiety, depression, brain fog, ADHD, Parkinson's, and OCD. The Big 5 ingredients work together as a chain — you cannot substitute or skip any.",
+      when: "Daily, indefinitely. The longer you do it the deeper the metals it reaches. Expect increased brain fog in the first 2–4 weeks as metals move — this is normal and means it's working.",
+    },
+    "Anti-Bug Cleanse": {
+      why: "Pathogens — EBV, streptococcus, HHV-6, shingles virus — feed on specific foods, primarily eggs and dairy. Removing these starves the pathogens while increasing antivirals creates a hostile environment for viruses. Per AW, most mystery illness is undiscovered viral illness.",
+      when: "Any time you want to accelerate healing, especially during a viral flare, after illness, or when you're not seeing results from the morning protocol alone.",
+    },
+    "Morning Cleanse": {
+      why: "The liver does its deepest cleaning from 1am to 9am. Anthony William teaches that the morning protocol supercharges this natural window — lemon water wakes the liver, celery juice floods it with sodium cluster salts that dissolve pathogens, and the HMDS targets heavy metals while the liver is still in cleaning mode.",
+      when: "Every single morning, forever. This is not a 30-day programme — it's a lifelong practice. Even just lemon water + celery juice without the HMDS is enormously beneficial.",
+    },
+    "Liver Rescue Morning": {
+      why: "The liver stores glucose and uses it to fuel nightly cleaning. Orange juice floods the liver with the specific glucose and vitamin C it needs to restore its cleaning capacity. Combined with lemon water and celery juice, this gives the liver an extraordinary amount of support in a short window.",
+      when: "3–4 consecutive mornings during a liver focus period, during the 3:6:9 phase 2, or any time you want targeted liver support. Also excellent after a period of stress, alcohol, or processed food.",
+    },
+    "Mono Eating Cleanse": {
+      why: "Digesting multiple different foods simultaneously requires the pancreas to produce a complex blend of enzymes. Eating just one food at a time gives the entire digestive system complete rest, freeing enormous amounts of energy for healing and detox. Per AW, apples are the most healing mono food.",
+      when: "During recovery from food poisoning, during a detox reaction, after hospitalisation, or any time digestion is severely compromised. Can be done for one meal, one day, or several days.",
+    },
+  };
 
   if (sel === "Original 3:6:9") {
     const days = Object.keys(ORIGINAL_369);
@@ -68,23 +141,12 @@ export default function Cleanse({ navQuery }) {
           </div>
           {!started["Original 3:6:9"] ? (
             <button
-              onClick={() =>
-                setStarted((s) => ({
-                  ...s,
-                  "Original 3:6:9": new Date().toISOString().split("T")[0],
-                }))
-              }
+              onClick={() => startCleanse("Original 3:6:9", 9)}
               style={{
-                marginTop: 12,
-                background: "rgba(255,255,255,0.25)",
-                color: C.white,
-                border: "2px solid rgba(255,255,255,0.5)",
-                borderRadius: 30,
-                padding: "8px 18px",
-                fontFamily: "Georgia,serif",
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: "pointer",
+                marginTop: 12, background: "rgba(255,255,255,0.25)", color: C.white,
+                border: "2px solid rgba(255,255,255,0.5)", borderRadius: 30,
+                padding: "8px 18px", fontFamily: "Georgia,serif", fontWeight: 700,
+                fontSize: 13, cursor: "pointer",
               }}
             >
               Start This Cleanse
@@ -92,6 +154,11 @@ export default function Cleanse({ navQuery }) {
           ) : (
             <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
               ✅ Started {started["Original 3:6:9"]}
+            </div>
+          )}
+          {startMsg && (
+            <div style={{ marginTop: 8, fontSize: 12, background: "rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 12px" }}>
+              {startMsg}
             </div>
           )}
         </div>
@@ -205,6 +272,24 @@ export default function Cleanse({ navQuery }) {
           </div>
         </Card>
 
+        <Card style={{ background: "#fff8f0", border: "1px solid #f59e0b30" }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: "#b45309", marginBottom: 6 }}>
+            💛 Why this cleanse matters
+          </div>
+          <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
+            {CLEANSE_WHY["Original 3:6:9"].why}
+          </div>
+        </Card>
+
+        <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}30` }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 6 }}>
+            📅 When to do it
+          </div>
+          <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
+            {CLEANSE_WHY["Original 3:6:9"].when}
+          </div>
+        </Card>
+
         <Card style={{ background: C.goldLight, border: `1px solid ${C.gold}40` }}>
           <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
             📚 Full protocol in <strong>Cleanse to Heal</strong> by Anthony William, Chapter 10.
@@ -306,7 +391,7 @@ export default function Cleanse({ navQuery }) {
           </div>
           {!started[sel] ? (
             <button
-              onClick={() => setStarted((s) => ({ ...s, [sel]: new Date().toISOString().split("T")[0] }))}
+              onClick={() => startCleanse(sel, cleanse.days)}
               style={{
                 marginTop: 12, background: "rgba(255,255,255,0.25)", color: "#fff",
                 border: "2px solid rgba(255,255,255,0.5)", borderRadius: 30, padding: "8px 18px",
@@ -317,6 +402,11 @@ export default function Cleanse({ navQuery }) {
             </button>
           ) : (
             <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>✅ Started {started[sel]}</div>
+          )}
+          {startMsg && (
+            <div style={{ marginTop: 8, fontSize: 12, background: "rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 12px" }}>
+              {startMsg}
+            </div>
           )}
         </div>
 
@@ -371,6 +461,27 @@ export default function Cleanse({ navQuery }) {
           </div>
         </Card>
 
+        {CLEANSE_WHY[sel] && (
+          <>
+            <Card style={{ background: "#fff8f0", border: "1px solid #f59e0b30" }}>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: "#b45309", marginBottom: 6 }}>
+                💛 Why this cleanse matters
+              </div>
+              <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
+                {CLEANSE_WHY[sel].why}
+              </div>
+            </Card>
+            <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}30` }}>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 6 }}>
+                📅 When to do it
+              </div>
+              <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
+                {CLEANSE_WHY[sel].when}
+              </div>
+            </Card>
+          </>
+        )}
+
         <Card style={{ background: C.goldLight, border: `1px solid ${C.gold}40` }}>
           <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
             📚 Full protocol in <strong>Cleanse to Heal</strong> by Anthony William. The book contains complete recipes, adaptations, and Q&A for every cleanse.
@@ -398,7 +509,7 @@ export default function Cleanse({ navQuery }) {
       {CLEANSES_SUMMARY.map((c) => (
         <Card
           key={c.name}
-          onClick={() => setSel(c.name)}
+          onClick={() => { setSel(c.name); onPageContext?.({ tab: "cleanses", label: c.name, detail: c.desc + " " + (CLEANSE_WHY[c.name]?.why || "") }); }}
           style={{ border: started[c.name] ? `2px solid ${c.color}` : undefined }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

@@ -202,7 +202,7 @@ function OrganDetail({ organ, onBack, voiceName }) {
   );
 }
 
-export default function Body({ navQuery }) {
+export default function Body({ navQuery, onPageContext }) {
   const [selected, setSelected] = useState(null);
   const { voiceName } = useVoicePrefs();
 
@@ -210,7 +210,7 @@ export default function Body({ navQuery }) {
     if (!navQuery) return;
     const q = navQuery.toLowerCase();
     const match = ORGANS.find(o => o.name.toLowerCase().includes(q) || q.includes(o.name.toLowerCase().split(" ")[0]));
-    if (match) setSelected(match);
+    if (match) { setSelected(match); onPageContext?.({ tab: "body", label: match.name, detail: match.overview?.slice(0, 300) }); }
   }, [navQuery]);
 
   if (selected) {
@@ -247,7 +247,7 @@ export default function Body({ navQuery }) {
         {ORGANS.map((organ) => (
           <button
             key={organ.id}
-            onClick={() => setSelected(organ)}
+            onClick={() => { setSelected(organ); onPageContext?.({ tab: "body", label: organ.name, detail: organ.overview?.slice(0, 300) }); }}
             style={{
               background: organ.lightColor,
               border: `1.5px solid ${organ.color}33`,

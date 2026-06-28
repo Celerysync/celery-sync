@@ -143,7 +143,7 @@ const GREETINGS = {
 };
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
-function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak }) {
+function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
 
   const milestonesSection = milestones?.length > 0
@@ -239,7 +239,16 @@ ${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep
 ${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
   })() : "No check-in logged yet today.";
 
-  return `${langInstruction}${caregiverIntro}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const pageContextSection = pageContext ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT THE USER WAS JUST LOOKING AT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Page: ${pageContext.label}
+${pageContext.detail ? `Context: ${pageContext.detail}` : ""}
+Reference this naturally when relevant — e.g. "I see you were just looking at ${pageContext.label}…"
+` : "";
+
+  return `${langInstruction}${caregiverIntro}${pageContextSection}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THIS USER'S PROFILE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Name: ${user?.name || "friend"}
@@ -262,7 +271,7 @@ function parseNavCommand(text) {
   return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
 }
 
-export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric' }) {
+export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -315,7 +324,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     if (memoryLoading) return;
     systemRef.current = {
       staticSystem: STATIC_SYSTEM,
-      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak }),
+      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }),
     };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
@@ -456,7 +465,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             systemRef.current = {
               staticSystem: STATIC_SYSTEM,
               dynamicSystem: buildDynamicSystem({
-                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak,
+                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext,
                 priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
               }),
             };

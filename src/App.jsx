@@ -135,6 +135,7 @@ export default function App() {
   } = useProfiles(authUser);
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [pageContext, setPageContext] = useState(null);
   const welcomeKey = `cs_welcomed_${authUser?.id}`;
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
@@ -277,21 +278,21 @@ export default function App() {
           ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
       case "coach":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
       case "journal":
         return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
       case "recipes":
-        return <Recipes user={activeProfile} navQuery={navQuery} />;
+        return <Recipes user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
       case "cleanses":
-        return <Cleanse navQuery={navQuery} />;
+        return <Cleanse navQuery={navQuery} authUser={authUser} profileId={activeProfileId} onPageContext={setPageContext} />;
       case "symptoms":
-        return <Symptom user={activeProfile} navQuery={navQuery} />;
+        return <Symptom user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
       case "reports":
         return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
       case "knowledge":
         return <Knowledge authUser={authUser} />;
       case "body":
-        return <Body navQuery={navQuery} />;
+        return <Body navQuery={navQuery} onPageContext={setPageContext} />;
       case "community":
         return <Community authUser={authUser} userProfile={activeProfile} />;
       case "carers":

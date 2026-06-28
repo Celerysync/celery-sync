@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { Card, Btn } from "./ui.jsx";
 import { CONDITIONS } from "../data/conditions.js";
 import { callClaude } from "../lib/api.js";
@@ -107,7 +108,7 @@ function printDoctorSummary({ user, conditions, result }) {
   setTimeout(() => win.print(), 400);
 }
 
-export default function Symptom({ user, navQuery }) {
+export default function Symptom({ user, navQuery, onPageContext }) {
   const [sel, setSel] = useState([]);
   const [custom, setCustom] = useState("");
   const [conditionSearch, setConditionSearch] = useState("");
@@ -115,7 +116,8 @@ export default function Symptom({ user, navQuery }) {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [showDrNote, setShowDrNote] = useState(false);
-  const { speak, speaking, stopSpeaking } = useVoice();
+  const { voiceName } = useVoicePrefs();
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
   useEffect(() => {
     if (!navQuery) return;
@@ -196,6 +198,11 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
         messages: [{ role: "user", content: prompt }],
       });
       setResult(text);
+      onPageContext?.({
+        tab: 'symptoms',
+        label: `Symptom: ${all.join(", ")}`,
+        detail: text.slice(0, 600),
+      });
     } catch (err) {
       setResult(`Connection error: ${err.message}. Please check your API key and try again.`);
     }
