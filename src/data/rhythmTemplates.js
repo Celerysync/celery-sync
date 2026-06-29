@@ -367,7 +367,7 @@ export const RHYTHM_PRESETS = [
         durationType: "ongoing",
         durationDays: null,
         startDate: null,
-        awNote: "Anthony William: even a smaller amount of celery juice on a hard day is still healing.",
+        awNote: "Anthony William: even a smaller amount of celery juice on a hard day is still supportive.",
         isMedicine: false,
         programId: null,
         programDayRange: null,
@@ -384,7 +384,7 @@ export const RHYTHM_PRESETS = [
         durationType: "ongoing",
         durationDays: null,
         startDate: null,
-        awNote: "Anthony William: on rest days, mono fruit meals are gentle on the digestive system and still deeply healing.",
+        awNote: "Anthony William: on rest days, mono fruit meals are gentle on the digestive system and still gentle and supportive.",
         isMedicine: false,
         programId: null,
         programDayRange: null,
@@ -551,7 +551,7 @@ RHYTHM_PRESETS.push(
     id: "thyroid-day",
     name: "Thyroid Support Day",
     emoji: "🦋",
-    description: "Supporting thyroid healing — iodine-rich foods, key supplements, low-fat eating. Refer to Thyroid Healing for the full protocol.",
+    description: "Supporting thyroid health — iodine-rich foods, key supplements, low-fat eating. Refer to Thyroid Healing for the full protocol.",
     items: [
       { id: "th-lemon", name: "Lemon Water", emoji: "🍋", category: "morning", spacingMinutes: 0, frequency: "daily", durationType: "ongoing", durationDays: null, startDate: null, awNote: "Anthony William: lemon water begins the day — supports liver which is tightly linked to thyroid.", isMedicine: false, programId: null, programDayRange: null, note: "", sortOrder: 1 },
       { id: "th-celery", name: "Celery Juice", emoji: "🥬", category: "morning", spacingMinutes: 30, frequency: "daily", durationType: "ongoing", durationDays: null, startDate: null, awNote: "Anthony William: celery juice supports thyroid by addressing the viral root cause — see Thyroid Healing.", isMedicine: false, programId: null, programDayRange: null, note: "", sortOrder: 2 },
@@ -564,7 +564,7 @@ RHYTHM_PRESETS.push(
   },
   {
     id: "adrenal-day",
-    name: "Adrenal Healing Day",
+    name: "Adrenal Support Day",
     emoji: "⚡",
     description: "Adrenal fatigue focus — frequent snacks, blood sugar stability, no overexertion. Refer to Medical Medium and Cleanse to Heal.",
     items: [

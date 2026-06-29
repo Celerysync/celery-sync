@@ -184,8 +184,8 @@ export default function Onboarding({ onDone }) {
               <div style={{ fontSize: 52 }}>🌿</div>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.9, marginTop: 8 }}>
                 🎙 Speak to it · 🔊 It speaks back<br />
-                🔍 Symptom checker with 100+ conditions<br />
-                💊 Protocol guidance from Anthony William's teachings<br />
+                🔍 Symptom and condition tracker<br />
+                💊 Track your own protocol — inspired by Anthony William's teachings<br />
                 🌿 All cleanses, day by day<br />
                 📊 Track energy, mood, and symptoms
               </div>

@@ -101,9 +101,9 @@ Write a personal, warm discovery message in 5–6 short paragraphs. Keep every p
 
 Paragraph 1: Open by speaking directly to ${name || "them"} and acknowledging exactly how they feel. Validate that this is real — they are not imagining it, not being dramatic, not weak.
 
-Paragraph 2: Introduce the core cause behind their symptoms in completely plain language. If Epstein-Barr virus is relevant, introduce it as "a very common virus called Epstein-Barr — one that most people carry without ever knowing — which can quietly become active and begin causing symptoms exactly like these." Explain heavy metals simply: "tiny particles from our food, water, and environment that accumulate in the body over years, affecting how the brain and organs function." Never abbreviate. Make it feel like a revelation, not a medical lecture.
+Paragraph 2: Introduce patterns that Anthony William generally associates with symptoms like these, in completely plain language — without implying this is a diagnosis. If Epstein-Barr virus is relevant, introduce it as "a very common virus called Epstein-Barr — one that most people carry without ever knowing — which can quietly become active and begin causing symptoms exactly like these." Explain heavy metals simply: "tiny particles from our food, water, and environment that accumulate in the body over years, affecting how the brain and organs function." Never abbreviate. Make it feel like a revelation, not a medical lecture.
 
-Paragraph 3: Explain gently why doctors typically miss this — why tests come back normal, why they're told they're fine, why standard medicine hasn't had answers. Validate the frustration without criticising doctors harshly.
+Paragraph 3: Explain gently why standard testing may not always identify these patterns — why tests can come back normal, why they may have been told they're fine, why standard medicine hasn't had answers. Validate the frustration without criticising doctors harshly.
 
 Paragraph 4: Give them ONE simple thing to start with this week. Just one. Celery juice on an empty stomach each morning — 500ml (about 16 ounces) of pure celery, nothing added. Explain in one or two sentences what it does and why it matters for exactly what they're experiencing.
 
@@ -336,7 +336,7 @@ Do not use the words "protocol", "EBV", "HCl", "neurotoxin", or any abbreviation
               Your first week, {name}
             </div>
             <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.65 }}>
-              Just two things. Nothing more. Anthony William says this alone — done consistently — begins to change everything.
+              Just two things. Nothing more. Anthony William suggests these as a foundation for your own protocol.
             </div>
           </div>
 

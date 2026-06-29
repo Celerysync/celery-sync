@@ -65,7 +65,7 @@ const FEATURES = [
   {
     emoji: "🍽",
     title: "MM-compliant meals, planned for you",
-    desc: "50+ healing recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
+    desc: "50+ MM-inspired recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
   },
   {
     emoji: "🔗",
@@ -95,7 +95,7 @@ const TESTIMONIALS = [
     quote: "The 3:6:9 cleanse guide alone is worth it. Having it mapped out day by day with exactly what to eat, a reminder when to drink the celery juice, and an AI to ask questions — I finally completed it properly for the first time.",
     name: "Tanya W.",
     loc: "Auckland, NZ",
-    condition: "Liver healing · chronic fatigue",
+    condition: "Liver support · chronic fatigue",
   },
   {
     quote: "My daughter has eczema and I have fibromyalgia. We both have our own profiles and our AI knows our separate symptoms and protocols. It feels like having Anthony William on speed dial — without the wait.",
@@ -367,10 +367,10 @@ export default function Landing({ onGetStarted }) {
           fontSize: 22, color: C.charcoal,
           marginBottom: 6, textAlign: "center",
         }}>
-          From healers on the same path
+          From people on the same path
         </h2>
         <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 24, lineHeight: 1.6 }}>
-          Real people. Real conditions. Real healing journeys.
+          Real people. Real journeys.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -448,7 +448,7 @@ export default function Landing({ onGetStarted }) {
             An AI that actually knows Medical Medium
           </h2>
           <p style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.8, marginBottom: 20, textAlign: "center" }}>
-            Not a generic chatbot with a prompt. CelerySync's AI is trained on Anthony William's publicly shared teachings — paraphrased, attributed, and always pointing you to the source. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation.
+            Not a generic chatbot with a prompt. CelerySync's AI paraphrases and attributes Anthony William's publicly shared teachings — always pointing you back to his books and official sources. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation.
           </p>
 
           {/* Mock AI conversation */}
@@ -470,7 +470,7 @@ export default function Landing({ onGetStarted }) {
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["100 condition protocols", "Permanent healing memory", "Speaks & listens", "Links to official AW sources", "Weekly summaries", "Doctor reports"].map((t) => (
+            {["Permanent healing memory", "Speaks & listens", "Links to official AW sources", "Weekly summaries", "Doctor reports"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",

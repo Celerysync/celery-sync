@@ -13,10 +13,10 @@ const MM_BOOKS_URL = "https://medicalmedium.com/books";
 
 const BOOKS = [
   { title: "Medical Medium",                        emoji: "📗", desc: "Where it all began — the foundation of everything Anthony William teaches about chronic illness." },
-  { title: "Life-Changing Foods",                   emoji: "🍇", desc: "50 healing foods with their spiritual and physical healing properties — a beautiful, essential read." },
+  { title: "Life-Changing Foods",                   emoji: "🍇", desc: "50 healing foods with their supportive properties and the unique gifts each one offers — a beautiful, essential read." },
   { title: "Thyroid Healing",                       emoji: "🦋", desc: "The truth behind Hashimoto's, Graves', hypothyroidism, and thyroid nodules. Life-changing for millions." },
   { title: "Liver Rescue",                          emoji: "🍋", desc: "The liver is behind almost everything — skin, weight, mystery symptoms, mood. This book is extraordinary." },
-  { title: "Celery Juice",                          emoji: "🥬", desc: "Everything about the global celery juice movement Anthony William started. Simple, profound, healing." },
+  { title: "Celery Juice",                          emoji: "🥬", desc: "Everything about the global celery juice movement Anthony William started. Simple, profound, nourishing." },
   { title: "Cleanse to Heal",                       emoji: "✨", desc: "The master protocol guide — the 3:6:9 cleanse, every variation, and protocols for 200+ conditions." },
   { title: "Brain Saver",                           emoji: "🧠", desc: "Answers to brain inflammation, anxiety, depression, and every neurological condition." },
   { title: "Brain Saver Protocols, Cleanses & Recipes", emoji: "💊", desc: "300+ symptoms with exact supplement dosages — the most clinical and detailed book in the series." },
@@ -212,7 +212,7 @@ function YouTubeSection() {
                     Search AW's free content on {activeTopic}:
                   </div>
                   <a
-                    href={`https://www.youtube.com/results?search_query=medical+medium+${encodeURIComponent(TOPICS.find(t => t.label === activeTopic)?.search || activeTopic)}`}
+                    href="https://www.youtube.com/@MedicalMedium"
                     target="_blank" rel="noopener noreferrer"
                     style={{
                       display: "inline-block", background: "#FF0000", color: C.white,
@@ -220,7 +220,7 @@ function YouTubeSection() {
                       fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
                     }}
                   >
-                    ▶ Search on YouTube
+                    ▶ Visit AW's YouTube channel
                   </a>
                 </div>
               )}
@@ -258,7 +258,7 @@ function HealingStorySection() {
 
   const QUESTIONS = [
     { key: "how_long",   label: "How long have you been following Medical Medium?", placeholder: "e.g. 3 years, since 2020…" },
-    { key: "conditions", label: "What conditions or symptoms brought you to Anthony William's work?", placeholder: "e.g. chronic fatigue, EBV, thyroid issues…" },
+    { key: "conditions", label: "What were you experiencing when you found Anthony William's work?", placeholder: "e.g. chronic fatigue, EBV, thyroid issues…" },
     { key: "changes",    label: "What has improved or changed for you?", placeholder: "e.g. energy levels, brain fog lifted, test results improved…" },
     { key: "message",    label: "What would you say to someone just discovering Medical Medium?", placeholder: "From your heart…" },
   ];
@@ -267,7 +267,7 @@ function HealingStorySection() {
     setLoading(true);
     const text = await callClaude({
       tier: "quick", maxTokens: 350,
-      messages: [{ role: "user", content: `Write a heartfelt, genuine healing testimony for Anthony William's website based on these answers. Write in first person, warm and personal, 3-4 short paragraphs. Do NOT include any medical claims or promises of cure — keep it personal experience only. End with genuine gratitude to Anthony William.\n\nHow long following MM: ${answers.how_long}\nConditions/symptoms: ${answers.conditions}\nWhat changed: ${answers.changes}\nMessage to others: ${answers.message}` }],
+      messages: [{ role: "user", content: `Write a heartfelt, genuine healing testimony for Anthony William's website based on these answers. Write in first person, warm and personal, 3-4 short paragraphs. Do NOT include any medical claims or promises of cure — keep it personal experience only. End with genuine gratitude to Anthony William.\n\nHow long following MM: ${answers.how_long}\nWhat they were experiencing: ${answers.conditions}\nWhat changed: ${answers.changes}\nMessage to others: ${answers.message}` }],
     }).catch(() => null);
     setStory((text || "").replace(/\*\*/g, "").replace(/[*_`#]/g, "").trim());
     setLoading(false);
@@ -590,7 +590,7 @@ export default function AW({ onNavigate }) {
         </div>
         <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px 16px", fontSize: 13.5, lineHeight: 1.8, fontFamily: "Georgia,serif", fontStyle: "italic" }}>
           "Healing is possible. You didn't create your illness, you are not to blame,
-          and you have more ability to heal than any doctor has told you."
+          and you have more capacity for change and wellbeing than you've been led to believe."
         </div>
         <div style={{ fontSize: 11, opacity: 0.75, marginTop: 8, textAlign: "right" }}>
           — Anthony William
@@ -604,7 +604,7 @@ export default function AW({ onNavigate }) {
         </div>
         <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.85 }}>
           CelerySync was built by people whose lives have been changed by Anthony William's teachings —
-          people who have seen loved ones healed, who have bought books for others when they couldn't
+          people who have seen loved ones transform on the Medical Medium path, who have bought books for others when they couldn't
           afford them, who have spent their own money on supplements for friends because they couldn't
           stand watching someone suffer when they knew there was a way forward.
         </div>
@@ -810,7 +810,7 @@ export default function AW({ onNavigate }) {
           🌐 Follow Anthony William — Free Healing Content
         </div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
-          He shares freely and abundantly. Follow him everywhere. Share his content. The more people who find him, the more people heal.
+          He shares freely and abundantly. Follow him everywhere. Share his content. The more people who find him, the more people can support their wellbeing.
         </div>
         {LINKS.map((l) => (
           <a
