@@ -6,23 +6,9 @@ import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 function OrganDetail({ organ, onBack, voiceName }) {
-  const [section, setSection] = useState("overview");
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
-  const getSectionText = () => {
-    if (section === "overview") return organ.overview;
-    if (section === "teachings") return organ.awTeachings.join(". ");
-    if (section === "healing") return `Best healing foods: ${organ.healingFoods.join(", ")}. Foods to avoid: ${organ.avoid.join(", ")}. Key supplements: ${organ.supplements.join(", ")}.`;
-    if (section === "protocol") return organ.protocol;
-    return "";
-  };
-
-  const SECTIONS = [
-    { id: "overview", label: "Overview" },
-    { id: "teachings", label: "AW Teaches" },
-    { id: "healing", label: "Healing" },
-    { id: "protocol", label: "Protocol" },
-  ];
+  const healingText = `Best healing foods for the ${organ.name}: ${organ.healingFoods.join(", ")}. Key supplements: ${organ.supplements.join(", ")}.`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -47,11 +33,8 @@ function OrganDetail({ organ, onBack, voiceName }) {
         <div style={{ fontSize: 13, color: C.mid, marginTop: 4, fontStyle: "italic" }}>
           {organ.tagline}
         </div>
-        <div style={{ marginTop: 10, fontSize: 11, background: organ.color, color: "#fff", display: "inline-block", padding: "3px 10px", borderRadius: 20, fontFamily: "Georgia,serif" }}>
-          📚 {organ.book}
-        </div>
         <button
-          onClick={() => speaking ? stopSpeaking() : speak(getSectionText())}
+          onClick={() => speaking ? stopSpeaking() : speak(healingText)}
           style={{
             marginTop: 12, background: speaking ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.2)",
             border: "1px solid rgba(255,255,255,0.5)", color: "#fff",
@@ -64,135 +47,69 @@ function OrganDetail({ organ, onBack, voiceName }) {
         </button>
       </div>
 
-      {/* Section tabs */}
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
-        {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => { stopSpeaking(); setSection(s.id); }}
-            style={{
-              flexShrink: 0, padding: "7px 14px", borderRadius: 20,
-              border: `1.5px solid ${section === s.id ? organ.color : C.border}`,
-              background: section === s.id ? organ.color : "transparent",
-              color: section === s.id ? "#fff" : C.mid,
-              fontFamily: "Georgia,serif", fontSize: 12, cursor: "pointer",
-              fontWeight: section === s.id ? 700 : 400,
-            }}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Overview */}
-      {section === "overview" && (
-        <Card>
-          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.85, whiteSpace: "pre-line" }}>
-            {organ.overview}
-          </div>
-        </Card>
-      )}
-
-      {/* AW Teachings */}
-      {section === "teachings" && (
-        <Card>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 12 }}>
-            What Anthony William teaches about the {organ.name}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {organ.awTeachings.map((t, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: organ.color, color: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700, fontFamily: "Georgia,serif",
-                  marginTop: 2,
-                }}>
-                  {i + 1}
-                </div>
-                <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7 }}>{t}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Healing foods + avoid */}
-      {section === "healing" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Card>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: "#16a34a", marginBottom: 10 }}>
-              🌿 Best healing foods
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-              {organ.healingFoods.map((f) => (
-                <div key={f} style={{
-                  padding: "5px 12px", borderRadius: 20,
-                  background: "#f0fdf4", border: "1px solid #86efac",
-                  fontSize: 12, color: "#15803d", fontFamily: "Georgia,serif",
-                }}>
-                  {f}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: "#dc2626", marginBottom: 10 }}>
-              ❌ Foods to avoid
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-              {organ.avoid.map((f) => (
-                <div key={f} style={{
-                  padding: "5px 12px", borderRadius: 20,
-                  background: "#fef2f2", border: "1px solid #fca5a5",
-                  fontSize: 12, color: "#dc2626", fontFamily: "Georgia,serif",
-                }}>
-                  {f}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
-              💊 Key supplements
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-              {organ.supplements.map((s) => (
-                <div key={s} style={{
-                  padding: "5px 12px", borderRadius: 20,
-                  background: C.sageLight, border: `1px solid ${C.sage}60`,
-                  fontSize: 12, color: C.sageDark, fontFamily: "Georgia,serif",
-                }}>
-                  {s}
-                </div>
-              ))}
-            </div>
-          </Card>
+      {/* Healing foods */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: "#16a34a", marginBottom: 10 }}>
+          🌿 Best healing foods
         </div>
-      )}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {organ.healingFoods.map((f) => (
+            <div key={f} style={{
+              padding: "5px 12px", borderRadius: 20,
+              background: "#f0fdf4", border: "1px solid #86efac",
+              fontSize: 12, color: "#15803d", fontFamily: "Georgia,serif",
+            }}>
+              {f}
+            </div>
+          ))}
+        </div>
+      </Card>
 
-      {/* Protocol */}
-      {section === "protocol" && (
-        <Card>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
-            🌿 Healing protocol
-          </div>
-          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.85 }}>
-            {organ.protocol}
-          </div>
-          <div style={{ marginTop: 14, padding: "12px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${C.sage}40` }}>
-            <div style={{ fontSize: 11, color: C.sageDark, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>
-              📚 Go deeper
+      {/* Supplements */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
+          💊 Key supplements
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {organ.supplements.map((s) => (
+            <div key={s} style={{
+              padding: "5px 12px", borderRadius: 20,
+              background: C.sageLight, border: `1px solid ${C.sage}60`,
+              fontSize: 12, color: C.sageDark, fontFamily: "Georgia,serif",
+            }}>
+              {s}
             </div>
-            <div style={{ fontSize: 12, color: C.mid }}>
-              Full protocol in <em>{organ.book}</em> by Anthony William
-            </div>
-          </div>
-        </Card>
-      )}
+          ))}
+        </div>
+      </Card>
+
+      {/* Link-out */}
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 8 }}>
+          📚 Full teachings and protocols
+        </div>
+        <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.7, marginBottom: 10 }}>
+          For Anthony William's complete {organ.name.toLowerCase()} teachings — protocols, supplement specifics, and underlying causes — visit his official website or read <em>{organ.book}</em>.
+        </div>
+        <a
+          href="https://www.medicalmedium.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            background: organ.color,
+            color: "#fff",
+            padding: "8px 16px",
+            borderRadius: 20,
+            fontSize: 12,
+            fontFamily: "Georgia,serif",
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          Visit medicalmedium.com →
+        </a>
+      </Card>
 
       {/* Disclaimer */}
       <div style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, padding: "0 8px 8px" }}>
@@ -210,7 +127,7 @@ export default function Body({ navQuery, onPageContext }) {
     if (!navQuery) return;
     const q = navQuery.toLowerCase();
     const match = ORGANS.find(o => o.name.toLowerCase().includes(q) || q.includes(o.name.toLowerCase().split(" ")[0]));
-    if (match) { setSelected(match); onPageContext?.({ tab: "body", label: match.name, detail: match.overview?.slice(0, 300) }); }
+    if (match) { setSelected(match); onPageContext?.({ tab: "body", label: match.name, detail: match.tagline }); }
   }, [navQuery]);
 
   if (selected) {
@@ -238,7 +155,7 @@ export default function Body({ navQuery, onPageContext }) {
           A different way of understanding your body
         </div>
         <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.7 }}>
-          Anthony William's teachings reveal how each organ truly functions, what burdens it, and exactly how to support it. Tap any organ below to explore.
+          Anthony William's teachings offer a unique lens on how each organ functions and what supports it. Tap any organ to explore, then follow the link to his official site for full protocols.
         </div>
       </div>
 
@@ -247,7 +164,7 @@ export default function Body({ navQuery, onPageContext }) {
         {ORGANS.map((organ) => (
           <button
             key={organ.id}
-            onClick={() => { setSelected(organ); onPageContext?.({ tab: "body", label: organ.name, detail: organ.overview?.slice(0, 300) }); }}
+            onClick={() => { setSelected(organ); onPageContext?.({ tab: "body", label: organ.name, detail: organ.tagline }); }}
             style={{
               background: organ.lightColor,
               border: `1.5px solid ${organ.color}33`,

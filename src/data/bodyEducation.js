@@ -3,25 +3,13 @@ export const ORGANS = [
     id: "liver",
     name: "Liver",
     emoji: "🫀",
-    tagline: "Your body's most hardworking healer",
+    tagline: "Your body's most hardworking organ",
     color: "#8B4513",
     lightColor: "#fdf3e7",
-    overview: `Anthony William teaches that the liver is the most important organ for healing in our modern world. It performs over 2,000 chemical functions and is under more stress today than at any point in human history — due to the viral, toxic, and dietary burdens we carry.
-
-The liver works on a cycle: from approximately 1am–3am it enters its deepest cleansing phase, processing and removing what it collected during the day. This is why waking between 1–3am often signals a sluggish or overburdened liver.`,
-    awTeachings: [
-      "The liver stores vitamins, minerals, glucose, and adrenaline for emergencies",
-      "A sluggish liver is behind most mystery illnesses, weight gain, and skin conditions",
-      "Fats — even healthy fats — are the liver's biggest burden when eaten too early in the day",
-      "The liver has a morning cleansing window that runs until noon — fruit and lemon water support this",
-      "Eating fat before noon interrupts the liver's overnight cleanse",
-      "Pathogens like EBV hide in the liver — this is the true cause of many autoimmune conditions",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Lemon water", "Apples", "Artichokes", "Asparagus", "Dandelion greens", "Turmeric"],
     avoid: ["Eggs", "Dairy", "Gluten", "Corn", "Soy", "Pork", "Canola oil", "Alcohol"],
     supplements: ["Milk thistle", "Dandelion root", "Chaga mushroom", "Lemon balm", "Zinc"],
     book: "Liver Rescue",
-    protocol: "The 3:6:9 Cleanse (from Cleanse to Heal) gives the liver a dedicated rest and flush period — the most powerful liver reset per Anthony William.",
   },
   {
     id: "thyroid",
@@ -30,22 +18,10 @@ The liver works on a cycle: from approximately 1am–3am it enters its deepest c
     tagline: "The butterfly gland that governs your energy",
     color: "#4a7c59",
     lightColor: "#f0f7f0",
-    overview: `Anthony William reveals that thyroid conditions are almost never caused by the thyroid itself — they are caused by the Epstein-Barr virus (EBV) attacking the thyroid gland. This is why thyroid medication often doesn't resolve symptoms: it manages hormone levels but doesn't address the underlying viral cause.
-
-Hashimoto's, hypothyroidism, hyperthyroidism, and thyroid nodules are all, per Anthony William, driven by EBV in various stages.`,
-    awTeachings: [
-      "EBV is the true cause of Hashimoto's, Graves', and most thyroid conditions",
-      "The immune system attacking the thyroid (so-called autoimmunity) is actually the immune system fighting EBV in the thyroid",
-      "Thyroid medication treats the symptom — only antiviral protocols address the root cause",
-      "Heavy metals in the thyroid feed EBV and worsen thyroid conditions",
-      "Iodine from sea vegetables directly supports healthy thyroid function",
-      "Stress hormones (adrenaline) weaken the thyroid over time",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Atlantic dulse", "Spirulina", "Raspberries", "Apricots", "Garlic", "Ginger"],
     avoid: ["Eggs", "Dairy", "Gluten", "Canola oil", "MSG", "Artificial flavours"],
     supplements: ["Zinc", "Selenium", "Lemon balm", "Cat's claw", "L-lysine", "Vitamin B12 (adenosylcobalamin)", "Nascent iodine"],
     book: "Thyroid Healing",
-    protocol: "The Heavy Metal Detox Smoothie daily removes the metals that feed EBV in the thyroid. Pair with the antiviral supplement protocol from Thyroid Healing.",
   },
   {
     id: "adrenals",
@@ -54,22 +30,10 @@ Hashimoto's, hypothyroidism, hyperthyroidism, and thyroid nodules are all, per A
     tagline: "Your fight-or-flight engines — and much more",
     color: "#d97706",
     lightColor: "#fffbeb",
-    overview: `Anthony William calls the adrenal glands the most misunderstood glands in the body. They don't just produce adrenaline for emergencies — they produce dozens of hormone blends that regulate almost every system. When they are chronically fatigued (adrenal fatigue), the entire body suffers.
-
-The key insight from Anthony William: blood sugar crashes are the #1 trigger of adrenaline surges, which exhaust the adrenals over time. This is why the adrenal snack protocol — eating every 1.5–2 hours — is central to all healing.`,
-    awTeachings: [
-      "Low blood sugar triggers adrenaline release — over time this exhausts the adrenals",
-      "Eating every 1.5–2 hours is the single most powerful thing for adrenal recovery",
-      "The classic adrenal snack: apple + celery + dates — sodium, potassium, and natural sugar together",
-      "Waking between 3am–5am often means an adrenaline surge from blood sugar dropping overnight",
-      "Stress, fear, and anxiety all draw on adrenal reserves — emotional healing matters",
-      "Adrenal fatigue is behind most cases of chronic fatigue, anxiety, and insomnia",
-    ],
     healingFoods: ["Apples", "Celery", "Dates", "Bananas", "Coconut water", "Oranges", "Potatoes", "Leafy greens"],
     avoid: ["Caffeine", "Alcohol", "Skipping meals", "High-fat meals", "Refined sugar", "Intermittent fasting (when adrenally fatigued)"],
     supplements: ["Ashwagandha", "Licorice root", "Vitamin C", "Magnesium glycinate", "B-complex", "Rhodiola"],
     book: "Medical Medium",
-    protocol: "Adrenal snack every 1.5–2 hours: apple + celery sticks is the classic. Never go more than 2 hours without eating during recovery.",
   },
   {
     id: "brain",
@@ -78,23 +42,10 @@ The key insight from Anthony William: blood sugar crashes are the #1 trigger of 
     tagline: "Electrical, chemical, and deeply healable",
     color: "#7c3aed",
     lightColor: "#faf5ff",
-    overview: `Anthony William's Brain Saver books reveal that the brain and central nervous system are under assault from neurotoxins released by viruses (particularly EBV and shingles virus), heavy metals, and chemical exposures. This is the true cause of most neurological symptoms — brain fog, anxiety, depression, tremors, tinnitus, and more.
-
-The brain runs on glucose and mineral salts — not fat. Anthony William directly challenges ketogenic diets, arguing they starve the brain of its preferred fuel.`,
-    awTeachings: [
-      "The brain runs on glucose (fruit sugar) and mineral salts — not fat or ketones",
-      "Heavy metals in the brain create a battery effect that generates pathogenic electrical activity",
-      "Viruses feed on heavy metals and release neurotoxins that cause neurological symptoms",
-      "Brain fog is almost always caused by viral neurotoxins + heavy metals, not a lack of ketones",
-      "Wild blueberries are the #1 food for the brain — they restore neurons and remove heavy metals",
-      "Celery juice's sodium cluster salts rebuild the central nervous system's neurotransmitter chemicals",
-      "Anxiety and depression are physical conditions with viral and toxic causes — not character flaws",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Spirulina", "Barley grass juice powder", "Atlantic dulse", "Walnuts", "Raspberries", "Mangoes"],
     avoid: ["MSG", "Aspartame", "Natural flavours", "Alcohol", "Recreational drugs", "Eggs (feed viruses)"],
     supplements: ["GABA", "5-HTP", "Magnesium glycinate", "Lemon balm", "Ashwagandha", "Vitamin B12 (adenosylcobalamin)", "Lion's mane mushroom"],
     book: "Brain Saver",
-    protocol: "Heavy Metal Detox Smoothie daily removes the metals that pathogens feed on. Celery juice rebuilds neurotransmitter chemicals. These two together are the foundation of neurological healing.",
   },
   {
     id: "gut",
@@ -103,22 +54,10 @@ The brain runs on glucose and mineral salts — not fat. Anthony William directl
     tagline: "Where healing begins and pathogens hide",
     color: "#059669",
     lightColor: "#ecfdf5",
-    overview: `Anthony William teaches that the gut is ground zero for most chronic illness. The small intestinal lining is where viruses, bacteria (including Streptococcus), and unproductive fungi establish themselves. This creates chronic inflammation, leaky gut, SIBO, IBS, bloating, and digestive distress.
-
-The key: it is not a lack of digestive enzymes or probiotics that causes gut problems — it is pathogens. Celery juice's sodium cluster salts are the most powerful gut-healing tool because they directly kill pathogens and rebuild the gut lining's mucosal cells.`,
-    awTeachings: [
-      "Streptococcus bacteria is the true cause of most SIBO, IBS, and chronic bloating",
-      "Celery juice kills pathogens in the gut lining and rebuilds mucosal cells",
-      "High-fat diets feed pathogens and slow digestive transit",
-      "The gut has its own nervous system — emotional trauma is stored in gut tissue",
-      "Hydrochloric acid levels drop from stress, viral load, and poor diet — not just age",
-      "Constipation is almost always caused by pathogenic load + dehydration + low fruit intake",
-    ],
     healingFoods: ["Celery juice", "Papaya", "Ginger", "Aloe vera", "Cucumbers", "Steamed zucchini", "Cooked leafy greens", "Apples"],
     avoid: ["Gluten", "Dairy", "Eggs", "Corn", "Soy", "Canola oil", "Alcohol", "Vinegar"],
     supplements: ["Zinc", "Licorice root", "Slippery elm", "Aloe vera juice", "Lemon balm", "Monolaurin"],
     book: "Cleanse to Heal",
-    protocol: "16oz celery juice on an empty stomach every morning. This is the single most powerful gut-healing intervention per Anthony William — more effective than any probiotic.",
   },
   {
     id: "immune",
@@ -127,22 +66,10 @@ The key: it is not a lack of digestive enzymes or probiotics that causes gut pro
     tagline: "Your army — and it needs the right fuel",
     color: "#dc2626",
     lightColor: "#fef2f2",
-    overview: `Anthony William teaches that the immune system is not malfunctioning in autoimmune conditions — it is doing exactly what it is designed to do: fighting pathogens. The concept of the immune system "attacking itself" is a misunderstanding. What doctors interpret as autoimmunity is actually the immune system fighting viruses (primarily EBV) that have embedded in organs and tissues.
-
-Supporting the immune system means: reducing pathogenic load, removing heavy metals, and feeding the immune cells with the right antiviral foods and supplements.`,
-    awTeachings: [
-      "Autoimmune disease is not the immune system attacking itself — it is the immune system fighting pathogens",
-      "EBV is the pathogen behind most so-called autoimmune conditions",
-      "Zinc is the single most important mineral for immune function — most people are deficient",
-      "Vitamin C in its bioavailable fruit form is more powerful than isolated supplements",
-      "Sleep is when the immune system does its most aggressive pathogen-fighting work",
-      "Emotional stress suppresses immune function more than any food",
-    ],
     healingFoods: ["Wild blueberries", "Elderberries", "Garlic", "Ginger", "Turmeric", "Oranges", "Kiwi", "Pomegranates"],
     avoid: ["Eggs", "Dairy", "Gluten (suppresses immune cell production)", "Alcohol", "Refined sugar"],
     supplements: ["Zinc (zinc sulfate liquid)", "Vitamin C", "Cat's claw", "Elderberry", "Echinacea", "Olive leaf extract", "L-lysine"],
     book: "Medical Medium",
-    protocol: "High-dose zinc + vitamin C + L-lysine is the foundational antiviral stack per Anthony William. Cat's claw and elderberry amplify this.",
   },
   {
     id: "lymphatic",
@@ -151,22 +78,10 @@ Supporting the immune system means: reducing pathogenic load, removing heavy met
     tagline: "The drainage system that most doctors ignore",
     color: "#0284c7",
     lightColor: "#f0f9ff",
-    overview: `The lymphatic system is the body's waste removal network — and Anthony William teaches it is chronically congested in most people with chronic illness. Unlike the blood, which has the heart to pump it, lymph fluid relies entirely on movement, breathing, and hydration to flow.
-
-Swollen lymph nodes, chronic sinus issues, skin conditions, and cellulite are all signs of lymphatic congestion. Clearing it is essential for deep healing.`,
-    awTeachings: [
-      "The lymphatic system has no pump — it relies on movement and deep breathing to circulate",
-      "Most chronic skin conditions (eczema, acne, rosacea) originate in lymphatic congestion",
-      "Dairy is the #1 cause of lymphatic congestion — it thickens lymph fluid",
-      "Rebounding (mini trampoline) is the most effective exercise for moving lymph",
-      "Dry brushing before a shower moves lymph toward drainage points",
-      "Lemon water first thing in the morning activates the lymphatic system",
-    ],
     healingFoods: ["Lemon water", "Celery juice", "Cucumber", "Watermelon", "Herbs (parsley, cilantro)", "Burdock root tea", "Nettle tea"],
     avoid: ["Dairy (thickens lymph)", "Gluten", "Eggs", "Processed foods", "Table salt"],
     supplements: ["Burdock root", "Red clover", "Cleavers", "Vitamin C", "Astragalus"],
     book: "Medical Medium",
-    protocol: "Morning lemon water (16–32oz) immediately on waking activates lymphatic drainage. Combine with deep breathing and, if possible, rebounding for 10 minutes.",
   },
   {
     id: "heart",
@@ -175,22 +90,10 @@ Swollen lymph nodes, chronic sinus issues, skin conditions, and cellulite are al
     tagline: "More than a pump — an emotional centre",
     color: "#e11d48",
     lightColor: "#fff1f2",
-    overview: `Anthony William teaches that most heart symptoms — palpitations, arrhythmias, high blood pressure, and even some chest pain — are neurological in origin, caused by viral neurotoxins and heavy metals affecting the phrenic nerve and vagus nerve, not structural heart problems.
-
-The heart is also profoundly connected to emotional experience. Fear, grief, and heartbreak leave literal physiological imprints on heart tissue, affecting its electrical rhythm and function.`,
-    awTeachings: [
-      "Heart palpitations are almost always caused by viral neurotoxins affecting the phrenic nerve — not a heart defect",
-      "High blood pressure often originates in a liver that is too congested to properly filter blood",
-      "The vagus nerve connects the brain, heart, and gut — viral damage here causes many heart symptoms",
-      "Magnesium deficiency is epidemic and is behind many arrhythmias and palpitations",
-      "Emotional trauma stores in heart tissue and affects its electrical function",
-      "Adrenaline surges (from blood sugar crashes) put direct stress on the heart",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Pomegranates", "Leafy greens", "Bananas", "Figs", "Avocado (in moderation)", "Turmeric"],
     avoid: ["Caffeine", "Alcohol", "Refined salt", "Processed foods", "MSG", "Adrenaline-triggering foods"],
     supplements: ["Magnesium glycinate", "CoQ10", "Hawthorn berry", "Lemon balm", "Vitamin B12", "Potassium"],
     book: "Medical Medium",
-    protocol: "Magnesium glycinate before bed + lemon balm tea addresses most palpitation and arrhythmia symptoms per Anthony William. Address blood sugar first (adrenal snacks) as adrenaline surges directly stress the heart.",
   },
   {
     id: "kidneys",
@@ -199,22 +102,10 @@ The heart is also profoundly connected to emotional experience. Fear, grief, and
     tagline: "Your body's master filtration system",
     color: "#0891b2",
     lightColor: "#ecfeff",
-    overview: `Anthony William teaches that the kidneys are under enormous stress in our modern world due to the high viral and toxic load the body is managing. The kidneys filter blood continuously — removing waste, balancing electrolytes, and producing erythropoietin for red blood cell production.
-
-Kidney issues in Anthony William's view are rarely about the kidneys themselves but about what the kidneys are being asked to process — viral waste, heavy metals, pharmaceutical residue, and the byproducts of a burdened liver.`,
-    awTeachings: [
-      "Kidney stones form when the body is dehydrated and high in oxalate from eggs and animal protein — not from eating greens",
-      "UTIs (urinary tract infections) are bacterial — streptococcus is usually the culprit, not E. coli as commonly believed",
-      "Edema and water retention are often a sign the kidneys are overwhelmed, not that you should restrict water",
-      "Coconut water is one of the most kidney-supportive drinks — its electrolytes go directly to the kidneys",
-      "Cucumber and asparagus are the most powerful kidney-flushing foods per Anthony William",
-      "The kidneys are vulnerable to certain medications, pesticides, and prescription drug residue",
-    ],
     healingFoods: ["Cucumber", "Asparagus", "Coconut water", "Celery juice", "Lemon water", "Parsley", "Watermelon", "Nettle tea"],
     avoid: ["Eggs", "Dairy", "Excessive sodium", "Alcohol", "Corn", "High-fat diets", "Carbonated water"],
     supplements: ["Nettle leaf", "Chanca piedra", "Marshmallow root", "Lemon balm", "Vitamin B12", "Magnesium"],
     book: "Cleanse to Heal",
-    protocol: "The 369 Cleanse dramatically reduces kidney burden by removing the foods that generate the most filtration waste (eggs, dairy, animal protein). Cucumber + celery juice daily flushes the kidneys continuously. Per Anthony William, Cleanse to Heal.",
   },
   {
     id: "skin",
@@ -223,22 +114,10 @@ Kidney issues in Anthony William's view are rarely about the kidneys themselves 
     tagline: "Your largest detox organ",
     color: "#d97706",
     lightColor: "#fffbeb",
-    overview: `Anthony William teaches that skin is an elimination organ — the body pushes toxins out through the skin when the liver, kidneys, and lymphatic system are overloaded. This is why skin conditions like acne, eczema, psoriasis, and rosacea rarely respond permanently to topical treatments — the source is internal.
-
-The skin's health is a direct reflection of liver health in Anthony William's view. When the liver is overburdened and the lymphatic system is sluggish, the body uses the skin as a backup route for detoxification.`,
-    awTeachings: [
-      "Acne is caused by the liver pushing out streptococcus byproducts and bacterial waste through the skin — not by dirty pores",
-      "Eczema is an internal condition — the liver is processing inflammatory viral waste and pushing it out through skin",
-      "Psoriasis involves streptococcus living in the liver and bloodstream, with the immune system attacking its byproducts",
-      "Rosacea is caused by low-grade streptococcus in the gut and blood — the flushing is an immune response",
-      "Cystic acne is often related to the liver being overwhelmed with adrenaline, eggs, and dairy — all of which feed strep",
-      "Skin heals when the liver heals — topical products address symptoms, not causes",
-    ],
     healingFoods: ["Celery juice", "Wild blueberries", "Cucumber", "Leafy greens", "Aloe vera", "Sprouts", "Apples", "Papaya"],
     avoid: ["Eggs (feed streptococcus most powerfully)", "Dairy", "Gluten", "Corn", "Canola oil", "Pork", "Soy"],
     supplements: ["Zinc (sulfate)", "Vitamin C", "Spirulina", "Barley grass juice", "Lemon balm", "Cat's claw"],
     book: "Cleanse to Heal",
-    protocol: "The 369 Cleanse with strict egg and dairy elimination is the most powerful skin protocol per Anthony William. Celery juice (16oz daily) and Wild Blueberries together target streptococcus in the liver — this is the root cause of most skin conditions. Skin changes typically begin within 2–4 weeks of strict protocol.",
   },
   {
     id: "reproductive",
@@ -247,23 +126,10 @@ The skin's health is a direct reflection of liver health in Anthony William's vi
     tagline: "Healing the hormonal storm",
     color: "#db2777",
     lightColor: "#fdf2f8",
-    overview: `Anthony William teaches that most reproductive and hormonal conditions — PCOS, endometriosis, ovarian cysts, uterine fibroids, heavy periods, infertility — are not primarily hormonal problems. They are caused by EBV (Epstein-Barr virus) and its neurotoxins interfering with the endocrine system, combined with a burdened liver that cannot properly process hormones.
-
-This is why hormonal treatments often fail to produce lasting results — they address the symptom (hormone imbalance) rather than the cause (viral activity and liver congestion).`,
-    awTeachings: [
-      "Endometriosis is caused by EBV neurotoxins that have settled in the pelvic area — not from retrograde menstruation",
-      "Ovarian cysts are often viral in origin — EBV feeds on estrogen, creating cystic growth on the ovaries",
-      "PCOS is driven by a liver that is too sluggish to properly metabolise testosterone and estrogen",
-      "Fibroids grow when streptococcus and EBV are both active in the body — they feed on eggs and dairy",
-      "Infertility in women is often traced to EBV burdening the liver and affecting egg quality",
-      "PMS and severe period pain indicate the liver is overloaded with hormones it cannot process fast enough",
-      "The thyroid is intimately connected to reproductive health — EBV in the thyroid disrupts sex hormones indirectly",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Leafy greens", "Figs", "Raspberries", "Turmeric", "Ginger", "Asparagus"],
     avoid: ["Eggs (feed EBV most powerfully)", "Dairy", "Gluten", "Corn", "Soy", "Pork", "Canola oil", "Alcohol"],
     supplements: ["Vitex (Chaste tree)", "Lemon balm", "Cats claw", "Zinc", "Vitamin B12 (methylcobalamin)", "Spirulina", "Red clover"],
     book: "Thyroid Healing",
-    protocol: "Strict elimination of eggs and dairy while doing the 369 Cleanse is the foundation per Anthony William. The liver needs to be freed to process the hormones that are accumulating. Vitex supports progesterone; Lemon balm directly targets EBV. This combination, sustained over 3–6 months, produces the most profound results.",
   },
   {
     id: "spleen",
@@ -272,22 +138,10 @@ This is why hormonal treatments often fail to produce lasting results — they a
     tagline: "The first line of defence against pathogens",
     color: "#7c3aed",
     lightColor: "#f5f3ff",
-    overview: `Anthony William teaches that the spleen is one of the most overlooked yet critical organs for healing chronic illness. The spleen produces B-cells, filters old red blood cells, and is the first line of defence when pathogens like EBV enter the body.
-
-When someone has mono (infectious mononucleosis), the spleen swells — this is a sign that EBV has reached the spleen and is actively being fought. Many people with chronic fatigue, frequent illness, and slow healing have a chronically burdened spleen that never fully recovered from an early EBV or strep infection.`,
-    awTeachings: [
-      "The spleen produces B-cells that create antibodies against EBV — when the spleen is overwhelmed, EBV wins",
-      "Chronic spleen burden is a hidden cause of chronic fatigue, anaemia, and frequent illness",
-      "Mono (glandular fever) swells the spleen — many people never recover their spleen health after a mono infection",
-      "Streptococcus attacks the spleen and thrives there — this is why recurring strep leads to ongoing immune problems",
-      "The spleen communicates with the thymus gland, making it essential for long-term immune memory",
-      "Wild blueberries are the most powerful spleen-supportive food — they contain phytochemicals that directly assist spleen function",
-    ],
     healingFoods: ["Wild blueberries", "Celery juice", "Oranges", "Apples", "Leafy greens", "Turmeric", "Ginger"],
     avoid: ["Eggs", "Dairy", "Gluten", "Corn", "Pork", "Alcohol", "Canola oil"],
     supplements: ["Cat's claw", "Elderberry", "Zinc", "Vitamin C", "Spirulina", "Red clover", "Chaga mushroom"],
     book: "Medical Medium",
-    protocol: "Anthony William recommends wild blueberries daily (1–2 cups) as the most direct spleen support. Cat's claw is the most antiviral supplement for directly addressing the pathogens (EBV, strep) that burden the spleen. The spleen responds well to the 369 Cleanse — particularly the wild blueberry focus on days 1–3.",
   },
 ];
 
