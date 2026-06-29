@@ -4,7 +4,7 @@ import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { Tag, Card, Btn } from "./ui.jsx";
-import { CLEANSES_SUMMARY, ORIGINAL_369 } from "../data/cleanses.js";
+import { CLEANSES_SUMMARY } from "../data/cleanses.js";
 import { AVOID_ALL } from "../data/avoidList.js";
 import { supabase } from "../lib/supabase.js";
 import { RECIPES } from "../data/recipes.js";
@@ -125,7 +125,6 @@ function CleanseRecipes({ cleanseName }) {
 
 export default function Cleanse({ navQuery, authUser, profileId, onPageContext }) {
   const [sel, setSel] = useState(null);
-  const [activeDay, setActiveDay] = useState(null);
   const [started, setStarted] = useLocalStorage("cs_started_cleanses", {});
   const [startMsg, setStartMsg] = useState(null);
   const { voiceName } = useVoicePrefs();
@@ -208,45 +207,30 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
   };
 
   if (sel === "Original 3:6:9") {
-    const days = Object.keys(ORIGINAL_369);
-    const day = activeDay || days[0];
-    const d = ORIGINAL_369[day];
-
-    const readIt = () =>
-      speak(
-        `${day}. ${d.theme}. Upon waking: ${d.uponWaking}. Morning: ${d.morning}. ${
-          d.lunch ? "Lunch: " + d.lunch + "." : ""
-        } ${d.dinner ? "Dinner: " + d.dinner + "." : ""} ${
-          d.allDay ? "Throughout the day: " + d.allDay : ""
-        } Tips: ${d.tips?.join(". ")}`
-      );
+    const startDate = started["Original 3:6:9"];
+    const daysElapsed = startDate
+      ? Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000)
+      : null;
+    const dayNumber = daysElapsed !== null ? Math.min(daysElapsed + 1, 9) : null;
+    const done = daysElapsed !== null && daysElapsed >= 9;
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <button
-          onClick={() => { setSel(null); setActiveDay(null); }}
+          onClick={() => setSel(null)}
           style={{
-            background: "none",
-            border: "none",
-            color: C.sage,
-            cursor: "pointer",
-            fontFamily: "Georgia,serif",
-            fontSize: 14,
-            padding: 0,
-            textAlign: "left",
+            background: "none", border: "none", color: C.sage,
+            cursor: "pointer", fontFamily: "Georgia,serif",
+            fontSize: 14, padding: 0, textAlign: "left",
           }}
         >
           ← All Cleanses
         </button>
 
-        <div
-          style={{
-            background: `linear-gradient(135deg,${C.sage},${C.sageDark})`,
-            borderRadius: 18,
-            padding: 20,
-            color: C.white,
-          }}
-        >
+        <div style={{
+          background: `linear-gradient(135deg,${C.sage},${C.sageDark})`,
+          borderRadius: 18, padding: 20, color: C.white,
+        }}>
           <div style={{ fontSize: 32 }}>🌿</div>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, marginTop: 6 }}>
             Original 3:6:9 Cleanse
@@ -254,7 +238,7 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
           <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>
             9 days · Cleanse to Heal Chapter 10 · Anthony William
           </div>
-          {!started["Original 3:6:9"] ? (
+          {!startDate ? (
             <button
               onClick={() => startCleanse("Original 3:6:9", 9)}
               style={{
@@ -268,7 +252,7 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
             </button>
           ) : (
             <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
-              ✅ Started {started["Original 3:6:9"]}
+              ✅ Started {startDate}
             </div>
           )}
           {startMsg && (
@@ -278,106 +262,54 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
           )}
         </div>
 
-        {/* Day tabs */}
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            overflowX: "auto",
-            paddingBottom: 4,
-            scrollbarWidth: "none",
-          }}
-        >
-          {days.map((d) => (
-            <div
-              key={d}
-              onClick={() => setActiveDay(d)}
-              style={{
-                flexShrink: 0,
-                padding: "8px 14px",
-                borderRadius: 30,
-                fontSize: 12,
-                cursor: "pointer",
-                border: `2px solid ${(activeDay || days[0]) === d ? C.sage : C.border}`,
-                background: (activeDay || days[0]) === d ? C.sageLight : "transparent",
-                color: (activeDay || days[0]) === d ? C.sageDark : C.muted,
-                fontFamily: "Georgia,serif",
-                fontWeight: 700,
-              }}
-            >
-              {d}
+        {/* Day counter */}
+        {startDate && !done && (
+          <Card>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: C.sage, marginBottom: 6 }}>
+              Day {dayNumber} of 9
             </div>
-          ))}
-        </div>
+            <div style={{ background: C.border, borderRadius: 8, height: 8, overflow: "hidden", marginBottom: 8 }}>
+              <div style={{
+                background: C.sage, height: "100%", borderRadius: 8,
+                width: `${(dayNumber / 9) * 100}%`, transition: "width 0.4s",
+              }} />
+            </div>
+            <div style={{ fontSize: 12, color: C.muted }}>Started {startDate}</div>
+          </Card>
+        )}
+        {done && (
+          <Card style={{ background: C.sageLight, border: `1.5px solid ${C.sage}` }}>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark }}>
+              ✅ 9-day cleanse complete
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Started {startDate}</div>
+          </Card>
+        )}
 
-        {/* Day detail */}
+        {/* Protocol link-out */}
         <Card>
-          <div
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
+            📚 Day-by-day protocol
+          </div>
+          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.7, marginBottom: 10 }}>
+            For what to eat and do on each of the 9 days — meals, timings, and guidelines — refer to <em>Cleanse to Heal</em> by Anthony William (Chapter 10) or visit his official website.
+          </div>
+          <a
+            href="https://www.medicalmedium.com"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
+              display: "inline-block", background: C.sage, color: "#fff",
+              padding: "8px 16px", borderRadius: 20, fontSize: 12,
+              fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
             }}
           >
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.sage }}>
-              {day}
-            </div>
-            <Btn small onClick={speaking ? stopSpeaking : readIt} color={C.sage}>
-              {speaking ? "⏹ Stop" : "🔊 Listen"}
-            </Btn>
-          </div>
-          <div
-            style={{
-              background: C.sageLight,
-              borderRadius: 10,
-              padding: "8px 12px",
-              fontSize: 13,
-              color: C.sageDark,
-              fontWeight: 700,
-              marginBottom: 12,
-            }}
-          >
-            {d.theme}
-          </div>
-          {[
-            ["🌅 Upon Waking", d.uponWaking],
-            ["☀️ Morning", d.morning],
-            ["🕐 Mid-Morning", d.midMorning],
-            ["🥗 Lunch", d.lunch],
-            ["🍎 Mid-Afternoon", d.midAfternoon],
-            ["🌆 Dinner", d.dinner],
-            ["📅 All Day", d.allDay],
-            ["🌇 Early Evening", d.earlyEvening],
-            ["🌙 Evening", d.evening],
-          ]
-            .filter(([, v]) => v)
-            .map(([label, val]) => (
-              <div key={label} style={{ padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 3 }}>
-                  {label}
-                </div>
-                <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6 }}>{val}</div>
-              </div>
-            ))}
-          {d.tips && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 8 }}>
-                📋 Guidelines
-              </div>
-              {d.tips.map((t, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", fontSize: 13, color: C.mid }}>
-                  <span style={{ color: C.sage, fontWeight: 700 }}>•</span>
-                  {t}
-                </div>
-              ))}
-            </div>
-          )}
+            Visit medicalmedium.com →
+          </a>
         </Card>
 
         <CleanseRecipes cleanseName="Original 3:6:9" />
 
-        {/* Avoid all */}
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
             🚫 Avoid All 9 Days
@@ -491,7 +423,7 @@ export default function Cleanse({ navQuery, authUser, profileId, onPageContext }
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <button
-          onClick={() => { setSel(null); setActiveDay(null); }}
+          onClick={() => setSel(null)}
           style={{ background: "none", border: "none", color: C.sage, cursor: "pointer", fontFamily: "Georgia,serif", fontSize: 14, padding: 0, textAlign: "left" }}
         >
           ← All Cleanses

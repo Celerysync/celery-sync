@@ -6,7 +6,7 @@ export const CLEANSES_SUMMARY = [
     emoji: "🌿",
     color: C.sage,
     days: 9,
-    best: "Heart palpitations, hot flashes, brain fog, migraines, anxiety, depression, fatigue, thyroid, Lyme, eczema, acne, UTIs",
+    best: "Heart palpitations, hot flashes, brain fog, migraines, anxiety, depression, fatigue, thyroid, eczema, acne, UTIs",
     desc: "The most powerful cleanse. Uproot deep-seated toxins. Day 9 is all liquids.",
   },
   {
@@ -14,7 +14,7 @@ export const CLEANSES_SUMMARY = [
     emoji: "🌱",
     color: C.leaf,
     days: 9,
-    best: "High cholesterol, high BP, fatty liver, arthritis, insomnia, varicose veins, bloating, headaches, type 2 diabetes",
+    best: "High cholesterol, high BP, fatty liver, arthritis, insomnia, varicose veins, bloating, headaches, general wellbeing support",
     desc: "70% strength of Original. Perfect for beginners or busy schedules.",
   },
   {
@@ -30,7 +30,7 @@ export const CLEANSES_SUMMARY = [
     emoji: "🧠",
     color: C.charcoal,
     days: 0,
-    best: "ADHD, autism, anxiety, depression, Alzheimer's, brain fog, tremors, Parkinson's, MS, fatigue, insomnia",
+    best: "General wellbeing support, anxiety, depression, brain fog, tremors, fatigue, insomnia",
     desc: "Daily Big 5 smoothie — wild blueberries, spirulina, barley grass juice, cilantro, Atlantic dulse. All 5 together every day.",
   },
   {
@@ -62,72 +62,8 @@ export const CLEANSES_SUMMARY = [
     emoji: "🍎",
     color: C.sage,
     days: 7,
-    best: "Food poisoning recovery, eating disorders, digestive conditions, MS, fibromyalgia, ME/CFS",
+    best: "Food poisoning recovery, digestive conditions, general wellbeing support",
     desc: "Eat only one healing food at a time — apples, bananas, papaya, mango, melon.",
   },
 ];
 
-export const ORIGINAL_369 = {
-  "Days 1-3": {
-    theme: "Prepare — Begin removing troublemaker foods",
-    uponWaking: "16oz lemon or lime water",
-    morning: "Wait 15-30 min → 16oz celery juice → wait 15-30 min → Breakfast of choice within guidelines",
-    midMorning: "1-2 apples or applesauce",
-    lunch: "Meal of choice within guidelines",
-    midAfternoon: "1-2 apples, celery sticks and cucumber slices",
-    dinner: "Meal of choice within guidelines",
-    evening: "16oz lemon or lime water",
-    tips: [
-      "Reduce dietary fat by at least half",
-      "No radical fats after dinner",
-      "Focus on fruits, vegetables, leafy greens",
-      "Steam vegetables — don't roast or bake",
-    ],
-  },
-  "Days 4-6": {
-    theme: "Push — Liver gets long-awaited break from producing bile",
-    uponWaking: "16oz lemon or lime water",
-    morning: "Wait 15-30 min → 16oz celery juice → wait 15-30 min → Liver Rescue Smoothie",
-    midMorning: "Apple or applesauce with one to two dates",
-    lunch: "Steamed asparagus with Liver Rescue Salad",
-    midAfternoon: "At least 1-2 apples plus celery sticks and dates",
-    dinner: "Steamed asparagus and brussels sprouts with Liver Rescue Salad",
-    evening: "Apple, hibiscus tea, lemon balm tea, or chaga tea",
-    tips: [
-      "AVOID ALL RADICAL FATS from Day 4 onwards — no avocado, oils, nuts, seeds, coconut, animal products",
-      "No eggs, dairy, gluten, soft drinks, salt, pork, corn, soy, lamb, tuna, vinegar, alcohol, MSG, fermented foods, caffeine, citric acid, aspartame, preservatives, nutritional yeast",
-      "Steam vegetables only",
-      "Stay hydrated — 1 litre water morning, 1 litre evening",
-    ],
-  },
-  "Days 7-8": {
-    theme: "Deep Cleanse — Your liver gets its greatest relief",
-    uponWaking: "16oz lemon or lime water",
-    morning: "Wait 15-30 min → 16oz celery juice → wait 15-30 min → Liver Rescue Smoothie",
-    lunch: "Spinach Soup over cucumber noodles",
-    midAfternoon: "Apple with cucumber slices and celery sticks",
-    dinner: "Steamed asparagus and/or brussels sprouts with optional Liver Rescue Salad",
-    evening: "16oz lemon or lime water, hibiscus or chaga tea",
-    tips: [
-      "Continue all Day 4-6 guidelines",
-      "Asparagus is one of the most important foods for the liver during cleanse",
-      "Spinach Soup is deeply healing and gentle on the liver",
-    ],
-  },
-  "Day 9": {
-    theme: "The 9 — The most potent day. All liquid and blended.",
-    uponWaking: "16oz lemon or lime water",
-    morning: "Two 16-20oz servings of celery juice — one in morning, one throughout day",
-    allDay:
-      "Choose one staple: blended melon, fresh watermelon juice, blended ripe pear, fresh-squeezed orange juice, cucumber-apple juice, or blended papaya. Enjoy as many servings as desired, consumed separately from each other.",
-    earlyEvening: "At least 16oz celery juice",
-    evening: "16oz lemon or lime water, hibiscus or chaga tea",
-    tips: [
-      "This is entirely liquid and blended — no solid foods",
-      "Your body is releasing large amounts of toxins and viral waste",
-      "This is the most potent cleansing day — honour it",
-      "Stick to liquid and blended foods only",
-      "Stay hydrated — about 1 litre water morning and evening",
-    ],
-  },
-};
