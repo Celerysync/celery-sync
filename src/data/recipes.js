@@ -18,7 +18,6 @@ export const RECIPES = [
       "Drink on an empty stomach immediately upon waking.",
       "Wait 15–30 minutes before having celery juice.",
     ],
-    mmNote: "Anthony William teaches this is the first step in the morning protocol. The organic acids in lemon help flush the liver and prepare the digestive system. Per Medical Medium, do NOT add anything else — no honey, no cayenne.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -40,7 +39,6 @@ export const RECIPES = [
       "Wait 15–30 minutes before eating anything else.",
       "Do not add lemon, apple, ginger or anything else — plain celery only.",
     ],
-    mmNote: "Anthony William calls celery juice the most powerful healing food on the planet. It restores hydrochloric acid, kills pathogens, cleanses the liver, and rebuilds the nervous system. Per Celery Juice, consistency is everything — daily use for months is where the healing happens.",
     book: "Celery Juice by Anthony William",
   },
   {
@@ -51,7 +49,7 @@ export const RECIPES = [
     category: "smoothie",
     prepTime: 5,
     servings: 1,
-    goodFor: ["brain-fog", "fatigue", "anxiety", "depression", "nerve-pain", "adhd", "autism", "parkinsons"],
+    goodFor: ["brain-fog", "fatigue", "anxiety", "depression", "nerve-pain"],
     ingredients: [
       "2 cups wild blueberries (fresh or frozen — not cultivated)",
       "1 ripe banana",
@@ -67,7 +65,6 @@ export const RECIPES = [
       "Blend until completely smooth — 60 seconds minimum.",
       "Drink immediately on an empty stomach (after celery juice wait time).",
     ],
-    mmNote: "Anthony William calls this the most important recipe in all his books. ALL FIVE ingredients (wild blueberry, spirulina, barley grass juice, cilantro, dulse) must be present — each performs a specific step in extracting heavy metals. Wild blueberries draw metals out of brain tissue; cilantro crosses the blood-brain barrier; spirulina and barley grass juice carry metals into the intestinal tract; dulse grabs them and exits the body.",
     book: "Cleanse to Heal by Anthony William",
     mustHaveAll: true,
   },
@@ -95,7 +92,6 @@ export const RECIPES = [
       "Top with fresh mango chunks, banana slices, fresh blueberries, and a sprinkle of hemp seeds.",
       "Eat immediately.",
     ],
-    mmNote: "Anthony William calls wild blueberries the number one brain food and the most powerful antioxidant on the planet. They are fundamentally different to cultivated blueberries — smaller, darker, and with dramatically higher phytochemical content. Per Brain Saver, they literally draw toxins out of brain tissue.",
     book: "Brain Saver by Anthony William",
   },
   {
@@ -119,7 +115,6 @@ export const RECIPES = [
       "Blend until smooth and creamy.",
       "Drink immediately or keep chilled for up to 4 hours.",
     ],
-    mmNote: "Anthony William teaches that bananas are critical for adrenal support — they contain the specific glucose and mineral salts the adrenals need to recover. Dates provide sustained energy without spiking blood sugar. Per Cleanse to Heal, this is an ideal pre-workout or morning meal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -143,7 +138,6 @@ export const RECIPES = [
       "Garnish with fresh mint.",
       "Eat slowly and mindfully.",
     ],
-    mmNote: "Anthony William teaches that papaya is a powerful digestive food — its enzymes help break down undigested proteins and clear pathogens from the gut. Mango is antiviral and liver-cleansing. Together they make a deeply healing breakfast. Per Life-Changing Foods, papaya is one of the 28 most healing foods.",
     book: "Life-Changing Foods by Anthony William",
   },
   {
@@ -166,7 +160,6 @@ export const RECIPES = [
       "Eat slowly and chew well.",
       "Best on an empty stomach.",
     ],
-    mmNote: "Anthony William teaches that mono meals of melon are among the most cleansing foods available. Melons move through the digestive system quickly and require almost no digestive energy — giving the body's resources entirely to healing. Watermelon in particular is deeply hydrating at a cellular level. Per Cleanse to Heal, mono melon mornings are especially powerful during a cleanse.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -190,7 +183,6 @@ export const RECIPES = [
       "Blend on high for 60 seconds until completely smooth.",
       "Drink immediately.",
     ],
-    mmNote: "Anthony William teaches that apples contain malic acid that breaks down the biofilm that pathogens hide behind in the gut and organs. Spinach is one of the most mineral-rich foods and alkalises the blood. Per Medical Medium, this combination is excellent for liver and gut healing.",
     book: "Medical Medium by Anthony William",
   },
 
@@ -213,7 +205,6 @@ export const RECIPES = [
       "Wash and cut celery into sticks.",
       "Eat both together — the combination is what matters.",
     ],
-    mmNote: "Anthony William's most recommended adrenal snack. The apple provides glucose (the adrenals' preferred fuel) and the celery provides mineral salts. Together they replenish the adrenal glands and prevent the adrenaline surges that damage the nervous system and worsen every condition. Have every 1.5–2 hours. Per Cleanse to Heal, the 3pm snack is the most important.",
     book: "Cleanse to Heal by Anthony William",
     isAdrenalSnack: true,
   },
@@ -235,7 +226,6 @@ export const RECIPES = [
       "Slice the cucumber.",
       "Eat together.",
     ],
-    mmNote: "Dates are one of Anthony William's top healing foods — they contain a specific sugar that feeds the brain and liver, not pathogens. Cucumber provides essential mineral salts. This pairing perfectly fulfils the glucose + mineral salt combination the adrenal glands require. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
     isAdrenalSnack: true,
   },
@@ -257,7 +247,6 @@ export const RECIPES = [
       "Wrap and eat.",
       "Or simply eat the banana and lettuce side by side.",
     ],
-    mmNote: "Bananas are among Anthony William's top adrenal foods — they contain the exact glucose and potassium blend the adrenals use to recover. Lettuce provides the mineral salts. Per Cleanse to Heal, this is especially helpful mid-afternoon when adrenal fatigue peaks.",
     book: "Cleanse to Heal by Anthony William",
     isAdrenalSnack: true,
   },
@@ -280,7 +269,6 @@ export const RECIPES = [
       "Top with fresh mint leaves and a squeeze of lime if desired.",
       "Eat as a snack between meals.",
     ],
-    mmNote: "Anthony William teaches that mangoes are powerfully antiviral and liver-cleansing. They contain specific phytochemicals that help flush viral debris from liver tissue. The natural sugars in mango are safe and beneficial, not the same as processed sugar. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
     isAdrenalSnack: true,
   },
@@ -312,7 +300,6 @@ export const RECIPES = [
       "Top with fresh cilantro and mint. Season with sea salt.",
       "Serve immediately (avocado browns if left too long).",
     ],
-    mmNote: "Anthony William teaches that avocados are deeply nourishing for the brain and nervous system, providing the healthy fats that protect myelin sheaths. Cucumbers provide mineral salts and hydration at a cellular level. Cilantro helps remove heavy metals. A deeply healing combination per Brain Saver.",
     book: "Brain Saver by Anthony William",
   },
   {
@@ -341,7 +328,6 @@ export const RECIPES = [
       "Add cherry tomatoes, lemon juice, oregano, salt and pepper.",
       "Garnish with fresh parsley and serve.",
     ],
-    mmNote: "Anthony William highlights sweet potatoes as deeply healing for the liver and adrenal glands. They are an excellent source of bioavailable beta-carotene and the specific sugars the liver uses for detoxification. Spinach provides iron and mineral salts. Per Liver Rescue, this combination is liver-restoring.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -369,7 +355,6 @@ export const RECIPES = [
       "Top with fresh basil and optional spinach.",
       "Season with sea salt. Serve immediately.",
     ],
-    mmNote: "Anthony William teaches that raw foods contain living enzymes that supercharge digestion and healing. Tomatoes are rich in lycopene which is antiviral and protective. Zucchini is alkalising and easy to digest. Garlic is one of Anthony William's top antimicrobial foods. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -395,7 +380,6 @@ export const RECIPES = [
       "Tear fresh mint and scatter on top.",
       "Serve on a bed of rocket if desired.",
     ],
-    mmNote: "Anthony William teaches that watermelon is one of the most deeply hydrating and kidney-supportive foods available. It contains specific amino acids and electrolytes that hydrate at a cellular level — far beyond what water alone can do. Per Cleanse to Heal, watermelon is especially healing during a cleanse.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -421,7 +405,6 @@ export const RECIPES = [
       "Squeeze lemon generously over the top.",
       "Sprinkle with garlic if using, sea salt, and fresh parsley.",
     ],
-    mmNote: "Anthony William calls asparagus one of the most important vegetables for liver and kidney healing. It contains specific phytochemicals that help the liver and kidneys flush toxins, and it is a critical food in the 3:6:9 cleanse. It also feeds beneficial gut bacteria. Per Liver Rescue and Cleanse to Heal.",
     book: "Liver Rescue by Anthony William",
   },
 
@@ -449,12 +432,11 @@ export const RECIPES = [
       "While potatoes bake, steam broccoli florets for 5–7 minutes until bright green and tender.",
       "Serve potato topped with steamed broccoli, lemon juice, chives, sea salt and pepper.",
     ],
-    mmNote: "Anthony William says potatoes are one of the most misunderstood foods — they are NOT inflammatory. They are deeply antiviral, anti-fungal, and highly bioavailable. They are one of the most filling and healing foods you can eat. Per Medical Medium, potatoes fed to the thymus gland, strengthening immunity. Eat the skins too — that is where much of the healing compounds concentrate.",
     book: "Medical Medium by Anthony William",
   },
   {
     id: "lentil-soup",
-    name: "Healing Lentil & Vegetable Soup",
+    name: "Nourishing Lentil & Vegetable Soup",
     emoji: "🍲",
     mealType: "dinner",
     category: "soup",
@@ -484,7 +466,6 @@ export const RECIPES = [
       "Stir in fresh spinach and lemon juice. Season with sea salt.",
       "Serve topped with fresh parsley.",
     ],
-    mmNote: "Anthony William endorses lentils as a clean protein source that doesn't feed pathogens. Turmeric is powerfully anti-inflammatory and supports the liver. Celery provides mineral salts. Garlic is antiviral. This is a deeply nourishing dinner that supports healing without taxing digestion. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -514,7 +495,6 @@ export const RECIPES = [
       "Stir in lemon juice and season with salt and white pepper.",
       "Serve topped with fresh chives and dill.",
     ],
-    mmNote: "Anthony William teaches that potatoes are deeply healing for the gut lining and antiviral. Leeks are particularly powerful for gut bacteria restoration and contain specific prebiotics that feed the beneficial microbiome. Per Cleanse to Heal, this soup is ideal for someone with gut sensitivity or who is mid-cleanse.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -543,12 +523,11 @@ export const RECIPES = [
       "Roast on a baking tray for 30–35 minutes, turning once halfway.",
       "Serve on a bed of quickly steamed greens, with extra lemon.",
     ],
-    mmNote: "Anthony William highlights sweet potatoes for their ability to nourish and cleanse the liver. They provide the specific carbohydrates the liver uses to detoxify. Rich in beta-carotene which converts to vitamin A — essential for immune function and thyroid health. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
     id: "asparagus-soup",
-    name: "Liver-Healing Asparagus Soup",
+    name: "Liver-Supportive Asparagus Soup",
     emoji: "💚",
     mealType: "dinner",
     category: "soup",
@@ -575,7 +554,6 @@ export const RECIPES = [
       "Stir in lemon juice, season with salt and pepper.",
       "Serve with fresh dill or chives.",
     ],
-    mmNote: "This soup is specifically designed for liver healing. Anthony William calls asparagus one of the most powerful liver and kidney cleansing foods, containing specific compounds that no other vegetable has. This soup is an excellent dinner during any of the MM cleanses. Per Liver Rescue and Cleanse to Heal.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -606,7 +584,6 @@ export const RECIPES = [
       "Blend until silky smooth. Season with salt and pepper.",
       "Serve topped with parsley and pumpkin seeds.",
     ],
-    mmNote: "Anthony William teaches that winter squashes like butternut are rich in carotenoids — phytochemicals that are deeply protective of the immune system, thyroid, and adrenals. The natural sugars in squash are beneficial and liver-supportive. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
 
@@ -632,7 +609,6 @@ export const RECIPES = [
       "Top with fresh herbs.",
       "This is your dinner — eat as much asparagus as you like.",
     ],
-    mmNote: "This is the exact dinner Anthony William prescribes for Day 9 of the original 3:6:9 cleanse — the most important day of the entire cleanse. Day 9 is when the body expels the most toxins. Asparagus specifically supports the liver and kidneys in this final push. Per Cleanse to Heal Ch. 7.",
     book: "Cleanse to Heal — Chapter 7",
     cleanseDay: "3:6:9 Day 9",
   },
@@ -656,7 +632,6 @@ export const RECIPES = [
       "Drink immediately.",
       "This juice is drunk mid-day on Days 7–9 of the 3:6:9 cleanse.",
     ],
-    mmNote: "Anthony William recommends this specific juice for the middle phase of the 3:6:9 cleanse (Days 7–9). Apples loosen toxins from the liver and cleanse the lymphatic system. Cucumbers hydrate cells at a deep level and support kidney filtration. Together they assist the body in the deepest phase of the cleanse. Per Cleanse to Heal Ch. 7.",
     book: "Cleanse to Heal — Chapter 7",
     cleanseDay: "3:6:9 Days 7–9",
   },
@@ -682,7 +657,6 @@ export const RECIPES = [
       "Strain and add a little raw honey if desired.",
       "Sip slowly — especially effective in the evening.",
     ],
-    mmNote: "Anthony William calls lemon balm one of the most important healing herbs. It is powerfully antiviral (particularly against EBV and shingles), calms the nervous system, reduces adrenaline surges, helps insomnia, and reduces anxiety. Per Brain Saver, it crosses the blood-brain barrier and directly calms overactive neurotransmitters.",
     book: "Brain Saver by Anthony William",
   },
   {
@@ -707,7 +681,6 @@ export const RECIPES = [
       "Add a small amount of raw honey if desired.",
       "Strain and sip slowly.",
     ],
-    mmNote: "Anthony William teaches that ginger is powerfully anti-inflammatory, antiviral, and anti-spasmodic. It calms the digestive system, reduces nausea, and helps the body fight viral and bacterial infections. Combined with lemon, it is supportive of both the liver and immune system. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
 
@@ -729,7 +702,6 @@ export const RECIPES = [
       "Slice or bite the apple and pair with Medjool dates.",
       "Eat every 1.5–2 hours between meals to stabilise blood sugar.",
     ],
-    mmNote: "Anthony William considers adrenal snacking one of the most important healing practices. The natural glucose in apples and dates feeds the adrenals directly, preventing them from secreting adrenaline to compensate for low blood sugar. This adrenaline is what drives anxiety, insomnia, palpitations, and fatigue in most chronic illness sufferers. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -750,7 +722,6 @@ export const RECIPES = [
       "Or blend together for a simple smoothie.",
       "Have between meals every 1.5–2 hours.",
     ],
-    mmNote: "Anthony William calls this combination one of the most powerful adrenal foods available. Coconut water provides bioavailable electrolytes that go directly to the adrenals and central nervous system. Banana provides glucose, potassium, and B6 to support neurotransmitter production. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -770,7 +741,6 @@ export const RECIPES = [
       "Peel bananas and eat alongside the dates.",
       "This is the simplest, most portable adrenal snack.",
     ],
-    mmNote: "Per Anthony William, bananas are a brain food — high in tryptophan which converts to serotonin, and rich in natural glucose that feeds the brain. Dates provide concentrated minerals and fuel. Together they are one of the most healing snack combinations. Per Medical Medium Protocols.",
     book: "Medical Medium by Anthony William",
   },
 
@@ -796,7 +766,6 @@ export const RECIPES = [
       "Blend until smooth.",
       "Drink within 15 minutes of blending.",
     ],
-    mmNote: "Anthony William teaches that papaya is one of the most liver-supportive fruits available. It contains enzymes that break down undigested proteins that have accumulated in the gut, while papain helps eliminate pathogens. Mango is antiviral and anti-inflammatory. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -818,7 +787,6 @@ export const RECIPES = [
       "Blend all ingredients until smooth.",
       "Drink immediately.",
     ],
-    mmNote: "Anthony William teaches that cherries are one of the most powerful liver-cleansing and anti-inflammatory fruits. They contain anthocyanins that cross the blood-brain barrier and reduce neurological inflammation. Combined with wild blueberries, this smoothie is deeply supportive of the liver and brain. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -842,7 +810,6 @@ export const RECIPES = [
       "Strain and add honey if desired.",
       "Enjoy warm or over ice.",
     ],
-    mmNote: "Anthony William teaches that rose hips contain one of the most bioavailable forms of vitamin C, critical for adrenal function and immune defence against pathogens. Hibiscus is antiviral and supports healthy blood pressure and lymphatic flow. This tea is especially supportive during healing reactions.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -864,12 +831,11 @@ export const RECIPES = [
       "Pour boiling water and steep 5–7 minutes — the longer you steep, the more mineral-dense.",
       "Strain well and add lemon if desired.",
     ],
-    mmNote: "Anthony William considers nettle leaf one of the most mineral-dense healing plants — rich in iron, magnesium, silica, and trace minerals that are depleted by chronic viral activity. It is also anti-histamine, making it supportive for those with sensitivities and reactivity. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
   {
     id: "thyme-antiviral-tea",
-    name: "Fresh Thyme Antiviral Tea",
+    name: "Fresh Thyme & Lemon Tea",
     emoji: "🌱",
     mealType: "drink",
     category: "tea",
@@ -888,14 +854,13 @@ export const RECIPES = [
       "Strain, add lemon and honey.",
       "Drink 2–3 cups daily during illness.",
     ],
-    mmNote: "Anthony William rates thyme as one of the most powerfully antiviral and antibacterial herbs available without a prescription. It contains thymol which directly kills pathogens including streptococcus, EBV, and respiratory viruses. Per Medical Medium, fresh thyme tea is more potent than dried. This is a front-line antiviral remedy.",
     book: "Medical Medium by Anthony William",
   },
 
   // ── SALADS & LUNCHES ─────────────────────────────────────
   {
     id: "healing-herb-salad",
-    name: "Healing Herb Salad",
+    name: "Herb & Greens Salad",
     emoji: "🥗",
     mealType: "lunch",
     category: "salad",
@@ -919,7 +884,6 @@ export const RECIPES = [
       "Whisk together lemon juice, apple cider vinegar, honey, and cayenne.",
       "Dress the salad just before serving.",
     ],
-    mmNote: "Anthony William designed this as a liver-supportive meal — leafy greens flush the liver, parsley and cilantro pull heavy metals and neurotoxins, while raw apple cider vinegar stimulates the liver's bile production. The cayenne stimulates lymphatic flow. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -945,7 +909,6 @@ export const RECIPES = [
       "Toss with lemon juice, ACV, and a pinch of sea salt.",
       "Let sit 5 minutes before serving.",
     ],
-    mmNote: "Anthony William teaches that cucumbers are deeply hydrating for the lymphatic system and kidneys. They flush out uric acid and purines that contribute to inflammation and joint pain. Dill is antiviral and supports the digestive system. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -975,14 +938,13 @@ export const RECIPES = [
       "Season with sea salt and pepper to taste.",
       "Serve immediately — this is best eaten fresh.",
     ],
-    mmNote: "Anthony William recommends raw meals especially during cleanses and liver healing. Raw zucchini noodles are easy to digest and low in sugar. Tomatoes are rich in lycopene which is anti-cancer and powerfully anti-inflammatory. Fresh basil is antiviral. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
 
   // ── SOUPS ─────────────────────────────────────────────────
   {
     id: "thyroid-healing-soup",
-    name: "Thyroid Healing Vegetable Soup",
+    name: "Nourishing Vegetable Soup",
     emoji: "🍲",
     mealType: "dinner",
     category: "soup",
@@ -1010,12 +972,11 @@ export const RECIPES = [
       "Stir in sea vegetables and kelp powder if using.",
       "Finish with lemon juice and salt.",
     ],
-    mmNote: "Anthony William teaches that the thyroid is particularly vulnerable to EBV (Epstein-Barr virus). This soup targets the thyroid with iodine-rich sea vegetables and kelp, while the thyme provides antiviral protection directly against EBV. Broccoli and kale provide DIM which supports hormone metabolism. Per Thyroid Healing.",
     book: "Thyroid Healing by Anthony William",
   },
   {
     id: "mineral-broth",
-    name: "Healing Mineral Broth",
+    name: "Nourishing Mineral Broth",
     emoji: "🫙",
     mealType: "dinner",
     category: "soup",
@@ -1042,7 +1003,6 @@ export const RECIPES = [
       "Strain, salt to taste, and drink as a warm nourishing broth.",
       "Can be stored refrigerated for 5 days.",
     ],
-    mmNote: "Anthony William considers mineral broth one of the most deeply nourishing and restorative foods for people who are very unwell. It floods the body with bioavailable trace minerals — particularly potassium, magnesium, and silica — that pathogens have depleted. The kombu adds thyroid-supportive iodine. Per Medical Medium.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -1074,14 +1034,13 @@ export const RECIPES = [
       "Stir in coconut milk (if using) and lemon juice.",
       "Season with salt and pepper.",
     ],
-    mmNote: "Anthony William recommends sweet potato and pumpkin as deeply liver-supportive foods — rich in carotenoids which the liver uses to rebuild liver cells after viral damage. Turmeric is a potent antiviral and supports the liver's detox pathways. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
 
   // ── DINNER ────────────────────────────────────────────────
   {
     id: "baked-potato-loaded",
-    name: "Loaded Healing Baked Potato",
+    name: "Loaded Baked Potato",
     emoji: "🥔",
     mealType: "dinner",
     category: "cooked",
@@ -1104,7 +1063,6 @@ export const RECIPES = [
       "Top with greens, tomatoes, spring onions, and herbs.",
       "Squeeze over lemon juice, season with salt and pepper.",
     ],
-    mmNote: "Anthony William calls potatoes one of the most healing and misunderstood foods. They are NOT inflammatory — they are deeply liver-supportive, rich in resistant starch that feeds beneficial gut bacteria, and contain lysine which is antiviral against EBV. The problem is only what people put on them (dairy, oils). Per Cleanse to Heal, plain baked potatoes are a healing staple.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1129,7 +1087,6 @@ export const RECIPES = [
       "Steam 35–45 minutes until outer leaves pull off easily.",
       "Serve with fresh lemon juice for dipping.",
     ],
-    mmNote: "Anthony William considers artichoke one of the most powerfully liver-supportive foods available — cynarin in artichoke directly stimulates bile production and flow, helping the liver process and eliminate toxins. This makes artichoke excellent for liver stagnation, high cholesterol, and poor fat digestion. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -1153,7 +1110,6 @@ export const RECIPES = [
       "Squeeze lime over and scatter fresh mint.",
       "Eat on an empty stomach or as a fruit-only meal.",
     ],
-    mmNote: "Anthony William teaches that papaya and mango eaten together form a powerfully liver-cleansing combination. Papain (papaya) and amylase (mango) support protein and carbohydrate digestion respectively. On an empty stomach, these enzymes go directly to work breaking down pathogens and toxic debris. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -1178,7 +1134,6 @@ export const RECIPES = [
       "Bake at 180°C (350°F) for 20–25 minutes until tender.",
       "Serve warm.",
     ],
-    mmNote: "Anthony William teaches that apples are among the most liver-supportive foods available — pectin binds to toxins in the intestinal tract and removes them. Cooked apples are easier to digest and gentler on the system during healing. Cinnamon is antiviral and helps regulate blood sugar. Per Liver Rescue.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -1204,7 +1159,6 @@ export const RECIPES = [
       "Drink immediately.",
       "This is the Days 4-8 breakfast smoothie for the Original 3:6:9 Cleanse.",
     ],
-    mmNote: "Anthony William's Liver Rescue Smoothie is the centrepiece of the 3:6:9 cleanse Days 4-8. The combination of fresh orange juice, mango, wild blueberries and dates gives the liver exactly the glucose and antioxidants it needs during deep cleansing — without any fat to burden bile production. This smoothie was specifically designed to support the liver's most critical detox window. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1235,7 +1189,6 @@ export const RECIPES = [
       "Serve over cucumber noodles if using.",
       "Garnish with fresh herbs.",
     ],
-    mmNote: "This soup is the Days 7-8 lunch for the Original 3:6:9 Cleanse. Anthony William specifically designed this combination because spinach provides deep mineral support for the liver's detox enzymes, while the soup format requires minimal digestive effort — leaving more energy for healing. It must be made with water or additive-free broth — no oils, no salt. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1265,12 +1218,11 @@ export const RECIPES = [
       "Drizzle dressing over salad and toss gently.",
       "Note: no avocado from Day 4 onwards of the 3:6:9 cleanse.",
     ],
-    mmNote: "Anthony William's Liver Rescue Salad appears in Days 4-8 of the 3:6:9 Cleanse. The arugula specifically triggers bile production, the apple provides liver-cleansing pectin and glucose, and the raw herbs provide phytochemicals that support the liver's deep detox pathways. The lemon-honey dressing is the only dressing allowed — no oils. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
     id: "coconut-water-electrolyte",
-    name: "Healing Electrolyte Water",
+    name: "Electrolyte Support Water",
     emoji: "🥥",
     mealType: "drink",
     prepTime: 2,
@@ -1288,7 +1240,6 @@ export const RECIPES = [
       "Drink slowly over 15-20 minutes.",
       "Ideal during or after detox reactions, high heat, or after exercise.",
     ],
-    mmNote: "Anthony William specifically recommends coconut water as one of the most important electrolyte sources during healing. The natural sodium, potassium, and glucose in coconut water directly support adrenal function — and during healing reactions (die-off), it helps neutralise and flush viral waste. Lemon activates the mineral salts. Per Cleanse to Heal and Medical Medium.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1314,13 +1265,12 @@ export const RECIPES = [
       "Garnish with fresh herbs.",
       "This is the primary dinner in Days 4-8 of the 3:6:9 Cleanse.",
     ],
-    mmNote: "Anthony William teaches that asparagus is one of the most important foods for the liver during cleansing — its specific compounds directly support the liver's detox enzymes. Brussels sprouts provide sulforaphane which stimulates the production of glutathione, the liver's master antioxidant. Together, these are the ideal cleanse dinner. No oil, no salt, no fat. Per Cleanse to Heal.",
     book: "Cleanse to Heal by Anthony William",
   },
   // ── MORE BREAKFAST ──────────────────────────────────────────
   {
     id: "mango-banana-bowl",
-    name: "Mango Banana Healing Bowl",
+    name: "Mango Banana Bowl",
     emoji: "🥭",
     mealType: "breakfast",
     category: "fruit",
@@ -1339,7 +1289,6 @@ export const RECIPES = [
       "Garnish with fresh mint or basil.",
       "Eat immediately — ideally as a mono meal for full digestive rest.",
     ],
-    mmNote: "Anthony William teaches that mango is one of the most healing fruits available — deeply supportive to the liver and incredibly rich in carotene and antioxidants. Eating it with banana provides the glucose-mineral combination the adrenals crave.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1359,7 +1308,6 @@ export const RECIPES = [
       "Drink 16–32oz (500ml–1L) first thing after lemon water (for Liver Rescue Morning protocol).",
       "Or drink as a morning juice any time during the day.",
     ],
-    mmNote: "Anthony William teaches that fresh-pressed orange juice floods the liver with the specific glucose and vitamin C it needs to power its morning clean. This is a cornerstone of the Liver Rescue Morning protocol. Per Liver Rescue, the liver loves glucose from fruit — not fat.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -1379,7 +1327,6 @@ export const RECIPES = [
       "Blend until smooth, then strain through a fine sieve if preferred — or drink as-is.",
       "Drink immediately. Best consumed on an empty stomach or 30 mins before a meal.",
     ],
-    mmNote: "Anthony William teaches that watermelon, especially the white rind, flushes the kidneys and lymphatic system. It is deeply hydrating for the liver and helps clear waste from the lymph. Per Cleanse to Heal, it is one of the best foods for Day 9 of the 3:6:9.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1399,7 +1346,6 @@ export const RECIPES = [
       "Run through a juicer, or blend and strain.",
       "Drink 16–32oz on an empty stomach or between meals.",
     ],
-    mmNote: "Anthony William teaches that cucumber juice is deeply alkalising and works synergistically with celery juice. Cucumber cools inflammation, flushes the kidneys, and is particularly important in Advanced 3:6:9 Days 7–9. Per Cleanse to Heal, it can alternate with celery juice or be combined during cleanses.",
     book: "Cleanse to Heal by Anthony William",
   },
   // ── MORE SNACKS ──────────────────────────────────────────────
@@ -1421,7 +1367,6 @@ export const RECIPES = [
       "Sip tea alongside the apple slices.",
       "Eat within 90 minutes of your last meal for maximum adrenal support.",
     ],
-    mmNote: "Anthony William's adrenal snack formula — apple provides the glucose and mineral salts that feed the adrenals, preventing an adrenaline surge between meals. Rose hip tea provides natural vitamin C to support adrenal recovery. Per Medical Medium, eating every 90 minutes is one of the most powerful things you can do for your adrenals.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -1441,7 +1386,6 @@ export const RECIPES = [
       "Pit dates and arrange with apple slices.",
       "Eat together as an adrenal snack mid-morning or mid-afternoon.",
     ],
-    mmNote: "Per Anthony William, Medjool dates are one of the most mineral-rich foods on earth — packed with trace minerals the nervous system and adrenals need urgently. Combined with apple glucose, this snack is specifically designed to stabilise blood sugar and prevent the adrenal surges that cause fatigue, anxiety, and insomnia.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -1460,7 +1404,6 @@ export const RECIPES = [
       "Slice mango away from stone.",
       "Eat as a stand-alone snack or adrenal snack between meals.",
     ],
-    mmNote: "Anthony William calls mango one of the most underrated healing fruits. It is rich in carotene and critical phytochemicals that specifically support the liver. Per Liver Rescue, eating mango regularly gives the liver the fuel it needs to push through years of stored toxicity.",
     book: "Liver Rescue by Anthony William",
   },
   // ── MORE LUNCH ────────────────────────────────────────────────
@@ -1487,7 +1430,6 @@ export const RECIPES = [
       "Steam broccoli and spinach separately until tender.",
       "Serve mash alongside greens, garnished with herbs.",
     ],
-    mmNote: "Anthony William teaches that sweet potato is a critical food for adrenal recovery — it provides the specific glucose and mineral salts the adrenal glands need. Per Cleanse to Heal, sweet potato with greens is ideal during Days 1–3 of the Original 3:6:9 as an evening meal.",
     book: "Cleanse to Heal by Anthony William",
   },
   {
@@ -1513,7 +1455,6 @@ export const RECIPES = [
       "Drizzle with lemon juice (and olive oil if not cleansing).",
       "Finish with fresh herbs and sea salt.",
     ],
-    mmNote: "Anthony William teaches that potatoes are deeply healing — anti-inflammatory, anti-viral, and specifically beneficial for the liver and nervous system. Per Liver Rescue, potatoes get an unfair reputation; they are one of the most healing foods available, especially when eaten without added fat.",
     book: "Liver Rescue by Anthony William",
   },
   {
@@ -1541,13 +1482,12 @@ export const RECIPES = [
       "Season with sea salt and fresh parsley.",
       "Serve immediately — the salt will soften the zucchini slightly.",
     ],
-    mmNote: "Per Anthony William, raw zucchini is deeply cleansing for the liver and digestive tract. Tomatoes contain their own antiviral compounds. This meal gives the digestive system minimal work while providing phytonutrients that actively cleanse. Excellent during 3:6:9 Days 4–8.",
     book: "Cleanse to Heal by Anthony William",
   },
   // ── MORE DINNER ───────────────────────────────────────────────
   {
     id: "chickpea-vegetable-stew",
-    name: "Chickpea & Vegetable Healing Stew",
+    name: "Chickpea & Vegetable Stew",
     emoji: "🫘",
     mealType: "dinner",
     category: "cooked",
@@ -1573,7 +1513,6 @@ export const RECIPES = [
       "Reduce heat and simmer 20 minutes until sweet potato is tender.",
       "Stir through spinach, season with sea salt. Serve with fresh herbs.",
     ],
-    mmNote: "Anthony William teaches that chickpeas are supportive to the liver and digestive system, and turmeric is one of the most powerful anti-inflammatory foods. This warming stew provides the glucose, mineral salts, and liver-friendly protein the body needs to heal overnight.",
     book: "Medical Medium by Anthony William",
   },
   {
@@ -1602,12 +1541,11 @@ export const RECIPES = [
       "Cover with foil and bake 30–35 minutes until capsicums are tender.",
       "Remove foil for the last 5 minutes to lightly colour the tops.",
     ],
-    mmNote: "Per Anthony William, capsicums are rich in bioflavonoids and vitamin C that support the adrenal glands and immune system. Brown rice provides slow-release glucose. This is an ideal dinner that is satisfying, liver-friendly, and completely pathogen-starving.",
     book: "Medical Medium by Anthony William",
   },
   {
     id: "roasted-cauliflower-soup",
-    name: "Roasted Cauliflower Healing Soup",
+    name: "Roasted Cauliflower Soup",
     emoji: "🥦",
     mealType: "dinner",
     category: "soup",
@@ -1631,7 +1569,6 @@ export const RECIPES = [
       "Add broth, turmeric, and lemon juice. Simmer 10 minutes.",
       "Blend until completely smooth. Stir in coconut milk if using. Season and serve.",
     ],
-    mmNote: "Anthony William teaches that cauliflower is powerfully anti-inflammatory and specifically beneficial to the brain and nervous system. Turmeric enhances its anti-inflammatory properties further. Roasting brings out natural sweetness and digestibility. This is a deeply nourishing, liver-supportive dinner.",
     book: "Brain Saver by Anthony William",
   },
   {
@@ -1657,7 +1594,6 @@ export const RECIPES = [
       "Roast 18–20 minutes until salmon flakes easily.",
       "Serve with fresh parsley and extra lemon.",
     ],
-    mmNote: "Anthony William includes wild salmon as an acceptable animal protein for those who need it — specifically wild-caught, not farmed. Per Brain Saver, wild salmon provides omega-3 fatty acids and DMAE that support the brain and nervous system. Note: AW recommends reducing or eliminating animal products over time.",
     book: "Brain Saver by Anthony William",
   },
   {
@@ -1686,7 +1622,6 @@ export const RECIPES = [
       "Partially blend — leave some chunks for texture.",
       "Stir through spinach, season, and serve with fresh parsley.",
     ],
-    mmNote: "Anthony William specifically designed potato-sweet potato combinations for adrenal healing. Both provide the mineral salts, potassium, and specific glucose ratios the adrenals need to recover overnight. Per Medical Medium, eating this type of dinner helps prevent the 3am cortisol crash that wakes many people with adrenal issues.",
     book: "Medical Medium by Anthony William",
   },
   // ── MORE DRINKS ───────────────────────────────────────────────
@@ -1711,7 +1646,6 @@ export const RECIPES = [
       "Add a small amount of raw honey if desired.",
       "Drink warm — especially effective in the evening.",
     ],
-    mmNote: "Anthony William calls lemon balm one of the most powerful antiviral herbs available. Per Medical Medium Herbs & Supplements, it calms the nervous system, reduces viral activity in nerve pathways, and supports deep sleep. Combined with lemon, it is excellent for anxiety, insomnia, and any condition with a viral component.",
     book: "Medical Medium Herbs & Supplements",
   },
   {
@@ -1735,7 +1669,6 @@ export const RECIPES = [
       "Add lemon juice and stir.",
       "Drink 1–2 cups daily during viral flares.",
     ],
-    mmNote: "Anthony William describes cat's claw as one of the most powerful antiviral tools available, specifically targeting Epstein-Barr virus and other herpetic viruses. Per Medical Medium Herbs & Supplements: 2 dropperfuls twice daily during active viral phases. Always point to the book for full dosage guidance.",
     book: "Medical Medium Herbs & Supplements",
   },
   {
@@ -1757,7 +1690,6 @@ export const RECIPES = [
       "Drink as a shot or sip slowly.",
       "Best taken in the morning after celery juice wait time.",
     ],
-    mmNote: "Anthony William teaches that spirulina works with the heavy metal detox process by capturing metallic debris drawn out by wild blueberries and helping transport it through the digestive tract. Lemon enhances bioavailability. This is a simple, powerful morning addition.",
     book: "Cleanse to Heal by Anthony William",
   },
 ];

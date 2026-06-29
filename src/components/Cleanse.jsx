@@ -78,9 +78,6 @@ function RecipeMini({ recipe }) {
           <div style={{ fontSize: 12, color: C.sage, fontWeight: 600, margin: "10px 0 6px", fontFamily: "Georgia,serif" }}>
             📚 {recipe.book}
           </div>
-          <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.65, fontStyle: "italic", marginBottom: 10 }}>
-            🌿 {recipe.mmNote}
-          </div>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12, color: C.charcoal, marginBottom: 6 }}>Ingredients</div>
           {recipe.ingredients.map((ing, i) => (
             <div key={i} style={{ display: "flex", gap: 6, padding: "3px 0", fontSize: 12.5, color: C.charcoal }}>

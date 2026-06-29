@@ -81,20 +81,6 @@ function RecipeCard({ recipe, onSave, saved, onAddToPlan, onLogMeal, compact = f
       {/* Expanded content */}
       {expanded && (
         <div style={{ padding: "0 14px 14px", borderTop: `1px solid ${C.border}` }}>
-          {/* MM Note */}
-          <div style={{
-            background: "#f0f7f0",
-            border: `1px solid ${C.sage}40`,
-            borderRadius: 10,
-            padding: "10px 12px",
-            margin: "12px 0",
-            fontSize: 12.5,
-            color: C.mid,
-            lineHeight: 1.65,
-            fontStyle: "italic",
-          }}>
-            🌿 {recipe.mmNote}
-          </div>
           <div style={{ fontSize: 11, color: C.sage, fontWeight: 600, marginBottom: 8 }}>
             📚 {recipe.book}
           </div>
