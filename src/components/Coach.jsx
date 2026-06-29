@@ -5,8 +5,6 @@ import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { Btn } from "./ui.jsx";
 import { streamClaude, callClaude } from "../lib/api.js";
-import { CONDITIONS } from "../data/conditions.js";
-import { MM_CORE } from "../lib/mmKnowledge.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
@@ -19,20 +17,6 @@ const CRISIS_KEYWORDS = [
 
 const hasCrisisWords = (text) =>
   CRISIS_KEYWORDS.some((kw) => text.toLowerCase().includes(kw));
-
-// Compact conditions index injected into system prompt
-function buildConditionsIndex() {
-  return Object.entries(CONDITIONS)
-    .map(([name, c]) => {
-      const cause = c.cause.split("—")[0].replace(/Anthony William teaches:/i, "").trim();
-      const topSupps = c.supps.slice(0, 4).join(", ");
-      const topAvoid = c.avoid.slice(0, 4).join(", ");
-      return `• ${name}: ${cause} | Supps: ${topSupps} | Avoid: ${topAvoid}`;
-    })
-    .join("\n");
-}
-
-const CONDITIONS_INDEX = buildConditionsIndex();
 
 // Frozen at module load — ~4000 tokens paid once, then cache hits cost ~10% via prompt caching
 const STATIC_SYSTEM = `You are the CelerySync companion — a warm, calm, encouraging guide for adults following Medical Medium (Anthony William) protocols. Many users are chronically ill, fatigued, and overwhelmed. Be gentle, concise, and practical. Keep spoken answers short.
@@ -66,13 +50,6 @@ DISCLAIMER (make prominent when relevant):
 Independent app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC.
 "Medical Medium" is a registered trademark of its owner. This is not medical advice.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${MM_CORE}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONDITION PROTOCOLS (paraphrased, attributed to AW — point to books for full detail):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${CONDITIONS_INDEX}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 APP NAVIGATION — YOU CONTROL THE ENTIRE APP:
@@ -110,20 +87,11 @@ HOW TO RESPOND:
 • Many users are very unwell — keep responses clear and actionable, not overwhelming
 • MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as physical conditions rooted in viral load and heavy metals. Validate the person's suffering as real and physical, then explain the MM perspective and point to the relevant book. Always encourage professional support alongside.
 
-HEALING REACTIONS (die-off / detox symptoms):
-When users report worsening symptoms, consider a healing reaction. Per Anthony William: as pathogens die off they release toxins; as heavy metals loosen they temporarily increase in circulation. Common reactions: increased fatigue, headaches, skin breakouts, heightened emotions, aching, brain fog spikes, nausea, loose stools. These can be positive signs. Advice: slow down the protocol slightly, drink more coconut water, rest more, continue celery juice. Signs to see a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk.
+HEALING REACTIONS:
+If a user reports worsening symptoms, Anthony William describes a "healing reaction" (die-off / detox). Acknowledge gently, encourage rest and hydration, and always flag the signs that need a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk. Never downplay genuine red-flag symptoms.
 
-MORNING PROTOCOL SEQUENCE (as Anthony William generally describes):
-1. Lemon water (16–32oz fresh lemon in water) — first thing, empty stomach. Wait 15–30 mins.
-2. Celery juice (16oz minimum, pure, nothing added, fresh) — Wait 15–30 mins.
-3. Heavy Metal Detox Smoothie — wild blueberries + banana + spirulina + barley grass juice powder + Atlantic dulse + cilantro + orange juice.
-Do NOT eat fat (avocado, nuts, seeds, coconut) until after the HMDS.
-
-ADRENAL SNACK TIMING:
-Every 1.5–2 hours between meals: apple + celery, banana + dates, coconut water + banana, medjool dates + apples. Purpose: keep blood sugar stable so adrenals don't surge adrenaline.
-
-FOODS TO AVOID (as Anthony William teaches):
-Eggs, dairy (all forms), gluten, corn, soy, pork, canola oil, MSG, natural flavours, citric acid (from aspergillus mould), artificial sweeteners, alcohol.`;
+PROTOCOL DETAILS:
+For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.`;
 
 const GREETINGS = {
   es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu guía de bienestar Medical Medium, basado en las enseñanzas de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
@@ -505,7 +473,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : "What causes my fatigue?",
     "Walk me through the 3:6:9 cleanse",
     "Heavy metal detox smoothie recipe?",
-    "Which supplements for anxiety?",
+    "What does AW say about nervous system support?",
     "Why is celery juice so important?",
     "What should I eat today?",
   ];
