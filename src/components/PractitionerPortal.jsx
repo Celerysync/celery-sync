@@ -210,11 +210,9 @@ function ClientView({ client, authUser, prac, onBack, onEdit }) {
 
   const generateProtocol = async () => {
     setGenLoading(true);
-    const dbContext = client.conditions.map(cond => {
-      const c = CONDITIONS[cond];
-      if (!c) return `${cond}: No exact data — use general MM teachings`;
-      return `${cond}: Cause: ${c.cause} | Supplements: ${c.supps.join(", ")} | Avoid: ${c.avoid.join(", ")} | Book: ${c.book || "Medical Medium series"}`;
-    }).join("\n");
+    const dbContext = client.conditions.length
+      ? `Conditions: ${client.conditions.join(", ")} — draw from Anthony William's publicly shared Medical Medium teachings for each.`
+      : "General wellness — draw from Anthony William's publicly shared Medical Medium teachings.";
 
     const text = await callClaude({
       tier: 'deep',

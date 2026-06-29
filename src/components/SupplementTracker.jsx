@@ -219,7 +219,7 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
 
           {conditionSupps.length === 0 && customSupps.length === 0 && (
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
-              Add your health conditions in your profile to see personalised supplement recommendations.
+              Add your own supplements below — enter exactly what you're following, including dose and timing.
             </div>
           )}
 
