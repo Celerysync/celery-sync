@@ -1,8 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import C from "../lib/colors.js";
-import { useVoice } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
-import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { Tag, Card } from "./ui.jsx";
@@ -159,7 +158,6 @@ export default function Home({ user, authUser, profileId }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
   const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
-  const { voiceName } = useVoicePrefs();
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
 
@@ -214,7 +212,7 @@ export default function Home({ user, authUser, profileId }) {
   };
 
   const done = Object.values(checks).every(Boolean);
-  const { speak, speaking, stopSpeaking } = useVoice(voiceName, units);
+  const { speak, speaking, stopSpeaking } = useVoiceOrchestrator();
 
   // Healing score (0–100): morning protocol 60pts + check-in 25pts + snacks 15pts
   const protocolScore = Object.values(checks).filter(Boolean).length * 20;

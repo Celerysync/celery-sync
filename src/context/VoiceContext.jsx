@@ -1,21 +1,18 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
+import { useVoice } from "../hooks/useVoice.js";
 
 const DEFAULT_VOICE = "el:IKne3meq5aSn9XLyUdCD"; // Charlie — friendly Aussie
 const LS_KEY = "cs_voiceName";
 
-const VoiceContext = createContext({
-  voiceName: DEFAULT_VOICE,
-  setVoiceName: () => {},
-});
+const VoiceContext = createContext(null);
 
 export function VoiceProvider({ authUser, children }) {
+  // ── Preferences ──────────────────────────────────────────────────────────────
   const [voiceName, setVoiceNameState] = useState(
     () => localStorage.getItem(LS_KEY) || DEFAULT_VOICE
   );
 
-  // When the user logs in, pull their saved voice from Supabase metadata.
-  // Falls back to whatever is already in localStorage.
   useEffect(() => {
     if (!authUser) return;
     const remote = authUser.user_metadata?.voice_name;
@@ -23,7 +20,6 @@ export function VoiceProvider({ authUser, children }) {
       setVoiceNameState(remote);
       localStorage.setItem(LS_KEY, remote);
     }
-  // Only run when the auth user identity changes, not on every render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser?.id]);
 
@@ -31,16 +27,55 @@ export function VoiceProvider({ authUser, children }) {
     setVoiceNameState(name);
     localStorage.setItem(LS_KEY, name);
     if (authUser) {
-      // Fire-and-forget — don't block the UI on a network call.
       supabase.auth.updateUser({ data: { voice_name: name } }).catch(() => {});
     }
   }, [authUser]);
 
+  // ── Single shared audio/STT instance for Today, Track, Companion, and GlobalVoice ──
+  // Other TTS-only components (WeeklyReport, Cleanse, Body, Symptom) keep their
+  // own useVoice instances; the _globalAudio singleton in useVoice.js already
+  // prevents simultaneous playback.
+  const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
+  const voice = useVoice(voiceName, units);
+
+  // ── AbortController for cancellable AI/ElevenLabs fetch calls ─────────────────
+  // Components call getAbortSignal() to get a signal tied to their latest request;
+  // calling it again cancels the previous one. cancelPending() cancels without
+  // issuing a new controller.
+  const abortRef = useRef(null);
+
+  const getAbortSignal = useCallback(() => {
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    return ac.signal;
+  }, []);
+
+  const cancelPending = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
+
   return (
-    <VoiceContext.Provider value={{ voiceName, setVoiceName }}>
+    <VoiceContext.Provider value={{
+      voiceName,
+      setVoiceName,
+      ...voice,
+      getAbortSignal,
+      cancelPending,
+    }}>
       {children}
     </VoiceContext.Provider>
   );
 }
 
-export const useVoicePrefs = () => useContext(VoiceContext);
+// Backward-compatible: components that only need voice name preference (Account, WelcomeVoice, etc.)
+export const useVoicePrefs = () => {
+  const ctx = useContext(VoiceContext);
+  return { voiceName: ctx.voiceName, setVoiceName: ctx.setVoiceName };
+};
+
+// Full orchestrator: shared voice state + methods + AbortController helpers.
+// Used by Today, Track, Companion, and GlobalVoice — one source of truth for
+// listening/speaking/transcript state across those surfaces.
+export const useVoiceOrchestrator = () => useContext(VoiceContext);

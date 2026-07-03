@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import C from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
-import { useVoice, srSupported } from "../hooks/useVoice.js";
+import { srSupported } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
 import { cleanForSpeech } from "../lib/ttsClean.js";
-import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 
 const TAB_CONTEXT = {
   home:        "The user is on the Today/Home tab — daily protocol, morning routine, supplement checklist, healing streak.",
@@ -20,8 +20,7 @@ export default function GlobalVoice({ currentTab, user }) {
   const [enabled] = useLocalStorage("cs_globalVoice", true);
   const [lang] = useLocalStorage("cs_lang", "en");
   const [units] = useLocalStorage("cs_units", "metric");
-  const { voiceName } = useVoicePrefs();
-  const { listening, speaking, speak, stopSpeaking, startListening, stopListening } = useVoice(voiceName, units === "imperial" ? "imperial" : "metric");
+  const { listening, speaking, speak, stopSpeaking, startListening, stopListening } = useVoiceOrchestrator();
 
   const [open, setOpen] = useState(false);
   const [transcript, setTranscript] = useState("");
