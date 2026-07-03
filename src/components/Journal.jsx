@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import C from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { callClaude } from "../lib/api.js";
+import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const MOODS = [
   { val: 1, emoji: "😫", label: "Rough" },
@@ -228,6 +229,31 @@ Write as if you know this person and genuinely care about their healing.`,
     setReflectionLoading(false);
   };
 
+  // Voice intake — merges parsed fields into form state + saves to Supabase
+  const handleVoiceWrite = useCallback(async (fields) => {
+    if (fields.energy    != null) setEnergy(fields.energy);
+    if (fields.mood      != null) setMood(fields.mood);
+    if (fields.celery_oz != null) setCeleryOz(fields.celery_oz);
+    if (fields.morning_protocol != null) setMorningProtocol(fields.morning_protocol);
+    if (fields.symptoms?.length) {
+      setSymptoms((prev) => [...new Set([...prev, ...fields.symptoms])]);
+    }
+    if (fields.notes) {
+      setNote((prev) => prev ? `${prev}\n${fields.notes}` : fields.notes);
+    }
+    setSaving(true);
+    await saveCheckin({
+      energy:           fields.energy      ?? energy,
+      mood:             fields.mood        ?? mood,
+      symptoms:         fields.symptoms?.length ? [...new Set([...symptoms, ...fields.symptoms])] : symptoms,
+      celery_oz:        fields.celery_oz   ?? celeryOz,
+      morning_protocol: fields.morning_protocol ?? morningProtocol,
+      notes:            fields.notes ? (note ? `${note}\n${fields.notes}` : fields.notes) : note,
+    });
+    setSaving(false);
+    setSaved(true);
+  }, [saveCheckin, energy, mood, symptoms, celeryOz, morningProtocol, note]);
+
   const getHour = () => new Date().getHours();
   const greeting = getHour() < 12 ? "Good morning" : getHour() < 17 ? "Good afternoon" : "Good evening";
 
@@ -274,6 +300,9 @@ Write as if you know this person and genuinely care about their healing.`,
           />
         </div>
       )}
+
+      {/* Voice intake — speak your check-in */}
+      <VoiceIntakeButton inline onWrite={handleVoiceWrite} />
 
       {/* Today's check-in */}
       <Card>
