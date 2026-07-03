@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import C from "../lib/colors.js";
-import { useVoice, ELEVENLABS_VOICES, srSupported } from "../hooks/useVoice.js";
+import { ELEVENLABS_VOICES, srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { Btn } from "./ui.jsx";
 import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
-import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const CRISIS_KEYWORDS = [
@@ -249,11 +249,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [tappedMsg, setTappedMsg] = useState(null);
   const [copied, setCopied] = useState(false);
   const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
-  const { voiceName: selectedVoiceName, setVoiceName: setSelectedVoiceName } = useVoicePrefs();
+  const { voiceName: selectedVoiceName, setVoiceName: setSelectedVoiceName,
+          listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
+          queueSentence, endQueue, resetQueue } = useVoiceOrchestrator();
   const [lang] = useLocalStorage("cs_lang", "en");
-  const { listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
-          queueSentence, endQueue, resetQueue } =
-    useVoice(selectedVoiceName, units);
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins, saveCheckin } = useDailyCheckins(authUser, profileId);
