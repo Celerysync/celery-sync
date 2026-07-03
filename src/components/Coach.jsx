@@ -129,6 +129,11 @@ THIS USER'S JOURNEY — REMEMBER ALL OF THIS:
 ${healingProfile?.healing_summary
   ? `Rolling summary:\n${healingProfile.healing_summary}`
   : ""}
+${healingProfile?.hard_times ? `\nHard times of day: ${healingProfile.hard_times}` : ""}
+${healingProfile?.current_focus ? `\nCurrently focused on: ${healingProfile.current_focus}` : ""}
+${healingProfile?.wins ? `\nRecent wins: ${healingProfile.wins}` : ""}
+${healingProfile?.preferences?.prefers?.length ? `\nThey prefer: ${healingProfile.preferences.prefers.join(", ")}` : ""}
+${healingProfile?.preferences?.avoids?.length ? `\nThey avoid: ${healingProfile.preferences.avoids.join(", ")}` : ""}
 ${milestonesSection}
 ${priorMessages.length > 0
   ? `\nMost recent conversation (last ${Math.min(priorMessages.length, 10)} messages):\n` +

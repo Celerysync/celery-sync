@@ -320,6 +320,7 @@ export default function App() {
               trialDaysLeft={trialDaysLeft}
               onSignOut={signOut}
               onReplayWelcome={() => setShowWelcome(true)}
+              profileId={activeProfileId}
             />
             <ReminderSettings authUser={authUser} />
             <ProfileManager

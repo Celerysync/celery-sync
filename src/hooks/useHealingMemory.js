@@ -88,12 +88,19 @@ export function useHealingMemory(authUser, profileId) {
   const refreshHealingSummary = useCallback(async () => {
     if (!profileId) return;
     try {
-      const { data: recent } = await supabase
-        .from("conversations")
-        .select("role, content")
-        .eq("profile_id", profileId)
-        .order("created_at", { ascending: false })
-        .limit(30);
+      const [{ data: recent }, { data: currentProfile }] = await Promise.all([
+        supabase
+          .from("conversations")
+          .select("role, content")
+          .eq("profile_id", profileId)
+          .order("created_at", { ascending: false })
+          .limit(30),
+        supabase
+          .from("healing_profiles")
+          .select("healing_summary, hard_times, current_focus, wins, preferences")
+          .eq("profile_id", profileId)
+          .maybeSingle(),
+      ]);
 
       if (!recent?.length) return;
 
@@ -102,23 +109,65 @@ export function useHealingMemory(authUser, profileId) {
         .map((m) => `${m.role === "user" ? "User" : "Guide"}: ${m.content}`)
         .join("\n");
 
-      const summary = await callClaude({
+      const existing = currentProfile || {};
+      const prefStr = existing.preferences
+        ? JSON.stringify(existing.preferences)
+        : '{"prefers":[],"avoids":[]}';
+
+      const raw = await callClaude({
         tier: "quick",
-        maxTokens: 400,
+        maxTokens: 500,
         messages: [{
           role: "user",
-          content: `Extract a concise healing profile summary (200 words max) from this Medical Medium conversation.
-Capture: main conditions, supplements currently taking with doses, recent healing wins, current challenges, emotional state, patterns noticed, and anything a healer would want to remember for the next session.
-Write as warm flowing notes, not bullet points. Start with their name if mentioned.
+          content: `You update the memory of a personal wellness companion.
+Use ONLY what this person has explicitly reported about themselves — never infer, diagnose, or add anything they did not say.
 
-Conversation:
-${transcript}`,
+CURRENT MEMORY:
+Rolling summary: ${existing.healing_summary || "(none yet)"}
+Hard times of day: ${existing.hard_times || "(none yet)"}
+Current focus: ${existing.current_focus || "(none yet)"}
+Wins: ${existing.wins || "(none yet)"}
+Preferences: ${prefStr}
+
+RECENT CONVERSATION:
+${transcript}
+
+Return ONLY valid JSON, no preamble, no explanation:
+{
+  "healing_summary": "Warm flowing notes, 150 words max. Their name if known. What they are working on, how they have been feeling, key patterns a caring companion would want to remember.",
+  "hard_times": "Times of day or situations they regularly find hard. Plain text, 50 words max. Merge new with existing — do not discard.",
+  "current_focus": "Their current cleanse, protocol, or goal. 30 words max. Replace only if they mentioned a change.",
+  "wins": "Their 3–5 most recent positive moments or improvements. 70 words max. Keep most recent, drop oldest when full.",
+  "preferences": {"prefers": [], "avoids": []}
+}
+
+Rules:
+• Capture only what the user reported — no inferred conditions or diagnoses.
+• Never use heal / cure / treat / diagnose / prescribe language.
+• If a field has no new information, return the existing value unchanged.
+• Merge carefully — new information adds to, does not erase, existing memory.
+• If the conversation is purely small talk, return all existing values unchanged.`,
         }],
       });
 
+      let parsed;
+      try {
+        const jsonMatch = raw?.match(/\{[\s\S]*\}/);
+        parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      } catch {
+        parsed = null;
+      }
+
+      if (!parsed) return;
+
       const updated = {
         profile_id: profileId,
-        healing_summary: summary,
+        healing_summary: parsed.healing_summary || existing.healing_summary,
+        hard_times: parsed.hard_times || existing.hard_times,
+        current_focus: parsed.current_focus || existing.current_focus,
+        wins: parsed.wins || existing.wins,
+        preferences: parsed.preferences || existing.preferences || { prefers: [], avoids: [] },
+        memory_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 

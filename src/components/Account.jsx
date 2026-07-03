@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import C from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import WearableConnect from './WearableConnect.jsx'
+import { supabase } from '../lib/supabase.js'
 
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
@@ -22,6 +23,19 @@ const LANGUAGES = [
   { code: "tr", label: "Turkish", native: "Türkçe" },
 ];
 
+function MemoryField({ label, value }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, background: C.sageLight, borderRadius: 8, padding: "8px 10px" }}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
 const FEATURES = [
   { emoji: '🎙', label: 'Voice AI Wellness Guide', desc: 'Speak to it, it speaks back — warm companion that remembers your journey' },
   { emoji: '🌿', label: 'Complete Cleanse Protocols', desc: 'Every day of every cleanse with audio read-aloud' },
@@ -32,11 +46,24 @@ const FEATURES = [
   { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
 ]
 
-export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome }) {
+export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, profileId }) {
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [error, setError] = useState(null)
   const [cancelPending, setCancelPending] = useState(subData?.cancel_at_period_end || false)
+  const [memoryData, setMemoryData] = useState(null)
+  const [memoryClearing, setMemoryClearing] = useState(false)
+  const [memoryExpanded, setMemoryExpanded] = useState(false)
+
+  useEffect(() => {
+    if (!isSubscribed || !profileId) return
+    supabase
+      .from("healing_profiles")
+      .select("healing_summary, hard_times, current_focus, wins, preferences, memory_updated_at")
+      .eq("profile_id", profileId)
+      .maybeSingle()
+      .then(({ data }) => setMemoryData(data || null))
+  }, [isSubscribed, profileId])
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
   const [units, setUnits] = useLocalStorage("cs_units", "metric")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
@@ -533,6 +560,94 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
           <Btn full onClick={() => { setLargeText(true); document.documentElement.setAttribute("data-large","true"); }} color={largeText ? C.sageDark : C.muted} style={{ opacity: largeText ? 1 : 0.6 }}>A+ Large</Btn>
         </div>
       </Card>
+
+      {/* Companion memory — subscribed users only */}
+      {isSubscribed && profileId && (
+        <Card>
+          <div
+            onClick={() => setMemoryExpanded(v => !v)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+          >
+            <div>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+                🧠 What the companion remembers
+              </div>
+              {memoryData?.memory_updated_at && (
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                  Last updated {new Date(memoryData.memory_updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
+                </div>
+              )}
+            </div>
+            <div style={{ fontSize: 16, color: C.muted, userSelect: "none" }}>{memoryExpanded ? "▲" : "▼"}</div>
+          </div>
+
+          {memoryExpanded && (
+            <div style={{ marginTop: 14 }}>
+              {!memoryData || (!memoryData.healing_summary && !memoryData.hard_times && !memoryData.current_focus && !memoryData.wins) ? (
+                <div style={{ fontSize: 13, color: C.muted, fontStyle: "italic", lineHeight: 1.6 }}>
+                  No memory yet — it builds up naturally as you chat with the companion.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {memoryData.healing_summary && (
+                    <MemoryField label="Summary" value={memoryData.healing_summary} />
+                  )}
+                  {memoryData.current_focus && (
+                    <MemoryField label="Current focus" value={memoryData.current_focus} />
+                  )}
+                  {memoryData.hard_times && (
+                    <MemoryField label="Hard times" value={memoryData.hard_times} />
+                  )}
+                  {memoryData.wins && (
+                    <MemoryField label="Recent wins" value={memoryData.wins} />
+                  )}
+                  {(memoryData.preferences?.prefers?.length > 0 || memoryData.preferences?.avoids?.length > 0) && (
+                    <MemoryField
+                      label="Preferences"
+                      value={[
+                        memoryData.preferences?.prefers?.length ? `Prefers: ${memoryData.preferences.prefers.join(", ")}` : null,
+                        memoryData.preferences?.avoids?.length ? `Avoids: ${memoryData.preferences.avoids.join(", ")}` : null,
+                      ].filter(Boolean).join(" · ")}
+                    />
+                  )}
+                </div>
+              )}
+
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                  The companion builds this automatically from your conversations. Clear it to start fresh — this cannot be undone.
+                </div>
+                <button
+                  disabled={memoryClearing}
+                  onClick={async () => {
+                    if (!confirm("Clear all companion memory? This cannot be undone.")) return
+                    setMemoryClearing(true)
+                    try {
+                      await Promise.all([
+                        supabase.from("conversations").delete().eq("profile_id", profileId),
+                        supabase.from("healing_profiles").delete().eq("profile_id", profileId),
+                        supabase.from("healing_milestones").delete().eq("profile_id", profileId),
+                      ])
+                      setMemoryData(null)
+                    } catch (e) {
+                      console.warn("Clear memory:", e.message)
+                    }
+                    setMemoryClearing(false)
+                  }}
+                  style={{
+                    background: "none", border: `1px solid ${C.border}`, borderRadius: 30,
+                    padding: "8px 16px", fontSize: 12, color: C.muted,
+                    cursor: memoryClearing ? "default" : "pointer", fontFamily: "Georgia,serif",
+                    touchAction: "manipulation",
+                  }}
+                >
+                  {memoryClearing ? "Clearing…" : "Clear companion memory"}
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Sign out — always visible */}
       <Card>
