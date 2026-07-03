@@ -8,6 +8,7 @@ import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -255,7 +256,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     useVoice(selectedVoiceName, units);
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
-  const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
+  const { todaysCheckin, celeryStreak, loadCheckins, saveCheckin } = useDailyCheckins(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
@@ -464,6 +465,11 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     },
     [messages, loading, speak, saveExchange, user, healingProfile, priorMessages]
   );
+
+  // Voice intake callback — merges voice-captured check-in fields into Supabase
+  const handleVoiceWrite = useCallback(async (fields) => {
+    await saveCheckin({ ...todaysCheckin, ...fields });
+  }, [saveCheckin, todaysCheckin]);
 
   const quickQuestions = [
     user?.symptoms?.[0]
@@ -951,6 +957,15 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           ➤
         </button>
       </div>
+
+      {/* Voice intake — log how you feel, what you took, etc. by speaking */}
+      {authUser && (
+        <VoiceIntakeButton
+          inline
+          onWrite={handleVoiceWrite}
+          onQuestion={(text) => send(text)}
+        />
+      )}
 
       {/* Follow-up suggestions — appear after each AI response */}
       {followUps.length > 0 && (
