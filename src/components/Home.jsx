@@ -1,8 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import C from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { Tag, Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
@@ -251,6 +252,13 @@ export default function Home({ user, authUser, profileId }) {
     setSavingCheckin(false);
   };
 
+  // Voice intake callback — merges parsed fields into today's check-in
+  const handleVoiceWrite = useCallback(async (fields) => {
+    setSavingCheckin(true);
+    await saveCheckin({ ...todaysCheckin, ...fields });
+    setSavingCheckin(false);
+  }, [saveCheckin, todaysCheckin]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -280,7 +288,7 @@ export default function Home({ user, authUser, profileId }) {
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
           <button
             onClick={() => (speaking ? stopSpeaking() : speak(morningScript))}
             style={{
@@ -297,6 +305,9 @@ export default function Home({ user, authUser, profileId }) {
           >
             {speaking ? "⏹ Stop" : "🔊 Read My Morning Plan"}
           </button>
+          {authUser && (
+            <VoiceIntakeButton inline onWrite={handleVoiceWrite} />
+          )}
         </div>
       </div>
 
