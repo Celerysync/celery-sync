@@ -28,8 +28,9 @@ export default function GlobalVoice({ currentTab, user }) {
   const [loading, setLoading] = useState(false);
   const [srError, setSrError] = useState(false);
 
-  // Don't show on companion tab — it already has full voice
-  if (!enabled || currentTab === "companion") return null;
+  // Intake tabs (home, track, companion) have their own VoiceIntakeButton —
+  // GlobalVoice is the Q&A assistant for the remaining tabs only.
+  if (!enabled || currentTab === "home" || currentTab === "track" || currentTab === "companion") return null;
 
   const close = () => {
     stopSpeaking();
