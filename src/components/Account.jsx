@@ -186,6 +186,18 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             No charge during your trial. Cancel before day 7 and pay nothing.{'\n'}
             Secure payment powered by Stripe.
           </div>
+
+          <div style={{
+            textAlign: 'center', fontSize: 11, color: C.muted,
+            borderTop: `1px solid ${C.border}`, paddingTop: 12, lineHeight: 1.8,
+          }}>
+            If you're in crisis, please reach out:{' '}
+            <a href="tel:131114" style={{ color: C.mid, fontWeight: 700 }}>Lifeline 13 11 14</a>
+            {' · '}
+            <a href="tel:1300224636" style={{ color: C.mid, fontWeight: 700 }}>Beyond Blue 1300 22 4636</a>
+            {' · '}
+            <a href="tel:000" style={{ color: C.mid, fontWeight: 700 }}>Emergency 000</a>
+          </div>
         </>
       ) : isInTrial ? (
         <>
