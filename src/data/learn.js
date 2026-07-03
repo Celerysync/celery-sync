@@ -102,7 +102,7 @@ Per Anthony William's teachings in *Medical Medium Brain Saver*.`,
 
 EBV is the virus AW identifies as behind most thyroid conditions, ME/CFS, fibromyalgia, and many autoimmune presentations. When you eat eggs, you're feeding the virus the specific proteins it needs to replicate and produce the byproduct (viral waste) that causes symptoms.
 
-Removing eggs doesn't kill the virus immediately. But it starves it of a preferred fuel — over weeks and months, the viral load drops and symptoms reduce.
+Removing eggs doesn't kill the virus immediately. But Anthony William teaches it starves the virus of a preferred fuel — and that over time this may reduce viral load and associated symptoms.
 
 **"But I've eaten eggs my whole life and been fine?"** AW explains that EBV typically stays dormant until triggered by stress, illness, or a depleted immune system. Once active, its food supply becomes relevant in a way it wasn't before.
 
@@ -234,11 +234,11 @@ Half a lemon in a large glass of room-temperature water. That's all it takes.
 
 Celery contains what AW calls "sodium cluster salts" — a complex of mineral compounds that behave very differently from regular sodium. When you juice celery and remove the fibre, you concentrate these salts into something the body can absorb immediately.
 
-These salts do three specific things per AW's teachings: they destroy pathogen membranes on contact in the digestive tract (particularly viruses and bacteria linked to chronic illness), they restore stomach acid (which most people with chronic health issues are chronically low in), and they repair the gut lining.
+Per AW's teachings, these salts play three roles: he teaches they attack pathogen membranes in the digestive tract (particularly viruses and bacteria he links to chronic illness), restore stomach acid, and help repair the gut lining.
 
 16oz minimum, on an empty stomach, nothing added — these aren't arbitrary rules. They're what makes it effective versus just a vegetable juice.
 
-Most people notice something within 2–4 weeks: better digestion, less bloating, more energy, or clearer skin. Some people notice a brief detox reaction first as the pathogens begin to die off.
+Anthony William teaches that many people following this protocol consistently notice changes within a few weeks: better digestion, less bloating, more energy, or clearer skin. Some notice a brief detox reaction first. Individual results vary.
 
 — Based on Anthony William's teachings in *Medical Medium Celery Juice*. Not medical advice.`,
   },
@@ -251,7 +251,7 @@ AW teaches that egg whites are a preferred fuel source for the Epstein-Barr Viru
 
 This isn't about eggs being harmful to everyone in all contexts. It's specifically that for someone whose viral load is active and causing symptoms, continuing to eat eggs is continuing to feed the thing that's making them unwell.
 
-Eliminating eggs — alongside dairy and gluten — starves the pathogen of preferred fuel. Over weeks and months, the viral load drops and symptoms begin to ease.
+Eliminating eggs — alongside dairy and gluten — starves the pathogen of a preferred fuel. Anthony William teaches that over time this can reduce viral load. Individual responses vary, and he always recommends working with a healthcare provider alongside any dietary changes.
 
 It's counterintuitive because eggs feel "clean" and protein-rich. But per AW's teachings, the protein in egg whites specifically is what viruses thrive on.
 
@@ -269,7 +269,7 @@ There's also a secondary liver effect: the fat in dairy (particularly the combin
 
 This doesn't mean dairy is poison for everyone at all times. But for someone with a chronic condition linked to strep or a sluggish liver, removing dairy consistently is one of the most impactful single changes they can make.
 
-Most people who remove dairy for 90 days report clearer sinuses, less bloating, clearer skin, and reduced inflammation — often without expecting it.
+Anthony William teaches that removing dairy consistently can lead to clearer sinuses, less bloating, clearer skin, and reduced inflammatory burden over time. Individual results vary and he always recommends working alongside a healthcare provider.
 
 — Based on Anthony William's teachings in *Cleanse to Heal*. Not medical advice.`,
   },
@@ -295,7 +295,7 @@ Banana or mango — fuels the brain with glucose during the detox process. Witho
 
 You can't get this effect by taking them separately at different times, or by substituting similar ingredients. The sequencing and combination is what makes it work.
 
-Most people notice subtle brain clarity improvements within a few months of doing this daily. For deeper metal burdens, it takes longer — but people consistently notice the difference.
+Anthony William teaches that many people notice subtle brain clarity improvements over time when doing this consistently. For deeper metal burdens, it takes longer. Individual results vary — always work alongside your healthcare provider.
 
 — Based on Anthony William's teachings in *Medical Medium Brain Saver*. Not medical advice.`,
   },

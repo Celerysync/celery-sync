@@ -13,7 +13,7 @@ const PAIN_POINTS = [
 ];
 
 const TRANSFORMATION = [
-  { before: "Drowning in books, unsure what applies to you", after: "Your exact protocol, personalised to your conditions and symptoms" },
+  { before: "Drowning in books, unsure what applies to you", after: "An AI companion that paraphrases AW's teachings in plain English — and always points you to the right book" },
   { before: "Alone with questions no one around you can answer", after: "An AI that speaks your language, any time you need it" },
   { before: "Starting cleanses, falling off, starting again", after: "Guided through every single day with reminders and support" },
   { before: "No idea if you're actually getting better", after: "Weekly summaries that track your energy, progress, and patterns over time" },
@@ -53,14 +53,14 @@ const FEATURES = [
     desc: "Adrenal snack every 1.5 hours. Morning protocol sequence. The nudges that stop you from forgetting the details that make the biggest difference.",
   },
   {
-    emoji: "🔍",
-    title: "Symptom search with protocol guidance",
-    desc: "Select your symptoms and get the likely cause, supplement guidance, healing foods, and what to avoid — paraphrased from Anthony William's teachings. See the books for full protocols.",
+    emoji: "💚",
+    title: "Log how you feel — get support",
+    desc: "Describe what you're experiencing and your companion shares what Anthony William teaches about it — supportive foods, general supplements, and which book goes deepest. Not a diagnosis — real support.",
   },
   {
-    emoji: "🌿",
-    title: "Every cleanse, every day",
-    desc: "The 3:6:9, mono eating, heavy metal detox — all mapped out day by day so you know exactly what to eat and when.",
+    emoji: "💊",
+    title: "Supplement tracker + shop",
+    desc: "Track what you're taking each day and when. Shop Anthony William's recommended Vimergy brands on iHerb in one tap — commissions support the Healing Access Fund.",
   },
   {
     emoji: "🍽",
@@ -113,8 +113,8 @@ const HOW_IT_WORKS = [
   },
   {
     step: "2",
-    title: "Tell it what's going on",
-    desc: "Select your symptoms and conditions. Get a clear, personalised starting plan — the likely cause, the first things to focus on, and where to go deeper in Anthony William's work.",
+    title: "Track how you're feeling",
+    desc: "Log your energy, mood, and symptoms daily. Describe what you're experiencing and your companion shares what Anthony William teaches about it — always pointing you to his books for the full detail.",
   },
   {
     step: "3",

@@ -24,16 +24,15 @@ const LANGUAGES = [
 
 const WELCOME_TEXT_EN =
   "Welcome to CelerySync — your personal Medical Medium companion. I'm so glad you're here. " +
-  "Let me give you a quick tour. " +
-  "Your Today tab is your daily home — morning protocol, supplement tracker, and wellness reminders. " +
-  "The AI Guide is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. I always point you to Anthony William's official sources for full protocols and specific amounts. " +
-  "The Symptom Checker helps you understand what Anthony William associates with your symptoms, with protocol guidance for over 100 conditions. " +
-  "Recipes gives you 50 healing meals, juices, shots, and a full meal planner with a shopping list. " +
-  "Cleanses walks you through Anthony William's cleanse protocols step by step, including the 3-6-9. " +
-  "The Body tab lets you explore each organ — liver, thyroid, brain, kidneys, skin and more — and understand what Anthony William teaches about each one. " +
-  "Circles connects you with others following the same protocols — a real community on the same path. " +
-  "And Resources has direct links to Anthony William's official books, YouTube channel, and podcast — so you can always go to the source. " +
-  "This app is not medical advice — always work alongside your doctor or licensed practitioner. " +
+  "Let me give you a quick tour of your seven tabs. " +
+  "Today is your daily home — morning protocol, supplement tracker, and wellness reminders. " +
+  "Companion is where we talk. Press the microphone and speak to me — I'll respond and then automatically listen for your next question, so our conversation flows hands-free. I always point you to Anthony William's official books for full protocols and specific amounts. " +
+  "Track is where you log how you're doing — your daily check-in for energy, mood, and celery juice, plus a feelings log where you can describe what you're experiencing and I'll share what Anthony William teaches about it. " +
+  "Supplements tracks what you're taking each day, and has a shop with the Vimergy brands Anthony William recommends. " +
+  "Learn is your library — weekly lessons, recipes, juices, and direct links to Anthony William's books, YouTube, and podcast. " +
+  "Progress shows your healing journey over time — energy trends, streaks, and history. " +
+  "And Settings holds your account, reminders, profiles, and everything else. " +
+  "This app is not medical advice — everything here is paraphrased from Anthony William's publicly shared teachings and always points you back to his books as the authoritative source. Always work alongside your doctor or licensed practitioner. " +
   "You're in exactly the right place. I'm here for you. Feel free to ask me anything — I'm listening.";
 
 const STEPS = [

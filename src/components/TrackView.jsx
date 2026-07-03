@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import Journal from "./Journal.jsx";
 import Symptom from "./Symptom.jsx";
@@ -8,8 +8,13 @@ const SUB_TABS = [
   { id: "feelings", label: "💚 How I Feel" },
 ];
 
-export default function TrackView({ authUser, user, navQuery, onPageContext }) {
+export default function TrackView({ authUser, user, profileId, navQuery, onPageContext }) {
   const [sub, setSub] = useState("checkin");
+
+  // Auto-switch to feelings sub-tab when Coach navigates here with a symptom query
+  useEffect(() => {
+    if (navQuery) setSub("feelings");
+  }, [navQuery]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -39,7 +44,7 @@ export default function TrackView({ authUser, user, navQuery, onPageContext }) {
       </div>
 
       {sub === "checkin" && (
-        <Journal authUser={authUser} user={user} />
+        <Journal authUser={authUser} user={user} profileId={profileId} />
       )}
 
       {sub === "feelings" && (

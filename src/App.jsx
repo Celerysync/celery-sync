@@ -296,7 +296,7 @@ export default function App() {
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
 
       case "track":
-        return <TrackView authUser={authUser} user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
+        return <TrackView authUser={authUser} user={activeProfile} profileId={activeProfileId} navQuery={navQuery} onPageContext={setPageContext} />;
 
       case "progress":
         return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
