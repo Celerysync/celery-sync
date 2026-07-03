@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+import { VAPID_PUBLIC_KEY } from '../lib/env.js'
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

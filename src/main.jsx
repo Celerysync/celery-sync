@@ -2,8 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { IS_PROD } from './lib/env.js'
 
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+if (IS_PROD && "serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 

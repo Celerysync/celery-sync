@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, useRef } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import "./App.css";
 import C from "./lib/colors.js";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
@@ -16,52 +16,55 @@ import ReminderBanner from "./components/ReminderBanner.jsx";
 import GlobalVoice from "./components/GlobalVoice.jsx";
 
 // Lazy-loaded: only fetched when first needed
-const Onboarding       = lazy(() => import("./components/Onboarding.jsx"));
-const Account          = lazy(() => import("./components/Account.jsx"));
-const ProfileManager   = lazy(() => import("./components/ProfileManager.jsx"));
-const ReminderSettings = lazy(() => import("./components/ReminderSettings.jsx"));
-const WelcomeVoice     = lazy(() => import("./components/WelcomeVoice.jsx"));
-const Coach            = lazy(() => import("./components/Coach.jsx"));
-const Journal          = lazy(() => import("./components/Journal.jsx"));
-const Recipes          = lazy(() => import("./components/Recipes.jsx"));
-const Cleanse          = lazy(() => import("./components/Cleanse.jsx"));
-const Symptom          = lazy(() => import("./components/Symptom.jsx"));
-const Knowledge        = lazy(() => import("./components/Knowledge.jsx"));
-const Body             = lazy(() => import("./components/Body.jsx"));
-const Community        = lazy(() => import("./components/Community.jsx"));
+const Onboarding         = lazy(() => import("./components/Onboarding.jsx"));
+const Account            = lazy(() => import("./components/Account.jsx"));
+const ProfileManager     = lazy(() => import("./components/ProfileManager.jsx"));
+const ReminderSettings   = lazy(() => import("./components/ReminderSettings.jsx"));
+const WelcomeVoice       = lazy(() => import("./components/WelcomeVoice.jsx"));
+const Coach              = lazy(() => import("./components/Coach.jsx"));
+const TrackView          = lazy(() => import("./components/TrackView.jsx"));
+const Learn              = lazy(() => import("./components/Learn.jsx"));
+const Supplements        = lazy(() => import("./components/Supplements.jsx"));
+const Reports            = lazy(() => import("./components/Reports.jsx"));
+const AW                 = lazy(() => import("./components/AW.jsx"));
+const CarerView          = lazy(() => import("./components/CarerView.jsx"));
 const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.jsx"));
-const AW               = lazy(() => import("./components/AW.jsx"));
 const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
-const AdminDashboard   = lazy(() => import("./components/AdminDashboard.jsx"));
-const DoctorReport     = lazy(() => import("./components/DoctorReport.jsx"));
-const HealingLetters   = lazy(() => import("./components/HealingLetters.jsx"));
-const Juices           = lazy(() => import("./components/Juices.jsx"));
-const Learn            = lazy(() => import("./components/Learn.jsx"));
-const CarerView        = lazy(() => import("./components/CarerView.jsx"));
+const AdminDashboard     = lazy(() => import("./components/AdminDashboard.jsx"));
+const DoctorReport       = lazy(() => import("./components/DoctorReport.jsx"));
+const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
-const BeginnerHome     = lazy(() => import("./components/BeginnerHome.jsx"));
-const StartHere        = lazy(() => import("./components/StartHere.jsx"));
-const Reports          = lazy(() => import("./components/Reports.jsx"));
+const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
+const StartHere          = lazy(() => import("./components/StartHere.jsx"));
 
 const TABS = [
-  { id: "home",      label: "Today",      emoji: "🏠", free: true  },
-  { id: "coach",     label: "AI Guide",   emoji: "🎙", free: false },
-  { id: "journal",   label: "Journal",    emoji: "📊", free: false },
-  { id: "recipes",   label: "Recipes",    emoji: "🍽", free: false },
-  { id: "juices",    label: "Juices",     emoji: "🥤", free: false },
-  { id: "cleanses",  label: "Cleanses",   emoji: "🌿", free: false },
-  { id: "symptoms",  label: "Symptoms",   emoji: "🔍", free: false },
-  { id: "reports",   label: "Reports",    emoji: "📋", free: false },
-  { id: "learn",     label: "Learn",      emoji: "🌱", free: false },
-  { id: "knowledge", label: "Resources",  emoji: "🔗", free: false },
-  { id: "body",      label: "The Body",   emoji: "🫁", free: false },
-  { id: "community",    label: "Circles",   emoji: "💚", free: false },
-  { id: "carers",      label: "Carers",    emoji: "💜", free: true  },
-  { id: "practice",    label: "Practice",  emoji: "🏥", free: false, practitionerOnly: true },
-  { id: "aw",          label: "Support AW",emoji: "💛", free: true  },
-  { id: "account",   label: "Account",    emoji: "👤", free: true  },
-  { id: "admin",     label: "Admin",      emoji: "📊", free: true, adminOnly: true },
+  { id: "home",        label: "Today",       emoji: "🏠", free: true  },
+  { id: "companion",   label: "Companion",   emoji: "🎙", free: false },
+  { id: "track",       label: "Track",       emoji: "📊", free: false },
+  { id: "progress",    label: "Progress",    emoji: "📋", free: false },
+  { id: "supplements", label: "Supplements", emoji: "💊", free: false },
+  { id: "learn",       label: "Learn",       emoji: "🌱", free: false },
+  { id: "settings",    label: "Settings",    emoji: "⚙️", free: true  },
+  { id: "admin",       label: "Admin",       emoji: "📊", free: true, adminOnly: true },
 ];
+
+// Map old tab IDs to new ones — handles existing localStorage values
+const TAB_MIGRATIONS = {
+  coach:     "companion",
+  reports:   "progress",
+  account:   "settings",
+  journal:   "track",
+  symptoms:  "track",
+  recipes:   "learn",
+  juices:    "learn",
+  knowledge: "learn",
+  cleanses:  "home",
+  body:      "home",
+  community: "home",
+  carers:    "settings",
+  practice:  "settings",
+  aw:        "settings",
+};
 
 function LoadingScreen({ message = "Loading your healing journey…" }) {
   return (
@@ -122,7 +125,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
           </button>
         ))}
         <div style={{ padding: "10px 14px", fontSize: 11, color: C.muted, textAlign: "center", borderTop: `1px solid ${C.border}` }}>
-          Manage profiles in Account tab
+          Manage profiles in Settings
         </div>
       </div>
     </>
@@ -140,7 +143,6 @@ export default function App() {
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [pageContext, setPageContext] = useState(null);
-  const welcomeKey = `cs_welcomed_${authUser?.id}`;
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
@@ -155,6 +157,12 @@ export default function App() {
   const [largeText] = useLocalStorage("cs_largeText", false);
   const { track } = useAnalytics(authUser);
   const isAdmin = authUser?.email === "allij@live.com.au";
+
+  // Migrate old tab IDs saved in localStorage
+  useEffect(() => {
+    if (TAB_MIGRATIONS[tab]) setTab(TAB_MIGRATIONS[tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-dark", darkMode ? "true" : "false");
@@ -175,8 +183,9 @@ export default function App() {
   }, []);
 
   const handleNavigate = (tabId, query) => {
+    const resolved = TAB_MIGRATIONS[tabId] || tabId;
     setNavQuery(query || null);
-    setTab(tabId);
+    setTab(resolved);
   };
   const { activeReminder, dismiss: dismissReminder, snooze: snoozeReminder } = useReminders();
 
@@ -195,7 +204,7 @@ export default function App() {
     }
     const returnTab = params.get("tab");
     if (returnTab) {
-      setTab(returnTab);
+      setTab(TAB_MIGRATIONS[returnTab] || returnTab);
       window.history.replaceState({}, "", "/");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -214,7 +223,7 @@ export default function App() {
     })
       .then(r => r.json())
       .then(data => {
-        if (data.success) setTab("carers");
+        if (data.success) setTab("settings");
         else alert("This invite link has already been used or has expired.");
       })
       .catch(() => alert("Couldn't accept invite — please try again."));
@@ -245,12 +254,13 @@ export default function App() {
   }
 
   const handleTabClick = (t) => {
-    if (!t.free && !isSubscribed && !subLoading) setTab("account");
+    if (!t.free && !isSubscribed && !subLoading) setTab("settings");
     else { setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
   const renderTab = () => {
-    const current = TABS.find((t) => t.id === tab);
+    const effectiveTab = TAB_MIGRATIONS[tab] || tab;
+    const current = TABS.find((t) => t.id === effectiveTab);
     if (current && !current.free && !isSubscribed && !subLoading) {
       return (
         <Account
@@ -266,7 +276,7 @@ export default function App() {
       );
     }
 
-    switch (tab) {
+    switch (effectiveTab) {
       case "home":
         if (!startHereDone && !caregiverMode) {
           return (
@@ -281,37 +291,23 @@ export default function App() {
           : isBeginnerMode
           ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} onNavigate={setTab} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
-      case "coach":
+
+      case "companion":
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
-      case "journal":
-        return <Journal authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
-      case "recipes":
-        return <Recipes user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
-      case "juices":
-        return <Juices />;
-      case "cleanses":
-        return <Cleanse navQuery={navQuery} authUser={authUser} profileId={activeProfileId} onPageContext={setPageContext} />;
-      case "symptoms":
-        return <Symptom user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
-      case "reports":
+
+      case "track":
+        return <TrackView authUser={authUser} user={activeProfile} navQuery={navQuery} onPageContext={setPageContext} />;
+
+      case "progress":
         return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
+
+      case "supplements":
+        return <Supplements authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
+
       case "learn":
-        return <Learn />;
-      case "knowledge":
-        return <Knowledge authUser={authUser} />;
-      case "body":
-        return <Body navQuery={navQuery} onPageContext={setPageContext} />;
-      case "community":
-        return <Community authUser={authUser} userProfile={activeProfile} />;
-      case "carers":
-        return <CarerView authUser={authUser} />;
-      case "practice":
-        return isPractitioner ? <PractitionerPortal authUser={authUser} /> : <Account authUser={authUser} isSubscribed={isSubscribed} isPractitioner={isPractitioner} subData={subData} subLoading={subLoading} isInTrial={isInTrial} trialDaysLeft={trialDaysLeft} onSignOut={signOut} onReplayWelcome={() => setShowWelcome(true)} />;
-      case "aw":
-        return <AW onNavigate={handleNavigate} />;
-      case "admin":
-        return isAdmin ? <AdminDashboard authUser={authUser} /> : null;
-      case "account":
+        return <Learn authUser={authUser} user={activeProfile} navQuery={navQuery} />;
+
+      case "settings":
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Account
@@ -341,8 +337,15 @@ export default function App() {
                 <HealingLetters profileId={activeProfileId} />
               </>
             )}
+            <CarerView authUser={authUser} />
+            {isPractitioner && <PractitionerPortal authUser={authUser} />}
+            <AW onNavigate={handleNavigate} />
           </div>
         );
+
+      case "admin":
+        return isAdmin ? <AdminDashboard authUser={authUser} /> : null;
+
       default:
         if (!startHereDone && !caregiverMode) {
           return (
@@ -454,7 +457,7 @@ export default function App() {
         <div className="scrollbar-none" style={{ display: "flex", overflowX: "auto" }}>
           {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
             const locked = !t.free && !isSubscribed && !subLoading;
-            const active = tab === t.id;
+            const active = (TAB_MIGRATIONS[tab] || tab) === t.id;
             return (
               <button
                 key={t.id}
@@ -499,7 +502,7 @@ export default function App() {
           <WelcomeVoice
             userId={authUser?.id}
             onDone={() => setShowWelcome(false)}
-            onNavigate={(tabId) => setTab(tabId)}
+            onNavigate={(tabId) => setTab(TAB_MIGRATIONS[tabId] || tabId)}
           />
         </Suspense>
       )}

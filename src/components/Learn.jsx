@@ -2,6 +2,9 @@ import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { WEEKLY_LESSONS, CONDITION_EXPLAINERS, SHAREABLES } from "../data/learn.js";
+import Recipes from "./Recipes.jsx";
+import Juices from "./Juices.jsx";
+import Knowledge from "./Knowledge.jsx";
 
 function LessonCard({ lesson, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -209,12 +212,15 @@ function MarkdownBody({ text }) {
 }
 
 const SECTIONS = [
-  { id: "lessons", label: "📖 Learn", emoji: "📖" },
-  { id: "conditions", label: "🔍 Conditions", emoji: "🔍" },
-  { id: "share", label: "📤 Share", emoji: "📤" },
+  { id: "lessons",    label: "📖 Learn"      },
+  { id: "conditions", label: "🔍 Understand"  },
+  { id: "share",      label: "📤 Share"       },
+  { id: "recipes",    label: "🍽 Recipes"     },
+  { id: "juices",     label: "🥤 Juices"      },
+  { id: "resources",  label: "🔗 Resources"   },
 ];
 
-export default function Learn() {
+export default function Learn({ authUser, user, navQuery }) {
   const [section, setSection] = useState("lessons");
 
   return (
@@ -228,20 +234,20 @@ export default function Learn() {
         </p>
       </div>
 
-      {/* Section tabs */}
-      <div style={{ display: "flex", background: C.mist, borderRadius: 12, padding: 4, gap: 4 }}>
+      {/* Section tabs — scrollable row */}
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
         {SECTIONS.map((s) => (
           <button
             key={s.id}
             onClick={() => setSection(s.id)}
             style={{
-              flex: 1, padding: "8px 4px", borderRadius: 9, border: "none",
-              background: section === s.id ? C.white : "transparent",
+              flexShrink: 0, padding: "8px 14px", borderRadius: 30, border: "none",
+              background: section === s.id ? C.sage : C.mist,
               fontFamily: "Georgia,serif", fontSize: 12.5,
-              color: section === s.id ? C.sageDark : C.muted,
+              color: section === s.id ? "#fff" : C.muted,
               fontWeight: section === s.id ? 700 : 400,
               cursor: "pointer",
-              boxShadow: section === s.id ? "0 1px 4px #00000012" : "none",
+              whiteSpace: "nowrap",
             }}
           >
             {s.label}
@@ -295,6 +301,18 @@ export default function Learn() {
             <ShareableCard key={id} id={id} item={item} />
           ))}
         </>
+      )}
+
+      {section === "recipes" && (
+        <Recipes user={user} navQuery={navQuery} />
+      )}
+
+      {section === "juices" && (
+        <Juices />
+      )}
+
+      {section === "resources" && (
+        <Knowledge authUser={authUser} />
       )}
     </div>
   );

@@ -3,10 +3,9 @@ import C from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { Card, Btn } from "./ui.jsx";
-import { CONDITIONS } from "../data/conditions.js";
 import { callClaude } from "../lib/api.js";
 
-function printDoctorSummary({ user, conditions, result }) {
+function printDoctorSummary({ user, result }) {
   const now = new Date().toLocaleDateString("en-AU", {
     day: "numeric", month: "long", year: "numeric",
   });
@@ -57,8 +56,7 @@ function printDoctorSummary({ user, conditions, result }) {
     <h2>Profile</h2>
     <p>
       <strong>Name:</strong> ${user?.name || "—"} &nbsp;&nbsp;
-      <strong>Goal:</strong> ${user?.goal || "—"}<br>
-      <strong>Areas of interest:</strong> ${conditions.join(", ") || "—"}
+      <strong>Goal:</strong> ${user?.goal || "—"}
     </p>
   </div>
 
@@ -88,33 +86,24 @@ const FEELING_CHIPS = [
 ];
 
 export default function Symptom({ user, navQuery, onPageContext }) {
-  const [sel, setSel] = useState([]);
   const [feelings, setFeelings] = useState([]);
   const [custom, setCustom] = useState("");
-  const [conditionSearch, setConditionSearch] = useState("");
-  const [showConditions, setShowConditions] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [streaming, setStreaming] = useState(false);
   const [showDrNote, setShowDrNote] = useState(false);
   const { voiceName } = useVoicePrefs();
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
   useEffect(() => {
     if (!navQuery) return;
-    const q = navQuery.trim();
-    const match = Object.keys(CONDITIONS).find(k => k.toLowerCase() === q.toLowerCase());
-    if (match) setSel([match]);
-    else setCustom(q);
+    setCustom(navQuery.trim());
   }, [navQuery]);
 
   const analyse = async () => {
-    if (!sel.length && !custom.trim()) return;
+    const all = [...feelings, ...(custom.trim() ? [custom.trim()] : [])];
+    if (!all.length) return;
     setLoading(true);
     setResult(null);
-    setStreaming(false);
-
-    const all = [...feelings, ...sel, ...(custom.trim() ? [custom.trim()] : [])];
 
     const prompt = `You are a compassionate CelerySync companion helping an adult explore Anthony William's Medical Medium teachings.
 
@@ -122,7 +111,7 @@ Person: ${user?.name || "friend"}
 Their profile conditions: ${(user?.symptoms || []).join(", ") || "not previously specified"}
 How they're feeling / what they're experiencing: ${all.join(", ")}
 
-Note: this person may not have a formal diagnosis — respond to their feelings and symptoms as described, warmly and practically, without requiring them to name a condition.
+Note: this person may not have a formal diagnosis — respond to their feelings and symptoms as described, warmly and practically.
 
 Draw from Anthony William's publicly shared Medical Medium teachings.
 
@@ -135,23 +124,20 @@ This is not medical advice. Always encourage working with a licensed practitione
 
 Provide these sections:
 
-## 🦠 What Anthony William Associates This With
-What he teaches is the likely underlying cause — pathogen (EBV, streptococcus, etc.) or toxic load (heavy metals, etc.). Attribute clearly and cite the relevant book.
+## 🦠 What Anthony William Teaches About This
+What he shares about the likely underlying causes related to these feelings — pathogen load (EBV, streptococcus, etc.) or toxic load (heavy metals, etc.). Attribute clearly and cite the relevant book.
 
-## 🌿 Suggested Starting Point
-Based on Anthony William's teachings — which cleanse or approach he generally recommends. Point to Cleanse to Heal for the full protocol.
-
-## 💊 Supplement Guidance (see book for full detail)
-General supplements Anthony William associates with this, paraphrased from his teachings. Note the relevant book. For precise amounts and protocols, refer to the book directly.
+## 💊 General Supplement Support
+General supplements Anthony William associates with these kinds of feelings, paraphrased from his publicly shared teachings. Note the relevant book. For precise amounts and complete protocols, always refer to the book directly.
 
 ## 🍎 Supportive Foods
-Foods Anthony William highlights for this condition — per his teachings. Include any general timing notes.
+Foods Anthony William highlights for these feelings — per his publicly shared teachings. Include any general timing notes.
 
 ## 🚫 Foods to Reduce or Avoid
-Key foods he says feed the pathogens involved — per his teachings.
+Key foods he says burden the body in these situations — per his teachings.
 
 ## 📚 Recommended Reading
-The most relevant Anthony William book for this situation.
+The most relevant Anthony William book for what this person is experiencing.
 
 ## 💛 Encouragement
 One warm paragraph acknowledging this person's commitment to their wellbeing.
@@ -166,12 +152,12 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
       });
       setResult(text);
       onPageContext?.({
-        tab: 'symptoms',
+        tab: 'track',
         label: `Feeling: ${all.join(", ")}`,
         detail: text.slice(0, 600),
       });
     } catch (err) {
-      setResult(`Connection error: ${err.message}. Please check your API key and try again.`);
+      setResult(`Connection error: ${err.message}. Please check your connection and try again.`);
     }
     setLoading(false);
   };
@@ -181,7 +167,7 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
     setResult(null);
   };
 
-  const hasInput = feelings.length > 0 || sel.length > 0 || custom.trim().length > 0;
+  const hasInput = feelings.length > 0 || custom.trim().length > 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -223,7 +209,7 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
         </div>
       </div>
 
-      {/* Free text — primary input */}
+      {/* Free text */}
       <div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 6, fontFamily: "Georgia,serif" }}>
           Or describe in your own words:
@@ -248,140 +234,24 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
         />
       </div>
 
-      <Btn
-        full
-        onClick={analyse}
-        disabled={loading || !hasInput}
-        color={C.sage}
-      >
-        {loading ? "🌿 Looking it up…" : "🌿 Get Support"}
+      <Btn full onClick={analyse} disabled={loading || !hasInput} color={C.sage}>
+        {loading ? "🌿 Looking into this…" : "🌿 Get Support"}
       </Btn>
-
-      {/* Specific condition lookup — secondary banner */}
-      <div
-        style={{
-          border: `2px solid ${C.plum}30`,
-          borderRadius: 16,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          onClick={() => setShowConditions((v) => !v)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            cursor: "pointer", userSelect: "none",
-            padding: "14px 18px",
-            background: showConditions ? C.plumLight : `${C.plum}08`,
-          }}
-        >
-          <div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
-              🔍 Look up a specific condition
-            </div>
-            <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
-              Browse {Object.keys(CONDITIONS).length} conditions from Anthony William's teachings
-            </div>
-          </div>
-          <span style={{ fontSize: 18, color: C.plum, fontWeight: 700 }}>{showConditions ? "▲" : "▼"}</span>
-        </div>
-
-        {showConditions && (
-          <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 10, borderTop: `1px solid ${C.plum}20` }}>
-            <input
-              value={conditionSearch}
-              onChange={(e) => setConditionSearch(e.target.value)}
-              placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
-              style={{
-                width: "100%", boxSizing: "border-box",
-                padding: "9px 16px", borderRadius: 30,
-                border: `1.5px solid ${C.border}`,
-                fontFamily: "Georgia,serif", fontSize: 13,
-                outline: "none", background: C.mist,
-              }}
-            />
-            {sel.length > 0 && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {sel.map((s) => (
-                  <div
-                    key={s}
-                    onClick={() => { setSel((p) => p.filter((x) => x !== s)); setResult(null); }}
-                    style={{
-                      padding: "5px 12px", borderRadius: 30, fontSize: 12,
-                      fontFamily: "Georgia,serif", cursor: "pointer",
-                      border: `2px solid ${C.plum}`,
-                      background: C.plumLight, color: C.plum, fontWeight: 700,
-                    }}
-                  >
-                    {s} ✕
-                  </div>
-                ))}
-              </div>
-            )}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, maxHeight: conditionSearch ? "none" : 180, overflowY: conditionSearch ? "visible" : "auto" }}>
-              {Object.keys(CONDITIONS)
-                .filter((s) => !conditionSearch || s.toLowerCase().includes(conditionSearch.toLowerCase()))
-                .map((s) => (
-                  <div
-                    key={s}
-                    onClick={() => {
-                      setSel((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
-                      setResult(null);
-                    }}
-                    style={{
-                      padding: "7px 14px",
-                      borderRadius: 30,
-                      fontSize: 12,
-                      fontFamily: "Georgia,serif",
-                      cursor: "pointer",
-                      border: `2px solid ${sel.includes(s) ? C.plum : C.border}`,
-                      background: sel.includes(s) ? C.plumLight : "transparent",
-                      color: sel.includes(s) ? C.plum : C.mid,
-                      fontWeight: sel.includes(s) ? 700 : 400,
-                    }}
-                  >
-                    {s}
-                  </div>
-                ))}
-            </div>
-            {!conditionSearch && (
-              <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>
-                Showing all {Object.keys(CONDITIONS).length} conditions — search to filter
-              </div>
-            )}
-          </div>
-        )}
-      </div>
 
       {result !== null && (
         <Card style={{ background: C.mist }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 10,
-              flexWrap: "wrap",
-              gap: 8,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                Protocol Overview
-              </div>
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8,
+          }}>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+              Support Overview
             </div>
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-              <Btn
-                small
-                onClick={() => (speaking ? stopSpeaking() : speak(result))}
-                color={C.sage}
-              >
+              <Btn small onClick={() => (speaking ? stopSpeaking() : speak(result))} color={C.sage}>
                 {speaking ? "⏹ Stop" : "🔊 Listen"}
               </Btn>
-              <Btn
-                small
-                onClick={() => setShowDrNote((v) => !v)}
-                color={C.plum}
-              >
+              <Btn small onClick={() => setShowDrNote((v) => !v)} color={C.plum}>
                 🩺 Doctor Summary
               </Btn>
             </div>
@@ -389,55 +259,32 @@ End with: ⚠️ This is based on Anthony William's Medical Medium teachings, pa
 
           {showDrNote && (
             <div style={{
-              background: "#f0f7f0",
-              border: `1px solid ${C.sage}50`,
-              borderRadius: 12,
-              padding: "14px 16px",
-              marginBottom: 12,
+              background: "#f0f7f0", border: `1px solid ${C.sage}50`,
+              borderRadius: 12, padding: "14px 16px", marginBottom: 12,
             }}>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 8 }}>
                 🩺 Doctor / Practitioner Summary
               </div>
               <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
-                Creates a printable wellness summary with the AI companion's response — perfect to share with your GP or naturopath. Includes a link to medicalmedium.com for full protocols.
+                Creates a printable wellness summary with the AI companion's response — perfect to share with your GP or naturopath.
               </div>
-              <Btn
-                full
-                color={C.sageDark}
-                onClick={() =>
-                  printDoctorSummary({ user, conditions: sel, result })
-                }
-              >
+              <Btn full color={C.sageDark} onClick={() => printDoctorSummary({ user, result })}>
                 🖨 Print / Save as PDF
               </Btn>
             </div>
           )}
 
-          <div
-            style={{
-              fontSize: 13.5,
-              color: C.charcoal,
-              lineHeight: 1.8,
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
             {result}
-            {streaming && <span className="cs-cursor">▋</span>}
           </div>
         </Card>
       )}
 
-      <div
-        style={{
-          background: C.sageLight,
-          border: `1px solid ${C.sage}40`,
-          borderRadius: 12,
-          padding: 10,
-          fontSize: 11.5,
-          color: C.sageDark,
-        }}
-      >
-        📖 Paraphrased from Anthony William's publicly shared teachings. Not medical advice — always work with your healthcare provider. See his books in the <strong>Resources</strong> tab for full protocols.
+      <div style={{
+        background: C.sageLight, border: `1px solid ${C.sage}40`,
+        borderRadius: 12, padding: 10, fontSize: 11.5, color: C.sageDark,
+      }}>
+        📖 Paraphrased from Anthony William's publicly shared teachings. Not medical advice — always work with your healthcare provider. See his books in the <strong>Learn</strong> tab for full protocols.
       </div>
     </div>
   );

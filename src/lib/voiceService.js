@@ -1,3 +1,5 @@
+import { VOICE_PROVIDER } from './env.js'
+
 // Voice provider abstraction — swap providers by setting VITE_VOICE_PROVIDER env var.
 // Supported: 'elevenlabs' (default), 'browser'
 // Future providers: add a new case in createVoiceProvider() — no other changes needed.
@@ -8,7 +10,7 @@
 //   fetchAudioUrl(text: string, voiceId: string): Promise<string|null>
 
 export const VOICE_CONFIG = {
-  provider: import.meta.env.VITE_VOICE_PROVIDER || 'elevenlabs',
+  provider: VOICE_PROVIDER,
   elevenLabs: {
     apiEndpoint: '/api/elevenlabs/speak',
   },

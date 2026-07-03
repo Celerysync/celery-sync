@@ -37,14 +37,13 @@ const WELCOME_TEXT_EN =
   "You're in exactly the right place. I'm here for you. Feel free to ask me anything — I'm listening.";
 
 const STEPS = [
-  { emoji: "🏠", tab: "home",      label: "Today",      desc: "Daily home — morning protocol, supplement tracker & reminders" },
-  { emoji: "🎙", tab: "coach",     label: "AI Guide",   desc: "Talk hands-free — warm MM companion, always points to official sources" },
-  { emoji: "🔍", tab: "symptoms",  label: "Symptoms",   desc: "100 conditions with protocol guidance attributed to Anthony William" },
-  { emoji: "🍽", tab: "recipes",   label: "Recipes",    desc: "50 healing meals, juices, shots & meal planner" },
-  { emoji: "🌿", tab: "cleanses",  label: "Cleanses",   desc: "Full step-by-step Anthony William protocols" },
-  { emoji: "🫁", tab: "body",      label: "The Body",   desc: "Explore each organ — liver, thyroid, kidneys & more" },
-  { emoji: "💚", tab: "community", label: "Circles",    desc: "Community — people following the same protocols" },
-  { emoji: "🔗", tab: "knowledge", label: "Resources",  desc: "Official AW books, YouTube, podcast — links to the source" },
+  { emoji: "🏠", tab: "home",        label: "Today",       desc: "Daily home — morning protocol, supplement tracker & reminders" },
+  { emoji: "🎙", tab: "companion",   label: "Companion",   desc: "Talk hands-free — warm MM companion, always points to official sources" },
+  { emoji: "📊", tab: "track",       label: "Track",       desc: "Daily check-in and symptom support — how you feel today" },
+  { emoji: "💊", tab: "supplements", label: "Supplements", desc: "Track today's supplements and shop Anthony William's recommendations" },
+  { emoji: "🌱", tab: "learn",       label: "Learn",       desc: "Lessons, recipes, juices, and official AW resources" },
+  { emoji: "📋", tab: "progress",    label: "Progress",    desc: "Your healing journey — energy trends, streaks, and history" },
+  { emoji: "⚙️", tab: "settings",   label: "Settings",    desc: "Account, reminders, profiles and carer management" },
 ];
 
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL";

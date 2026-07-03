@@ -7,21 +7,13 @@ import { cleanForSpeech } from "../lib/ttsClean.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 const TAB_CONTEXT = {
-  home:      "The user is on the Today/Home tab — daily protocol, morning routine, supplement checklist, healing streak.",
-  journal:   "The user is on the Journal tab — they may want to reflect, log symptoms, or get journaling prompts.",
-  recipes:   "The user is on the Recipes tab — healing foods, juices, smoothies, meal planner, shopping list.",
-  juices:    "The user is on the Juices tab — fresh juices, celery juice, liver rescue shots, and healing drink protocols from Anthony William.",
-  cleanses:  "The user is on the Cleanses tab — 3:6:9, Heavy Metal Detox, and other Anthony William cleanse protocols.",
-  symptoms:  "The user is on the Symptom Checker tab — looking up symptoms, conditions, and protocol guidance.",
-  reports:   "The user is on the Reports tab — reviewing their healing progress, energy trends, celery juice streaks, and supplement history.",
-  learn:     "The user is on the Learn tab — reading plain-English explanations of Medical Medium protocols, condition explainers, and shareable cards from Anthony William's public teachings.",
-  knowledge: "The user is on the Resources tab — links to Anthony William's official books, YouTube, and podcast.",
-  body:      "The user is on the Body tab — exploring organs like liver, thyroid, brain, kidneys, and what Anthony William teaches about each.",
-  community: "The user is on the Healing Circles tab — connecting with others following the same protocols.",
-  carers:    "The user is on the Carers tab — supporting someone else's healing journey with Medical Medium protocols.",
-  practice:  "The user is on the Practice tab — practitioner tools for supporting clients following Medical Medium protocols.",
-  aw:        "The user is on the Support AW tab — Anthony William official content and support.",
-  account:   "The user is on the Account tab — subscription, settings, profile.",
+  home:        "The user is on the Today/Home tab — daily protocol, morning routine, supplement checklist, healing streak.",
+  companion:   "The user is on the Companion tab — their AI healing companion for conversation, protocol guidance, and questions.",
+  track:       "The user is on the Track tab — logging daily check-in (energy, mood, celery juice, symptoms) or exploring how they feel with support from Anthony William's teachings.",
+  progress:    "The user is on the Progress tab — reviewing their healing progress, energy trends, celery juice streaks, and supplement history.",
+  supplements: "The user is on the Supplements tab — tracking today's supplements or shopping for Anthony William's recommended Vimergy supplements via iHerb.",
+  learn:       "The user is on the Learn tab — reading plain-English explanations of Medical Medium protocols, condition explainers, recipes, juices, and resources from Anthony William's public teachings.",
+  settings:    "The user is on the Settings tab — subscription, reminders, profiles, carer management, and account details.",
 };
 
 export default function GlobalVoice({ currentTab, user }) {
@@ -37,8 +29,8 @@ export default function GlobalVoice({ currentTab, user }) {
   const [loading, setLoading] = useState(false);
   const [srError, setSrError] = useState(false);
 
-  // Don't show on coach tab — it already has full voice
-  if (!enabled || currentTab === "coach") return null;
+  // Don't show on companion tab — it already has full voice
+  if (!enabled || currentTab === "companion") return null;
 
   const close = () => {
     stopSpeaking();

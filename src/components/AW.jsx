@@ -3,12 +3,6 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { callClaude } from "../lib/api.js";
 
-const IHERB_CODE = "CELERYSYNC";
-
-function iherbUrl(path) {
-  return `https://www.iherb.com/${path}?rcode=${IHERB_CODE}`;
-}
-
 const MM_BOOKS_URL = "https://medicalmedium.com/books";
 
 const BOOKS = [
@@ -20,19 +14,6 @@ const BOOKS = [
   { title: "Cleanse to Heal",                       emoji: "✨", desc: "The master protocol guide — the 3:6:9 cleanse, every variation, and protocols for 200+ conditions." },
   { title: "Brain Saver",                           emoji: "🧠", desc: "Answers to brain inflammation, anxiety, depression, and every neurological condition." },
   { title: "Brain Saver Protocols, Cleanses & Recipes", emoji: "💊", desc: "300+ symptoms with exact supplement dosages — the most clinical and detailed book in the series." },
-];
-
-const SUPPLEMENTS = [
-  { name: "Zinc Sulfate Liquid",            emoji: "⚡", path: "pr/vimergy-usda-organic-zinc-sulfate-liquid/ihb-00229",       desc: "AW's #1 recommended zinc form — liquid sulfate absorbs best, antiviral, immune-rebuilding." },
-  { name: "Vitamin B12 (Adenosylcobalamin)",emoji: "🔴", path: "pr/vimergy-usda-organic-b12/ihb-00152",                       desc: "The most bioavailable B12 — adenosylcobalamin. Rebuilds the nervous system and adrenals." },
-  { name: "Lemon Balm",                     emoji: "🍋", path: "pr/vimergy-organic-lemon-balm/ihb-00176",                     desc: "Antiviral, deeply calming, thyroid-supporting. One of AW's most recommended herbs." },
-  { name: "Cat's Claw",                     emoji: "🌿", path: "pr/vimergy-organic-cat-s-claw/ihb-00158",                     desc: "Powerful antiviral — key for Epstein-Barr virus, Lyme, and mystery illness protocols." },
-  { name: "L-Lysine",                       emoji: "🛡", path: "pr/vimergy-l-lysine/ihb-00180",                               desc: "Antiviral amino acid that suppresses EBV replication. Foundational for almost every viral condition." },
-  { name: "Spirulina",                      emoji: "🔵", path: "pr/vimergy-usda-organic-spirulina-powder/ihb-00218",          desc: "Heavy metal detox, brain food, deep nutrition. One of the 5 HMDS ingredients." },
-  { name: "Barley Grass Juice Powder",      emoji: "🟢", path: "pr/vimergy-organic-barley-grass-juice-powder/ihb-00154",      desc: "Draws heavy metals from the intestinal tract — essential HMDS ingredient." },
-  { name: "Wild Blueberry Powder",          emoji: "🫐", path: "pr/vimergy-wild-blueberry-powder/ihb-00228",                  desc: "The most powerful brain food on earth per AW. Restores neurons, removes heavy metals." },
-  { name: "Magnesium Glycinate",            emoji: "💤", path: "pr/doctor-s-best-high-absorption-magnesium/ihb-00112",        desc: "The most calming magnesium — sleep, anxiety, heart palpitations, muscle cramps." },
-  { name: "Vitamin C",                      emoji: "🍊", path: "pr/vimergy-micro-c-immune-power/ihb-00223",                   desc: "AW's preferred Micro-C form — rebuilds the immune system and fights viral load." },
 ];
 
 const LINKS = [
@@ -701,7 +682,7 @@ export default function AW({ onNavigate }) {
         {[
           { n: "1", label: "Buy from Anthony William's website", desc: "All purchases go directly to his team — he chooses the retailers and earns from every sale." },
           { n: "2", label: "Read the book directly", desc: "His books contain complete protocols, exact guidance, and the full depth of his teachings — they are the authoritative source." },
-          { n: "3", label: "Use Resources in this app", desc: "The Resources tab links directly to his official books, YouTube, and podcast so you can always access his official content." },
+          { n: "3", label: "Use Resources in this app", desc: "The Learn tab links directly to his official books, YouTube, and podcast so you can always access his official content." },
         ].map(({ n, label, desc }) => (
           <div key={n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
             <div style={{
@@ -716,7 +697,7 @@ export default function AW({ onNavigate }) {
           </div>
         ))}
         <button
-          onClick={() => onNavigate?.("knowledge")}
+          onClick={() => onNavigate?.("learn")}
           style={{
             background: C.sage, color: C.white, border: "none",
             borderRadius: 30, padding: "8px 18px",
@@ -724,7 +705,7 @@ export default function AW({ onNavigate }) {
             cursor: "pointer", marginTop: 4,
           }}
         >
-          Go to Resources →
+          Go to Learn →
         </button>
       </div>
 
@@ -755,7 +736,7 @@ export default function AW({ onNavigate }) {
                   Buy on medicalmedium.com →
                 </a>
                 <button
-                  onClick={() => onNavigate?.("knowledge")}
+                  onClick={() => onNavigate?.("learn")}
                   style={{
                     background: "transparent", color: C.sage,
                     border: `1.5px solid ${C.sage}`, borderRadius: 30,
@@ -763,42 +744,9 @@ export default function AW({ onNavigate }) {
                     fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
                   }}
                 >
-                  See in Resources →
+                  See in Learn →
                 </button>
               </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-
-      {/* Supplements */}
-      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
-        💊 Anthony William's Recommended Supplements
-      </div>
-      <div style={{ fontSize: 12, color: C.muted, marginTop: -8 }}>
-        These are the Vimergy and top-quality brands Anthony William recommends. Shop via iHerb — commissions support the Healing Access Fund.
-      </div>
-      {SUPPLEMENTS.map((s) => (
-        <Card key={s.name}>
-          <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-            <div style={{ fontSize: 24, flexShrink: 0, marginTop: 2 }}>{s.emoji}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
-                {s.name}
-              </div>
-              <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
-              <a
-                href={iherbUrl(s.path)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-block", background: "#16a34a", color: C.white,
-                  borderRadius: 30, padding: "6px 14px", fontSize: 12,
-                  fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none",
-                }}
-              >
-                Shop on iHerb →
-              </a>
             </div>
           </div>
         </Card>
