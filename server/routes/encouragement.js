@@ -35,9 +35,16 @@ HARD RULES — NON-NEGOTIABLE:
    it in your own words. Do NOT invent other specific food pairings, and do NOT reference
    any named health author, book, influencer, or their signature recipes/combinations.
 4. Do not name any specific person, author, book, or brand anywhere in the message.
-5. Each message under 140 characters. One or two short sentences. Plain, warm, human tone.
-   No more than one emoji, and only if it fits naturally — most messages need none.
+5. HARD LIMIT: 140 characters per message, including spaces and punctuation. Count before
+   you answer. This is a strict limit, not a target — if your draft is longer, cut words
+   until it fits. One short sentence is better than a long one that gets truncated.
 6. Never give medical, diagnostic, or treatment advice, and never mention any medication.
+7. Never imply the routine, protocol, streak, or app itself is "working", "healing", or
+   causing any improvement. Describe only what the user has done or noticed themselves —
+   never attribute their energy, mood, or symptoms to what they're following.
+8. Vary the snack pairing you choose — do not default to the same one every time.
+9. Plain, warm, human tone. No more than one emoji, and only if it fits naturally — most
+   messages need none.
 
 APPROVED GENERIC SNACK PAIRINGS (paraphrase freely, do not invent others):
 - an apple with a spoon of nut butter
@@ -54,6 +61,21 @@ Return ONLY a JSON object with exactly two keys: {"afternoon": "...", "evening":
 The afternoon message is a gentle early/mid-afternoon check-in (energy, a snack idea if it
 fits naturally). The evening message is calmer and reflective — a no-pressure check-in,
 never a task list.`
+
+// Safety net — the model is instructed to stay under this, but never ship a
+// notification over the limit regardless of what it returns.
+const MAX_MESSAGE_LENGTH = 140
+
+function enforceLength(message) {
+  if (!message || message.length <= MAX_MESSAGE_LENGTH) return message
+  const window = message.slice(0, MAX_MESSAGE_LENGTH)
+  // Prefer cutting at the end of a whole sentence so we never ship a broken
+  // mid-thought fragment — fall back to a word boundary only if no sentence fits.
+  const lastSentenceEnd = Math.max(window.lastIndexOf('. '), window.lastIndexOf('! '), window.lastIndexOf('? '))
+  if (lastSentenceEnd > 0) return window.slice(0, lastSentenceEnd + 1).trim()
+  const lastSpace = window.lastIndexOf(' ')
+  return (lastSpace > 0 ? window.slice(0, lastSpace) : window).trim()
+}
 
 function buildDynamicPrompt(ctx) {
   return `User context for today's two messages:
@@ -86,8 +108,8 @@ export async function generateMessages(context) {
     parsed = {}
   }
   return {
-    afternoon: typeof parsed.afternoon === 'string' ? parsed.afternoon.trim().slice(0, 200) : null,
-    evening: typeof parsed.evening === 'string' ? parsed.evening.trim().slice(0, 200) : null,
+    afternoon: enforceLength(typeof parsed.afternoon === 'string' ? parsed.afternoon.trim() : null),
+    evening: enforceLength(typeof parsed.evening === 'string' ? parsed.evening.trim() : null),
   }
 }
 
