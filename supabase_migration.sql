@@ -260,3 +260,10 @@ CREATE POLICY "Users manage own rhythm items" ON rhythm_items
 
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS rhythm_anchor_time text;
+
+-- 13. Onboarding rebuild: one durable, server-side completion signal,
+-- replacing 3-4 inconsistent localStorage flags (cs_start_here_done,
+-- cs_journey_type, cs_welcomed_<userId>) that weren't scoped per-user and
+-- could desync across devices.
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS onboarding_completed_at timestamptz;

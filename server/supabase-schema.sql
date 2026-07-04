@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   age_band text,
   cycle_tracking_enabled boolean NOT NULL DEFAULT false,
   rhythm_anchor_time text,
+  onboarding_completed_at timestamptz,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
