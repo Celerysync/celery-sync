@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
+import ProgressCharts from "./ProgressCharts.jsx";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
 const DISCLAIMER =
@@ -151,6 +152,23 @@ function MonthCard({ month }) {
   );
 }
 
+function ShareButton({ onClick, downloading }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={downloading}
+      style={{
+        background: C.sageDark, color: "#fff", border: "none",
+        borderRadius: 20, padding: "10px 22px", width: "100%",
+        fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700,
+        cursor: downloading ? "default" : "pointer", opacity: downloading ? 0.7 : 1,
+      }}
+    >
+      {downloading ? "Generating…" : "📤 Share wellness log (PDF)"}
+    </button>
+  );
+}
+
 export default function Reports({ authUser, profileId, user }) {
   const [view, setView] = useState("weekly");
   const [checkins, setCheckins] = useState([]);
@@ -159,6 +177,9 @@ export default function Reports({ authUser, profileId, user }) {
   const [loadingWeeklies, setLoadingWeeklies] = useState(true);
   const [drMonths, setDrMonths] = useState(3);
   const [drDownloading, setDrDownloading] = useState(false);
+  const [progressCheckins, setProgressCheckins] = useState([]);
+  const [loadingProgress, setLoadingProgress] = useState(false);
+  const [progressDownloading, setProgressDownloading] = useState(false);
 
   useEffect(() => {
     if (!profileId) return;
@@ -180,6 +201,48 @@ export default function Reports({ authUser, profileId, user }) {
   }, [profileId, view, checkins.length]);
 
   const months = groupByMonth(weeklies);
+
+  useEffect(() => {
+    if (!profileId || (view !== "weekly" && view !== "monthly")) return;
+    const days = view === "monthly" ? 180 : 28;
+    setLoadingProgress(true);
+    fetch(`/api/memory/checkins/${profileId}?days=${days}`)
+      .then((r) => r.json())
+      .then((d) => setProgressCheckins(d.checkins || []))
+      .catch(() => {})
+      .finally(() => setLoadingProgress(false));
+  }, [profileId, view]);
+
+  const downloadProgressReport = async () => {
+    setProgressDownloading(true);
+    try {
+      const res = await fetch(`/api/memory/progress/${profileId}/pdf?range=${view === "monthly" ? "monthly" : "weekly"}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const filename = `wellness-log-${new Date().toISOString().split("T")[0]}.pdf`;
+      const file = new File([blob], filename, { type: "application/pdf" });
+
+      // Prefer the native share sheet (lets the user pick email/messages/save)
+      // — this hands the file to the OS, not sharing infrastructure of our own.
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "Wellness log" });
+          return;
+        } catch {
+          // user cancelled or share failed — fall through to plain download
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setProgressDownloading(false);
+    }
+  };
 
   const downloadDoctorReport = async () => {
     setDrDownloading(true);
@@ -323,7 +386,15 @@ export default function Reports({ authUser, profileId, user }) {
             </div>
           </Card>
         ) : (
-          <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
+          <>
+            <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
+            {loadingProgress ? (
+              <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
+            ) : (
+              <ProgressCharts checkins={progressCheckins} />
+            )}
+            <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
+          </>
         )
       )}
 
@@ -346,6 +417,17 @@ export default function Reports({ authUser, profileId, user }) {
             months.map((m) => <MonthCard key={m.ym} month={m} />)
           )}
         </Card>
+      )}
+
+      {view === "monthly" && (
+        loadingProgress ? (
+          <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
+        ) : (
+          <>
+            <ProgressCharts checkins={progressCheckins} bucket="week" />
+            <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
+          </>
+        )
       )}
 
       {/* Doctor report download — always shown */}
