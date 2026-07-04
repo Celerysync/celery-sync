@@ -224,3 +224,39 @@ CREATE POLICY "Users manage own cycle logs" ON cycle_logs
 -- PUSH_SCHEDULE pushes ignored them entirely. This makes the toggles real.
 ALTER TABLE push_subscriptions
   ADD COLUMN IF NOT EXISTS reminder_prefs jsonb DEFAULT '{"morningProtocol":true,"adrenalSnack":true}'::jsonb;
+
+-- 12. Real per-profile rhythm item storage — was localStorage-only,
+-- unscoped by profile, so nothing survived a device switch or synced to
+-- an account. fixed_time (absolute "HH:MM") takes precedence over
+-- spacing_minutes (relative, minutes after anchor/previous item) when set —
+-- natural speech usually gives an absolute time ("at 9am"), not a relative one.
+CREATE TABLE IF NOT EXISTS rhythm_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  emoji text DEFAULT '🌿',
+  category text DEFAULT 'other',
+  spacing_minutes int DEFAULT 0,
+  fixed_time text,
+  frequency text DEFAULT 'daily',
+  duration_type text DEFAULT 'ongoing',
+  duration_days int,
+  start_date date,
+  is_medicine boolean DEFAULT false,
+  note text DEFAULT '',
+  sort_order int DEFAULT 0,
+  last_reminded_on date,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rhythm_items_profile
+  ON rhythm_items(profile_id);
+
+ALTER TABLE rhythm_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own rhythm items" ON rhythm_items;
+CREATE POLICY "Users manage own rhythm items" ON rhythm_items
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS rhythm_anchor_time text;

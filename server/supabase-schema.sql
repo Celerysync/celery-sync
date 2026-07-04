@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   gender text,
   age_band text,
   cycle_tracking_enabled boolean NOT NULL DEFAULT false,
+  rhythm_anchor_time text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -51,6 +52,31 @@ DO $$ BEGIN
     ON profiles FOR ALL
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS rhythm_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  emoji text DEFAULT '🌿',
+  category text DEFAULT 'other',
+  spacing_minutes int DEFAULT 0,
+  fixed_time text,
+  frequency text DEFAULT 'daily',
+  duration_type text DEFAULT 'ongoing',
+  duration_days int,
+  start_date date,
+  is_medicine boolean DEFAULT false,
+  note text DEFAULT '',
+  sort_order int DEFAULT 0,
+  last_reminded_on date,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_rhythm_items_profile ON rhythm_items(profile_id);
+ALTER TABLE rhythm_items ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users manage own rhythm items"
+    ON rhythm_items FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS cycle_logs (
