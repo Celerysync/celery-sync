@@ -35,7 +35,6 @@ const DoctorReport       = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
-const StartHere          = lazy(() => import("./components/StartHere.jsx"));
 
 const TABS = [
   { id: "home",        label: "Today",       emoji: "🏠", free: true  },
@@ -147,7 +146,7 @@ export default function App() {
   const [navQuery, setNavQuery] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
-  const [startHereDone, setStartHereDone] = useLocalStorage("cs_start_here_done", false);
+  const [justOnboarded, setJustOnboarded] = useState(null); // { name, firstItem } — one-time, not persisted
 
   const graduateToFullApp = () => {
     localStorage.setItem("cs_journey_type", "experienced");
@@ -234,19 +233,23 @@ export default function App() {
   if (!authUser) return <Auth />;
   if (profilesLoading) return <LoadingScreen message="Loading your healing profiles…" />;
 
-  // No profiles yet = first time setup
-  if (profiles.length === 0) {
+  // No profiles yet, or an existing profile never finished onboarding
+  // (e.g. closed the app mid-flow) — onboarding_completed_at is the one
+  // durable signal, replacing the old scattered localStorage flags.
+  if (profiles.length === 0 || (activeProfile && !activeProfile.onboarding_completed_at)) {
     return (
       <Suspense fallback={<LoadingScreen message="Setting up your journey…" />}>
         <Onboarding
-          onDone={async (data) => {
-            const created = await createProfile({
-              name: data.name,
-              symptoms: data.symptoms,
-              goal: data.goal,
-              avatar_emoji: "🌿",
-            });
-            if (created) switchProfile(created.id);
+          authUser={authUser}
+          existingProfile={profiles.length === 0 ? null : activeProfile}
+          createProfile={createProfile}
+          switchProfile={switchProfile}
+          updateProfile={updateProfile}
+          onDone={({ name, firstItem }) => {
+            localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
+            setShowWelcome(false);
+            setJustOnboarded({ name, firstItem });
+            setTab("companion");
           }}
         />
       </Suspense>
@@ -278,14 +281,6 @@ export default function App() {
 
     switch (effectiveTab) {
       case "home":
-        if (!startHereDone && !caregiverMode) {
-          return (
-            <StartHere
-              user={activeProfile}
-              onDone={() => setStartHereDone(true)}
-            />
-          );
-        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
@@ -293,7 +288,7 @@ export default function App() {
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
 
       case "companion":
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} />;
+        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} justOnboarded={justOnboarded} onConsumedJustOnboarded={() => setJustOnboarded(null)} />;
 
       case "track":
         return <TrackView authUser={authUser} user={activeProfile} profileId={activeProfileId} navQuery={navQuery} onPageContext={setPageContext} />;
@@ -348,14 +343,6 @@ export default function App() {
         return isAdmin ? <AdminDashboard authUser={authUser} /> : null;
 
       default:
-        if (!startHereDone && !caregiverMode) {
-          return (
-            <StartHere
-              user={activeProfile}
-              onDone={() => setStartHereDone(true)}
-            />
-          );
-        }
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode

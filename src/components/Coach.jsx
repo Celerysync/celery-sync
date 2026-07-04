@@ -257,7 +257,12 @@ function parseNavCommand(text) {
   return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
 }
 
-export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext }) {
+function formatFixedTime(t) {
+  if (!t) return null;
+  return new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext, justOnboarded, onConsumedJustOnboarded }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -327,7 +332,19 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       ? `Today's the day${user?.name ? ", " + user.name : ""}! 🌿 You just started ${activeProtocol.name} — that takes real courage, and I'm proud of you for beginning. The first few days can bring healing reactions like tiredness, headaches, or emotional waves — that's normal, not a setback. The most powerful thing you can do right now is keep it simple: celery juice, hydration, rest. I'm right here with you every step. How are you feeling so far today?`
       : null;
 
-    const greeting = day1Greeting
+    // Fires exactly once, right after onboarding finishes — reflects one
+    // specific thing she just entered rather than a generic first greeting.
+    const justOnboardedGreeting = (!caregiverMode && !translatedGreeting && justOnboarded)
+      ? `Hi ${justOnboarded.name || user?.name || "there"}! 🌿 ${
+          justOnboarded.firstItem
+            ? `${justOnboarded.firstItem.name}${justOnboarded.firstItem.fixedTime ? ` at ${formatFixedTime(justOnboarded.firstItem.fixedTime)}` : ""} — I'll remind you.`
+            : "Your rhythm is ready — add to it anytime just by telling me."
+        } I'm your companion — here whenever you need me. How are you feeling right now?`
+      : null;
+
+    const greeting = justOnboardedGreeting
+      ? justOnboardedGreeting
+      : day1Greeting
       ? day1Greeting
       : translatedGreeting
       ? translatedGreeting
@@ -342,6 +359,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — a warm guide for Anthony William's Medical Medium protocols. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
+    if (justOnboardedGreeting) onConsumedJustOnboarded?.();
     // Autoplay is blocked until a user gesture — queue the greeting and speak it
     // the moment the user first taps/clicks anywhere in the Coach panel.
     pendingGreetingRef.current = greeting;
