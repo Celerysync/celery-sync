@@ -12,6 +12,7 @@ import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './ro
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 import encouragementRoutes, { runEncouragementTick } from './routes/encouragement.js'
+import { sendRhythmReminders } from './routes/rhythm.js'
 import { checkRestockAlerts } from './routes/supplements.js'
 
 const app = express()
@@ -107,10 +108,16 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     } catch (err) {
       console.warn('Restock check error:', err.message);
     }
+    try {
+      await sendRhythmReminders();
+    } catch (err) {
+      console.warn('Rhythm reminder error:', err.message);
+    }
   });
   console.log('🔔 Push notification scheduler active')
   console.log('💬 Encouragement engine scheduler active')
   console.log('📦 Supplement restock scheduler active')
+  console.log('🕐 Rhythm item reminder scheduler active')
 
   // Sync Oura Ring data for all connected users at 6:30am
   cron.schedule('30 6 * * *', async () => {
