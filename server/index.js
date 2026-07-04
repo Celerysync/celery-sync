@@ -12,6 +12,7 @@ import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './ro
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 import encouragementRoutes, { runEncouragementTick } from './routes/encouragement.js'
+import { checkRestockAlerts } from './routes/supplements.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -134,6 +135,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     try { await refreshAllHealingProfiles(); } catch (err) { console.warn('Profile refresh error:', err.message); }
   });
   console.log('🧠 Nightly healing profile refresh scheduler active')
+
+  // Supplement restock check — daily at 3am UTC
+  cron.schedule('0 3 * * *', async () => {
+    try { await checkRestockAlerts(); } catch (err) { console.warn('Restock check error:', err.message); }
+  });
+  console.log('📦 Supplement restock scheduler active')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

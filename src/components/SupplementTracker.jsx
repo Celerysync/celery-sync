@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
+import { useUserSupplements } from "../hooks/useUserSupplements.js";
 
 const CORE_SUPPS = [
   { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
@@ -43,30 +44,36 @@ function getSuppsForConditions(conditions = [], CONDITIONS) {
   return result.slice(0, 12);
 }
 
-const BLANK_CUSTOM = { name: "", dose: "", timing: "morning_food" };
+const BLANK_CUSTOM = { name: "", dose: "", timing: "morning_food", unitsOnHand: "", unitsPerDose: "" };
 
 function todayDate() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
+function formatRunOutDate(date) {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function SupplementTracker({ userConditions = [], profileId }) {
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState(false);
-  const [customSupps, setCustomSupps] = useState([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
   const [CONDITIONS, setCONDITIONS] = useState(null);
+  const [editingStockFor, setEditingStockFor] = useState(null); // supplement name being edited
+  const [stockForm, setStockForm] = useState({ unitsOnHand: "", unitsPerDose: "1", restockThresholdDays: "7" });
+
+  const {
+    supplements, addSupplement, removeSupplement,
+    inventoryFor, setInventoryFor, adjustStockOnDoseChange, runOutInfoFor,
+  } = useUserSupplements(profileId);
 
   const key = todayKey();
   const date = todayDate();
 
-  // Load today's state — Supabase first if logged in, localStorage fallback
+  // Load today's checked state — Supabase first if logged in, localStorage fallback
   useEffect(() => {
-    try {
-      setCustomSupps(JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"));
-    } catch { setCustomSupps([]); }
-
     if (profileId) {
       supabase
         .from("supplement_logs")
@@ -106,39 +113,79 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
           taken: next[dbKey],
           taken_at: next[dbKey] ? new Date().toISOString() : null,
         }, { onConflict: "profile_id,date,supplement_name,timing" }).catch(() => {});
+        if (supp.source === "custom") {
+          adjustStockOnDoseChange(supp.name, next[dbKey]).catch(() => {});
+        }
       }
       return next;
     });
   };
 
-  const saveCustom = () => {
+  const saveCustom = async () => {
     if (!form.name.trim()) return;
-    const newSupp = {
-      id: `custom_${Date.now()}`,
-      label: form.dose ? `${form.name.trim()} (${form.dose.trim()})` : form.name.trim(),
-      timing: form.timing,
-    };
-    const next = [...customSupps, newSupp];
-    setCustomSupps(next);
-    localStorage.setItem("cs_custom_supps", JSON.stringify(next));
+    const name = form.name.trim();
+    const dose = form.dose.trim();
+
+    if (profileId) {
+      const saved = await addSupplement(name, dose, form.timing);
+      if (saved && form.unitsOnHand.trim()) {
+        await setInventoryFor(name, {
+          unitsOnHand: Number(form.unitsOnHand),
+          unitsPerDose: form.unitsPerDose.trim() ? Number(form.unitsPerDose) : 1,
+        });
+      }
+    } else {
+      // No account yet — fall back to localStorage-only, matching prior behaviour
+      let local = [];
+      try { local = JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"); } catch { local = []; }
+      local.push({ id: `local_${Date.now()}`, label: dose ? `${name} (${dose})` : name, timing: form.timing });
+      localStorage.setItem("cs_custom_supps", JSON.stringify(local));
+    }
+
     setForm(BLANK_CUSTOM);
     setAdding(false);
   };
 
-  const removeCustom = (id) => {
-    const next = customSupps.filter(s => s.id !== id);
-    setCustomSupps(next);
-    localStorage.setItem("cs_custom_supps", JSON.stringify(next));
+  const removeCustom = (supp) => {
+    if (profileId) {
+      removeSupplement(supp.id);
+    }
     setChecked((prev) => {
       const next2 = { ...prev };
-      delete next2[id];
+      delete next2[`${supp.label}__${supp.timing}`];
       localStorage.setItem(key, JSON.stringify(next2));
       return next2;
     });
   };
 
-  const conditionSupps = getSuppsForConditions(userConditions, CONDITIONS);
-  const allSupps = [...CORE_SUPPS, ...conditionSupps, ...customSupps];
+  const openStockEditor = (name) => {
+    const existing = inventoryFor(name);
+    setStockForm({
+      unitsOnHand: existing?.units_on_hand != null ? String(existing.units_on_hand) : "",
+      unitsPerDose: existing ? String(existing.units_per_dose) : "1",
+      restockThresholdDays: existing ? String(existing.restock_threshold_days) : "7",
+    });
+    setEditingStockFor(name);
+  };
+
+  const saveStock = async (name) => {
+    await setInventoryFor(name, {
+      unitsOnHand: stockForm.unitsOnHand.trim() ? Number(stockForm.unitsOnHand) : null,
+      unitsPerDose: stockForm.unitsPerDose.trim() ? Number(stockForm.unitsPerDose) : 1,
+      restockThresholdDays: stockForm.restockThresholdDays.trim() ? Number(stockForm.restockThresholdDays) : 7,
+    });
+    setEditingStockFor(null);
+  };
+
+  const conditionSupps = getSuppsForConditions(userConditions, CONDITIONS).map(s => ({ ...s, source: "condition" }));
+  const customSuppItems = supplements.map((s) => ({
+    id: s.id,
+    label: s.dose_label ? `${s.name} (${s.dose_label})` : s.name,
+    timing: s.timing,
+    name: s.name,
+    source: "custom",
+  }));
+  const allSupps = [...CORE_SUPPS.map(s => ({ ...s, source: "core" })), ...conditionSupps, ...customSuppItems];
   const suppKey = (s) => `${s.label}__${s.timing}`;
   const doneCount = allSupps.filter((s) => checked[suppKey(s)]).length;
   const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;
@@ -203,21 +250,34 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
                   {t.label}
                 </div>
                 {group.map((s) => (
-                  <SuppRow
-                    key={s.id}
-                    label={s.label}
-                    checked={!!checked[suppKey(s)]}
-                    onToggle={() => toggle(s)}
-                    isCustom={s.id.startsWith("custom_")}
-                    onRemove={() => removeCustom(s.id)}
-                    timingColor={t.color}
-                  />
+                  <div key={s.id}>
+                    <SuppRow
+                      label={s.label}
+                      checked={!!checked[suppKey(s)]}
+                      onToggle={() => toggle(s)}
+                      isCustom={s.source === "custom"}
+                      onRemove={() => removeCustom(s)}
+                      timingColor={t.color}
+                    />
+                    {s.source === "custom" && (
+                      <StockLine
+                        name={s.name}
+                        runOutInfo={runOutInfoFor(s.name)}
+                        editing={editingStockFor === s.name}
+                        onOpen={() => openStockEditor(s.name)}
+                        onCancel={() => setEditingStockFor(null)}
+                        onSave={() => saveStock(s.name)}
+                        stockForm={stockForm}
+                        setStockForm={setStockForm}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             );
           })}
 
-          {conditionSupps.length === 0 && customSupps.length === 0 && (
+          {conditionSupps.length === 0 && customSuppItems.length === 0 && (
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
               Add your own supplements below — enter exactly what you're following, including dose and timing.
             </div>
@@ -242,30 +302,46 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
                 placeholder="Supplement name (e.g. Zinc)"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                style={{
-                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
-                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
-                }}
+                style={inputStyle}
               />
               <input
                 placeholder="Dose (optional, e.g. 50mg)"
                 value={form.dose}
                 onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
-                style={{
-                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
-                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
-                }}
+                style={inputStyle}
               />
               <select
                 value={form.timing}
                 onChange={(e) => setForm((f) => ({ ...f, timing: e.target.value }))}
-                style={{
-                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
-                  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%",
-                }}
+                style={inputStyle}
               >
                 {TIMINGS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
+
+              {profileId && (
+                <>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                    Optional — track inventory so we can remind you before you run out
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      placeholder="Units on hand (e.g. 60)"
+                      type="number"
+                      value={form.unitsOnHand}
+                      onChange={(e) => setForm((f) => ({ ...f, unitsOnHand: e.target.value }))}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <input
+                      placeholder="Units per dose"
+                      type="number"
+                      value={form.unitsPerDose}
+                      onChange={(e) => setForm((f) => ({ ...f, unitsPerDose: e.target.value }))}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                  </div>
+                </>
+              )}
+
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   onClick={saveCustom}
@@ -305,6 +381,76 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
         </div>
       )}
     </Card>
+  );
+}
+
+const inputStyle = {
+  border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
+  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
+};
+
+function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockForm, setStockForm }) {
+  if (editing) {
+    return (
+      <div style={{ marginLeft: 30, marginBottom: 8, padding: "8px 10px", background: `${C.sageLight}40`, borderRadius: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <input
+            placeholder="Units on hand"
+            type="number"
+            value={stockForm.unitsOnHand}
+            onChange={(e) => setStockForm((f) => ({ ...f, unitsOnHand: e.target.value }))}
+            style={{ ...inputStyle, flex: 1, fontSize: 12, padding: "5px 8px" }}
+          />
+          <input
+            placeholder="Per dose"
+            type="number"
+            value={stockForm.unitsPerDose}
+            onChange={(e) => setStockForm((f) => ({ ...f, unitsPerDose: e.target.value }))}
+            style={{ ...inputStyle, flex: 1, fontSize: 12, padding: "5px 8px" }}
+          />
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <label style={{ fontSize: 11, color: C.muted, flex: 1 }}>
+            Alert when
+            <input
+              type="number"
+              value={stockForm.restockThresholdDays}
+              onChange={(e) => setStockForm((f) => ({ ...f, restockThresholdDays: e.target.value }))}
+              style={{ width: 40, margin: "0 4px", border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 4px", fontSize: 12 }}
+            />
+            days left
+          </label>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={onSave} style={{ flex: 1, background: C.sage, color: "#fff", border: "none", borderRadius: 16, padding: "6px", fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}>Save</button>
+          <button onClick={onCancel} style={{ flex: 1, background: "none", color: C.muted, border: `1px solid ${C.border}`, borderRadius: 16, padding: "6px", fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!runOutInfo) {
+    return (
+      <button
+        onClick={onOpen}
+        style={{ marginLeft: 30, marginBottom: 8, background: "none", border: "none", color: C.muted, fontSize: 11, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+      >
+        + track inventory for {name}
+      </button>
+    );
+  }
+
+  const low = runOutInfo.daysRemaining <= runOutInfo.restockThresholdDays;
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        marginLeft: 30, marginBottom: 8, background: "none", border: "none",
+        color: low ? C.terracotta : C.muted, fontSize: 11, cursor: "pointer", padding: 0,
+      }}
+    >
+      {runOutInfo.unitsOnHand} left · runs out ~{formatRunOutDate(runOutInfo.runOutDate)}{low ? " · reorder soon" : ""}
+    </button>
   );
 }
 
