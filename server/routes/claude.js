@@ -4,7 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const MODELS = {
+export const MODELS = {
   quick:    'claude-haiku-4-5-20251001', // daily check-ins, follow-ups, short lookups
   standard: 'claude-sonnet-4-6',         // most conversation turns (resolveModel picks this for health queries)
   deep:     'claude-opus-4-8',           // practitioner protocol generation only

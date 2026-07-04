@@ -11,6 +11,7 @@ import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
+import encouragementRoutes from './routes/encouragement.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -69,6 +70,7 @@ app.use('/api/wearable', generalLimit, wearableRoutes)
 app.use('/api/analytics', generalLimit, analyticsRoutes)
 app.use('/api/memory', generalLimit, memoryRoutes)
 app.use('/api/carers', generalLimit, carerRoutes)
+app.use('/api/encouragement', generalLimit, encouragementRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
