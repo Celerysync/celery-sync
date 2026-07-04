@@ -1,13 +1,9 @@
-import { useEffect, useCallback, useMemo, useRef } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
 import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
 
 const TODAY = () => new Date().toISOString().split("T")[0];
-
-function makeId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-}
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + "T00:00:00");
@@ -24,18 +20,30 @@ function programDayNumber(startDate, totalDays) {
   return diff;
 }
 
+// scheduledMs is computed for relative items (cascading from the anchor, or
+// the previous item's actual completion time) AND for fixedTime items
+// (absolute "HH:MM", independent of the anchor entirely) — a fixedTime item
+// shows up even if the user has never set a wake-time anchor at all, since
+// voice-entered items ("B12 at 9am") shouldn't require that setup first.
 function calculateSequence(orderedItems, anchorTime, completions) {
-  if (!anchorTime || orderedItems.length === 0) return [];
-  const [h, m] = anchorTime.split(":").map(Number);
+  if (orderedItems.length === 0) return [];
   const today = new Date();
-  const anchorMs = new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m, 0, 0).getTime();
-  let prevMs = anchorMs;
+  let prevMs = null;
+  if (anchorTime) {
+    const [h, m] = anchorTime.split(":").map(Number);
+    prevMs = new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m, 0, 0).getTime();
+  }
   return orderedItems.map((item) => {
-    const spacingMs = item.spacingMinutes * 60_000;
-    const scheduledMs = prevMs + spacingMs;
     const completionStr = completions[item.id];
     const completedAt = completionStr ? new Date(completionStr) : null;
-    prevMs = completedAt ? completedAt.getTime() : scheduledMs;
+    let scheduledMs = null;
+    if (item.fixedTime) {
+      const [fh, fm] = item.fixedTime.split(":").map(Number);
+      scheduledMs = new Date(today.getFullYear(), today.getMonth(), today.getDate(), fh, fm, 0, 0).getTime();
+    } else if (prevMs != null) {
+      scheduledMs = prevMs + (item.spacingMinutes || 0) * 60_000;
+      prevMs = completedAt ? completedAt.getTime() : scheduledMs;
+    }
     return { ...item, scheduledMs, completedAt };
   });
 }
@@ -88,14 +96,88 @@ async function syncRhythmCountsToCheckin(profileId, userId, completed, total, ac
   }, { onConflict: "profile_id,check_date" });
 }
 
+function rowToItem(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    emoji: row.emoji,
+    category: row.category,
+    spacingMinutes: row.spacing_minutes,
+    fixedTime: row.fixed_time,
+    frequency: row.frequency,
+    durationType: row.duration_type,
+    durationDays: row.duration_days,
+    startDate: row.start_date,
+    isMedicine: row.is_medicine,
+    note: row.note,
+    sortOrder: row.sort_order,
+  };
+}
+
+function itemToRow(item, profileId) {
+  return {
+    profile_id: profileId,
+    name: item.name,
+    emoji: item.emoji || "🌿",
+    category: item.category || "other",
+    spacing_minutes: item.spacingMinutes ?? 0,
+    fixed_time: item.fixedTime ?? null,
+    frequency: item.frequency ?? "daily",
+    duration_type: item.durationType ?? "ongoing",
+    duration_days: item.durationDays ?? null,
+    start_date: item.startDate ?? null,
+    is_medicine: item.isMedicine ?? false,
+    note: item.note ?? "",
+    sort_order: item.sortOrder ?? 0,
+  };
+}
+
 export function useRhythm(authUser, profileId) {
-  const [baseItems, setBaseItems] = useLocalStorage("cs_rhythm_items", []);
-  const [anchorTime, setAnchorTimeRaw] = useLocalStorage("cs_rhythm_anchor", "");
+  const [baseItems, setBaseItems] = useState([]);
+  const [anchorTime, setAnchorTimeState] = useState("");
+  const [rhythmLoaded, setRhythmLoaded] = useState(false);
   const [activeProgram, setActiveProgram] = useLocalStorage("cs_active_program", null);
   // localStorage completions as instant-response cache; Supabase is source of truth
   const [completions, setCompletions] = useLocalStorage(`cs_completions_${TODAY()}`, {});
 
-  const setAnchorTime = useCallback((t) => setAnchorTimeRaw(t), [setAnchorTimeRaw]);
+  // Load rhythm items + anchor from Supabase, migrating any existing
+  // localStorage data on first load so nobody loses their schedule.
+  useEffect(() => {
+    if (!profileId) { setRhythmLoaded(false); return; }
+    (async () => {
+      setRhythmLoaded(false);
+      const [itemsRes, profileRes] = await Promise.all([
+        supabase.from("rhythm_items").select("*").eq("profile_id", profileId).order("sort_order", { ascending: true }),
+        supabase.from("profiles").select("rhythm_anchor_time").eq("id", profileId).maybeSingle(),
+      ]);
+
+      let items = itemsRes.data || [];
+      let anchor = profileRes.data?.rhythm_anchor_time || "";
+
+      if (!items.length) {
+        let localItems = [];
+        try { localItems = JSON.parse(localStorage.getItem("cs_rhythm_items") || "[]"); } catch { localItems = []; }
+        if (localItems.length) {
+          const rows = localItems.map((item) => itemToRow(item, profileId));
+          const { data: inserted } = await supabase.from("rhythm_items").insert(rows).select("*");
+          items = inserted || [];
+        }
+        if (!anchor) {
+          anchor = localStorage.getItem("cs_rhythm_anchor") || "";
+          if (anchor) await supabase.from("profiles").update({ rhythm_anchor_time: anchor }).eq("id", profileId);
+        }
+      }
+
+      setBaseItems(items.map(rowToItem));
+      setAnchorTimeState(anchor);
+      setRhythmLoaded(true);
+    })();
+  }, [profileId]);
+
+  const setAnchorTime = useCallback((t) => {
+    setAnchorTimeState(t);
+    if (profileId) supabase.from("profiles").update({ rhythm_anchor_time: t }).eq("id", profileId).then(() => {});
+  }, [profileId]);
 
   // On mount + profile change, pull today's completions from Supabase and merge
   useEffect(() => {
@@ -121,7 +203,6 @@ export function useRhythm(authUser, profileId) {
 
   const sequence = useMemo(() => {
     const todaysItems = filterTodaysItems(baseItems, activeProgram);
-    if (!anchorTime) return todaysItems.map((item) => ({ ...item, scheduledMs: null, completedAt: null }));
     return calculateSequence(todaysItems, anchorTime, completions);
   }, [baseItems, activeProgram, anchorTime, completions]);
 
@@ -194,33 +275,59 @@ export function useRhythm(authUser, profileId) {
     }
   }, [authUser?.id, profileId, baseItems, activeProgram, currentProgramDay, setCompletions]);
 
-  const addItem = useCallback((item) => {
+  // Adds an item and persists it immediately — used by both the manual
+  // RhythmBuilder form and the voice/chat extraction path, so anything
+  // captured either way is saved and shows up in today's sequence right away.
+  const addItem = useCallback(async (item) => {
+    if (!profileId) return null;
     const maxOrder = baseItems.reduce((mx, i) => Math.max(mx, i.sortOrder), 0);
-    setBaseItems((prev) => [...prev, { ...item, id: makeId(), sortOrder: maxOrder + 1 }]);
-  }, [baseItems, setBaseItems]);
+    const row = itemToRow({ ...item, sortOrder: maxOrder + 1 }, profileId);
+    const { data, error } = await supabase.from("rhythm_items").insert(row).select().single();
+    if (error || !data) return null;
+    const newItem = rowToItem(data);
+    setBaseItems((prev) => [...prev, newItem]);
+    return newItem;
+  }, [baseItems, profileId]);
 
   const updateItem = useCallback((id, patch) => {
     setBaseItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-  }, [setBaseItems]);
+    if (profileId) {
+      const current = baseItems.find((i) => i.id === id);
+      if (current) supabase.from("rhythm_items").update(itemToRow({ ...current, ...patch }, profileId)).eq("id", id).then(() => {});
+    }
+  }, [profileId, baseItems]);
 
   const removeItem = useCallback((id) => {
     setBaseItems((prev) => prev.filter((i) => i.id !== id));
-  }, [setBaseItems]);
+    if (profileId) supabase.from("rhythm_items").delete().eq("id", id).then(() => {});
+  }, [profileId]);
 
   const reorderItems = useCallback((fromIndex, toIndex) => {
     setBaseItems((prev) => {
       const next = [...prev];
       const [moved] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, moved);
-      return next.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
+      const reordered = next.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
+      if (profileId) {
+        Promise.all(reordered.map((item) =>
+          supabase.from("rhythm_items").update({ sort_order: item.sortOrder }).eq("id", item.id)
+        )).catch(() => {});
+      }
+      return reordered;
     });
-  }, [setBaseItems]);
+  }, [profileId]);
 
-  const applyTemplate = useCallback((presetId, customItems) => {
+  const applyTemplate = useCallback(async (presetId, customItems) => {
     const items = customItems ?? RHYTHM_PRESETS.find((p) => p.id === presetId)?.items;
-    if (!items) return;
-    setBaseItems(items.map((item, idx) => ({ ...item, sortOrder: idx + 1 })));
-  }, [setBaseItems]);
+    if (!items || !profileId) return;
+    const ordered = items.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
+
+    // Replace the whole schedule — delete existing items, insert the template's
+    await supabase.from("rhythm_items").delete().eq("profile_id", profileId);
+    const rows = ordered.map((item) => itemToRow(item, profileId));
+    const { data } = await supabase.from("rhythm_items").insert(rows).select("*");
+    setBaseItems((data || []).map(rowToItem));
+  }, [profileId]);
 
   const startProgram = useCallback(async (programId, startDate) => {
     const program = ALL_PROGRAMS.find((p) => p.id === programId);
@@ -267,6 +374,7 @@ export function useRhythm(authUser, profileId) {
     currentProgramDay,
     hasMedicine,
     hasRhythm: baseItems.length > 0,
+    rhythmLoaded,
     completeItem,
     uncompleteItem,
     addItem,
