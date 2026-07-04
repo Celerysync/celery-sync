@@ -68,6 +68,14 @@ function ForkScreen({ onSelect }) {
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 8 }}>
           🌿 Independent app · Inspired by Anthony William's teachings · Not affiliated with Medical Medium LLC
         </div>
+        <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 10, lineHeight: 1.8 }}>
+          If you're in crisis, please reach out:{" "}
+          <a href="tel:131114" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Lifeline 13 11 14</a>
+          {" · "}
+          <a href="tel:1300224636" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Beyond Blue 1300 22 4636</a>
+          {" · "}
+          <a href="tel:000" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Emergency 000</a>
+        </div>
       </div>
     </div>
   );

@@ -89,6 +89,14 @@ export default function Learn({ authUser, user, navQuery }) {
         <p style={{ margin: "6px 0 0", fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
           CelerySync is an independent app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC.
         </p>
+        <p style={{ margin: "6px 0 0", fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
+          If you're in crisis, please reach out:{" "}
+          <a href="tel:131114" style={{ color: C.mid, fontWeight: 700 }}>Lifeline 13 11 14</a>
+          {" · "}
+          <a href="tel:1300224636" style={{ color: C.mid, fontWeight: 700 }}>Beyond Blue 1300 22 4636</a>
+          {" · "}
+          <a href="tel:000" style={{ color: C.mid, fontWeight: 700 }}>Emergency 000</a>
+        </p>
       </div>
 
       {/* Section tabs — scrollable row */}
