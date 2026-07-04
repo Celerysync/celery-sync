@@ -3,12 +3,14 @@ import { useLocalStorage } from "./useLocalStorage.js";
 
 const SNACK_INTERVAL_MS = 90 * 60 * 1000; // 1.5 hours
 
+// Generic whole-food pairings in our own words — deliberately avoids any
+// named health author's specific signature combinations. See LEGAL_CONSTRAINTS.md.
 const ADRENAL_SNACKS = [
-  "Apple + celery sticks 🍎",
-  "Banana + 3 Medjool dates 🍌",
-  "Coconut water + banana 🥥",
-  "Apple + dates + celery 🌿",
-  "Orange slices + dates 🍊",
+  "An apple with a spoon of nut butter 🍎",
+  "A pear with a small handful of walnuts 🍐",
+  "Orange segments with a few almonds 🍊",
+  "Grapes with a couple of cashews 🍇",
+  "Berries with a spoonful of tahini 🫐",
 ];
 
 const MORNING_STEPS = [
@@ -21,7 +23,7 @@ function getRandomSnack() {
   return ADRENAL_SNACKS[Math.floor(Math.random() * ADRENAL_SNACKS.length)];
 }
 
-export function useReminders() {
+export function useReminders(authUser) {
   const [settings, setSettings] = useLocalStorage("cs_reminders", {
     adrenalSnack: true,
     morningProtocol: true,
@@ -30,6 +32,22 @@ export function useReminders() {
   const [activeReminder, setActiveReminder] = useState(null);
   const snackTimerRef = useRef(null);
   const lastSnackRef = useRef(null);
+
+  // These two toggles also gate the server-side push reminders (not just the
+  // in-app banners below) — pull the server's current state in on mount so
+  // they don't silently drift apart.
+  useEffect(() => {
+    if (!authUser) return;
+    fetch(`/api/notifications/reminder-preferences?userId=${authUser.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reminderPrefs) {
+          setSettings((s) => ({ ...s, ...data.reminderPrefs }));
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.id]);
 
   const dismiss = useCallback(() => setActiveReminder(null), []);
 
@@ -91,8 +109,21 @@ export function useReminders() {
   }, [settings.morningProtocol]);
 
   const updateSetting = useCallback((key, val) => {
-    setSettings((s) => ({ ...s, [key]: val }));
-  }, [setSettings]);
+    setSettings((s) => {
+      const next = { ...s, [key]: val };
+      if (authUser && (key === "morningProtocol" || key === "adrenalSnack")) {
+        fetch("/api/notifications/reminder-preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: authUser.id,
+            reminderPrefs: { morningProtocol: next.morningProtocol, adrenalSnack: next.adrenalSnack },
+          }),
+        }).catch(() => {});
+      }
+      return next;
+    });
+  }, [setSettings, authUser]);
 
   return {
     settings,

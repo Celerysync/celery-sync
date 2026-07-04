@@ -47,6 +47,33 @@ router.post("/preferences", async (req, res) => {
   res.json({ ok: true });
 });
 
+const DEFAULT_REMINDER_PREFS = { morningProtocol: true, adrenalSnack: true };
+
+// Read current reminder toggle prefs (morningProtocol/adrenalSnack push categories)
+router.get("/reminder-preferences", async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
+  const { data } = await supabase
+    .from("push_subscriptions")
+    .select("reminder_prefs")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  res.json({ reminderPrefs: data?.reminder_prefs || DEFAULT_REMINDER_PREFS });
+});
+
+// Update reminder toggle prefs — makes the Settings toggles actually control
+// the server-side pushes, not just the client-side in-app banners.
+router.post("/reminder-preferences", async (req, res) => {
+  const { userId, reminderPrefs } = req.body;
+  if (!userId || !reminderPrefs) return res.status(400).json({ error: "Missing data" });
+  const { error } = await supabase.from("push_subscriptions")
+    .update({ reminder_prefs: reminderPrefs })
+    .eq("user_id", userId);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 // Remove push subscription
 router.post("/unsubscribe", async (req, res) => {
   const { userId, endpoint } = req.body;
@@ -110,12 +137,23 @@ export async function sendPushToAll({ title, body, tag, url }) {
 }
 
 // Internal: send to users whose adjusted local hour matches (respects per-user morning start time)
+// Maps a PUSH_SCHEDULE tag to the reminder_prefs category it's gated by.
+// Tags not listed here (e.g. "evening") aren't gated by any toggle.
+function reminderCategoryForTag(tag) {
+  if (tag?.startsWith("morning-")) return "morningProtocol";
+  if (tag?.startsWith("snack-")) return "adrenalSnack";
+  return null;
+}
+
 export async function sendToUsersAtLocalHour({ hour, title, body, tag, url }) {
   const { data: subs } = await supabase.from("push_subscriptions").select("*");
   if (!subs?.length) return;
 
+  const category = reminderCategoryForTag(tag);
+
   const matching = subs.filter((sub) => {
     try {
+      if (category && sub.reminder_prefs?.[category] === false) return false;
       const now = new Date();
       const localHour = parseInt(
         now.toLocaleTimeString("en-US", { timeZone: sub.timezone || "UTC", hour: "numeric", hour12: false }),

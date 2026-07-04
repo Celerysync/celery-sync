@@ -254,6 +254,7 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   timezone text NOT NULL DEFAULT 'UTC',
   morning_start_hour integer NOT NULL DEFAULT 6,
   encouragement_prefs jsonb DEFAULT '{"afternoon":{"enabled":true,"hour":15},"evening":{"enabled":true,"hour":20}}'::jsonb,
+  reminder_prefs jsonb DEFAULT '{"morningProtocol":true,"adrenalSnack":true}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, endpoint)
 );
@@ -263,6 +264,9 @@ DO $$ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 DO $$ BEGIN
   ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS encouragement_prefs jsonb DEFAULT '{"afternoon":{"enabled":true,"hour":15},"evening":{"enabled":true,"hour":20}}'::jsonb;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS reminder_prefs jsonb DEFAULT '{"morningProtocol":true,"adrenalSnack":true}'::jsonb;
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN

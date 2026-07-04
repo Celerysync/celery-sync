@@ -39,77 +39,83 @@ function buildAlertMessage(name, daysRemaining, runOutDate) {
   return `Your ${name} ${phrase}`
 }
 
-// Daily check — for every supplement with tracking enabled (units_on_hand set)
-// and not already alerted, compute projected run-out and send a push if within
-// the user's threshold. No LLM call; pure arithmetic + a template.
-export async function checkRestockAlerts() {
-  const { data: rows } = await supabaseAdmin
-    .from('supplement_inventory')
-    .select('*')
-    .not('units_on_hand', 'is', null)
-    .is('low_stock_alerted_on', null)
+// Restock checks fire once per subscriber, at their own local morning hour —
+// never at a fixed UTC time, which previously meant some timezones got
+// pushed at 3-5am local. Called from the same hourly cron tick as the other
+// push systems (server/index.js).
+const RESTOCK_CHECK_LOCAL_HOUR = 10
 
-  if (!rows?.length) {
-    console.log('💊 No supplement inventory due for a restock check')
-    return
-  }
+// For every supplement with tracking enabled (units_on_hand set) and not
+// already alerted, compute projected run-out and send a push if within the
+// user's threshold. No LLM call; pure arithmetic + a template.
+export async function checkRestockAlerts() {
+  const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('user_id, endpoint, keys, timezone')
+  if (!subs?.length) return
 
   const today = todayStr()
   let sent = 0
 
-  for (const row of rows) {
+  for (const sub of subs) {
     try {
-      const { data: doseRows } = await supabaseAdmin
-        .from('user_supplements')
-        .select('id')
-        .eq('profile_id', row.profile_id)
-        .ilike('name', row.supplement_name)
-      const dosesPerDay = doseRows?.length || 0
-      if (!dosesPerDay) continue // not currently scheduled — nothing to project
-
-      const dailyUse = (row.units_per_dose || 1) * dosesPerDay
-      if (!dailyUse) continue
-      const daysRemaining = Math.floor(row.units_on_hand / dailyUse)
-      if (daysRemaining > row.restock_threshold_days) continue
+      const localHour = parseInt(
+        new Date().toLocaleTimeString('en-US', { timeZone: sub.timezone || 'UTC', hour: 'numeric', hour12: false }),
+        10
+      )
+      if (localHour !== RESTOCK_CHECK_LOCAL_HOUR) continue
 
       const { data: profile } = await supabaseAdmin
         .from('profiles')
-        .select('user_id')
-        .eq('id', row.profile_id)
+        .select('id')
+        .eq('user_id', sub.user_id)
+        .order('created_at', { ascending: true })
+        .limit(1)
         .maybeSingle()
-      if (!profile?.user_id) continue
+      if (!profile?.id) continue
 
-      const { data: subs } = await supabaseAdmin
-        .from('push_subscriptions')
-        .select('endpoint, keys')
-        .eq('user_id', profile.user_id)
-      if (!subs?.length) continue
-
-      const runOutDate = new Date()
-      runOutDate.setDate(runOutDate.getDate() + daysRemaining)
-      const message = buildAlertMessage(row.supplement_name, daysRemaining, runOutDate)
-
-      await Promise.allSettled(
-        subs.map((sub) =>
-          webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: sub.keys },
-            JSON.stringify({ title: '📦 Restock reminder', body: message, tag: 'restock-alert' })
-          ).catch(async (err) => {
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
-            }
-          })
-        )
-      )
-
-      await supabaseAdmin
+      const { data: rows } = await supabaseAdmin
         .from('supplement_inventory')
-        .update({ low_stock_alerted_on: today })
-        .eq('id', row.id)
+        .select('*')
+        .eq('profile_id', profile.id)
+        .not('units_on_hand', 'is', null)
+        .is('low_stock_alerted_on', null)
+      if (!rows?.length) continue
 
-      sent++
+      for (const row of rows) {
+        const { data: doseRows } = await supabaseAdmin
+          .from('user_supplements')
+          .select('id')
+          .eq('profile_id', row.profile_id)
+          .ilike('name', row.supplement_name)
+        const dosesPerDay = doseRows?.length || 0
+        if (!dosesPerDay) continue // not currently scheduled — nothing to project
+
+        const dailyUse = (row.units_per_dose || 1) * dosesPerDay
+        if (!dailyUse) continue
+        const daysRemaining = Math.floor(row.units_on_hand / dailyUse)
+        if (daysRemaining > row.restock_threshold_days) continue
+
+        const runOutDate = new Date()
+        runOutDate.setDate(runOutDate.getDate() + daysRemaining)
+        const message = buildAlertMessage(row.supplement_name, daysRemaining, runOutDate)
+
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          JSON.stringify({ title: '📦 Restock reminder', body: message, tag: 'restock-alert' })
+        ).catch(async (err) => {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+          }
+        })
+
+        await supabaseAdmin
+          .from('supplement_inventory')
+          .update({ low_stock_alerted_on: today })
+          .eq('id', row.id)
+
+        sent++
+      }
     } catch (err) {
-      console.warn(`Restock check failed for inventory row ${row.id}:`, err.message)
+      console.warn(`Restock check failed for subscription ${sub.endpoint?.slice(-12)}:`, err.message)
     }
   }
 

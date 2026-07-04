@@ -218,3 +218,9 @@ ALTER TABLE cycle_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own cycle logs" ON cycle_logs;
 CREATE POLICY "Users manage own cycle logs" ON cycle_logs
   FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- 11. Pre-launch fix: the morningProtocol/adrenalSnack toggles in Settings
+-- only ever controlled client-side in-app banners — the actual server-side
+-- PUSH_SCHEDULE pushes ignored them entirely. This makes the toggles real.
+ALTER TABLE push_subscriptions
+  ADD COLUMN IF NOT EXISTS reminder_prefs jsonb DEFAULT '{"morningProtocol":true,"adrenalSnack":true}'::jsonb;

@@ -102,9 +102,15 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     } catch (err) {
       console.warn('Encouragement tick error:', err.message);
     }
+    try {
+      await checkRestockAlerts();
+    } catch (err) {
+      console.warn('Restock check error:', err.message);
+    }
   });
   console.log('🔔 Push notification scheduler active')
   console.log('💬 Encouragement engine scheduler active')
+  console.log('📦 Supplement restock scheduler active')
 
   // Sync Oura Ring data for all connected users at 6:30am
   cron.schedule('30 6 * * *', async () => {
@@ -135,12 +141,6 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     try { await refreshAllHealingProfiles(); } catch (err) { console.warn('Profile refresh error:', err.message); }
   });
   console.log('🧠 Nightly healing profile refresh scheduler active')
-
-  // Supplement restock check — daily at 3am UTC
-  cron.schedule('0 3 * * *', async () => {
-    try { await checkRestockAlerts(); } catch (err) { console.warn('Restock check error:', err.message); }
-  });
-  console.log('📦 Supplement restock scheduler active')
 }
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

@@ -97,7 +97,7 @@ function EncouragementWindowRow({ label, desc, window, hourOptions, prefs, updat
 }
 
 export default function ReminderSettings({ authUser }) {
-  const { settings, updateSetting } = useReminders();
+  const { settings, updateSetting } = useReminders(authUser);
   const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime, sendTest } = useWebPush(authUser);
   const { prefs: encouragementPrefs, updateWindow: updateEncouragementWindow } = useEncouragementPrefs(authUser, subscribed);
   const [morningHour, setMorningHour] = useLocalStorage("cs_morning_hour", 6);
