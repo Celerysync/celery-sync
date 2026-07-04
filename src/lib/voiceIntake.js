@@ -50,7 +50,12 @@ EXTRACT these fields if mentioned — leave them null/empty if not mentioned:
 - celery_oz: integer — 0 (skipped), 8 (one glass/small), 16 (standard/500ml), 32 (large/1 litre+). null if not mentioned.
 - morning_protocol: boolean — true if they mention doing their morning routine/lemon water/protocol. null if not mentioned.
 - notes: string — supplements taken, meals/snacks, cycle notes, free text. Keep it brief. null if nothing extra.
-- hasData: boolean — true if ANY of the above fields have non-null values.
+- restock: object — ONLY when the user reports adding to their supplement supply (e.g.
+  "I've got two new bottles of zinc, 60 capsules each", "just bought more B12, 100 tablets").
+  { "name": string (the supplement name as they said it), "unitsAdded": number (total units —
+  do the multiplication yourself, e.g. 2 bottles x 60 capsules = 120) }. null if not mentioned.
+  This is inventory bookkeeping only — never a product recommendation or dosage instruction.
+- hasData: boolean — true if ANY of the above fields (including restock) have non-null values.
 - conversationalReply: string — if the user asked a question (not just reporting data), answer it warmly in 1-2 sentences. Use supportive wellness language only. Never diagnose, treat, or use heal/cure language. null if it was purely a data report.
 - confirmation: string — a short spoken confirmation of what was captured, e.g. "Got it — energy 6, headache noted, B12 logged. Anything else?" Read naturally aloud. Only include what was actually captured. If hasData is false, use null.
 
@@ -69,7 +74,8 @@ OUTPUT FORMAT (strict JSON, no markdown):
     "symptoms": string[],
     "celery_oz": number|null,
     "morning_protocol": boolean|null,
-    "notes": string|null
+    "notes": string|null,
+    "restock": { "name": string, "unitsAdded": number }|null
   },
   "confirmation": string|null,
   "conversationalReply": string|null
@@ -152,6 +158,9 @@ export function summariseParsed(fields) {
   }
   if (fields.notes) {
     items.push({ label: "Notes", value: fields.notes });
+  }
+  if (fields.restock?.name && fields.restock?.unitsAdded) {
+    items.push({ label: "Restock", value: `${fields.restock.name} +${fields.restock.unitsAdded} units` });
   }
 
   return items;
