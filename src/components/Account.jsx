@@ -526,7 +526,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
           🎙 Voice on Every Page
         </div>
         <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
-          A floating mic button lets you ask the AI Guide anything from any page — Symptoms, Recipes, Body, wherever you are.
+          A floating mic button lets you ask the AI Guide anything from any page, and the companion briefly introduces each tab the first time you visit it each session.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import C from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { callClaude } from "../lib/api.js";
@@ -14,17 +14,41 @@ const TAB_CONTEXT = {
   settings:    "The user is on the Settings tab — subscription, reminders, profiles, carer management, and account details.",
 };
 
+// Short, speakable ambient guidance — a different tone/length than
+// TAB_CONTEXT above, which is a system-prompt description for the Q&A
+// assistant, not meant to be read aloud verbatim. Only covers the tabs
+// GlobalVoice actually renders on (home/track/companion have their own
+// dedicated voice UI already).
+const AMBIENT_GUIDANCE = {
+  progress:    "This is Progress — your energy, symptoms, and adherence over time, plus a shareable PDF for your GP.",
+  supplements: "This is Supplements — track today's doses, and set up restock reminders so you never run out.",
+  learn:       "This is Learn — plain-English explanations in our own words, with links to the official teachings.",
+  settings:    "This is Settings — reminders, your subscription, and profile details all live here.",
+};
+
 export default function GlobalVoice({ currentTab, user }) {
   const [enabled] = useLocalStorage("cs_globalVoice", true);
   const [lang] = useLocalStorage("cs_lang", "en");
   const [units] = useLocalStorage("cs_units", "metric");
-  const { listening, speaking, speak, stopSpeaking, startListening, stopListening } = useVoiceOrchestrator();
+  const { listening, speaking, speak, stopSpeaking, startListening, stopListening, audioUnlocked } = useVoiceOrchestrator();
 
   const [open, setOpen] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
   const [srError, setSrError] = useState(false);
+
+  // Speaks each tab's ambient guidance once per session — not every single
+  // visit, which would get old fast.
+  const spokenTabsRef = useRef(new Set());
+  useEffect(() => {
+    if (!enabled || !audioUnlocked || lang !== "en") return;
+    const line = AMBIENT_GUIDANCE[currentTab];
+    if (!line || spokenTabsRef.current.has(currentTab)) return;
+    spokenTabsRef.current.add(currentTab);
+    speak(line);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTab, enabled, audioUnlocked]);
 
   // Intake tabs (home, track, companion) have their own VoiceIntakeButton —
   // GlobalVoice is the Q&A assistant for the remaining tabs only.

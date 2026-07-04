@@ -60,6 +60,23 @@ export function VoiceProvider({ authUser, children }) {
     abortRef.current = null;
   }, []);
 
+  // Session-wide "has the user interacted at all yet" flag — browsers block
+  // autoplay without a gesture, and until now every unlock check was scoped
+  // to a single component instance (Coach's own ref, WelcomeVoice's own
+  // state), resetting every remount. This is shared app-wide so anything —
+  // like ambient per-tab guidance — can check it once, globally.
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  useEffect(() => {
+    if (audioUnlocked) return;
+    const unlock = () => setAudioUnlocked(true);
+    document.addEventListener("touchstart", unlock, { once: true, passive: true });
+    document.addEventListener("click", unlock, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", unlock);
+      document.removeEventListener("click", unlock);
+    };
+  }, [audioUnlocked]);
+
   return (
     <VoiceContext.Provider value={{
       voiceName,
@@ -67,6 +84,7 @@ export function VoiceProvider({ authUser, children }) {
       ...voice,
       getAbortSignal,
       cancelPending,
+      audioUnlocked,
     }}>
       {children}
     </VoiceContext.Provider>
