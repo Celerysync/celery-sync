@@ -43,6 +43,29 @@ function _stopGlobalAudio() {
   window.speechSynthesis?.cancel();
 }
 
+// Words that suggest the speaker is mid-clause, not finished — if the
+// transcript trails off on one of these, give more room before committing.
+const CONTINUATION_WORDS = new Set([
+  "and", "so", "but", "or", "um", "uh", "the", "a", "an", "to", "with",
+  "at", "in", "on", "for", "of", "my", "is", "was", "because", "that",
+  "which", "i", "you", "we", "it's", "im",
+]);
+
+// Adapts the fixed silenceMs threshold to how the utterance actually sounds,
+// instead of using one number for every pause — a real sentence ending
+// doesn't need to wait as long as a trailing "and so I..." does. Bounded
+// adjustment (±700ms) so it stays predictable, not a full VAD model.
+function adaptSilenceMs(transcript, baseMs) {
+  const trimmed = transcript.trim();
+  if (!trimmed) return baseMs;
+  const endsWithPunctuation = /[.!?]$/.test(trimmed);
+  const lastWord = trimmed.split(/\s+/).pop().toLowerCase().replace(/[^a-z']/g, "");
+  const looksIncomplete = CONTINUATION_WORDS.has(lastWord);
+  if (looksIncomplete) return baseMs + 400;
+  if (endsWithPunctuation) return Math.max(600, baseMs - 700);
+  return baseMs;
+}
+
 export function useVoice(preferredVoiceName = "", units = "metric") {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -261,12 +284,14 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     r.lang = lang;
 
     let finalTranscript = '';
+    let latestTranscript = '';
     let silenceTimer = null;
 
     r.onstart = () => setListening(true);
 
     r.onresult = (e) => {
       const t = Array.from(e.results).map((x) => x[0].transcript).join('');
+      latestTranscript = t;
       setTranscript(t);
       if (e.results[e.results.length - 1].isFinal) {
         finalTranscript = t;
@@ -278,12 +303,13 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
       // VAD: wait for silence before committing
       r.onspeechend = () => {
         clearTimeout(silenceTimer);
+        const adaptedMs = adaptSilenceMs(latestTranscript, silenceMs);
         silenceTimer = setTimeout(() => {
           if (finalTranscript.trim()) {
             r.stop();
             onResult(finalTranscript);
           }
-        }, silenceMs);
+        }, adaptedMs);
       };
       r.onspeechstart = () => clearTimeout(silenceTimer);
     }
