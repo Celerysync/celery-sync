@@ -238,21 +238,23 @@ export default function App() {
   // durable signal, replacing the old scattered localStorage flags.
   if (profiles.length === 0 || (activeProfile && !activeProfile.onboarding_completed_at)) {
     return (
-      <Suspense fallback={<LoadingScreen message="Setting up your journey…" />}>
-        <Onboarding
-          authUser={authUser}
-          existingProfile={profiles.length === 0 ? null : activeProfile}
-          createProfile={createProfile}
-          switchProfile={switchProfile}
-          updateProfile={updateProfile}
-          onDone={({ name, firstItem }) => {
-            localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
-            setShowWelcome(false);
-            setJustOnboarded({ name, firstItem });
-            setTab("companion");
-          }}
-        />
-      </Suspense>
+      <VoiceProvider authUser={authUser}>
+        <Suspense fallback={<LoadingScreen message="Setting up your journey…" />}>
+          <Onboarding
+            authUser={authUser}
+            existingProfile={profiles.length === 0 ? null : activeProfile}
+            createProfile={createProfile}
+            switchProfile={switchProfile}
+            updateProfile={updateProfile}
+            onDone={({ name, firstItem }) => {
+              localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
+              setShowWelcome(false);
+              setJustOnboarded({ name, firstItem });
+              setTab("companion");
+            }}
+          />
+        </Suspense>
+      </VoiceProvider>
     );
   }
 

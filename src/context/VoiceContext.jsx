@@ -94,10 +94,23 @@ export function VoiceProvider({ authUser, children }) {
 // Backward-compatible: components that only need voice name preference (Account, WelcomeVoice, etc.)
 export const useVoicePrefs = () => {
   const ctx = useContext(VoiceContext);
-  return { voiceName: ctx.voiceName, setVoiceName: ctx.setVoiceName };
+  return { voiceName: ctx?.voiceName ?? "", setVoiceName: ctx?.setVoiceName ?? (() => {}) };
+};
+
+// Safe no-op fallback if a component ever renders without a VoiceProvider
+// ancestor — destructuring straight from a null context throws and takes
+// down the whole tree with no error boundary to catch it in time. Better to
+// silently disable voice than crash.
+const NOOP_VOICE = {
+  listening: false, transcript: "", speaking: false,
+  speak: () => {}, stopSpeaking: () => {}, startListening: () => {}, stopListening: () => {},
+  queueSentence: () => {}, endQueue: () => {}, resetQueue: () => {},
+  voiceName: "", setVoiceName: () => {},
+  getAbortSignal: () => new AbortController().signal, cancelPending: () => {},
+  audioUnlocked: false,
 };
 
 // Full orchestrator: shared voice state + methods + AbortController helpers.
 // Used by Today, Track, Companion, and GlobalVoice — one source of truth for
 // listening/speaking/transcript state across those surfaces.
-export const useVoiceOrchestrator = () => useContext(VoiceContext);
+export const useVoiceOrchestrator = () => useContext(VoiceContext) || NOOP_VOICE;

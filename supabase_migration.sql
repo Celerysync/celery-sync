@@ -267,3 +267,9 @@ ALTER TABLE profiles
 -- could desync across devices.
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS onboarding_completed_at timestamptz;
+
+-- 14. URGENT follow-up fix: onboarding_completed_at was never backfilled
+-- for existing profiles, so every existing user (not just new signups) was
+-- being routed back into the onboarding wizard. Mark anyone who already
+-- exists as already onboarded.
+UPDATE profiles SET onboarding_completed_at = created_at WHERE onboarding_completed_at IS NULL;
