@@ -2,9 +2,12 @@ import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { WEEKLY_LESSONS, CONDITION_EXPLAINERS, SHAREABLES } from "../data/learn.js";
-import Recipes from "./Recipes.jsx";
-import Juices from "./Juices.jsx";
 import Knowledge from "./Knowledge.jsx";
+
+const RECIPE_LINKS = [
+  { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/blog/recipes", desc: "Anthony William's official recipe collection" },
+  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/blog/juices-and-smoothies", desc: "Official juice, smoothie, and healing water recipes" },
+];
 
 function LessonCard({ lesson, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -216,7 +219,6 @@ const SECTIONS = [
   { id: "conditions", label: "🔍 Understand"  },
   { id: "share",      label: "📤 Share"       },
   { id: "recipes",    label: "🍽 Recipes"     },
-  { id: "juices",     label: "🥤 Juices"      },
   { id: "resources",  label: "🔗 Resources"   },
 ];
 
@@ -304,11 +306,32 @@ export default function Learn({ authUser, user, navQuery }) {
       )}
 
       {section === "recipes" && (
-        <Recipes user={user} navQuery={navQuery} />
-      )}
-
-      {section === "juices" && (
-        <Juices />
+        <>
+          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
+            We don't reproduce Anthony William's specific recipes here — his full collection lives at the official source, linked below.
+          </div>
+          {RECIPE_LINKS.map((l) => (
+            <a
+              key={l.label}
+              href={l.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "14px 16px", borderRadius: 14,
+                background: C.white, border: `1.5px solid ${C.sage}50`,
+                textDecoration: "none",
+              }}
+            >
+              <span style={{ fontSize: 24, flexShrink: 0 }}>{l.emoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{l.label}</div>
+                <div style={{ fontSize: 11.5, color: C.muted, marginTop: 1 }}>{l.desc}</div>
+              </div>
+              <span style={{ fontSize: 11, color: C.sage, fontWeight: 700, flexShrink: 0 }}>Official ↗</span>
+            </a>
+          ))}
+        </>
       )}
 
       {section === "resources" && (
