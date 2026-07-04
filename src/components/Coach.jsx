@@ -7,6 +7,7 @@ import { Btn } from "./ui.jsx";
 import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
@@ -110,7 +111,7 @@ const GREETINGS = {
 };
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
-function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }) {
+function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext, activeProtocol }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
 
   const milestonesSection = milestones?.length > 0
@@ -211,6 +212,19 @@ ${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep
 ${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
   })() : "No check-in logged yet today.";
 
+  const day1Section = activeProtocol?.day === 1 ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TODAY IS DAY 1 OF ${activeProtocol.name.toUpperCase()}:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+They just started this protocol today. Lead your opening message with a genuine, warm pep talk —
+acknowledge the courage it takes to start, set realistic expectations (the first few days can bring
+healing reactions like fatigue, headaches, or emotional waves — reassure them this is normal, not a
+setback), and remind them the most powerful thing they can do is stay consistent with the basics
+(celery juice, hydration, rest). Keep it brief and encouraging, not a lecture.
+Do not give exact day-by-day protocol steps yourself — point them to the relevant Anthony William book
+for full detail.
+` : "";
+
   const pageContextSection = pageContext ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WHAT THE USER WAS JUST LOOKING AT:
@@ -220,7 +234,7 @@ ${pageContext.detail ? `Context: ${pageContext.detail}` : ""}
 Reference this naturally when relevant — e.g. "I see you were just looking at ${pageContext.label}…"
 ` : "";
 
-  return `${langInstruction}${caregiverIntro}${pageContextSection}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  return `${langInstruction}${caregiverIntro}${day1Section}${pageContextSection}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THIS USER'S PROFILE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Name: ${user?.name || "friend"}
@@ -261,6 +275,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins, saveCheckin } = useDailyCheckins(authUser, profileId);
+  const { activeProtocol, loadActiveProtocol } = useActiveProtocol(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
@@ -287,6 +302,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     setMessages([]);
     loadMemory();
     loadCheckins();
+    loadActiveProtocol();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
 
@@ -295,7 +311,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     if (memoryLoading) return;
     systemRef.current = {
       staticSystem: STATIC_SYSTEM,
-      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext }),
+      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext, activeProtocol }),
     };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
@@ -306,7 +322,13 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     const streakNote = celeryStreak >= 7 ? ` Your ${celeryStreak}-day celery streak is extraordinary.` : celeryStreak >= 3 ? ` ${celeryStreak} days of celery juice in a row — keep going!` : "";
     const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
 
-    const greeting = translatedGreeting
+    const day1Greeting = (!caregiverMode && !translatedGreeting && activeProtocol?.day === 1)
+      ? `Today's the day${user?.name ? ", " + user.name : ""}! 🌿 You just started ${activeProtocol.name} — that takes real courage, and I'm proud of you for beginning. The first few days can bring healing reactions like tiredness, headaches, or emotional waves — that's normal, not a setback. The most powerful thing you can do right now is keep it simple: celery juice, hydration, rest. I'm right here with you every step. How are you feeling so far today?`
+      : null;
+
+    const greeting = day1Greeting
+      ? day1Greeting
+      : translatedGreeting
       ? translatedGreeting
       : caregiverMode
       ? `Hello! 💜 I'm here to support you as you care for ${user?.name || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
