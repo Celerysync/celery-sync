@@ -514,13 +514,14 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     const hasCheckinData = Object.values(checkinFields).some((v) => v != null);
     if (hasCheckinData) await saveCheckin({ ...todaysCheckin, ...checkinFields });
 
-    if (fields.scheduleItem?.name) {
+    for (const item of fields.scheduleItems || []) {
+      if (!item?.name) continue;
       await addRhythmItem({
-        name: fields.scheduleItem.name,
-        category: fields.scheduleItem.category || "other",
-        fixedTime: fields.scheduleItem.fixedTime || null,
-        note: fields.scheduleItem.note || "",
-        frequency: fields.scheduleItem.frequency || "daily",
+        name: item.name,
+        category: item.category || "other",
+        fixedTime: item.fixedTime || null,
+        note: item.note || "",
+        frequency: item.frequency || "daily",
       });
     }
   }, [saveCheckin, todaysCheckin, addRhythmItem]);

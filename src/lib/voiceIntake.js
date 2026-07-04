@@ -55,17 +55,18 @@ EXTRACT these fields if mentioned — leave them null/empty if not mentioned:
   { "name": string (the supplement name as they said it), "unitsAdded": number (total units —
   do the multiplication yourself, e.g. 2 bottles x 60 capsules = 120) }. null if not mentioned.
   This is inventory bookkeeping only — never a product recommendation or dosage instruction.
-- scheduleItem: object — ONLY when the user describes something THEY do as part of their daily
-  routine and when/how, meant to become a standing reminder (e.g. "I want to take my B12 at 9am
-  with my detox smoothie", "remind me to do my lemon water every morning at 6:30").
-  { "name": string (short item name, e.g. "B12"), "category": one of "morning"|"supplement"|
-  "food"|"medicine"|"other", "fixedTime": string|null ("HH:MM" 24-hour, convert "9am" -> "09:00";
-  null if they gave a relative time like "after breakfast" instead), "note": string|null (brief
-  context they mentioned, e.g. "with detox smoothie"; null if none), "frequency": "daily"|
-  "weekdays" (default "daily") }. null if nothing schedule-like was mentioned. This stores only
-  what the user says about their OWN routine — never suggest or invent a supplement, dose, or
-  timing they didn't say themselves.
-- hasData: boolean — true if ANY of the above fields (including restock, scheduleItem) have non-null values.
+- scheduleItems: array — ONE ENTRY PER THING the user describes as part of their daily routine
+  and when/how, meant to become standing reminders. A single utterance often describes several
+  at once (e.g. "every morning I do lemon water, then celery juice, then my B12 and zinc" ->
+  four separate entries) — extract each one separately, don't merge them.
+  Each entry: { "name": string (short item name, e.g. "B12"), "category": one of "morning"|
+  "supplement"|"food"|"medicine"|"other", "fixedTime": string|null ("HH:MM" 24-hour, convert
+  "9am" -> "09:00"; null if they gave a relative time like "after breakfast" instead),
+  "note": string|null (brief context they mentioned, e.g. "with detox smoothie"; null if none),
+  "frequency": "daily"|"weekdays" (default "daily") }. Empty array [] if nothing schedule-like
+  was mentioned. This stores only what the user says about their OWN routine — never suggest or
+  invent a supplement, dose, or timing they didn't say themselves.
+- hasData: boolean — true if ANY of the above fields (including restock, a non-empty scheduleItems) have non-null/non-empty values.
 - conversationalReply: string — if the user asked a question (not just reporting data), answer it warmly in 1-2 sentences. Use supportive wellness language only. Never diagnose, treat, or use heal/cure language. null if it was purely a data report.
 - confirmation: string — a short spoken confirmation of what was captured, e.g. "Got it — energy 6, headache noted, B12 logged. Anything else?" Read naturally aloud. Only include what was actually captured. If hasData is false, use null.
 
@@ -86,7 +87,7 @@ OUTPUT FORMAT (strict JSON, no markdown):
     "morning_protocol": boolean|null,
     "notes": string|null,
     "restock": { "name": string, "unitsAdded": number }|null,
-    "scheduleItem": { "name": string, "category": string, "fixedTime": string|null, "note": string|null, "frequency": string }|null
+    "scheduleItems": [{ "name": string, "category": string, "fixedTime": string|null, "note": string|null, "frequency": string }]
   },
   "confirmation": string|null,
   "conversationalReply": string|null
@@ -130,6 +131,7 @@ export async function parseVoiceTranscript(transcript, { signal } = {}) {
     // Normalise — ensure fields object always exists
     if (!parsed.fields) parsed.fields = {};
     if (!Array.isArray(parsed.fields.symptoms)) parsed.fields.symptoms = [];
+    if (!Array.isArray(parsed.fields.scheduleItems)) parsed.fields.scheduleItems = [];
 
     return parsed;
   } catch (err) {
@@ -173,13 +175,14 @@ export function summariseParsed(fields) {
   if (fields.restock?.name && fields.restock?.unitsAdded) {
     items.push({ label: "Restock", value: `${fields.restock.name} +${fields.restock.unitsAdded} units` });
   }
-  if (fields.scheduleItem?.name) {
-    const time = fields.scheduleItem.fixedTime
-      ? new Date(`2000-01-01T${fields.scheduleItem.fixedTime}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  for (const item of fields.scheduleItems || []) {
+    if (!item?.name) continue;
+    const time = item.fixedTime
+      ? new Date(`2000-01-01T${item.fixedTime}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
       : null;
     items.push({
       label: "Rhythm",
-      value: `${fields.scheduleItem.name}${time ? ` at ${time}` : ""}${fields.scheduleItem.note ? ` (${fields.scheduleItem.note})` : ""}`,
+      value: `${item.name}${time ? ` at ${time}` : ""}${item.note ? ` (${item.note})` : ""}`,
     });
   }
 
