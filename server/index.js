@@ -11,7 +11,7 @@ import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
-import encouragementRoutes from './routes/encouragement.js'
+import encouragementRoutes, { runEncouragementTick } from './routes/encouragement.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -96,8 +96,14 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
         console.warn('Push schedule error:', err.message);
       }
     }
+    try {
+      await runEncouragementTick();
+    } catch (err) {
+      console.warn('Encouragement tick error:', err.message);
+    }
   });
   console.log('🔔 Push notification scheduler active')
+  console.log('💬 Encouragement engine scheduler active')
 
   // Sync Oura Ring data for all connected users at 6:30am
   cron.schedule('30 6 * * *', async () => {

@@ -183,86 +183,71 @@ export async function buildContextForProfile(profileId) {
   }
 }
 
-// Batch-generates today's afternoon + evening messages for every subscribed user's
-// primary profile, ONE model call per profile (not per notification send).
-export async function generateAllEncouragementMessages() {
-  const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('user_id')
-  if (!subs?.length) {
-    console.log('💬 No push subscribers — skipping encouragement generation')
-    return
-  }
+const DEFAULT_PREFS = { afternoon: { enabled: true, hour: 15 }, evening: { enabled: true, hour: 20 } }
+// Generate each subscriber's two messages once, at this local hour — safely before
+// either window, and naturally timezone-robust since it's computed per subscriber.
+const GENERATION_LOCAL_HOUR = 4
 
-  const seen = new Set()
-  const userIds = subs.map(s => s.user_id).filter(id => {
-    if (seen.has(id)) return false
-    seen.add(id)
-    return true
-  })
-
-  const today = todayStr()
-  let generated = 0
-
-  for (const userId of userIds) {
-    try {
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      if (!profile?.id) continue
-
-      const context = await buildContextForProfile(profile.id)
-      const { afternoon, evening } = await generateMessages(context)
-
-      const rows = []
-      if (afternoon) rows.push({ profile_id: profile.id, date: today, window: 'afternoon', message: afternoon })
-      if (evening) rows.push({ profile_id: profile.id, date: today, window: 'evening', message: evening })
-      if (rows.length) {
-        await supabaseAdmin.from('encouragement_messages').upsert(rows, { onConflict: 'profile_id,date,window' })
-        generated += rows.length
-      }
-    } catch (err) {
-      console.warn(`Encouragement generation failed for user ${userId}:`, err.message)
-    }
-  }
-
-  console.log(`💬 Encouragement messages generated: ${generated} (for ${userIds.length} subscribers)`)
+async function primaryProfileFor(userId) {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return data?.id || null
 }
 
-// Hourly tick — sends a pre-generated message when a subscriber's local time matches
-// one of their enabled encouragement windows. Never calls the model at send time.
-export async function sendEncouragementAtLocalHour() {
+// Called every hour (piggybacks on the existing PUSH_SCHEDULE cron tick). For each
+// subscriber: at their local generation hour, batch-create today's two messages if
+// not already done (one model call, not per-send); at an enabled window's local
+// hour, deliver the pre-generated message for that window if not already sent.
+export async function runEncouragementTick() {
   const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('*')
   if (!subs?.length) return
   const today = todayStr()
 
   for (const sub of subs) {
     try {
-      const prefs = sub.encouragement_prefs || { afternoon: { enabled: true, hour: 15 }, evening: { enabled: true, hour: 20 } }
       const localHour = parseInt(
         new Date().toLocaleTimeString('en-US', { timeZone: sub.timezone || 'UTC', hour: 'numeric', hour12: false }),
         10
       )
+      const profileId = await primaryProfileFor(sub.user_id)
+      if (!profileId) continue
+
+      if (localHour === GENERATION_LOCAL_HOUR) {
+        const { data: existing } = await supabaseAdmin
+          .from('encouragement_messages')
+          .select('id')
+          .eq('profile_id', profileId)
+          .eq('date', today)
+          .limit(1)
+        if (existing?.length) continue
+
+        const context = await buildContextForProfile(profileId)
+        const { afternoon, evening } = await generateMessages(context)
+        const rows = []
+        if (afternoon) rows.push({ profile_id: profileId, date: today, window: 'afternoon', message: afternoon })
+        if (evening) rows.push({ profile_id: profileId, date: today, window: 'evening', message: evening })
+        if (rows.length) {
+          await supabaseAdmin.from('encouragement_messages').upsert(rows, { onConflict: 'profile_id,date,window' })
+          console.log(`💬 Generated encouragement messages for profile ${profileId}`)
+        }
+        continue
+      }
+
+      const prefs = sub.encouragement_prefs || DEFAULT_PREFS
       const win = prefs.afternoon?.enabled && localHour === prefs.afternoon.hour ? 'afternoon'
         : prefs.evening?.enabled && localHour === prefs.evening.hour ? 'evening'
         : null
       if (!win) continue
 
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('user_id', sub.user_id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      if (!profile?.id) continue
-
       const { data: msgRow } = await supabaseAdmin
         .from('encouragement_messages')
         .select('id, message, sent')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', profileId)
         .eq('date', today)
         .eq('window', win)
         .maybeSingle()
@@ -279,11 +264,25 @@ export async function sendEncouragementAtLocalHour() {
       })
 
       await supabaseAdmin.from('encouragement_messages').update({ sent: true }).eq('id', msgRow.id)
+      console.log(`💬 Sent ${win} encouragement to profile ${profileId}`)
     } catch (err) {
-      console.warn('Encouragement send error:', err.message)
+      console.warn(`Encouragement tick error for subscription ${sub.id}:`, err.message)
     }
   }
 }
+
+// Read current per-window preferences for a user (falls back to defaults if unset)
+router.get('/preferences', async (req, res) => {
+  const { userId } = req.query
+  if (!userId) return res.status(400).json({ error: 'Missing userId' })
+  const { data } = await supabaseAdmin
+    .from('push_subscriptions')
+    .select('encouragement_prefs')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle()
+  res.json({ encouragementPrefs: data?.encouragement_prefs || DEFAULT_PREFS })
+})
 
 // Update per-window encouragement preferences (enabled + hour) for one user
 router.post('/preferences', async (req, res) => {
