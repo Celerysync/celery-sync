@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
+import { useRhythm } from "../hooks/useRhythm.js";
 import { callClaude } from "../lib/api.js";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
@@ -86,6 +87,7 @@ export default function Journal({ authUser, user, profileId }) {
     checkins, todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
     loading, loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
+  const { addItem: addRhythmItem } = useRhythm(authUser, profileId);
   const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
 
   // Form state
@@ -252,9 +254,18 @@ Write as if you know this person and genuinely care about their healing.`,
       morning_protocol: fields.morning_protocol ?? morningProtocol,
       notes:            fields.notes ? (note ? `${note}\n${fields.notes}` : fields.notes) : note,
     });
+    if (fields.scheduleItem?.name) {
+      await addRhythmItem({
+        name: fields.scheduleItem.name,
+        category: fields.scheduleItem.category || "other",
+        fixedTime: fields.scheduleItem.fixedTime || null,
+        note: fields.scheduleItem.note || "",
+        frequency: fields.scheduleItem.frequency || "daily",
+      });
+    }
     setSaving(false);
     setSaved(true);
-  }, [saveCheckin, energy, mood, symptoms, celeryOz, morningProtocol, note]);
+  }, [saveCheckin, energy, mood, symptoms, celeryOz, morningProtocol, note, addRhythmItem]);
 
   const getHour = () => new Date().getHours();
   const greeting = getHour() < 12 ? "Good morning" : getHour() < 17 ? "Good afternoon" : "Good evening";

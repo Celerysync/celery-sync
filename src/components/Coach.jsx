@@ -7,6 +7,7 @@ import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
+import { useRhythm } from "../hooks/useRhythm.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
@@ -275,6 +276,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins, saveCheckin } = useDailyCheckins(authUser, profileId);
   const { activeProtocol, loadActiveProtocol } = useActiveProtocol(authUser, profileId);
+  const { addItem: addRhythmItem } = useRhythm(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
@@ -503,10 +505,25 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     [messages, loading, speak, saveExchange, user, healingProfile, priorMessages]
   );
 
-  // Voice intake callback — merges voice-captured check-in fields into Supabase
+  // Voice intake callback — merges voice-captured check-in fields into Supabase.
+  // Only real daily_checkins columns get spread into saveCheckin — restock/
+  // scheduleItem are handled separately, each with their own destination.
   const handleVoiceWrite = useCallback(async (fields) => {
-    await saveCheckin({ ...todaysCheckin, ...fields });
-  }, [saveCheckin, todaysCheckin]);
+    const { energy, mood, symptoms, celery_oz, morning_protocol, notes } = fields;
+    const checkinFields = { energy, mood, symptoms, celery_oz, morning_protocol, notes };
+    const hasCheckinData = Object.values(checkinFields).some((v) => v != null);
+    if (hasCheckinData) await saveCheckin({ ...todaysCheckin, ...checkinFields });
+
+    if (fields.scheduleItem?.name) {
+      await addRhythmItem({
+        name: fields.scheduleItem.name,
+        category: fields.scheduleItem.category || "other",
+        fixedTime: fields.scheduleItem.fixedTime || null,
+        note: fields.scheduleItem.note || "",
+        frequency: fields.scheduleItem.frequency || "daily",
+      });
+    }
+  }, [saveCheckin, todaysCheckin, addRhythmItem]);
 
   const quickQuestions = [
     user?.symptoms?.[0]
