@@ -420,7 +420,7 @@ export default function Home({ user, authUser, profileId }) {
 
       {/* Supplement tracker */}
       {authUser && (
-        <SupplementTracker userConditions={user?.conditions || []} profileId={profileId} />
+        <SupplementTracker profileId={profileId} />
       )}
 
       {/* Daily check-in */}

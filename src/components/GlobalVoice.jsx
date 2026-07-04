@@ -1,9 +1,7 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import C from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
-import { srSupported } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
-import { cleanForSpeech } from "../lib/ttsClean.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 
 const TAB_CONTEXT = {

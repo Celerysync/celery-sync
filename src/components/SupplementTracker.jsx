@@ -26,25 +26,6 @@ function todayKey() {
   return `cs_supps_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-function getSuppsForConditions(conditions = [], CONDITIONS) {
-  if (!CONDITIONS) return [];
-  const seen = new Set();
-  const result = [];
-  for (const cond of conditions) {
-    const data = CONDITIONS[cond];
-    if (!data) continue;
-    for (const s of (data.supps || [])) {
-      if (s.toLowerCase().includes("celery juice")) continue;
-      const name = s.split(" ").slice(0, 3).join(" ");
-      if (!seen.has(name)) {
-        seen.add(name);
-        result.push({ id: `cond_${name}`, label: s, timing: "morning_food" });
-      }
-    }
-  }
-  return result.slice(0, 12);
-}
-
 const BLANK_CUSTOM = { name: "", dose: "", timing: "morning_food", unitsOnHand: "", unitsPerDose: "" };
 
 function todayDate() {
@@ -56,12 +37,11 @@ function formatRunOutDate(date) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export default function SupplementTracker({ userConditions = [], profileId }) {
+export default function SupplementTracker({ profileId }) {
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
-  const [CONDITIONS, setCONDITIONS] = useState(null);
   const [editingStockFor, setEditingStockFor] = useState(null); // supplement name being edited
   const [stockForm, setStockForm] = useState({ unitsOnHand: "", unitsPerDose: "1", restockThresholdDays: "7" });
 
@@ -95,10 +75,6 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
       try { setChecked(JSON.parse(localStorage.getItem(key) || "{}")); } catch { setChecked({}); }
     }
   }, [key, date, profileId]);
-
-  useEffect(() => {
-    import("../data/conditions.js").then(m => setCONDITIONS(m.CONDITIONS));
-  }, []);
 
   const toggle = (supp) => {
     const dbKey = `${supp.label}__${supp.timing}`;
@@ -190,7 +166,6 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
     setEditingStockFor(null);
   };
 
-  const conditionSupps = getSuppsForConditions(userConditions, CONDITIONS).map(s => ({ ...s, source: "condition" }));
   const customSuppItems = supplements.map((s) => ({
     id: s.id,
     label: s.dose_label ? `${s.name} (${s.dose_label})` : s.name,
@@ -198,7 +173,7 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
     name: s.name,
     source: "custom",
   }));
-  const allSupps = [...CORE_SUPPS.map(s => ({ ...s, source: "core" })), ...conditionSupps, ...customSuppItems];
+  const allSupps = [...CORE_SUPPS.map(s => ({ ...s, source: "core" })), ...customSuppItems];
   const suppKey = (s) => `${s.label}__${s.timing}`;
   const doneCount = allSupps.filter((s) => checked[suppKey(s)]).length;
   const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;
@@ -296,7 +271,7 @@ export default function SupplementTracker({ userConditions = [], profileId }) {
             );
           })}
 
-          {conditionSupps.length === 0 && customSuppItems.length === 0 && (
+          {customSuppItems.length === 0 && (
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
               Add your own supplements below — enter exactly what you're following, including dose and timing.
             </div>
