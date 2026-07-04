@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_emoji text DEFAULT '🌿',
   symptoms text[] DEFAULT '{}',
   goal text DEFAULT '',
+  gender text,
+  age_band text,
+  cycle_tracking_enabled boolean NOT NULL DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -51,6 +54,20 @@ DO $$ BEGIN
     ON profiles FOR ALL
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS cycle_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  period_start_date date NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(profile_id, period_start_date)
+);
+CREATE INDEX IF NOT EXISTS idx_cycle_logs_profile ON cycle_logs(profile_id);
+ALTER TABLE cycle_logs ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users manage own cycle logs"
+    ON cycle_logs FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- conversations (AI memory per profile)

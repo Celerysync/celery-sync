@@ -193,3 +193,28 @@ ALTER TABLE supplement_inventory ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own supplement inventory" ON supplement_inventory;
 CREATE POLICY "Users manage own supplement inventory" ON supplement_inventory
   FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- 10. Optional demographics (both nullable — "prefer not to say" simply leaves
+-- them unset) + menstrual cycle tracking (opt-in, gated by gender in the UI
+-- but not enforced at the DB level).
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS gender text,           -- 'female' | 'male' | 'non_binary' | null
+  ADD COLUMN IF NOT EXISTS age_band text,         -- '18-29' | '30-44' | '45-59' | '60+' | null
+  ADD COLUMN IF NOT EXISTS cycle_tracking_enabled boolean NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS cycle_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  period_start_date date NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(profile_id, period_start_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cycle_logs_profile
+  ON cycle_logs(profile_id);
+
+ALTER TABLE cycle_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own cycle logs" ON cycle_logs;
+CREATE POLICY "Users manage own cycle logs" ON cycle_logs
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
