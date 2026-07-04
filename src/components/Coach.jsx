@@ -357,6 +357,14 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Abort any in-flight chat request on unmount/tab switch — previously a
+  // stale streamed response could keep arriving and call setMessages after
+  // the user had already navigated away.
+  const chatAbortRef = useRef(null);
+  useEffect(() => {
+    return () => chatAbortRef.current?.abort();
+  }, []);
+
   const send = useCallback(
     async (text) => {
       if (!text.trim() || loading) return;
@@ -377,11 +385,14 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         let sentenceBuffer = "";
         const isElVoice = selectedVoiceName.startsWith("el:");
         resetQueue();
+        chatAbortRef.current?.abort();
+        chatAbortRef.current = new AbortController();
         const reply = await streamClaude({
           staticSystem: systemRef.current.staticSystem,
           dynamicSystem: systemRef.current.dynamicSystem,
           messages: newMsgs.slice(-8),
           maxTokens: voiceModeRef.current ? 350 : 700,
+          signal: chatAbortRef.current.signal,
           onDelta: (delta, full) => {
             streamBuffer = full;
             const { clean } = parseNavCommand(full);
@@ -479,6 +490,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         });
         if (!reply) setLoading(false);
       } catch (err) {
+        if (err.name === "AbortError") return; // navigated away — not a real failure, nothing to show
         setMessages((m) => [
           ...m,
           {

@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
 
     const response = await anthropic.messages.create(
       { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
-      { headers: CACHE_HEADERS }
+      { headers: CACHE_HEADERS, timeout: 30000 }
     )
     res.json({ text: response.content.find(b => b.type === 'text')?.text ?? '' })
   } catch (err) {
@@ -88,7 +88,7 @@ router.post('/stream', async (req, res) => {
 
     const stream = anthropic.messages.stream(
       { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
-      { headers: CACHE_HEADERS }
+      { headers: CACHE_HEADERS, timeout: 60000 }
     )
 
     for await (const event of stream) {

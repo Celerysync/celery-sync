@@ -79,6 +79,7 @@ const INSIGHT_KEY = "cs_weekly_insight_";
 export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEnergy7 }) {
   const [insight, setInsight] = useState(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [insightError, setInsightError] = useState(false);
 
   const daysWithData = last7.filter((d) => d.energy > 0).length;
 
@@ -90,6 +91,7 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
     if (cached) { setInsight(cached); return; }
 
     setLoadingInsight(true);
+    setInsightError(false);
     const summary = last7.map((d) =>
       `${d.day}: energy=${d.energy || "?"}/10, celery=${d.celery}oz, sleep=${d.sleep_hours || "?"}h (quality ${d.sleep_quality || "?"}/5), HRV=${d.hrv || "?"}`
     ).join(" | ");
@@ -105,7 +107,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, celery 
     }).then((text) => {
       localStorage.setItem(key, text);
       setInsight(text);
-    }).catch(() => {}).finally(() => setLoadingInsight(false));
+    }).catch(() => setInsightError(true)).finally(() => setLoadingInsight(false));
   }, [daysWithData]);
 
   const energyVals = last7.map((d) => d.energy || 0);
@@ -178,11 +180,13 @@ Write 2-3 sentences describing what the data shows — trends in energy, celery 
           <ChartRow label="💓 HRV (ms)" dot="#e05252" points={hrvVals} min={Math.max(0, (avgHrv || 40) - 30)} max={(avgHrv || 40) + 30} days={last7} />
 
           {/* AI weekly insight */}
-          {(insight || loadingInsight) && (
+          {(insight || loadingInsight || insightError) && (
             <div style={{ background: C.goldLight, border: `1px solid ${C.gold}40`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 5 }}>✨ Weekly Insight</div>
               {loadingInsight
                 ? <div style={{ fontSize: 12, color: C.mid }}>Generating your insight…</div>
+                : insightError
+                ? <div style={{ fontSize: 12, color: C.mid }}>Couldn't generate your insight this time — try again in a bit.</div>
                 : <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, fontStyle: "italic" }}>{insight}</div>
               }
             </div>

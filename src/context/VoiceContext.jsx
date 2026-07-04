@@ -44,11 +44,15 @@ export function VoiceProvider({ authUser, children }) {
   // issuing a new controller.
   const abortRef = useRef(null);
 
-  const getAbortSignal = useCallback(() => {
+  // Combined with a timeout — previously this only cancelled the PREVIOUS
+  // request when a new one started; a hung request with no follow-up call
+  // would never be aborted and left the UI stuck (e.g. "Understanding…"
+  // forever).
+  const getAbortSignal = useCallback((timeoutMs = 20000) => {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
-    return ac.signal;
+    return AbortSignal.any([ac.signal, AbortSignal.timeout(timeoutMs)]);
   }, []);
 
   const cancelPending = useCallback(() => {
