@@ -3,9 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import PDFDocument from 'pdfkit'
 import { Resend } from 'resend'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { computeProgressStats, computeCycleOverlay } from '../../src/lib/progressStats.js'
 
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const GELASIO_REGULAR = path.join(__dirname, '..', 'fonts', 'Gelasio-Regular.ttf')
+const GELASIO_BOLD = path.join(__dirname, '..', 'fonts', 'Gelasio-Bold.ttf')
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -438,6 +445,51 @@ router.get('/doctor/:profileId/pdf', async (req, res) => {
   }
 })
 
+// ── Progress / wellness log PDF — descriptive only, no interpretation ──
+router.get('/progress/:profileId/pdf', async (req, res) => {
+  const { profileId } = req.params
+  const { range = 'weekly' } = req.query
+  const days = range === 'monthly' ? 180 : 28
+  const bucket = range === 'monthly' ? 'week' : 'day'
+
+  try {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+
+    const [checkinsRes, profileRes, cycleRes] = await Promise.all([
+      supabaseAdmin
+        .from('daily_checkins')
+        .select('check_date, energy, mood, symptoms, celery_oz, rhythm_completed, rhythm_total')
+        .eq('profile_id', profileId)
+        .gte('check_date', cutoffStr)
+        .order('check_date', { ascending: true }),
+      supabaseAdmin.from('profiles').select('name').eq('id', profileId).maybeSingle(),
+      supabaseAdmin.from('cycle_logs').select('period_start_date').eq('profile_id', profileId).order('period_start_date', { ascending: true }),
+    ])
+
+    const checkins = checkinsRes.data || []
+    const stats = computeProgressStats(checkins, { bucket })
+    const cycleOverlay = computeCycleOverlay(checkins, (cycleRes.data || []).map(r => r.period_start_date))
+
+    const pdfBuffer = await buildProgressReportPDF({
+      profileName: profileRes.data?.name || 'Friend',
+      range,
+      periodStart: checkins[0]?.check_date,
+      periodEnd: checkins[checkins.length - 1]?.check_date,
+      stats,
+      cycleOverlay,
+    })
+
+    const dateStr = new Date().toISOString().split('T')[0]
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="wellness-log-${dateStr}.pdf"`)
+    res.send(pdfBuffer)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── Build weekly healing summary PDF ──
 async function buildWeeklyPDF(summary, forEmail = false) {
   return new Promise((resolve, reject) => {
@@ -680,6 +732,188 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
         'CelerySync Personal Health Tracking  |  This document is for personal reference only and is not a medical record.',
         50, doc.page.height - 33, { width: pageW, align: 'center' }
       )
+
+    doc.end()
+  })
+}
+
+// ── Build progress / wellness log PDF — descriptive only ──
+// Every section is labelled "what you logged" — no interpretation, no
+// correlation, no causation language. See LEGAL_CONSTRAINTS.md / rule 2.
+async function buildProgressReportPDF({ profileName, range, periodStart, periodEnd, stats, cycleOverlay }) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Self-Reported Wellness Log' } })
+    const chunks = []
+    doc.on('data', c => chunks.push(c))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    doc.registerFont('Body', GELASIO_REGULAR)
+    doc.registerFont('Heading', GELASIO_BOLD)
+
+    const SAGE = '#3D6B44'
+    const SAGE_SOFT = '#E7F0E4'
+    const CHARCOAL = '#1E2A1E'
+    const MUTED = '#6B7C6B'
+    const GOLD = '#C8973A'
+    const PLUM = '#7c6fcd'
+    const BAND = '#F2EEE1'
+    const pageW = doc.page.width - 100
+    const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    const fmtShort = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'
+
+    const ensureRoom = (need) => {
+      if (doc.y > doc.page.height - 90 - need) { doc.addPage(); doc.y = 50 }
+    }
+
+    const barRow = (label, value, max, display, color, y, labelW = 90) => {
+      doc.font('Body').fontSize(9).fillColor(MUTED).text(label, 50, y + 2, { width: labelW })
+      const trackX = 50 + labelW + 8
+      const trackW = pageW - labelW - 8 - 50
+      doc.rect(trackX, y, trackW, 8).fill(BAND)
+      if (value != null && max) {
+        const filled = Math.min((value / max) * trackW, trackW)
+        if (filled > 0) doc.rect(trackX, y, filled, 8).fill(color)
+      }
+      doc.font('Body').fontSize(9).fillColor(CHARCOAL).text(display, trackX + trackW + 8, y + 2, { width: 42, align: 'right' })
+    }
+
+    const sectionTitle = (title, tag) => {
+      ensureRoom(40)
+      doc.font('Heading').fontSize(13).fillColor(CHARCOAL).text(`${title}  `, 50, doc.y, { continued: true })
+      doc.font('Body').fontSize(8).fillColor(MUTED).text(tag.toUpperCase())
+      doc.y += 4
+      doc.rect(50, doc.y, pageW, 1).fill('#DAD5C4')
+      doc.y += 10
+    }
+
+    // ── Header ──
+    doc.rect(0, 0, doc.page.width, 100).fill(SAGE)
+    doc.fillColor('#fff').font('Heading').fontSize(11).text('CELERYSYNC', 50, 26)
+    doc.font('Heading').fontSize(20).text('Self-Reported Wellness Log', 50, 42)
+    doc.font('Body').fontSize(11).fillColor('rgba(255,255,255,0.85)').text('generated by CelerySync', 50, 68)
+
+    doc.font('Body').fontSize(10).fillColor('rgba(255,255,255,0.9)')
+      .text(profileName, doc.page.width - 250, 30, { width: 200, align: 'right' })
+    doc.text(`${fmtShort(periodStart)} — ${fmtShort(periodEnd)}`, doc.page.width - 250, 46, { width: 200, align: 'right' })
+    doc.text(`Generated ${today}`, doc.page.width - 250, 60, { width: 200, align: 'right' })
+
+    let y = 118
+    doc.rect(50, y, pageW, 34).fill(SAGE_SOFT)
+    doc.font('Body').fontSize(9).fillColor(CHARCOAL).text(
+      'This log reflects only what was entered by the user. It contains no interpretation, correlation, or diagnosis — descriptive data only.',
+      58, y + 10, { width: pageW - 16 }
+    )
+    y += 46
+    doc.y = y
+
+    // ── Stat strip ──
+    const stripY = doc.y
+    const tileW = (pageW - 30) / 4
+    const tiles = [
+      { label: 'DAYS LOGGED', value: `${stats.daysLogged}` },
+      { label: 'ADHERENCE', value: stats.adherence.pct != null ? `${stats.adherence.pct}%` : '—' },
+      { label: 'CURRENT STREAK', value: `${stats.streaks.current}d` },
+      { label: 'LONGEST STREAK', value: `${stats.streaks.longest}d` },
+    ]
+    tiles.forEach((t, i) => {
+      const x = 50 + i * (tileW + 10)
+      doc.rect(x, stripY, tileW, 46).fill(BAND)
+      doc.font('Body').fontSize(7.5).fillColor(MUTED).text(t.label, x + 10, stripY + 8)
+      doc.font('Heading').fontSize(16).fillColor(SAGE).text(t.value, x + 10, stripY + 20)
+    })
+    doc.y = stripY + 60
+
+    // ── Energy ──
+    sectionTitle('Energy', 'what you logged · 1–10')
+    stats.energyTrend.forEach((d) => {
+      barRow(fmtShort(d.date), d.value, 10, d.value ? `${d.value}/10` : '—', SAGE, doc.y)
+      doc.y += 13
+    })
+    doc.y += 8
+
+    // ── Mood ──
+    sectionTitle('Mood', 'what you logged · 1–5')
+    stats.moodTrend.forEach((d) => {
+      barRow(fmtShort(d.date), d.value, 5, d.value ? `${d.value}/5` : '—', GOLD, doc.y)
+      doc.y += 13
+    })
+    doc.y += 8
+
+    // ── Symptoms ──
+    sectionTitle('Symptoms', 'what you logged · frequency')
+    if (!stats.symptomFrequency.length) {
+      doc.font('Body').fontSize(10).fillColor(MUTED).text('No symptoms logged this period.', 50, doc.y)
+      doc.y += 14
+    } else {
+      stats.symptomFrequency.forEach((s) => {
+        barRow(s.name, s.count, s.ofDays, `${s.count}/${s.ofDays}d`, MUTED, doc.y, 130)
+        doc.y += 15
+      })
+    }
+    doc.y += 8
+
+    // ── Weekly rhythm ──
+    sectionTitle('Weekly Rhythm', 'what you logged · avg energy by day')
+    stats.weeklyRhythm.forEach((d) => {
+      barRow(d.label, d.avgEnergy, 10, d.avgEnergy ? `${d.avgEnergy}/10` : '—', SAGE, doc.y)
+      doc.y += 13
+    })
+    doc.y += 8
+
+    // ── Cycle overlay ──
+    sectionTitle('Cycle Overlay', 'what you logged')
+    if (!cycleOverlay) {
+      doc.font('Body').fontSize(10).fillColor(MUTED).text(
+        'Not enough data yet — turn on cycle tracking in your profile and log a period start date to see this here.',
+        50, doc.y, { width: pageW }
+      )
+      doc.y += 20
+    } else {
+      cycleOverlay.forEach((d) => {
+        barRow(`Day ${d.day}`, d.avgEnergy, 10, d.avgEnergy ? `${d.avgEnergy}/10` : '—', PLUM, doc.y)
+        doc.y += 13
+      })
+    }
+    doc.y += 8
+
+    // ── Adherence ──
+    sectionTitle('Adherence', 'what you logged · doses vs scheduled')
+    doc.rect(50, doc.y, pageW, 12).fill(BAND)
+    if (stats.adherence.pct != null) {
+      const filled = Math.min((stats.adherence.pct / 100) * pageW, pageW)
+      doc.rect(50, doc.y, filled, 12).fill(SAGE)
+    }
+    doc.y += 18
+    doc.font('Body').fontSize(9).fillColor(MUTED).text(
+      stats.adherence.scheduled
+        ? `${stats.adherence.completed} of ${stats.adherence.scheduled} scheduled doses logged (${stats.adherence.pct}%)`
+        : 'No scheduled doses recorded this period.',
+      50, doc.y
+    )
+    doc.y += 22
+
+    // ── Streaks ──
+    sectionTitle('Streaks', 'what you logged')
+    const streakItems = [
+      { num: stats.streaks.current, label: 'current streak (days)' },
+      { num: stats.streaks.longest, label: 'longest this period' },
+      { num: stats.daysLogged, label: 'total days logged' },
+    ]
+    const streakY = doc.y
+    streakItems.forEach((s, i) => {
+      const x = 50 + i * 160
+      doc.font('Heading').fontSize(20).fillColor(SAGE).text(`${s.num}`, x, streakY, { width: 150, lineBreak: false })
+      doc.font('Body').fontSize(8.5).fillColor(MUTED).text(s.label, x, streakY + 24, { width: 150 })
+    })
+    doc.y = streakY + 46
+
+    // ── Footer ──
+    doc.rect(0, doc.page.height - 60, doc.page.width, 60).fill(SAGE)
+    doc.font('Body').fontSize(8).fillColor('rgba(255,255,255,0.85)').text(
+      'All data on this page is self-reported by the user via the CelerySync app. This document is not a medical record and does not constitute medical advice or diagnosis. CelerySync operates independently and is not affiliated with or endorsed by Anthony William or Medical Medium LLC. Please share with a licensed health practitioner for clinical interpretation.',
+      50, doc.page.height - 48, { width: pageW, align: 'center', lineGap: 2 }
+    )
 
     doc.end()
   })
