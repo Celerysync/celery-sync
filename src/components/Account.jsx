@@ -54,6 +54,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [memoryData, setMemoryData] = useState(null)
   const [memoryClearing, setMemoryClearing] = useState(false)
   const [memoryExpanded, setMemoryExpanded] = useState(false)
+  const [annual, setAnnual] = useState(false)
 
   useEffect(() => {
     if (!isSubscribed || !profileId) return
@@ -78,7 +79,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: authUser.id, email: authUser.email }),
+        body: JSON.stringify({ userId: authUser.id, email: authUser.email, interval: annual ? 'annual' : 'monthly' }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -133,12 +134,26 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               Healer Plan
             </div>
             <div style={{ fontSize: 32, fontFamily: 'Georgia,serif', fontWeight: 700 }}>
-              $14.97
-              <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
+              {annual ? '$119' : '$14.97'}
+              <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>{annual ? '/year AUD' : '/month AUD'}</span>
             </div>
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4, marginBottom: 8 }}>
-              or $119/year — save $61
-            </div>
+            <button
+              onClick={() => setAnnual(a => !a)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: C.white,
+                textDecoration: 'underline',
+                fontSize: 12,
+                opacity: 0.85,
+                marginTop: 4,
+                marginBottom: 8,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {annual ? 'Switch to monthly — $14.97/mo' : 'Switch to annual — $119/year, save $61'}
+            </button>
             <div style={{
               marginTop: 6,
               background: 'rgba(255,255,255,0.18)',

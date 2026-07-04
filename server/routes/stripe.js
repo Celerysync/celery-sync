@@ -21,10 +21,14 @@ async function getOrCreateCustomer(userId, email) {
   return customer.id
 }
 
-// Create Stripe Checkout session (healer plan)
+// Create Stripe Checkout session (healer plan — monthly or annual)
 router.post('/checkout', async (req, res) => {
-  const { userId, email } = req.body
+  const { userId, email, interval } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
+  if (interval === 'annual' && !process.env.STRIPE_ANNUAL_PRICE_ID) {
+    return res.status(500).json({ error: 'Annual plan not configured' })
+  }
+  const priceId = interval === 'annual' ? process.env.STRIPE_ANNUAL_PRICE_ID : process.env.STRIPE_PRICE_ID
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
   try {
     const customerId = await getOrCreateCustomer(userId, email)
@@ -32,7 +36,7 @@ router.post('/checkout', async (req, res) => {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: { trial_period_days: 7 },
       success_url: `${CLIENT_URL}?subscribed=true`,
       cancel_url: `${CLIENT_URL}?tab=account`,
