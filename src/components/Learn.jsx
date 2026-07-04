@@ -1,229 +1,81 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import C from "../lib/colors.js";
-import { Card, Btn } from "./ui.jsx";
-import { WEEKLY_LESSONS, CONDITION_EXPLAINERS, SHAREABLES } from "../data/learn.js";
+import { Card } from "./ui.jsx";
+import { ARTICLES_BY_CATEGORY } from "../lib/learnContent.js";
 import Knowledge from "./Knowledge.jsx";
 
-const RECIPE_LINKS = [
-  { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/blog/recipes", desc: "Anthony William's official recipe collection" },
-  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/blog/juices-and-smoothies", desc: "Official juice, smoothie, and healing water recipes" },
-];
+const MARKDOWN_COMPONENTS = {
+  h2: ({ children }) => (
+    <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginTop: 18, marginBottom: 8 }}>
+      {children}
+    </div>
+  ),
+  h3: ({ children }) => (
+    <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13.5, color: C.sageDark, marginTop: 14, marginBottom: 6 }}>
+      {children}
+    </div>
+  ),
+  p: ({ children }) => (
+    <p style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.75, margin: "0 0 10px" }}>{children}</p>
+  ),
+  ul: ({ children }) => (
+    <ul style={{ margin: "0 0 12px", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>{children}</ul>
+  ),
+  li: ({ children }) => (
+    <li style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.6 }}>{children}</li>
+  ),
+  strong: ({ children }) => <strong style={{ color: C.sageDark }}>{children}</strong>,
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: C.sage, fontWeight: 700 }}>{children}</a>
+  ),
+};
 
-function LessonCard({ lesson, defaultOpen = false }) {
+function ArticleCard({ article, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
-
   return (
     <Card style={{ border: open ? `1.5px solid ${C.sage}` : `1.5px solid ${C.border}` }}>
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          display: "flex", alignItems: "flex-start", gap: 12,
+          display: "flex", alignItems: "center", gap: 12,
           width: "100%", background: "none", border: "none",
           cursor: "pointer", padding: 0, textAlign: "left",
         }}
       >
-        <span style={{ fontSize: 28, flexShrink: 0 }}>{lesson.emoji}</span>
+        <span style={{ fontSize: 26, flexShrink: 0 }}>{article.emoji}</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: C.sage, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>
-            Week {lesson.week} · {lesson.duration}
-          </div>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
-            {lesson.title}
-          </div>
-          <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.5 }}>
-            {lesson.summary}
-          </div>
-        </div>
-        <span style={{ fontSize: 14, color: C.muted, flexShrink: 0, marginTop: 2 }}>{open ? "▲" : "▼"}</span>
-      </button>
-
-      {open && (
-        <div style={{ marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-          <MarkdownBody text={lesson.body} />
-          <div style={{
-            marginTop: 16,
-            padding: "12px 14px",
-            background: C.sageLight,
-            borderRadius: 12,
-            border: `1px solid ${C.sage}40`,
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.sageDark, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>
-              Key takeaway
-            </div>
-            <div style={{ fontSize: 13, color: C.sageDark, lineHeight: 1.6, fontFamily: "Georgia,serif" }}>
-              {lesson.keyTakeaway}
-            </div>
-          </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 10, fontStyle: "italic" }}>
-            📚 {lesson.bookRef}
-          </div>
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function ExplainerCard({ id, explainer }) {
-  const [open, setOpen] = useState(false);
-
-  const share = () => {
-    const text = `${explainer.headline}\n\n${explainer.body.slice(0, 300)}…\n\nRead more in the CelerySync app`;
-    if (navigator.share) {
-      navigator.share({ title: id, text }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(text).catch(() => {});
-    }
-  };
-
-  return (
-    <Card style={{ border: open ? `1.5px solid ${C.plum}30` : `1.5px solid ${C.border}` }}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          display: "flex", alignItems: "flex-start", gap: 12,
-          width: "100%", background: "none", border: "none",
-          cursor: "pointer", padding: 0, textAlign: "left",
-        }}
-      >
-        <span style={{ fontSize: 24, flexShrink: 0 }}>{explainer.emoji}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 3 }}>
-            {id}
-          </div>
-          <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.4, fontStyle: "italic" }}>
-            {explainer.headline}
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14.5, color: C.charcoal }}>
+            {article.title}
           </div>
         </div>
         <span style={{ fontSize: 14, color: C.muted, flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-          <MarkdownBody text={explainer.body} />
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 12, fontStyle: "italic" }}>
-            📚 {explainer.bookRef}
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-            <button
-              onClick={share}
-              style={{
-                padding: "6px 14px", borderRadius: 20,
-                border: `1.5px solid ${C.plum}50`,
-                background: C.plumLight, color: C.plum,
-                fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif",
-              }}
-            >
-              📤 Share this
-            </button>
-          </div>
+        <div style={{ marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 16, maxWidth: 640 }}>
+          <ReactMarkdown components={MARKDOWN_COMPONENTS}>{article.content}</ReactMarkdown>
         </div>
       )}
     </Card>
   );
 }
 
-function ShareableCard({ id, item }) {
-  const [copied, setCopied] = useState(false);
+const RECIPE_LINKS = [
+  { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/blog/recipes", desc: "Anthony William's official recipe collection" },
+  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/blog/juices-and-smoothies", desc: "Official juice, smoothie, and healing water recipes" },
+];
 
-  const share = async () => {
-    const text = `${item.title}\n\n${item.content}`;
-    if (navigator.share) {
-      navigator.share({ title: item.title, text }).catch(() => {});
-    } else {
-      await navigator.clipboard?.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  };
-
-  return (
-    <Card style={{ background: `${C.sage}08`, border: `1.5px solid ${C.sage}30` }}>
-      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 3 }}>
-        {item.title}
-      </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
-        {item.subtitle}
-      </div>
-      <div style={{
-        fontSize: 13, color: C.charcoal, lineHeight: 1.75,
-        background: C.white, borderRadius: 10, padding: "12px 14px",
-        border: `1px solid ${C.border}`, marginBottom: 12,
-        whiteSpace: "pre-wrap",
-      }}>
-        {item.content}
-      </div>
-      <Btn full color={C.sage} onClick={share}>
-        {copied ? "✓ Copied to clipboard" : "📤 Share this explanation"}
-      </Btn>
-    </Card>
-  );
-}
-
-function MarkdownBody({ text }) {
-  const parts = text.split(/\n\n+/);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {parts.map((block, i) => {
-        if (block.startsWith("**") && block.endsWith("**") && !block.slice(2).includes("**")) {
-          return (
-            <div key={i} style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13.5, color: C.charcoal, marginTop: 6 }}>
-              {block.slice(2, -2)}
-            </div>
-          );
-        }
-        const lines = block.split("\n").map((line, j) => {
-          if (line.startsWith("• ") || line.startsWith("🫐 ") || line.startsWith("🌿 ") ||
-              line.startsWith("🟢 ") || line.startsWith("🟤 ") || line.startsWith("🍌 ") ||
-              line.startsWith("🚫 ") || line.startsWith("⚔️ ") || line.startsWith("🧠 ") ||
-              line.startsWith("🦠 ") || line.startsWith("💧 ")) {
-            const isBold = line.includes("**");
-            const cleaned = line.replace(/\*\*(.*?)\*\*/g, "$1");
-            return (
-              <div key={j} style={{ display: "flex", gap: 8, fontSize: 13, color: C.charcoal, lineHeight: 1.6 }}>
-                <span style={{ flexShrink: 0 }}>{cleaned.split(" ")[0]}</span>
-                <span>{cleaned.split(" ").slice(1).join(" ")}</span>
-              </div>
-            );
-          }
-          const withBold = line.replace(/\*\*(.*?)\*\*/g, (_, m) => `<strong>${m}</strong>`);
-          return (
-            <span key={j} style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7 }}
-              dangerouslySetInnerHTML={{ __html: withBold }} />
-          );
-        });
-        if (block.startsWith("**")) {
-          const heading = block.match(/\*\*(.*?)\*\*/)?.[1];
-          const rest = block.replace(/^\*\*.*?\*\*\n?/, "");
-          return (
-            <div key={i}>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13.5, color: C.charcoal, marginBottom: 4, marginTop: 6 }}>
-                {heading}
-              </div>
-              {rest && <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7 }}
-                dangerouslySetInnerHTML={{ __html: rest.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />}
-            </div>
-          );
-        }
-        return (
-          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {lines}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 const SECTIONS = [
-  { id: "lessons",    label: "📖 Learn"      },
-  { id: "conditions", label: "🔍 Understand"  },
-  { id: "share",      label: "📤 Share"       },
+  { id: "articles",   label: "📖 Learn"      },
   { id: "recipes",    label: "🍽 Recipes"     },
   { id: "resources",  label: "🔗 Resources"   },
 ];
 
 export default function Learn({ authUser, user, navQuery }) {
-  const [section, setSection] = useState("lessons");
+  const [section, setSection] = useState("articles");
+  const categories = Object.entries(ARTICLES_BY_CATEGORY);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -232,7 +84,10 @@ export default function Learn({ authUser, user, navQuery }) {
           🌱 Understand Your Healing
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: C.mid, fontFamily: "Georgia,serif" }}>
-          Plain-English explanations from Anthony William's public teachings
+          CelerySync teaches general wellness mechanics in our own words. For Medical Medium protocols, always go to the official sources.
+        </p>
+        <p style={{ margin: "6px 0 0", fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
+          CelerySync is an independent app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC.
         </p>
       </div>
 
@@ -257,51 +112,27 @@ export default function Learn({ authUser, user, navQuery }) {
         ))}
       </div>
 
-      {/* Weekly lessons */}
-      {section === "lessons" && (
+      {/* Articles — original content, grouped by category */}
+      {section === "articles" && (
         <>
-          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-            Short reads that explain the <em>why</em> behind the core MM protocols — one lesson per week as you build your healing routine.
-          </div>
-          {WEEKLY_LESSONS.map((lesson) => (
-            <LessonCard key={lesson.week} lesson={lesson} defaultOpen={lesson.week === 1} />
-          ))}
-          <div style={{
-            padding: "12px 14px", background: C.sageLight,
-            borderRadius: 12, fontSize: 12.5, color: C.sageDark, lineHeight: 1.6,
-          }}>
-            📖 All content is paraphrased from Anthony William's publicly available teachings. Not medical advice. Always work with your healthcare provider.
-          </div>
-        </>
-      )}
-
-      {/* Condition explainers */}
-      {section === "conditions" && (
-        <>
-          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-            Plain-English explanations of what's actually happening in common conditions — and how Anthony William approaches them.
-          </div>
-          {Object.entries(CONDITION_EXPLAINERS).map(([id, explainer]) => (
-            <ExplainerCard key={id} id={id} explainer={explainer} />
-          ))}
-          <div style={{
-            padding: "12px 14px", background: C.sageLight,
-            borderRadius: 12, fontSize: 12.5, color: C.sageDark, lineHeight: 1.6,
-          }}>
-            📖 Paraphrased from Anthony William's publicly available teachings. Not medical advice.
-          </div>
-        </>
-      )}
-
-      {/* Shareables */}
-      {section === "share" && (
-        <>
-          <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-            Clean, jargon-free explanations you can share with someone curious or sceptical — family, friends, a GP. Tap share to send or copy.
-          </div>
-          {Object.entries(SHAREABLES).map(([id, item]) => (
-            <ShareableCard key={id} id={id} item={item} />
-          ))}
+          {categories.length === 0 ? (
+            <div style={{ fontSize: 13, color: C.muted, textAlign: "center", padding: "20px 0" }}>
+              No articles yet — add markdown files to src/content/learn/.
+            </div>
+          ) : (
+            categories.map(([category, articles]) => (
+              <div key={category}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.sage, textTransform: "uppercase", letterSpacing: 0.6, margin: "4px 0 8px" }}>
+                  {category}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {articles.map((article, i) => (
+                    <ArticleCard key={article.slug} article={article} defaultOpen={categories.length === 1 && i === 0} />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </>
       )}
 
@@ -320,6 +151,7 @@ export default function Learn({ authUser, user, navQuery }) {
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "14px 16px", borderRadius: 14,
                 background: C.white, border: `1.5px solid ${C.sage}50`,
+                borderLeftWidth: 4, borderLeftColor: C.sage,
                 textDecoration: "none",
               }}
             >
@@ -328,7 +160,12 @@ export default function Learn({ authUser, user, navQuery }) {
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{l.label}</div>
                 <div style={{ fontSize: 11.5, color: C.muted, marginTop: 1 }}>{l.desc}</div>
               </div>
-              <span style={{ fontSize: 11, color: C.sage, fontWeight: 700, flexShrink: 0 }}>Official ↗</span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: C.sage, letterSpacing: 0.4,
+                textTransform: "uppercase", flexShrink: 0, whiteSpace: "nowrap",
+              }}>
+                Official ↗
+              </span>
             </a>
           ))}
         </>

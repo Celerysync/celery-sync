@@ -85,6 +85,7 @@ export default function Knowledge({ authUser }) {
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "11px 14px", borderRadius: 12,
                 background: C.mist, border: `1px solid ${C.border}`,
+                borderLeftWidth: 4, borderLeftColor: C.sage,
                 textDecoration: "none",
               }}
             >
@@ -93,7 +94,12 @@ export default function Knowledge({ authUser }) {
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>{l.label}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{l.desc}</div>
               </div>
-              <span style={{ fontSize: 12, color: C.sage }}>→</span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: C.sage, letterSpacing: 0.4,
+                textTransform: "uppercase", flexShrink: 0, whiteSpace: "nowrap",
+              }}>
+                Official ↗
+              </span>
             </a>
           ))}
         </div>
@@ -118,12 +124,13 @@ export default function Knowledge({ authUser }) {
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "9px 12px", borderRadius: 10,
                 background: C.mist, border: `1px solid ${C.border}`,
+                borderLeftWidth: 4, borderLeftColor: C.sage,
                 textDecoration: "none",
               }}
             >
               <span style={{ fontSize: 18 }}>{b.emoji}</span>
               <span style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, flex: 1 }}>{b.title}</span>
-              <span style={{ fontSize: 11, color: C.sage }}>Buy →</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: C.sage, letterSpacing: 0.4, textTransform: "uppercase" }}>Official ↗</span>
             </a>
           ))}
         </div>
