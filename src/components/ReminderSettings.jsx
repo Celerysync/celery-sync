@@ -52,10 +52,21 @@ const HOUR_OPTIONS = [
 
 export default function ReminderSettings({ authUser }) {
   const { settings, updateSetting } = useReminders();
-  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime } = useWebPush(authUser);
+  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime, sendTest } = useWebPush(authUser);
   const [morningHour, setMorningHour] = useLocalStorage("cs_morning_hour", 6);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [testSending, setTestSending] = useState(false);
+  const [testSent, setTestSent] = useState(false);
+
+  const handleSendTest = async () => {
+    setTestSending(true);
+    setTestSent(false);
+    await sendTest();
+    setTestSending(false);
+    setTestSent(true);
+    setTimeout(() => setTestSent(false), 4000);
+  };
 
   const handleHourChange = async (hour) => {
     setMorningHour(hour);
@@ -153,17 +164,30 @@ export default function ReminderSettings({ authUser }) {
             <div style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>
               ✓ Background notifications active
             </div>
-            <button
-              onClick={unsubscribe}
-              disabled={loading}
-              style={{
-                background: "none", border: `1px solid ${C.border}`, borderRadius: 20,
-                padding: "6px 14px", fontSize: 12, color: C.muted, cursor: "pointer",
-                fontFamily: "Georgia,serif", width: "fit-content",
-              }}
-            >
-              {loading ? "Turning off…" : "Turn off background notifications"}
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={handleSendTest}
+                disabled={testSending}
+                style={{
+                  background: "none", border: `1px solid ${C.sage}`, borderRadius: 20,
+                  padding: "6px 14px", fontSize: 12, color: C.sageDark, cursor: "pointer",
+                  fontFamily: "Georgia,serif", width: "fit-content",
+                }}
+              >
+                {testSending ? "Sending…" : testSent ? "✓ Sent — check your notifications" : "Send test notification"}
+              </button>
+              <button
+                onClick={unsubscribe}
+                disabled={loading}
+                style={{
+                  background: "none", border: `1px solid ${C.border}`, borderRadius: 20,
+                  padding: "6px 14px", fontSize: 12, color: C.muted, cursor: "pointer",
+                  fontFamily: "Georgia,serif", width: "fit-content",
+                }}
+              >
+                {loading ? "Turning off…" : "Turn off background notifications"}
+              </button>
+            </div>
           </div>
         ) : (
           <Btn full onClick={handleSubscribe} color={C.sage} disabled={loading}>

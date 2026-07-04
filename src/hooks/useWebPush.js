@@ -58,6 +58,22 @@ export function useWebPush(authUser) {
     setLoading(false);
   }, [supported, authUser]);
 
+  const sendTest = useCallback(async () => {
+    if (!authUser) return;
+    setError(null);
+    try {
+      const res = await fetch("/api/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: authUser.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send test notification");
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [authUser]);
+
   const updateMorningTime = useCallback(async (morningStartHour) => {
     if (!authUser) return;
     await fetch("/api/notifications/preferences", {
@@ -88,5 +104,5 @@ export function useWebPush(authUser) {
     setLoading(false);
   }, [supported, authUser]);
 
-  return { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime };
+  return { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime, sendTest };
 }

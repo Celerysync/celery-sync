@@ -56,6 +56,36 @@ router.post("/unsubscribe", async (req, res) => {
   res.json({ ok: true });
 });
 
+// Send an immediate test push to one user — lets them verify delivery works
+router.post("/test", async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
+  const { data: subs } = await supabase.from("push_subscriptions").select("*").eq("user_id", userId);
+  if (!subs?.length) return res.status(404).json({ error: "No subscription found for this user" });
+
+  const payload = JSON.stringify({
+    title: "🌿 Test notification",
+    body: "If you can see this, background notifications are working!",
+    tag: "test-push",
+  });
+  const results = await Promise.allSettled(
+    subs.map((sub) =>
+      webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload).catch(async (err) => {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+        }
+        throw err;
+      })
+    )
+  );
+  const sent = results.filter((r) => r.status === "fulfilled").length;
+  if (sent === 0) {
+    const firstError = results.find((r) => r.status === "rejected")?.reason?.message || "Unknown error";
+    return res.status(500).json({ error: firstError });
+  }
+  res.json({ ok: true, sent });
+});
+
 // Internal: send a push to all matching subscriptions
 export async function sendPushToAll({ title, body, tag, url }) {
   const { data: subs } = await supabase.from("push_subscriptions").select("*");
