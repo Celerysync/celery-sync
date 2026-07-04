@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import C from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
+import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { callClaude } from "../lib/api.js";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
@@ -85,6 +86,7 @@ export default function Journal({ authUser, user, profileId }) {
     checkins, todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
     loading, loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
+  const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
 
   // Form state
   const [energy, setEnergy] = useState(0);
@@ -457,6 +459,26 @@ Write as if you know this person and genuinely care about their healing.`,
             ))}
           </div>
         </div>
+
+        {/* Cycle tracking — opt-in, only shown once enabled in profile settings */}
+        {user?.cycle_tracking_enabled && (
+          <div style={{ marginBottom: 14 }}>
+            <button
+              onClick={() => (periodLoggedToday ? undoPeriodToday() : logPeriodStart())}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 14px", borderRadius: 20,
+                border: `1.5px solid ${periodLoggedToday ? C.plum : C.border}`,
+                background: periodLoggedToday ? C.plumLight : "transparent",
+                color: periodLoggedToday ? C.plum : C.mid,
+                fontSize: 12, fontFamily: "Georgia,serif", fontWeight: periodLoggedToday ? 700 : 400,
+                cursor: "pointer",
+              }}
+            >
+              {periodLoggedToday ? "✓ Period start logged today — tap to undo" : "🩸 Log period start today"}
+            </button>
+          </div>
+        )}
 
         {/* Note */}
         <textarea

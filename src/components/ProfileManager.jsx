@@ -14,12 +14,28 @@ const GOALS = [
   "Supporting a family member (carer)",
 ];
 
+const GENDER_OPTIONS = [
+  { value: "female", label: "Female" },
+  { value: "male", label: "Male" },
+  { value: "non_binary", label: "Non-binary" },
+];
+
+const AGE_BAND_OPTIONS = [
+  { value: "18-29", label: "18–29" },
+  { value: "30-44", label: "30–44" },
+  { value: "45-59", label: "45–59" },
+  { value: "60+", label: "60+" },
+];
+
 function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
   const [name, setName] = useState(initial.name || "");
   const [symptoms, setSymptoms] = useState(initial.symptoms || []);
   const [goal, setGoal] = useState(initial.goal || "");
   const [avatar, setAvatar] = useState(initial.avatar_emoji || "🌿");
   const [condSearch, setCondSearch] = useState("");
+  const [gender, setGender] = useState(initial.gender || null);
+  const [ageBand, setAgeBand] = useState(initial.age_band || null);
+  const [cycleTracking, setCycleTracking] = useState(initial.cycle_tracking_enabled || false);
 
   const toggleSymptom = (s) =>
     setSymptoms((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
@@ -87,6 +103,73 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
         </div>
       </div>
 
+      {/* Gender + age — both optional, "prefer not to say" just leaves them blank */}
+      <div>
+        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+          Gender <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {GENDER_OPTIONS.map((g) => (
+            <button
+              key={g.value}
+              onClick={() => setGender(gender === g.value ? null : g.value)}
+              style={{
+                padding: "6px 14px", borderRadius: 20,
+                border: `1.5px solid ${gender === g.value ? C.sage : C.border}`,
+                background: gender === g.value ? C.sageLight : "transparent",
+                color: gender === g.value ? C.sageDark : C.mid,
+                fontSize: 12, fontFamily: "Georgia,serif",
+                cursor: "pointer", fontWeight: gender === g.value ? 700 : 400,
+              }}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+          Age range <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {AGE_BAND_OPTIONS.map((a) => (
+            <button
+              key={a.value}
+              onClick={() => setAgeBand(ageBand === a.value ? null : a.value)}
+              style={{
+                padding: "6px 14px", borderRadius: 20,
+                border: `1.5px solid ${ageBand === a.value ? C.sage : C.border}`,
+                background: ageBand === a.value ? C.sageLight : "transparent",
+                color: ageBand === a.value ? C.sageDark : C.mid,
+                fontSize: 12, fontFamily: "Georgia,serif",
+                cursor: "pointer", fontWeight: ageBand === a.value ? 700 : 400,
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {gender === "female" && (
+        <div style={{ background: C.sageLight, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif" }}>Track my cycle</div>
+            <div style={{ fontSize: 11, color: C.mid, marginTop: 2 }}>Adds a cycle-day overlay to your Progress reports</div>
+          </div>
+          <button
+            onClick={() => setCycleTracking((v) => !v)}
+            style={{
+              width: 42, height: 24, borderRadius: 12, border: "none", flexShrink: 0,
+              background: cycleTracking ? C.sage : "#d1d5db", cursor: "pointer", position: "relative",
+            }}
+          >
+            <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: cycleTracking ? 21 : 3, transition: "left 0.2s" }} />
+          </button>
+        </div>
+      )}
+
       {/* Symptoms */}
       <div>
         <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
@@ -128,7 +211,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Actions */}
       <div style={{ display: "flex", gap: 10 }}>
-        <Btn full color={C.sageDark} onClick={() => onSave({ name, symptoms, goal, avatar_emoji: avatar })} disabled={saving || !name.trim()}>
+        <Btn full color={C.sageDark} onClick={() => onSave({ name, symptoms, goal, avatar_emoji: avatar, gender, age_band: ageBand, cycle_tracking_enabled: cycleTracking })} disabled={saving || !name.trim()}>
           {saving ? "Saving…" : "Save Profile"}
         </Btn>
         <button

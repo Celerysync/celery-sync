@@ -59,10 +59,10 @@ export function useProfiles(authUser) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser?.id]);
 
-  const createProfile = useCallback(async ({ name, symptoms = [], goal = "", avatar_emoji = "🌿" }) => {
+  const createProfile = useCallback(async ({ name, symptoms = [], goal = "", avatar_emoji = "🌿", gender = null, age_band = null, cycle_tracking_enabled = false }) => {
     const created = await _createInDb({
       user_id: authUser.id,
-      name, symptoms, goal, avatar_emoji,
+      name, symptoms, goal, avatar_emoji, gender, age_band, cycle_tracking_enabled,
     });
     setProfiles((prev) => [...prev, created]);
     return created;

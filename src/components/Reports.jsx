@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
+import { useCycleTracking } from "../hooks/useCycleTracking.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
 const DISCLAIMER =
@@ -180,6 +181,7 @@ export default function Reports({ authUser, profileId, user }) {
   const [progressCheckins, setProgressCheckins] = useState([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [progressDownloading, setProgressDownloading] = useState(false);
+  const { periodStartDates } = useCycleTracking(profileId);
 
   useEffect(() => {
     if (!profileId) return;
@@ -391,7 +393,7 @@ export default function Reports({ authUser, profileId, user }) {
             {loadingProgress ? (
               <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
             ) : (
-              <ProgressCharts checkins={progressCheckins} />
+              <ProgressCharts checkins={progressCheckins} periodStartDates={periodStartDates} />
             )}
             <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
           </>
@@ -424,7 +426,7 @@ export default function Reports({ authUser, profileId, user }) {
           <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
         ) : (
           <>
-            <ProgressCharts checkins={progressCheckins} bucket="week" />
+            <ProgressCharts checkins={progressCheckins} periodStartDates={periodStartDates} bucket="week" />
             <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
           </>
         )
