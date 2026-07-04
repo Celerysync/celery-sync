@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useReminders } from "../hooks/useReminders.js";
 import { useWebPush } from "../hooks/useWebPush.js";
+import { useEncouragementPrefs } from "../hooks/useEncouragementPrefs.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
 function Toggle({ on, onChange, label, desc }) {
@@ -50,9 +51,55 @@ const HOUR_OPTIONS = [
   { value: 10, label: "10:00 am" },
 ];
 
+// Kept to sensible daytime/evening ranges — no scheduling into quiet hours
+const AFTERNOON_HOURS = [
+  { value: 13, label: "1:00 pm" },
+  { value: 14, label: "2:00 pm" },
+  { value: 15, label: "3:00 pm (default)" },
+  { value: 16, label: "4:00 pm" },
+  { value: 17, label: "5:00 pm" },
+];
+const EVENING_HOURS = [
+  { value: 18, label: "6:00 pm" },
+  { value: 19, label: "7:00 pm" },
+  { value: 20, label: "8:00 pm (default)" },
+  { value: 21, label: "9:00 pm" },
+  { value: 22, label: "10:00 pm" },
+];
+
+function EncouragementWindowRow({ label, desc, window, hourOptions, prefs, updateWindow }) {
+  const win = prefs[window] || { enabled: true, hour: hourOptions[0].value };
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <Toggle
+        on={win.enabled}
+        onChange={(v) => updateWindow(window, { enabled: v })}
+        label={label}
+        desc={desc}
+      />
+      {win.enabled && (
+        <select
+          value={win.hour}
+          onChange={(e) => updateWindow(window, { hour: Number(e.target.value) })}
+          style={{
+            border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 12px",
+            fontSize: 13, color: C.charcoal, background: "#fff",
+            fontFamily: "Georgia,serif", cursor: "pointer", width: "100%", marginTop: 8,
+          }}
+        >
+          {hourOptions.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
+}
+
 export default function ReminderSettings({ authUser }) {
   const { settings, updateSetting } = useReminders();
   const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime, sendTest } = useWebPush(authUser);
+  const { prefs: encouragementPrefs, updateWindow: updateEncouragementWindow } = useEncouragementPrefs(authUser, subscribed);
   const [morningHour, setMorningHour] = useLocalStorage("cs_morning_hour", 6);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -199,6 +246,33 @@ export default function ReminderSettings({ authUser }) {
           <div style={{ marginTop: 8, fontSize: 12, color: C.terracotta }}>{error}</div>
         )}
       </div>
+
+      {subscribed && (
+        <div style={{ paddingTop: 14, marginTop: 14, borderTop: `1px solid ${C.border}` }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 4 }}>
+            💬 Gentle check-ins
+          </div>
+          <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+            A short, personal check-in twice a day based on how things are actually going for you — never a task list, always optional.
+          </div>
+          <EncouragementWindowRow
+            label="Afternoon check-in"
+            desc="A gentle mid-afternoon nudge"
+            window="afternoon"
+            hourOptions={AFTERNOON_HOURS}
+            prefs={encouragementPrefs}
+            updateWindow={updateEncouragementWindow}
+          />
+          <EncouragementWindowRow
+            label="Evening check-in"
+            desc="A calm, no-pressure wind-down check-in"
+            window="evening"
+            hourOptions={EVENING_HOURS}
+            prefs={encouragementPrefs}
+            updateWindow={updateEncouragementWindow}
+          />
+        </div>
+      )}
 
       <div style={{ marginTop: 12, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
         In-app reminders appear as banners when the app is open. Background notifications work when the app is closed — best installed as a home screen app.
