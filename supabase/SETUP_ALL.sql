@@ -115,6 +115,11 @@ CREATE TABLE healing_profiles (
   profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   healing_summary text DEFAULT '',
+  hard_times text,
+  current_focus text,
+  wins text,
+  preferences jsonb DEFAULT '{"prefers":[],"avoids":[]}'::jsonb,
+  memory_updated_at timestamptz,
   updated_at timestamptz DEFAULT now()
 );
 ALTER TABLE healing_profiles ENABLE ROW LEVEL SECURITY;
@@ -231,12 +236,16 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   keys jsonb NOT NULL,
   timezone text NOT NULL DEFAULT 'UTC',
   morning_start_hour integer NOT NULL DEFAULT 6,
+  encouragement_prefs jsonb DEFAULT '{"afternoon":{"enabled":true,"hour":15},"evening":{"enabled":true,"hour":20}}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, endpoint)
 );
--- Migration: add morning_start_hour if upgrading from older schema
+-- Migration: add columns if upgrading from older schema
 DO $$ BEGIN
   ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS morning_start_hour integer NOT NULL DEFAULT 6;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS encouragement_prefs jsonb DEFAULT '{"afternoon":{"enabled":true,"hour":15},"evening":{"enabled":true,"hour":20}}'::jsonb;
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
@@ -246,6 +255,24 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE POLICY "Service role reads all push subscriptions"
     ON push_subscriptions FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS encouragement_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  window text NOT NULL CHECK (window IN ('afternoon','evening')),
+  message text NOT NULL,
+  sent boolean DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(profile_id, date, window)
+);
+CREATE INDEX IF NOT EXISTS idx_encouragement_messages_profile_date
+  ON encouragement_messages(profile_id, date);
+ALTER TABLE encouragement_messages ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Users manage own encouragement messages"
+    ON encouragement_messages FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 

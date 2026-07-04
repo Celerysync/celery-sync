@@ -117,3 +117,35 @@ ALTER TABLE saved_rhythms ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own saved rhythms" ON saved_rhythms;
 CREATE POLICY "Users manage own saved rhythms" ON saved_rhythms
   FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- 7. Per-user companion memory: structured fields on healing_profiles
+ALTER TABLE healing_profiles
+  ADD COLUMN IF NOT EXISTS hard_times         text,
+  ADD COLUMN IF NOT EXISTS current_focus      text,
+  ADD COLUMN IF NOT EXISTS wins               text,
+  ADD COLUMN IF NOT EXISTS preferences        jsonb DEFAULT '{"prefers":[],"avoids":[]}'::jsonb,
+  ADD COLUMN IF NOT EXISTS memory_updated_at  timestamptz;
+
+-- 8. Encouragement engine: per-window prefs + pre-generated daily messages
+ALTER TABLE push_subscriptions
+  ADD COLUMN IF NOT EXISTS encouragement_prefs jsonb DEFAULT '{"afternoon":{"enabled":true,"hour":15},"evening":{"enabled":true,"hour":20}}'::jsonb;
+
+CREATE TABLE IF NOT EXISTS encouragement_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  window text NOT NULL CHECK (window IN ('afternoon','evening')),
+  message text NOT NULL,
+  sent boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(profile_id, date, window)
+);
+
+CREATE INDEX IF NOT EXISTS idx_encouragement_messages_profile_date
+  ON encouragement_messages(profile_id, date);
+
+ALTER TABLE encouragement_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own encouragement messages" ON encouragement_messages;
+CREATE POLICY "Users manage own encouragement messages" ON encouragement_messages
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));

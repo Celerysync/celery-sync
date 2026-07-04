@@ -131,6 +131,11 @@ CREATE TABLE healing_profiles (
   profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   healing_summary text DEFAULT '',
+  hard_times text,
+  current_focus text,
+  wins text,
+  preferences jsonb DEFAULT '{"prefers":[],"avoids":[]}'::jsonb,
+  memory_updated_at timestamptz,
   updated_at timestamptz DEFAULT now()
 );
 
