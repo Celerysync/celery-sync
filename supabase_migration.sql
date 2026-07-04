@@ -149,3 +149,47 @@ ALTER TABLE encouragement_messages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own encouragement messages" ON encouragement_messages;
 CREATE POLICY "Users manage own encouragement messages" ON encouragement_messages
   FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- 9. Supplement inventory + restock alerts
+-- The user's own supplement schedule (name, dose label, timing) — moved from
+-- localStorage-only so it syncs across devices and the restock cron can read it.
+CREATE TABLE IF NOT EXISTS user_supplements (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  dose_label text,
+  timing text NOT NULL DEFAULT 'morning_food',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_supplements_profile
+  ON user_supplements(profile_id);
+
+ALTER TABLE user_supplements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own supplements" ON user_supplements;
+CREATE POLICY "Users manage own supplements" ON user_supplements
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- Optional inventory tracking, one row per profile+supplement name.
+-- units_on_hand staying NULL means tracking is off for that supplement.
+CREATE TABLE IF NOT EXISTS supplement_inventory (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  supplement_name text NOT NULL,
+  units_on_hand numeric,
+  units_per_dose numeric NOT NULL DEFAULT 1,
+  restock_threshold_days int NOT NULL DEFAULT 7,
+  low_stock_alerted_on date,
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(profile_id, supplement_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_supplement_inventory_profile
+  ON supplement_inventory(profile_id);
+
+ALTER TABLE supplement_inventory ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own supplement inventory" ON supplement_inventory;
+CREATE POLICY "Users manage own supplement inventory" ON supplement_inventory
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
