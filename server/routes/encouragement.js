@@ -229,10 +229,10 @@ export async function runEncouragementTick() {
         const context = await buildContextForProfile(profileId)
         const { afternoon, evening } = await generateMessages(context)
         const rows = []
-        if (afternoon) rows.push({ profile_id: profileId, date: today, window: 'afternoon', message: afternoon })
-        if (evening) rows.push({ profile_id: profileId, date: today, window: 'evening', message: evening })
+        if (afternoon) rows.push({ profile_id: profileId, date: today, time_window: 'afternoon', message: afternoon })
+        if (evening) rows.push({ profile_id: profileId, date: today, time_window: 'evening', message: evening })
         if (rows.length) {
-          await supabaseAdmin.from('encouragement_messages').upsert(rows, { onConflict: 'profile_id,date,window' })
+          await supabaseAdmin.from('encouragement_messages').upsert(rows, { onConflict: 'profile_id,date,time_window' })
           console.log(`💬 Generated encouragement messages for profile ${profileId}`)
         }
         continue
@@ -249,7 +249,7 @@ export async function runEncouragementTick() {
         .select('id, message, sent')
         .eq('profile_id', profileId)
         .eq('date', today)
-        .eq('window', win)
+        .eq('time_window', win)
         .maybeSingle()
       if (!msgRow || msgRow.sent) continue
 

@@ -134,11 +134,11 @@ CREATE TABLE IF NOT EXISTS encouragement_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   date date NOT NULL,
-  window text NOT NULL CHECK (window IN ('afternoon','evening')),
+  time_window text NOT NULL CHECK (time_window IN ('afternoon','evening')),
   message text NOT NULL,
   sent boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
-  UNIQUE(profile_id, date, window)
+  UNIQUE(profile_id, date, time_window)
 );
 
 CREATE INDEX IF NOT EXISTS idx_encouragement_messages_profile_date
