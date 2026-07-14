@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { TODAY, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
+import { TAB_CONTEXT } from "../lib/voiceTabContext.js";
 
 const todayStr = TODAY;
 
@@ -55,9 +56,25 @@ async function todayStatus(profileId) {
 // replaces src/lib/voiceIntake.js's parse-then-write flow: Hume's paired
 // Claude model calls these as native tools mid-conversation instead of a
 // separate post-hoc text parse.
-export function useVoiceTools(authUser, profileId) {
+export function useVoiceTools(authUser, profileId, onSwitchTab) {
   const userId = authUser?.id;
   return useMemo(() => ({
+    // Lets the user navigate by voice ("take me to Track", "open supplements").
+    // Ambient tab context (voiceTabContext.js) only tells the companion where
+    // the user IS; this is the one tool that actually moves them.
+    async switch_tab(args) {
+      const requested = String(args?.tab || "").trim().toLowerCase();
+      const validTabs = Object.keys(TAB_CONTEXT);
+      if (!validTabs.includes(requested)) {
+        return { error: "invalid_tab", message: `"${args?.tab}" isn't a real tab. Valid tabs are: ${validTabs.join(", ")}.` };
+      }
+      if (!onSwitchTab) {
+        return { error: "unavailable", message: "Tab switching isn't available right now." };
+      }
+      onSwitchTab(requested);
+      return { switched_to: requested };
+    },
+
     // Spec §3.3 — "done my juice" ticks the real checkbox. Writes the same
     // activity_events ledger as a tap; the Rhythm screen's Realtime
     // subscription animates the checkbox on screen as this row lands.
@@ -207,5 +224,5 @@ export function useVoiceTools(authUser, profileId) {
       if (error) throw new Error(error.message);
       return { logged: true };
     },
-  }), [userId, profileId]);
+  }), [userId, profileId, onSwitchTab]);
 }

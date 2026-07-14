@@ -364,7 +364,13 @@ export default function App() {
 
   return (
     <VoiceProvider authUser={authUser}>
-    <HumeVoiceProvider authUser={authUser} profileId={activeProfileId} tab={tab} enabled={humeEnabled}>
+    <HumeVoiceProvider
+      authUser={authUser}
+      profileId={activeProfileId}
+      tab={tab}
+      enabled={humeEnabled}
+      onSwitchTab={(tabId) => setTab(TAB_MIGRATIONS[tabId] || tabId)}
+    >
     <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
       <div style={{

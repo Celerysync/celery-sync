@@ -44,7 +44,7 @@ async function fetchJSON(url, opts) {
   return res.json();
 }
 
-function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, children }) {
+function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, onSwitchTab, children }) {
   const voice = useHumeSDKVoice();
   const memory = useHealingMemory(authUser, profileId);
   const lastUserTurnRef = useRef(null); // { text, at }
@@ -132,7 +132,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, c
   // through a specific tab's local state, so log_checkin/log_restock/
   // log_rhythm_item work identically no matter which tab is on screen. This
   // is what replaces src/lib/voiceIntake.js's parse-then-write flow.
-  const voiceTools = useVoiceTools(authUser, profileId);
+  const voiceTools = useVoiceTools(authUser, profileId, onSwitchTab);
   useEffect(() => {
     return registerToolHandlers(voiceTools);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,7 +241,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, c
 // authUser/profileId/tab are read fresh on every connect() call via refs so
 // the WS session itself doesn't get torn down on tab switches — only one
 // session exists app-wide, which is the whole point of this provider.
-export function HumeVoiceProvider({ authUser, profileId, tab, enabled, children }) {
+export function HumeVoiceProvider({ authUser, profileId, tab, enabled, onSwitchTab, children }) {
   const toolHandlersRef = useRef({});
 
   const handleToolCall = useCallback(async (message, send) => {
@@ -282,6 +282,7 @@ export function HumeVoiceProvider({ authUser, profileId, tab, enabled, children 
         tab={tab}
         enabled={enabled}
         toolHandlersRef={toolHandlersRef}
+        onSwitchTab={onSwitchTab}
       >
         {children}
       </HumeVoiceBridge>
