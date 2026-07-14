@@ -304,19 +304,6 @@ export function useRhythm(authUser, profileId) {
       return;
     }
 
-    // Transitional dual-write keeping rhythm_completions current as the
-    // rollback net; delete this block once the ledger cutover is verified.
-    supabase.from("rhythm_completions").upsert({
-      profile_id: profileId,
-      date: TODAY(),
-      item_id: itemId,
-      item_name: item?.name ?? itemId,
-      item_category: item?.category ?? "other",
-      completed_at: now,
-      program_id: activeProgram?.id ?? null,
-      program_day: currentProgramDay ?? null,
-    }, { onConflict: "profile_id,date,item_id" }).then(() => {});
-
     setCompletions((latest) => {
       const todaysItems = filterTodaysItems(baseItems, activeProgram);
       const total = todaysItems.length;
@@ -362,14 +349,6 @@ export function useRhythm(authUser, profileId) {
       setSyncError("Couldn't save — check your connection and try again.");
       return;
     }
-
-    // Transitional dual-write (see completeItem)
-    supabase.from("rhythm_completions")
-      .delete()
-      .eq("profile_id", profileId)
-      .eq("date", TODAY())
-      .eq("item_id", itemId)
-      .then(() => {});
 
     setCompletions((latest) => {
       const todaysItems = filterTodaysItems(baseItems, activeProgram);
