@@ -3,7 +3,13 @@ import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
 import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
 
-const TODAY = () => new Date().toISOString().split("T")[0];
+// Local calendar day, NOT UTC — toISOString() would put anything ticked
+// before ~10am AEST on yesterday's date (spec §2.1: local_date is computed
+// from the user's timezone, never from UTC).
+const TODAY = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + "T00:00:00");
@@ -187,22 +193,53 @@ export function useRhythm(authUser, profileId) {
     if (profileId) supabase.from("profiles").update({ rhythm_anchor_time: t }).eq("id", profileId).then(() => {});
   }, [profileId]);
 
-  // On mount + profile change, pull today's completions from Supabase and merge
+  // On mount + profile change, pull today's status from the ledger view.
+  // The ledger is the source of truth; localStorage is only the instant-paint
+  // cache, so a successful load replaces it (a failed load keeps it).
   useEffect(() => {
     if (!authUser?.id || !profileId) return;
     (async () => {
-      const { data } = await supabase
-        .from("rhythm_completions")
-        .select("item_id, completed_at")
+      const { data, error } = await supabase
+        .from("v_daily_status")
+        .select("item_id, status, occurred_at")
         .eq("profile_id", profileId)
-        .eq("date", TODAY());
-      if (data?.length) {
-        const fromDb = {};
-        data.forEach((r) => { fromDb[r.item_id] = r.completed_at; });
-        setCompletions((prev) => ({ ...fromDb, ...prev }));
-      }
+        .eq("local_date", TODAY());
+      if (error) return;
+      const fromDb = {};
+      (data || []).forEach((r) => {
+        if (r.status === "completed") fromDb[r.item_id] = r.occurred_at;
+      });
+      setCompletions(fromDb);
     })();
   }, [authUser?.id, profileId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Realtime: any new ledger event for this profile — a voice tick, another
+  // device, a carer — updates today's checkboxes live, no refresh.
+  useEffect(() => {
+    if (!profileId) return;
+    const channel = supabase
+      .channel(`activity_events_${profileId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "activity_events",
+        filter: `profile_id=eq.${profileId}`,
+      }, ({ new: row }) => {
+        if (row.local_date !== TODAY()) return;
+        setCompletions((prev) => {
+          if (row.event_type === "completed") {
+            if (prev[row.item_id]) return prev;
+            return { ...prev, [row.item_id]: row.occurred_at };
+          }
+          if (!(row.item_id in prev)) return prev;
+          const next = { ...prev };
+          delete next[row.item_id];
+          return next;
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [profileId, setCompletions]);
 
   const currentProgramDay = useMemo(() => {
     if (!activeProgram) return null;
@@ -244,7 +281,32 @@ export function useRhythm(authUser, profileId) {
 
     const item = [...baseItems, ...(ALL_PROGRAMS.find(p => p.id === activeProgram?.id)?.items ?? [])]
       .find((i) => i.id === itemId);
-    const { error } = await supabase.from("rhythm_completions").upsert({
+    // Append-only ledger — the single source of truth (spec §1). Every tick
+    // is one event row; voice and reports read the same ledger.
+    const { error } = await supabase.from("activity_events").insert({
+      user_id: authUser.id,
+      profile_id: profileId,
+      item_id: itemId,
+      item_name: item?.name ?? itemId,
+      item_category: item?.category ?? "other",
+      event_type: "completed",
+      source: "tap",
+      occurred_at: now,
+      local_date: TODAY(),
+      program_id: activeProgram?.id ?? null,
+      program_day: currentProgramDay ?? null,
+    });
+
+    if (error) {
+      console.error("activity_events insert failed:", error.message);
+      setCompletions(previous);
+      setSyncError("Couldn't save — check your connection and try again.");
+      return;
+    }
+
+    // Transitional dual-write keeping rhythm_completions current as the
+    // rollback net; delete this block once the ledger cutover is verified.
+    supabase.from("rhythm_completions").upsert({
       profile_id: profileId,
       date: TODAY(),
       item_id: itemId,
@@ -253,14 +315,7 @@ export function useRhythm(authUser, profileId) {
       completed_at: now,
       program_id: activeProgram?.id ?? null,
       program_day: currentProgramDay ?? null,
-    }, { onConflict: "profile_id,date,item_id" });
-
-    if (error) {
-      console.error("rhythm_completions upsert failed:", error.message);
-      setCompletions(previous);
-      setSyncError("Couldn't save — check your connection and try again.");
-      return;
-    }
+    }, { onConflict: "profile_id,date,item_id" }).then(() => {});
 
     setCompletions((latest) => {
       const todaysItems = filterTodaysItems(baseItems, activeProgram);
@@ -284,18 +339,37 @@ export function useRhythm(authUser, profileId) {
       return next;
     });
 
-    const { error } = await supabase.from("rhythm_completions")
-      .delete()
-      .eq("profile_id", profileId)
-      .eq("date", TODAY())
-      .eq("item_id", itemId);
+    // Un-ticking is a reversal EVENT, not a deletion — the ledger is
+    // append-only, and the latest event per item/day wins (v_daily_status).
+    const item = baseItems.find((i) => i.id === itemId);
+    const { error } = await supabase.from("activity_events").insert({
+      user_id: authUser.id,
+      profile_id: profileId,
+      item_id: itemId,
+      item_name: item?.name ?? itemId,
+      item_category: item?.category ?? "other",
+      event_type: "uncompleted",
+      source: "tap",
+      occurred_at: new Date().toISOString(),
+      local_date: TODAY(),
+      program_id: activeProgram?.id ?? null,
+      program_day: currentProgramDay ?? null,
+    });
 
     if (error) {
-      console.error("rhythm_completions delete failed:", error.message);
+      console.error("activity_events insert failed:", error.message);
       setCompletions(previous);
       setSyncError("Couldn't save — check your connection and try again.");
       return;
     }
+
+    // Transitional dual-write (see completeItem)
+    supabase.from("rhythm_completions")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("date", TODAY())
+      .eq("item_id", itemId)
+      .then(() => {});
 
     setCompletions((latest) => {
       const todaysItems = filterTodaysItems(baseItems, activeProgram);
