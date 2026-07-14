@@ -180,6 +180,7 @@ export default function Home({ user, authUser, profileId }) {
     applyTemplate,
     startProgram,
     cancelProgram,
+    syncError,
   } = useRhythm(authUser, profileId);
 
   const [checklist, setChecklist] = useLocalStorage("cs_checklist", {
@@ -312,6 +313,18 @@ export default function Home({ user, authUser, profileId }) {
       </div>
 
       {/* Daily rhythm sequence */}
+      {syncError && (
+        <div style={{
+          background: `${C.plum}18`,
+          border: `1.5px solid ${C.plum}60`,
+          borderRadius: 12,
+          padding: "10px 14px",
+          fontSize: 13,
+          color: C.charcoal,
+        }}>
+          ⚠️ {syncError}
+        </div>
+      )}
       <RhythmView
         sequence={sequence}
         anchorTime={anchorTime}

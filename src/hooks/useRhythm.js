@@ -139,6 +139,14 @@ export function useRhythm(authUser, profileId) {
   const [activeProgram, setActiveProgram] = useLocalStorage("cs_active_program", null);
   // localStorage completions as instant-response cache; Supabase is source of truth
   const [completions, setCompletions] = useLocalStorage(`cs_completions_${TODAY()}`, {});
+  const [syncError, setSyncError] = useState(null);
+
+  // Auto-clear the sync error banner after a few seconds
+  useEffect(() => {
+    if (!syncError) return;
+    const id = setTimeout(() => setSyncError(null), 5000);
+    return () => clearTimeout(id);
+  }, [syncError]);
 
   // Load rhythm items + anchor from Supabase, migrating any existing
   // localStorage data on first load so nobody loses their schedule.
@@ -221,58 +229,81 @@ export function useRhythm(authUser, profileId) {
     setActiveProgram(null);
   }, [activeProgram, currentProgramDay, authUser?.id, setActiveProgram]);
 
-  const completeItem = useCallback((itemId) => {
-    const now = new Date().toISOString();
-    setCompletions((prev) => ({ ...prev, [itemId]: now }));
-
-    // Write to Supabase rhythm_completions
-    if (authUser?.id && profileId) {
-      const item = [...baseItems, ...(ALL_PROGRAMS.find(p => p.id === activeProgram?.id)?.items ?? [])]
-        .find((i) => i.id === itemId);
-      supabase.from("rhythm_completions").upsert({
-        profile_id: profileId,
-        date: TODAY(),
-        item_id: itemId,
-        item_name: item?.name ?? itemId,
-        item_category: item?.category ?? "other",
-        completed_at: now,
-        program_id: activeProgram?.id ?? null,
-        program_day: currentProgramDay ?? null,
-      }, { onConflict: "profile_id,date,item_id" }).then(() => {
-        // After each completion, sync counts to daily_checkins
-        setCompletions((latest) => {
-          const todaysItems = filterTodaysItems(baseItems, activeProgram);
-          const total = todaysItems.length;
-          const completed = todaysItems.filter((i) => latest[i.id]).length;
-          syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
-          return latest;
-        });
-      });
+  const completeItem = useCallback(async (itemId) => {
+    if (!authUser?.id || !profileId) {
+      // Can't persist yet (profile still loading) — don't show a false "done"
+      setSyncError("Still loading your profile — try again in a moment.");
+      return;
     }
+    const now = new Date().toISOString();
+    let previous;
+    setCompletions((prev) => {
+      previous = prev;
+      return { ...prev, [itemId]: now };
+    });
+
+    const item = [...baseItems, ...(ALL_PROGRAMS.find(p => p.id === activeProgram?.id)?.items ?? [])]
+      .find((i) => i.id === itemId);
+    const { error } = await supabase.from("rhythm_completions").upsert({
+      profile_id: profileId,
+      date: TODAY(),
+      item_id: itemId,
+      item_name: item?.name ?? itemId,
+      item_category: item?.category ?? "other",
+      completed_at: now,
+      program_id: activeProgram?.id ?? null,
+      program_day: currentProgramDay ?? null,
+    }, { onConflict: "profile_id,date,item_id" });
+
+    if (error) {
+      console.error("rhythm_completions upsert failed:", error.message);
+      setCompletions(previous);
+      setSyncError("Couldn't save — check your connection and try again.");
+      return;
+    }
+
+    setCompletions((latest) => {
+      const todaysItems = filterTodaysItems(baseItems, activeProgram);
+      const total = todaysItems.length;
+      const completed = todaysItems.filter((i) => latest[i.id]).length;
+      syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
+      return latest;
+    });
   }, [authUser?.id, profileId, baseItems, activeProgram, currentProgramDay, setCompletions]);
 
-  const uncompleteItem = useCallback((itemId) => {
+  const uncompleteItem = useCallback(async (itemId) => {
+    if (!authUser?.id || !profileId) {
+      setSyncError("Still loading your profile — try again in a moment.");
+      return;
+    }
+    let previous;
     setCompletions((prev) => {
+      previous = prev;
       const next = { ...prev };
       delete next[itemId];
       return next;
     });
-    if (authUser?.id && profileId) {
-      supabase.from("rhythm_completions")
-        .delete()
-        .eq("profile_id", profileId)
-        .eq("date", TODAY())
-        .eq("item_id", itemId)
-        .then(() => {
-          setCompletions((latest) => {
-            const todaysItems = filterTodaysItems(baseItems, activeProgram);
-            const total = todaysItems.length;
-            const completed = todaysItems.filter((i) => latest[i.id]).length;
-            syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
-            return latest;
-          });
-        });
+
+    const { error } = await supabase.from("rhythm_completions")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("date", TODAY())
+      .eq("item_id", itemId);
+
+    if (error) {
+      console.error("rhythm_completions delete failed:", error.message);
+      setCompletions(previous);
+      setSyncError("Couldn't save — check your connection and try again.");
+      return;
     }
+
+    setCompletions((latest) => {
+      const todaysItems = filterTodaysItems(baseItems, activeProgram);
+      const total = todaysItems.length;
+      const completed = todaysItems.filter((i) => latest[i.id]).length;
+      syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
+      return latest;
+    });
   }, [authUser?.id, profileId, baseItems, activeProgram, currentProgramDay, setCompletions]);
 
   // Adds an item and persists it immediately — used by both the manual
@@ -385,5 +416,6 @@ export function useRhythm(authUser, profileId) {
     startProgram,
     cancelProgram,
     completions,
+    syncError,
   };
 }
