@@ -147,7 +147,11 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceTools]);
 
-  const connect = useCallback(async () => {
+  // extraContext: an optional one-off instruction folded into this specific
+  // connection's context (e.g. WelcomeVoice's "this is a first-time user,
+  // introduce yourself and the app" hand-off) — same mechanism as the
+  // ambient tab/memory context below, just for a one-time situational cue.
+  const connect = useCallback(async (extraContext) => {
     if (!enabled) return;
     setTimedOut(false);
     const [{ accessToken }, { configId }] = await Promise.all([
@@ -157,7 +161,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     if (!accessToken || !configId) {
       throw new Error("Hume voice isn't configured yet — set HUME_API_KEY/HUME_SECRET_KEY/HUME_EVI_CONFIG_ID.");
     }
-    const contextText = [memory.healingProfile?.healing_summary, TAB_CONTEXT[tab]]
+    const contextText = [memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], extraContext]
       .filter(Boolean)
       .join("\n\n");
     await voice.connect({

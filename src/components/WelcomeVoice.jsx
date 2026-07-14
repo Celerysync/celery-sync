@@ -48,6 +48,22 @@ const STEPS = [
 
 const DEFAULT_VOICE_ID = "el:EXAVITQu4vr4xnSDxMaL";
 
+// Hume path: no fixed script — the companion introduces itself and the app
+// in its own words, live, two-way from the first moment (spec compliance
+// rails + personality already live in its system prompt; this is just a
+// one-time situational cue, same mechanism as the ambient tab context).
+const WELCOME_TAB_TOUR =
+  "This is the user's very first time opening CelerySync. Warmly welcome " +
+  "them, then briefly explain in your own words what each of the app's " +
+  "tabs is for - Today (daily protocol, morning routine, supplement " +
+  "checklist), Companion (talking with you, any time), Track (daily " +
+  "check-in: energy, mood, symptoms, celery juice), Supplements (today's " +
+  "supplements plus shopping), Learn (educational library, recipes, " +
+  "official Anthony William resources), Progress (their healing trends " +
+  "over time), and Settings (account and reminders). Keep it warm and " +
+  "conversational, not a lecture - a sentence or two per tab at most. " +
+  "Then invite them to ask you anything or just start exploring.";
+
 // Inject keyframe animations once
 const STYLE = `
   @keyframes cs-mic-glow {
@@ -167,6 +183,16 @@ export default function WelcomeVoice({ userId, onDone, onNavigate, humeEnabled }
 
   // ── Load + auto-play welcome on mount / when voice or language changes ────
   useEffect(() => {
+    // Hume path: skip the scripted ElevenLabs tour entirely and hand off
+    // straight to the real companion, which introduces the app live and
+    // conversationally instead of reading a fixed script.
+    if (humeEnabled) {
+      humeOpenSheet();
+      humeConnect(WELCOME_TAB_TOUR).catch(() => {});
+      dismiss();
+      return;
+    }
+
     const gen = ++loadGenRef.current;
     setPhase("loading");
     preloadUrlRef.current = null;
