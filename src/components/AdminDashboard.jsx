@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
 
 const TAB_LABELS = {
@@ -38,6 +39,34 @@ function BarRow({ label, value, max, color = C.sage }) {
         <div style={{ height: 6, width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.4s" }} />
       </div>
     </div>
+  );
+}
+
+function VoiceStackToggle() {
+  const [voiceProvider, setVoiceProvider] = useLocalStorage("cs_voiceProvider", "legacy");
+  const isHume = voiceProvider === "hume";
+  return (
+    <Card>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
+        🎙 Voice AI stack (rollout flag — admin account only)
+      </div>
+      <div style={{ fontSize: 12, color: C.mid, marginBottom: 12, lineHeight: 1.5 }}>
+        Phase 1 of the Hume EVI rollout: this switch only affects your own admin
+        session. Everyone else stays on the legacy ElevenLabs/browser-STT voice
+        stack until this has been validated. Requires HUME_API_KEY, HUME_SECRET_KEY,
+        and HUME_EVI_CONFIG_ID to be set on the server, or connecting will fail.
+      </div>
+      <button
+        onClick={() => setVoiceProvider(isHume ? "legacy" : "hume")}
+        style={{
+          padding: "9px 16px", borderRadius: 30, border: "none", cursor: "pointer",
+          background: isHume ? C.sage : C.charcoal, color: C.white,
+          fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12,
+        }}
+      >
+        {isHume ? "✓ Hume EVI active — switch back to legacy" : "Switch this account to Hume EVI"}
+      </button>
+    </Card>
   );
 }
 
@@ -99,6 +128,8 @@ export default function AdminDashboard({ authUser }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20 }}>CelerySync Overview</div>
         <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>Last 7 days · Live data from Supabase</div>
       </div>
+
+      <VoiceStackToggle />
 
       {/* Key stats */}
       <Card>

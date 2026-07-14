@@ -6,6 +6,7 @@ import { rateLimit } from 'express-rate-limit'
 import claudeRoutes from './routes/claude.js'
 import stripeRoutes from './routes/stripe.js'
 import elevenLabsRoutes from './routes/elevenlabs.js'
+import humeRoutes from './routes/hume.js'
 import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
@@ -66,6 +67,7 @@ app.use(express.json({ limit: '50mb' }))
 
 app.use('/api/claude', aiLimit, claudeRoutes)
 app.use('/api/elevenlabs', ttsLimit, elevenLabsRoutes)
+app.use('/api/hume', generalLimit, humeRoutes)
 app.use('/api/stripe', generalLimit, stripeRoutes)
 app.use('/api/notifications', generalLimit, notificationRoutes)
 app.use('/api/wearable', generalLimit, wearableRoutes)

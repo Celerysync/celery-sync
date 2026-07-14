@@ -8,6 +8,8 @@ import { useProfiles } from "./hooks/useProfiles.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
 import { VoiceProvider } from "./context/VoiceContext.jsx";
+import { HumeVoiceProvider } from "./context/HumeVoiceContext.jsx";
+import VoiceOrb from "./components/VoiceOrb.jsx";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -156,6 +158,13 @@ export default function App() {
   const [largeText] = useLocalStorage("cs_largeText", false);
   const { track } = useAnalytics(authUser);
   const isAdmin = authUser?.email === "allij@live.com.au";
+
+  // Hume EVI rollout flag — default "legacy" so existing users see zero
+  // behaviour change. Phase 1 of the rollout also gates on isAdmin so only
+  // the admin account can opt in while the new stack is being validated,
+  // even if the flag is somehow flipped elsewhere.
+  const [voiceProvider] = useLocalStorage("cs_voiceProvider", "legacy");
+  const humeEnabled = voiceProvider === "hume" && isAdmin;
 
   // Migrate old tab IDs saved in localStorage
   useEffect(() => {
@@ -355,6 +364,7 @@ export default function App() {
 
   return (
     <VoiceProvider authUser={authUser}>
+    <HumeVoiceProvider authUser={authUser} profileId={activeProfileId} tab={tab} enabled={humeEnabled}>
     <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
       <div style={{
@@ -496,8 +506,9 @@ export default function App() {
           />
         </Suspense>
       )}
-      <GlobalVoice currentTab={tab} user={activeProfile} />
+      {humeEnabled ? <VoiceOrb /> : <GlobalVoice currentTab={tab} user={activeProfile} />}
     </div>
+    </HumeVoiceProvider>
     </VoiceProvider>
   );
 }

@@ -17,11 +17,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
+    "@humeai/voice-react": "^0.2.14",
     "@supabase/supabase-js": "^2.45.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.21.0",
     "express-rate-limit": "^8.5.2",
+    "hume": "^0.16.0",
     "lucide-react": "^1.16.0",
     "multer": "^2.2.0",
     "node-cron": "^4.2.1",
