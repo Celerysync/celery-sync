@@ -139,7 +139,7 @@ Get the real, current state of the user's daily rhythm: every item with whether 
 
 Parameters:
 ```json
-{ "type": "object", "properties": {} }
+{ "type": "object", "properties": {}, "required": [] }
 ```
 
 ---
@@ -179,13 +179,14 @@ Parameters:
 {
   "type": "object",
   "properties": {
-    "energy": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Energy level 1-10" },
+    "energy": { "type": "integer", "description": "Energy level 1-10 (no min/max - Hume's schema validator rejects those keywords)" },
     "mood": { "type": "string", "description": "Mood in a word or two" },
     "symptoms": { "type": "array", "items": { "type": "string" }, "description": "Symptoms the user mentioned" },
     "celery_oz": { "type": "number", "description": "Celery juice drunk today, in ounces" },
     "morning_protocol": { "type": "boolean", "description": "True if the user completed their morning protocol" },
     "notes": { "type": "string", "description": "Anything else worth noting, close to the user's words" }
-  }
+  },
+  "required": []
 }
 ```
 
@@ -233,6 +234,35 @@ Parameters:
   "required": ["name"]
 }
 ```
+
+---
+
+**Tool 7 — `switch_tab`** (added 2026-07-15, after the first live test showed
+the companion could see what tab you're on but not change it)
+
+Description:
+```
+Switch the app to a different tab when the user asks to navigate, e.g. "take me to Track", "open supplements", "go to settings".
+```
+
+Parameters:
+```json
+{
+  "type": "object",
+  "properties": {
+    "tab": {
+      "type": "string",
+      "enum": ["home", "companion", "track", "progress", "supplements", "learn", "settings"],
+      "description": "The tab to switch to"
+    }
+  },
+  "required": ["tab"]
+}
+```
+
+(Remember: Hume's schema validator rejects empty `properties: {}` without an
+explicit `"required": []`, and rejects `minimum`/`maximum` on numeric fields —
+both bit us during the first setup pass. `enum` was fine.)
 
 ---
 
