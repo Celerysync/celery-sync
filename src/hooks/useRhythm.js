@@ -2,29 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
 import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
-
-// Local calendar day, NOT UTC — toISOString() would put anything ticked
-// before ~10am AEST on yesterday's date (spec §2.1: local_date is computed
-// from the user's timezone, never from UTC).
-const TODAY = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
-
-function addDays(dateStr, n) {
-  const d = new Date(dateStr + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split("T")[0];
-}
-
-function programDayNumber(startDate, totalDays) {
-  if (!startDate) return null;
-  const start = new Date(startDate + "T00:00:00");
-  const today = new Date(TODAY() + "T00:00:00");
-  const diff = Math.floor((today - start) / 86_400_000) + 1;
-  if (diff < 1 || diff > totalDays) return null;
-  return diff;
-}
+import { TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
 
 // scheduledMs is computed for relative items (cascading from the anchor, or
 // the previous item's actual completion time) AND for fixedTime items
@@ -54,40 +32,6 @@ function calculateSequence(orderedItems, anchorTime, completions) {
   });
 }
 
-function filterTodaysItems(baseItems, activeProgram) {
-  const today = TODAY();
-  const dow = new Date().getDay();
-  const isWeekday = dow >= 1 && dow <= 5;
-
-  let programDay = null;
-  if (activeProgram) {
-    programDay = programDayNumber(activeProgram.startDate, activeProgram.totalDays);
-  }
-
-  const programItems = [];
-  if (programDay !== null && activeProgram) {
-    const program = ALL_PROGRAMS.find((p) => p.id === activeProgram.id);
-    if (program) {
-      for (const item of program.items) {
-        const [from, to] = item.programDayRange;
-        if (programDay >= from && programDay <= to) {
-          programItems.push(item);
-        }
-      }
-    }
-  }
-
-  return [...baseItems, ...programItems].filter((item) => {
-    if (item.frequency === "weekdays" && !isWeekday) return false;
-    if (item.durationType === "days" && item.durationDays && item.startDate) {
-      const endDate = addDays(item.startDate, item.durationDays - 1);
-      if (today > endDate) return false;
-    }
-    if (item.durationType === "cleanse" && !item.programId) return false;
-    return true;
-  }).sort((a, b) => a.sortOrder - b.sortOrder);
-}
-
 // Write rhythm completion counts back to daily_checkins so the AI coach sees them
 async function syncRhythmCountsToCheckin(profileId, userId, completed, total, activeProgram, programDay) {
   if (!profileId || !userId) return;
@@ -102,23 +46,7 @@ async function syncRhythmCountsToCheckin(profileId, userId, completed, total, ac
   }, { onConflict: "profile_id,check_date" });
 }
 
-function rowToItem(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    emoji: row.emoji,
-    category: row.category,
-    spacingMinutes: row.spacing_minutes,
-    fixedTime: row.fixed_time,
-    frequency: row.frequency,
-    durationType: row.duration_type,
-    durationDays: row.duration_days,
-    startDate: row.start_date,
-    isMedicine: row.is_medicine,
-    note: row.note,
-    sortOrder: row.sort_order,
-  };
-}
+const rowToItem = rhythmRowToItem;
 
 function itemToRow(item, profileId) {
   return {

@@ -1,34 +1,52 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
+import { TODAY, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
 
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayStr = TODAY;
+
+// activeProgram lives in localStorage, not Supabase (see useRhythm.js) — read
+// it directly since voice tools run client-side on the same page.
+function readActiveProgram() {
+  try {
+    const raw = localStorage.getItem("cs_active_program");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+// The SAME "what's actually scheduled today" filter the Rhythm screen uses
+// (weekday-only items, multi-day program windows, expired items) — so voice
+// can never see or tick something that isn't even showing on screen.
+async function todaysItems(profileId) {
+  const { data } = await supabase
+    .from("rhythm_items")
+    .select("*")
+    .eq("profile_id", profileId)
+    .order("sort_order", { ascending: true });
+  return filterTodaysItems((data || []).map(rhythmRowToItem), readActiveProgram());
 }
 
 // Today's rhythm state from the activity_events ledger (spec §1) — the same
 // v_daily_status the Rhythm screen reads, so the companion and the checkboxes
 // can never disagree.
 async function todayStatus(profileId) {
-  const [itemsRes, statusRes] = await Promise.all([
-    supabase.from("rhythm_items")
-      .select("id, name, category, fixed_time")
-      .eq("profile_id", profileId)
-      .order("sort_order", { ascending: true }),
+  const [items, statusRes] = await Promise.all([
+    todaysItems(profileId),
     supabase.from("v_daily_status")
       .select("item_id, status")
       .eq("profile_id", profileId)
-      .eq("local_date", todayStr()),
+      .eq("local_date", TODAY()),
   ]);
   const doneIds = new Set(
     (statusRes.data || []).filter((r) => r.status === "completed").map((r) => r.item_id)
   );
-  const items = (itemsRes.data || []).map((i) => ({
+  const withStatus = items.map((i) => ({
     name: i.name,
     done: doneIds.has(i.id),
-    time: i.fixed_time || undefined,
+    time: i.fixedTime || undefined,
   }));
-  return { items, completed: items.filter((i) => i.done).length, total: items.length };
+  return { items: withStatus, completed: withStatus.filter((i) => i.done).length, total: withStatus.length };
 }
 
 // Hume EVI tool implementations — write directly to Supabase rather than
@@ -50,23 +68,21 @@ export function useVoiceTools(authUser, profileId) {
       if (!query) throw new Error("item_name required");
       const action = args?.action === "uncomplete" ? "uncompleted" : "completed";
 
-      const { data: items } = await supabase
-        .from("rhythm_items")
-        .select("id, name, category")
-        .eq("profile_id", profileId);
-      const matches = (items || []).filter((i) => {
+      const items = await todaysItems(profileId);
+      const matches = items.filter((i) => {
         const n = i.name.toLowerCase();
         return n === query || n.includes(query) || query.includes(n);
       });
       if (matches.length === 0) {
-        const names = (items || []).map((i) => i.name).join(", ") || "none yet";
-        return { error: "not_found", message: `No rhythm item matches "${args.item_name}". The user's items are: ${names}. Ask which one they meant — never guess.` };
+        const names = items.map((i) => i.name).join(", ") || "nothing scheduled today";
+        return { error: "not_found", message: `No item scheduled for today matches "${args.item_name}". Today's items are: ${names}. Ask which one they meant — never guess.` };
       }
       if (matches.length > 1) {
         return { error: "ambiguous", message: `Multiple items match: ${matches.map((m) => m.name).join(", ")}. Ask the user which one they meant.` };
       }
 
       const item = matches[0];
+      const activeProgram = readActiveProgram();
       const { error } = await supabase.from("activity_events").insert({
         user_id: userId,
         profile_id: profileId,
@@ -77,6 +93,7 @@ export function useVoiceTools(authUser, profileId) {
         source: "voice",
         occurred_at: new Date().toISOString(),
         local_date: todayStr(),
+        program_id: activeProgram?.id ?? null,
       });
       if (error) throw new Error(error.message);
 
