@@ -36,6 +36,9 @@ const NOOP = {
   silenceWarning: false,
   timedOut: false,
   meterSecondsRemaining: null,
+  sheetOpen: false,
+  openSheet: () => {},
+  closeSheet: () => {},
 };
 
 async function fetchJSON(url, opts) {
@@ -48,6 +51,12 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const voice = useHumeSDKVoice();
   const memory = useHealingMemory(authUser, profileId);
   const lastUserTurnRef = useRef(null); // { text, at }
+
+  // Sheet open/closed lives here (not in VoiceOrb's own state) so anything
+  // else in the app — e.g. WelcomeVoice handing off to the real companion —
+  // can open it without duplicating a second chat UI (spec §3.2: one
+  // companion, everywhere).
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Session shell state (spec §3.2): timer, silence containment, meter
   const [sessionStartedAt, setSessionStartedAt] = useState(null);
@@ -233,6 +242,9 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     silenceWarning,
     timedOut,
     meterSecondsRemaining,
+    sheetOpen,
+    openSheet: () => setSheetOpen(true),
+    closeSheet: () => setSheetOpen(false),
   };
 
   return <HumeVoiceContext.Provider value={value}>{children}</HumeVoiceContext.Provider>;

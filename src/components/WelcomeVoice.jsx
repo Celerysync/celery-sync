@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { ELEVENLABS_VOICES } from "../hooks/useVoice.js";
 import { callClaude } from "../lib/api.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 
 const LANGUAGES = [
   { code: "en", label: "English",    native: "English"    },
@@ -62,8 +63,9 @@ const STYLE = `
   }
 `;
 
-export default function WelcomeVoice({ userId, onDone, onNavigate }) {
+export default function WelcomeVoice({ userId, onDone, onNavigate, humeEnabled }) {
   const { voiceName: contextVoice, setVoiceName: saveVoiceName } = useVoicePrefs();
+  const { connect: humeConnect, openSheet: humeOpenSheet } = useHumeVoiceOrchestrator();
   const savedLang = localStorage.getItem("cs_lang") || "en";
 
   const [selectedVoice, setSelectedVoice] = useState(contextVoice || DEFAULT_VOICE_ID);
@@ -239,6 +241,20 @@ export default function WelcomeVoice({ userId, onDone, onNavigate }) {
   // ── Speech recognition ────────────────────────────────────────────────────
   const startListening = () => {
     clearTimeout(idleTimerRef.current);
+
+    // On the Hume stack, hand off to the real persistent companion instead
+    // of running a second, separate SpeechRecognition+Claude+browserTTS
+    // pipeline in here — spec §3.2, one companion everywhere. The welcome
+    // narration above stays on ElevenLabs either way (one-way TTS, same as
+    // Symptom/WeeklyReport/CaregiverDashboard); only this interactive
+    // "ask me anything" step changes.
+    if (humeEnabled) {
+      humeOpenSheet();
+      humeConnect().catch(() => {});
+      dismiss();
+      return;
+    }
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { dismiss(); return; }
 

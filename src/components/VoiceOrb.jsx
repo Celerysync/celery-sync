@@ -16,8 +16,8 @@ export default function VoiceOrb() {
     isConnected, isConnecting, speaking, listening, isMuted,
     connect, disconnect, mute, unmute, error, lastUserMessage, lastVoiceMessage,
     sessionStartedAt, silenceWarning, timedOut, meterSecondsRemaining,
+    sheetOpen: open, openSheet, closeSheet,
   } = useHumeVoiceOrchestrator();
-  const [open, setOpen] = useState(false);
   const [connectError, setConnectError] = useState(null);
 
   // Session clock — ticks only while a session is live; shows 0:00 until
@@ -33,7 +33,7 @@ export default function VoiceOrb() {
   const handleTap = async () => {
     if (!isConnected && !isConnecting) {
       setConnectError(null);
-      setOpen(true);
+      openSheet();
       try {
         await connect();
       } catch (err) {
@@ -43,12 +43,12 @@ export default function VoiceOrb() {
     }
     if (isMuted) unmute();
     else mute();
-    setOpen(true);
+    openSheet();
   };
 
   const close = () => {
     disconnect();
-    setOpen(false);
+    closeSheet();
   };
 
   const icon = isConnecting ? "⏳" : speaking ? "🔊" : isMuted ? "🔇" : listening ? "👂" : "🎙";

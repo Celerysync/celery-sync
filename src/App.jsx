@@ -509,6 +509,7 @@ export default function App() {
             userId={authUser?.id}
             onDone={() => setShowWelcome(false)}
             onNavigate={(tabId) => setTab(TAB_MIGRATIONS[tabId] || tabId)}
+            humeEnabled={humeEnabled}
           />
         </Suspense>
       )}
