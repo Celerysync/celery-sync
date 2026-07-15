@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
+import AdherenceStreaks from "./AdherenceStreaks.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
@@ -284,6 +285,8 @@ export default function Reports({ authUser, profileId, user }) {
           <strong>Note:</strong> {DISCLAIMER}
         </div>
       </Card>
+
+      <AdherenceStreaks profileId={profileId} />
 
       {/* View selector */}
       <div style={{
