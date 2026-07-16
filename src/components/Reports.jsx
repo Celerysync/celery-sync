@@ -4,6 +4,7 @@ import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
 import AdherenceStreaks from "./AdherenceStreaks.jsx";
+import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
@@ -392,6 +393,7 @@ export default function Reports({ authUser, profileId, user }) {
           </Card>
         ) : (
           <>
+            <WeeklyVoiceSummary authUser={authUser} user={user} weeklies={weeklies} />
             <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
             {loadingProgress ? (
               <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
