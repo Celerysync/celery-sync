@@ -11,6 +11,10 @@ import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import RhythmView from "./RhythmView.jsx";
+import MorningCheckIn from "./MorningCheckIn.jsx";
+import EveningReflection from "./EveningReflection.jsx";
+import { useVoicePrefs } from "../hooks/useVoicePrefs.js";
+import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 
@@ -216,6 +220,11 @@ export default function Home({ user, authUser, profileId }) {
   const done = Object.values(checks).every(Boolean);
   const { speak, speaking, stopSpeaking } = useVoiceOrchestrator();
 
+  // Phase 4 (spec §3.1/§4): companion voice prefs drive the guided morning/
+  // evening flows below and the spoken fixed-time nudges.
+  const { prefs: voicePrefs, loaded: voicePrefsLoaded } = useVoicePrefs(authUser);
+  useProtocolNudges(sequence, voicePrefs, voicePrefsLoaded);
+
   // Healing score (0–100): morning protocol 60pts + check-in 25pts + snacks 15pts
   const protocolScore = Object.values(checks).filter(Boolean).length * 20;
   const checkinScore = todaysCheckin ? 25 : 0;
@@ -311,6 +320,27 @@ export default function Home({ user, authUser, profileId }) {
           )}
         </div>
       </div>
+
+      {/* Guided session shapes (spec §4) — each self-gates by hour, its
+          user_voice_prefs toggle, and a once-per-day marker */}
+      {voicePrefsLoaded && (
+        <>
+          <MorningCheckIn
+            user={user}
+            sequence={sequence}
+            todaysCheckin={todaysCheckin}
+            saveCheckin={saveCheckin}
+            prefs={voicePrefs}
+          />
+          <EveningReflection
+            user={user}
+            sequence={sequence}
+            todaysCheckin={todaysCheckin}
+            saveCheckin={saveCheckin}
+            prefs={voicePrefs}
+          />
+        </>
+      )}
 
       {/* Daily rhythm sequence */}
       {syncError && (

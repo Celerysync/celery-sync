@@ -37,6 +37,7 @@ const DoctorReport       = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"));
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
+const CompanionVoiceSettings = lazy(() => import("./components/CompanionVoiceSettings.jsx"));
 
 const TABS = [
   { id: "home",        label: "Today",       emoji: "🏠", free: true  },
@@ -328,6 +329,7 @@ export default function App() {
               onReplayWelcome={() => setShowWelcome(true)}
               profileId={activeProfileId}
             />
+            <CompanionVoiceSettings authUser={authUser} />
             <ReminderSettings authUser={authUser} />
             <ProfileManager
               profiles={profiles}

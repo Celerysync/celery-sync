@@ -213,7 +213,20 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     if (!accessToken || !configId) {
       throw new Error("Hume voice isn't configured yet — set HUME_API_KEY/HUME_SECRET_KEY/HUME_EVI_CONFIG_ID.");
     }
-    const contextText = [memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], extraContext]
+    // Honor the user's chosen companion name (user_voice_prefs, spec §2.5) —
+    // read fresh at connect time so a rename applies to the very next session.
+    let nameLine = null;
+    if (userId) {
+      const { data: voicePrefs } = await supabase
+        .from("user_voice_prefs")
+        .select("companion_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (voicePrefs?.companion_name) {
+        nameLine = `The user has named you ${voicePrefs.companion_name} — refer to yourself by that name.`;
+      }
+    }
+    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], extraContext]
       .filter(Boolean)
       .join("\n\n");
     await voice.connect({
@@ -223,7 +236,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         ? { context: { text: contextText, type: "persistent" } }
         : undefined,
     });
-  }, [enabled, voice, memory.healingProfile, tab, loadMeter]);
+  }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId]);
 
   // Ambient tab-change context — pushed into the live session instead of
   // reconnecting, so the assistant knows where the user is without dropping

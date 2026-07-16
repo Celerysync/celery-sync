@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { fetchAccessToken } from 'hume'
+import { fetchAccessToken, HumeClient } from 'hume'
+import { createHash } from 'crypto'
 
 const router = Router()
 
@@ -8,6 +9,13 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
+
+let _humeClient = null
+function humeClient() {
+  if (!process.env.HUME_API_KEY) return null
+  if (!_humeClient) _humeClient = new HumeClient({ apiKey: process.env.HUME_API_KEY })
+  return _humeClient
+}
 
 // Short-lived Hume access token — the client never sees HUME_API_KEY/HUME_SECRET_KEY.
 // Called once per session-mount (app load), not per turn.
@@ -28,6 +36,124 @@ router.post('/token', async (req, res) => {
 // client, but server-supplied so a config swap never needs a client redeploy).
 router.get('/config', (_req, res) => {
   res.json({ configId: process.env.HUME_EVI_CONFIG_ID || null })
+})
+
+// ── Octave TTS (spec §3.1 — the cheap one-way audio layer) ────────────────
+// Same cache pattern as /api/elevenlabs/speak: sha256(voice+text) → tts_cache
+// row → public mp3 in the tts-audio bucket, so repeated lines (greetings,
+// nudges, wrap-ups) cost characters exactly once per voice.
+
+function cleanText(text) {
+  return text
+    .replace(/[#*_`•→]/g, '')
+    .replace(/\n+/g, '. ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+router.post('/tts', async (req, res) => {
+  const { text, voiceId, provider = 'HUME_AI' } = req.body
+  if (!text?.trim()) return res.status(400).json({ error: 'text required' })
+  if (!voiceId) return res.status(400).json({ error: 'voiceId required' })
+  if (!['HUME_AI', 'CUSTOM_VOICE'].includes(provider)) {
+    return res.status(400).json({ error: 'provider must be HUME_AI or CUSTOM_VOICE' })
+  }
+
+  const client = humeClient()
+  if (!client) return res.status(503).json({ error: 'Hume TTS not configured — set HUME_API_KEY' })
+
+  const clean = cleanText(text)
+  // 'hume:' prefix keeps these hashes from ever colliding with ElevenLabs
+  // entries in the shared tts_cache table.
+  const hash = createHash('sha256').update(`hume:${provider}:${voiceId}:${clean}`).digest('hex')
+
+  try {
+    const { data: cached } = await supabase
+      .from('tts_cache')
+      .select('audio_url')
+      .eq('hash', hash)
+      .single()
+    if (cached?.audio_url) return res.json({ url: cached.audio_url, cached: true })
+  } catch {
+    // Cache lookup failed — continue to generate fresh audio
+  }
+
+  try {
+    const result = await client.tts.synthesizeJson({
+      utterances: [{ text: clean, voice: { id: voiceId, provider } }],
+      format: { type: 'mp3' },
+    })
+    const b64 = result?.generations?.[0]?.audio
+    if (!b64) return res.status(502).json({ error: 'Hume returned no audio' })
+    const audioBuffer = Buffer.from(b64, 'base64')
+
+    const filename = `${hash}.mp3`
+    const { error: uploadError } = await supabase.storage
+      .from('tts-audio')
+      .upload(filename, audioBuffer, { contentType: 'audio/mpeg', upsert: false })
+
+    // 409/duplicate is fine — file already exists from a race condition
+    const uploadOk = !uploadError || uploadError.statusCode === '409'
+    if (uploadOk) {
+      const { data: urlData } = supabase.storage.from('tts-audio').getPublicUrl(filename)
+      await supabase.from('tts_cache').upsert(
+        { hash, audio_url: urlData.publicUrl, voice_id: `hume:${voiceId}`, char_count: clean.length },
+        { onConflict: 'hash' }
+      )
+      return res.json({ url: urlData.publicUrl, cached: false })
+    }
+
+    // Storage failed — return audio as base64 data URL (fallback, rarely triggered)
+    console.error('Supabase storage upload failed:', uploadError?.message)
+    return res.json({ url: `data:audio/mpeg;base64,${b64}`, cached: false })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// Curated companion voices (spec §3.4: 4–6 CelerySync voices, not the whole
+// Hume library). Custom voices saved in our Hume account are the curated set;
+// until those exist, HUME_CURATED_VOICE_NAMES (comma-separated) or simply the
+// first few library voices keep the picker working.
+const VOICES_CACHE_MS = 60 * 60 * 1000
+let _voicesCache = { at: 0, voices: null }
+
+async function listVoices(client, provider, max = 40) {
+  const out = []
+  try {
+    const page = await client.tts.voices.list({ provider, pageSize: Math.min(max, 100) })
+    for await (const v of page) {
+      out.push({ id: v.id, name: v.name, provider })
+      if (out.length >= max) break
+    }
+  } catch (err) {
+    console.warn(`Hume voices list (${provider}) failed:`, err.message)
+  }
+  return out
+}
+
+router.get('/voices', async (_req, res) => {
+  if (_voicesCache.voices && Date.now() - _voicesCache.at < VOICES_CACHE_MS) {
+    return res.json({ voices: _voicesCache.voices })
+  }
+  const client = humeClient()
+  if (!client) return res.status(503).json({ error: 'Hume TTS not configured — set HUME_API_KEY' })
+
+  const custom = await listVoices(client, 'CUSTOM_VOICE')
+  let voices
+  if (custom.length > 0) {
+    voices = custom.slice(0, 6)
+  } else {
+    const library = await listVoices(client, 'HUME_AI')
+    const curatedNames = (process.env.HUME_CURATED_VOICE_NAMES || '')
+      .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+    voices = curatedNames.length
+      ? library.filter((v) => curatedNames.includes(v.name.toLowerCase()))
+      : library.slice(0, 6)
+  }
+
+  if (voices.length > 0) _voicesCache = { at: Date.now(), voices }
+  res.json({ voices })
 })
 
 // ── Usage metering (spec §2.4) ────────────────────────────────────────────
