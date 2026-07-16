@@ -258,10 +258,12 @@ router.post('/session/end', async (req, res) => {
 // One row per conversational turn, from every voice surface app-wide —
 // this is the logging that didn't exist before the Hume migration.
 router.post('/log', async (req, res) => {
+  // emotion scores are never accepted or stored (spec §3.5) — Hume's prosody
+  // data may only shape tone live, in-session.
   const {
     userId, profileId, surface,
     userTranscript, assistantTranscript,
-    latencyMs, emotionScores, toolCalls,
+    latencyMs, toolCalls,
     success = true, errorMessage, humeChatId,
   } = req.body
 
@@ -275,7 +277,6 @@ router.post('/log', async (req, res) => {
       user_transcript: userTranscript || null,
       assistant_transcript: assistantTranscript || null,
       latency_ms: latencyMs ?? null,
-      emotion_scores: emotionScores ?? null,
       tool_calls: toolCalls ?? null,
       success,
       error_message: errorMessage || null,

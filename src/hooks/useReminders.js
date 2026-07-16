@@ -13,12 +13,6 @@ const ADRENAL_SNACKS = [
   "Berries with a spoonful of tahini 🫐",
 ];
 
-const MORNING_STEPS = [
-  { id: "lemon",   time: "On waking",      label: "Lemon water",              emoji: "🍋", desc: "16–32oz of fresh lemon water on an empty stomach" },
-  { id: "celery",  time: "15–30 min later", label: "Celery juice",             emoji: "🥬", desc: "16oz pure fresh celery juice — nothing added" },
-  { id: "hmds",    time: "15–30 min later", label: "Heavy Metal Detox Smoothie", emoji: "🫐", desc: "Wild blueberries, banana, spirulina, barley grass, Atlantic dulse, cilantro, orange juice" },
-];
-
 function getRandomSnack() {
   return ADRENAL_SNACKS[Math.floor(Math.random() * ADRENAL_SNACKS.length)];
 }
@@ -131,6 +125,5 @@ export function useReminders(authUser) {
     activeReminder,
     dismiss,
     snooze,
-    MORNING_STEPS,
   };
 }

@@ -14,22 +14,12 @@ export default function ReminderBanner({ reminder, onDismiss, onSnooze }) {
         animation: "slideDown 0.35s ease",
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>
-          🌅 Good morning — time for your protocol
+          🌅 Good morning — time for your rhythm
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-          {[
-            { emoji: "🍋", label: "Lemon water", desc: "16–32oz on empty stomach" },
-            { emoji: "🥬", label: "Celery juice", desc: "16oz pure — 15–30 min later" },
-            { emoji: "🫐", label: "Heavy Metal Detox Smoothie", desc: "15–30 min after celery" },
-          ].map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ fontSize: 22, flexShrink: 0 }}>{s.emoji}</div>
-              <div>
-                <div style={{ fontSize: 13, fontFamily: "Georgia,serif", fontWeight: 600 }}>{s.label}</div>
-                <div style={{ fontSize: 11, opacity: 0.8 }}>{s.desc}</div>
-              </div>
-            </div>
-          ))}
+        {/* No protocol steps here (compliance) — the user's own rhythm list
+            on the Today screen is the plan. */}
+        <div style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.6, marginBottom: 14 }}>
+          Your morning items are ready on your Today list — start whenever you're ready.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
@@ -68,7 +58,7 @@ export default function ReminderBanner({ reminder, onDismiss, onSnooze }) {
           {reminder.snack}
         </div>
         <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 14, lineHeight: 1.5 }}>
-          Per Anthony William: sodium + potassium + natural sugar together rebuilds your adrenal reserves and stabilises blood sugar.
+          A steady snack through the afternoon supports even energy for the rest of your day.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button

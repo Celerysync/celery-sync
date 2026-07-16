@@ -276,6 +276,9 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       fetch("/api/hume/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Emotion/prosody data is deliberately NOT sent — Hume uses it live to
+        // shape the companion's tone, but spec §3.5 forbids storing or scoring
+        // it (privacy + therapeutic-claims risk).
         body: JSON.stringify({
           userId: authUser.id,
           profileId,
@@ -283,7 +286,6 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
           userTranscript: userText || null,
           assistantTranscript: assistantText,
           latencyMs,
-          emotionScores: voice.lastAssistantProsodyMessage?.models?.prosody?.scores ?? null,
         }),
       }).catch(() => {});
     }

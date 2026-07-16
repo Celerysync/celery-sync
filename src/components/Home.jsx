@@ -5,7 +5,7 @@ import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 import { useRhythm } from "../hooks/useRhythm.js";
-import { Tag, Card } from "./ui.jsx";
+import { Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
@@ -19,37 +19,30 @@ import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 
 const TODAY = new Date().toISOString().split("T")[0];
-const EMPTY_CHECKS = { lemon: false, celery: false, hmd: false };
 
+// Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): paraphrase + attribute
+// only, wellbeing language, no named conditions, no protocol specifics or
+// recipes — the books/site are always the pointer for those.
 const DAILY_TEACHINGS = [
-  "Anthony William teaches that your suffering has a real, physical cause — pathogens, heavy metals, and toxins your body has been quietly fighting, often for years. Your symptoms are not imaginary and you are not to blame.",
-  "Anthony William has long shared that fresh celery juice, taken alone on an empty stomach, provides what he calls sodium cluster salts — compounds he says are deeply supportive for the gut lining, liver, and immune system.",
-  "Anthony William teaches that the liver is the body's central protective organ, quietly processing pathogens, toxins, and excess hormones around the clock. When you give it the support it needs, the whole body responds.",
-  "According to Anthony William, heavy metals that accumulate in brain tissue over years are a key driver behind brain fog, anxiety, depression, and many neurological symptoms — and they can be progressively cleared with the right foods.",
-  "Anthony William teaches that most thyroid conditions — including Hashimoto's and hypothyroidism — are driven by Epstein-Barr virus living in thyroid tissue, not by the immune system attacking itself. Knowing the true cause changes the path forward.",
-  "Anthony William calls wild blueberries one of the most important foods for the brain, sharing that their unique compounds help address damage caused by heavy metals in a way no other food can replicate.",
-  "Anthony William teaches that chronic fatigue, brain fog, and pain are not signs of weakness or laziness. They are signs that the body is fighting something real — and understanding that is the first step to supporting it.",
-  "Anthony William describes the 3:6:9 Cleanse as a structured way to give the liver dedicated rest and support over nine days, cycling through progressive phases to help the body clear pathogens and accumulated toxins more deeply.",
-  "Anthony William teaches that anxiety has physical roots — adrenaline surges from blood sugar instability, viral neurotoxins, and heavy metals affecting the brain's chemistry. It is a physical condition that can be supported, not just managed.",
-  "Anthony William teaches that the body is always working to restore balance. Every clean meal, every morning practice, every supplement gives it more of what it needs to do the repair work it is always trying to do.",
-  "Anthony William shares that warm lemon water — taken first thing on an empty stomach before anything else — supports the liver's early-morning cleansing function and helps gently flush the lymphatic system.",
-  "Anthony William teaches that heavy metals don't stay in one place. They migrate through the body over years, accumulating in different tissues — which is why symptoms often shift and change, and why daily Heavy Metal Detox support matters.",
-  "Anthony William teaches that the adrenal glands are often overburdened in chronic illness, taxed by viral loads, blood sugar crashes, and emotional stress. Consistently supporting them — with the adrenal snack and steady meals — changes how the whole body functions.",
-  "Anthony William teaches that your body is not broken and is not attacking itself. You are carrying real, physical burdens — and when those burdens reduce, the body's natural resilience and vitality can return.",
-  "Anthony William has shared extensively that zinc is critical for immune function and antiviral defence, and that most people with chronic illness have depleted zinc reserves. Restoring them is a key part of supporting recovery.",
-  "Anthony William teaches that the liver performs over 2,000 functions silently on our behalf, every single day. Morning practices — lemon water, celery juice, clean food — are some of the most meaningful things we can do to support it.",
-  "Anthony William has dedicated years of teaching to explaining Epstein-Barr virus as a root driver behind many chronic, mystery, and so-called autoimmune conditions — giving answers to people who had been told none existed.",
-  "Anthony William teaches that sleep is when the liver does some of its most important processing — and that prioritising quality rest is a central, non-optional part of supporting the body's recovery, not a luxury.",
-  "Anthony William explains that spirulina is one of five core ingredients in the Heavy Metal Detox Smoothie. Each ingredient performs a specific step in the extraction process, and all five together form a complete chain.",
-  "Anthony William teaches that depression has physical roots — neurotoxins from viral activity, heavy metals affecting brain chemistry, and exhausted adrenals — and that addressing those roots, not just the symptoms, is the path forward.",
-  "Anthony William has observed that celery juice and the Medical Medium protocols have helped people with conditions that had no answers for decades. When enough people experience something, it becomes important to pay attention.",
+  "Anthony William teaches that the body is always working on your behalf, quietly doing its repair work every day. Consistent, gentle routines are a way of supporting it.",
+  "Anthony William has long shared his view that fresh celery juice, taken on its own, is deeply supportive for general wellbeing — his books explain exactly how he suggests preparing and enjoying it.",
+  "Anthony William often speaks of the liver as a hardworking, protective organ, and encourages simple morning habits as a way of gently supporting it.",
+  "Anthony William encourages starting the day with hydration — he associates lemon water first thing with gently supporting the body's natural morning rhythm.",
+  "Anthony William teaches that rest is never a luxury. Sleep is when the body does some of its most important quiet work, and protecting it matters.",
+  "Anthony William speaks warmly of wild blueberries, counting them among the foods he considers most supportive — his books share how he recommends enjoying them.",
+  "Anthony William encourages eating steadily through the day, with regular gentle snacks, as a way of supporting even energy.",
+  "Anthony William reminds his readers that consistency matters more than perfection — showing up for your routine, even imperfectly, is what builds momentum.",
+  "Anthony William encourages self-compassion on the hard days. Your effort counts, and tomorrow is always a fresh start.",
+  "Anthony William's books, podcast, and medicalmedium.com are the home of his teachings — for the specifics of any protocol, go straight to the source.",
 ];
 
+// Celebration copy is about consistency only — reports describe the user's
+// own logged behaviour, never physiological effects (TGA rail).
 const STREAK_MILESTONES = [
-  { days: 7,  emoji: "🌟", title: "One week of healing!", msg: "Seven days of celery juice — your liver's sodium cluster salt reserves are rebuilding. Anthony William says the first week is when the gut lining begins to repair.", color: C.leaf },
-  { days: 14, emoji: "✨", title: "Two weeks strong!", msg: "Fourteen days — the longest streak most people maintain. You are in rare company. Your immune system is receiving daily antiviral support and your adrenals are getting steadier.", color: C.sage },
-  { days: 21, emoji: "💫", title: "Three weeks of commitment!", msg: "Anthony William teaches that 21 days is when deeper cellular changes begin. Viral loads start to meaningfully reduce at this stage. Your body is doing something profound.", color: C.plum },
-  { days: 28, emoji: "🏆", title: "One full month!", msg: "A full lunar cycle of healing. Your liver has had a month of daily sodium cluster salts. This is the kind of sustained effort that produces lasting transformation.", color: C.gold },
+  { days: 7,  emoji: "🌟", title: "One week!", msg: "Seven days in a row. A whole week of showing up for yourself — this is how a routine becomes a rhythm.", color: C.leaf },
+  { days: 14, emoji: "✨", title: "Two weeks strong!", msg: "Fourteen days of daily consistency. You're building something that lasts.", color: C.sage },
+  { days: 21, emoji: "💫", title: "Three weeks of commitment!", msg: "They say it takes 21 days to build a habit — you've just done it, one day at a time.", color: C.plum },
+  { days: 28, emoji: "🏆", title: "One full month!", msg: "Day after day for a whole month, you kept your rhythm. That kind of consistency is something to be genuinely proud of.", color: C.gold },
 ];
 
 function StreakMilestone({ celeryStreak }) {
@@ -60,7 +53,7 @@ function StreakMilestone({ celeryStreak }) {
 
   if (!milestone) return null;
 
-  const shareText = `🥬 Day ${celeryStreak} of my Medical Medium healing journey!\n\nI've been drinking fresh celery juice every single day and following Anthony William's protocols.\n\nIf you're dealing with chronic illness, fatigue, or mystery symptoms — his books changed my life.\n\n🌿 medicalmedium.com\n\n#celeryjuice #medicalmedium #healing #anthonywilliam #celerysync`;
+  const shareText = `🥬 Day ${celeryStreak} of my daily celery juice rhythm!\n\nI follow the Medical Medium lifestyle and keep my rhythm on track with CelerySync.\n\n🌿 medicalmedium.com\n\n#celeryjuice #medicalmedium #celerysync`;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -87,7 +80,7 @@ function StreakMilestone({ celeryStreak }) {
         {milestone.msg}
       </div>
       <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
-        🥬 {celeryStreak}-day celery streak — Anthony William
+        🥬 {celeryStreak}-day celery streak
       </div>
       <button
         onClick={handleShare}
@@ -102,7 +95,7 @@ function StreakMilestone({ celeryStreak }) {
         {shareCopied ? "✓ Copied — paste & share!" : "🌿 Share this milestone"}
       </button>
       <div style={{ fontSize: 10, color: C.muted, textAlign: "center", marginTop: 6 }}>
-        Spreads AW's message to people who need it
+        Share it with someone who'd cheer you on
       </div>
     </div>
   );
@@ -113,48 +106,44 @@ function getTodaysTeaching() {
   return DAILY_TEACHINGS[dayNum % DAILY_TEACHINGS.length];
 }
 
-function getNowFood() {
+// Time-of-day companion card. Deliberately carries NO food lists or protocol
+// steps (compliance: the app never ships protocol content) — the user's own
+// rhythm above is the plan; the books are the pointer for meal specifics.
+function getNowWindow() {
   const h = new Date().getHours();
   if (h >= 5 && h < 9) return {
-    emoji: "🌅", label: "Morning routine window",
-    items: ["Lemon water (16–32oz) — first thing, empty stomach", "Celery juice (16oz pure) — 15–30 min after lemon water", "Heavy Metal Detox Smoothie — 15–30 min after celery juice"],
-    note: "Anthony William: this exact sequence is the most important part of your healing day.",
+    emoji: "🌅", label: "Morning window",
+    note: "A gentle start. Your morning rhythm items are on your list above — begin when you're ready.",
     color: C.leaf,
   };
   if (h >= 9 && h < 12) return {
     emoji: "☀️", label: "Mid-morning",
-    items: ["Mono fruit: apple, pear, mango, papaya, or banana", "Or banana + Medjool dates", "Or fresh orange/grapefruit juice"],
-    note: "Keep it to fruit only — your liver is still in its cleansing window until noon.",
+    note: "Keep your pace easy and tick things off as they happen.",
     color: C.sage,
   };
   if (h >= 12 && h < 14) return {
-    emoji: "🥗", label: "Lunch window",
-    items: ["Large leafy green salad with lemon dressing", "Steamed potato or sweet potato", "Cucumber, celery, tomato, avocado", "Or continue with mono fruit if not hungry"],
-    note: "Per Anthony William: fat-free at lunch if doing deeper healing — avocado is the exception.",
+    emoji: "🥗", label: "Midday",
+    note: "A natural pause point — a good moment to see how your day is tracking.",
     color: C.sage,
   };
   if (h >= 14 && h < 17) return {
-    emoji: "🍎", label: "Adrenal snack window",
-    items: ["Apple + celery sticks (the classic AW combination)", "Banana + Medjool dates (3–4)", "Coconut water + banana", "Dates + apple slices"],
-    note: "Anthony William teaches: sodium + potassium + natural sugar together stabilises blood sugar and rebuilds adrenal reserves.",
+    emoji: "🍎", label: "Afternoon",
+    note: "A steady afternoon snack can help keep your energy feeling even.",
     color: C.gold,
   };
   if (h >= 17 && h < 20) return {
-    emoji: "🌆", label: "Dinner window",
-    items: ["Steamed vegetables: broccoli, Brussels sprouts, asparagus, zucchini", "Baked potato, sweet potato, or wild rice", "Large salad with lemon-olive oil dressing", "Or a warming vegetable soup"],
-    note: "Anthony William: dinner should be lighter than you think — the liver does its deepest work from 1–3am and needs you to have eaten early.",
+    emoji: "🌆", label: "Evening wind-down",
+    note: "The day is winding down — anything still on your rhythm can happen at your own pace.",
     color: C.sageDark,
   };
   if (h >= 20 && h < 23) return {
     emoji: "🌙", label: "Evening",
-    items: ["Cucumber slices", "Watermelon or apple", "Banana", "Herbal tea (lemon balm, peppermint, or ginger)"],
-    note: "Anthony William: if you need something, fruit or nothing is ideal at this hour — it supports your liver's overnight cleanse.",
+    note: "Time to slow down. Your evening reflection is a lovely way to close the day.",
     color: C.plum,
   };
   return {
     emoji: "🌛", label: "Rest time",
-    items: [],
-    note: "Anthony William: your liver works hardest from 1–3am. Rest is healing — let your body do its work.",
+    note: "Rest matters. Let the day go — tomorrow starts fresh.",
     color: C.charcoal,
   };
 }
@@ -162,7 +151,6 @@ function getNowFood() {
 export default function Home({ user, authUser, profileId }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-  const units = localStorage.getItem("cs_units") === "imperial" ? "imperial" : "metric";
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
 
@@ -187,10 +175,6 @@ export default function Home({ user, authUser, profileId }) {
     syncError,
   } = useRhythm(authUser, profileId);
 
-  const [checklist, setChecklist] = useLocalStorage("cs_checklist", {
-    date: TODAY,
-    checks: EMPTY_CHECKS,
-  });
   const [lastSnack, setLastSnack] = useLocalStorage("cs_lastSnack", null);
   const [snackCount, setSnackCount] = useLocalStorage("cs_snackCount_" + TODAY, 0);
   const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
@@ -211,13 +195,6 @@ export default function Home({ user, authUser, profileId }) {
     return () => clearInterval(id);
   }, []);
 
-  const checks = checklist.date === TODAY ? checklist.checks : EMPTY_CHECKS;
-  const setChecks = (updater) => {
-    const next = typeof updater === "function" ? updater(checks) : updater;
-    setChecklist({ date: TODAY, checks: next });
-  };
-
-  const done = Object.values(checks).every(Boolean);
   const { speak, speaking, stopSpeaking } = useVoiceOrchestrator();
 
   // Phase 4 (spec §3.1/§4): companion voice prefs drive the guided morning/
@@ -225,8 +202,12 @@ export default function Home({ user, authUser, profileId }) {
   const { prefs: voicePrefs, loaded: voicePrefsLoaded } = useVoicePrefs(authUser);
   useProtocolNudges(sequence, voicePrefs, voicePrefsLoaded);
 
-  // Healing score (0–100): morning protocol 60pts + check-in 25pts + snacks 15pts
-  const protocolScore = Object.values(checks).filter(Boolean).length * 20;
+  // Rhythm completion comes from the same ledger-backed sequence the Rhythm
+  // list renders (spec §1 single source of truth) — no private checklist copy.
+  const rhythmDoneCount = sequence.filter((i) => i.completedAt).length;
+
+  // Healing score (0–100): rhythm 60pts + check-in 25pts + snacks 15pts
+  const protocolScore = sequence.length ? Math.round((rhythmDoneCount / sequence.length) * 60) : 0;
   const checkinScore = todaysCheckin ? 25 : 0;
   const snackScore = Math.min(snackCount, 2) * 7;
   const healingScore = protocolScore + checkinScore + snackScore;
@@ -234,11 +215,16 @@ export default function Home({ user, authUser, profileId }) {
   // Streak protection — warn if evening and check-in not done
   const streakAtRisk = h >= 19 && celeryStreak > 2 && (todaysCheckin?.celery_oz ?? 0) === 0;
 
-  const morningScript = units === "metric"
-    ? `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 500 millilitres to 1 litre. After 15 to 30 minutes, drink your fresh celery juice — 500 millilitres of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`
-    : `${greeting}${user?.name ? ", " + user.name : ""}. Start with your lemon water now — 16 to 32 ounces. After 15 to 30 minutes, drink your fresh celery juice — 16 ounces of pure celery only. After another 15 to 30 minutes, enjoy your Heavy Metal Detox Smoothie with all five Big 5 ingredients together. You are doing something powerful for your body today.`;
+  // Spoken plan comes ONLY from the user's own item titles (compliance:
+  // the app never supplies protocol steps or quantities of its own).
+  const remainingNames = sequence.filter((i) => !i.completedAt).map((i) => i.name);
+  const morningScript = remainingNames.length > 0
+    ? `${greeting}${user?.name ? ", " + user.name : ""}. Here's what's on your rhythm today: ${remainingNames.slice(0, 6).join(", ")}${remainingNames.length > 6 ? `, and ${remainingNames.length - 6} more` : ""}. One thing at a time — you're doing something good for yourself today.`
+    : sequence.length > 0
+    ? `${greeting}${user?.name ? ", " + user.name : ""}. Everything on your rhythm is done — beautiful work today.`
+    : `${greeting}${user?.name ? ", " + user.name : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;
 
-  const nowFood = getNowFood();
+  const nowWindow = getNowWindow();
 
   const minutesSinceSnack = lastSnack ? (now - new Date(lastSnack).getTime()) / 60_000 : null;
   const isAwakeHours = h >= 7 && h <= 20;
@@ -411,7 +397,7 @@ export default function Home({ user, authUser, profileId }) {
               const isToday = dateStr === TODAY;
               const entry = last7.find(c => c.date === dateStr);
               const hasCelery = entry?.celery_juice;
-              const hasProtocol = entry?.protocol_done || (isToday && done);
+              const hasProtocol = entry?.protocol_done || (isToday && sequence.length > 0 && rhythmDoneCount === sequence.length);
               const hasCheckin = !!entry;
               const score = (hasCelery ? 2 : 0) + (hasProtocol ? 2 : 0) + (hasCheckin ? 1 : 0);
               const color = score >= 4 ? C.sage : score >= 2 ? C.gold : score >= 1 ? C.muted : C.border;
@@ -541,7 +527,7 @@ export default function Home({ user, authUser, profileId }) {
             Water today — {waterCount} {waterCount === 1 ? "glass" : "glasses"}
           </div>
           <div style={{ fontSize: 12, color: "#3b82f6", marginTop: 2 }}>
-            {waterCount < 8 ? `${8 - waterCount} more to reach Anthony William's recommended 8 glasses` : "Beautifully hydrated today ✓"}
+            {waterCount < 8 ? `${8 - waterCount} more to reach today's 8-glass goal` : "Beautifully hydrated today ✓"}
           </div>
           <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
             {Array.from({ length: 8 }, (_, i) => (
@@ -569,97 +555,27 @@ export default function Home({ user, authUser, profileId }) {
         </div>
       </div>
 
-      {/* Morning checklist */}
-      <Card>
-        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal, marginBottom: 14 }}>
-          🌅 Morning Healing Routine
-        </div>
-        {[
-          { k: "lemon", label: units === "metric" ? "Lemon Water (500ml–1 litre)" : "Lemon Water (16–32oz)", sub: "First thing — empty stomach. Nothing before this." },
-          { k: "celery", label: units === "metric" ? "Celery Juice (500ml pure fresh)" : "Celery Juice (16oz pure fresh)", sub: "Wait 15–30 min after lemon water. Pure celery only." },
-          { k: "hmd", label: "Heavy Metal Detox Smoothie", sub: "Wait 15–30 min after celery juice. All Big 5 together." },
-        ].map(({ k, label, sub }) => (
-          <div
-            key={k}
-            onClick={() => setChecks((c) => ({ ...c, [k]: !c[k] }))}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: "11px 0",
-              borderBottom: `1px solid ${C.border}`,
-              cursor: "pointer",
-              opacity: checks[k] ? 0.45 : 1,
-            }}
-          >
-            <div style={{
-              width: 26,
-              height: 26,
-              borderRadius: 8,
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: checks[k] ? C.sage : "transparent",
-              border: `2px solid ${checks[k] ? C.sage : C.border}`,
-              color: C.white,
-              fontWeight: 700,
-            }}>
-              {checks[k] ? "✓" : ""}
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, textDecoration: checks[k] ? "line-through" : "none" }}>
-                {label}
-              </div>
-              <div style={{ fontSize: 12, color: C.muted }}>{sub}</div>
-            </div>
-          </div>
-        ))}
-        {done && (
-          <div style={{ textAlign: "center", marginTop: 12, color: C.sage, fontFamily: "Georgia,serif", fontWeight: 700 }}>
-            ✨ Morning routine complete! Beautiful work.
-          </div>
-        )}
-      </Card>
-
-      {/* What to eat right now */}
-      <Card style={{ border: `2px solid ${nowFood.color}30` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          <div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
-              {nowFood.emoji} {nowFood.label}
-            </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>What to eat right now</div>
+      {/* Where you are in the day */}
+      <Card style={{ border: `2px solid ${nowWindow.color}30` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
+            {nowWindow.emoji} {nowWindow.label}
           </div>
           <div style={{
-            background: `${nowFood.color}20`,
+            background: `${nowWindow.color}20`,
             borderRadius: 20,
             padding: "3px 10px",
             fontSize: 10,
-            color: nowFood.color,
+            color: nowWindow.color,
             fontWeight: 700,
             flexShrink: 0,
           }}>
             {new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
           </div>
         </div>
-        {nowFood.items.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {nowFood.items.map((item) => (
-              <div key={item} style={{ display: "flex", gap: 8, fontSize: 13, color: C.charcoal }}>
-                <span style={{ color: nowFood.color, fontWeight: 700, flexShrink: 0 }}>•</span>
-                {item}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ fontSize: 13, color: C.muted, fontStyle: "italic" }}>Rest — no eating now</div>
-        )}
-        {nowFood.note && (
-          <div style={{ marginTop: 10, fontSize: 11, color: C.muted, lineHeight: 1.6, fontStyle: "italic" }}>
-            {nowFood.note}
-          </div>
-        )}
+        <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6 }}>
+          {nowWindow.note}
+        </div>
       </Card>
 
       {/* Healing trends — shown once tracking has started */}
@@ -671,33 +587,6 @@ export default function Home({ user, authUser, profileId }) {
           avgEnergy7={avgEnergy7}
         />
       )}
-
-      {/* Include today */}
-      <Card>
-        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 10 }}>
-          🍃 Include Today
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          {["Wild blueberries", "Leafy greens", "Cucumber", "Apples", "Papaya", "Lemons", "Bananas", "Asparagus"].map((f) => (
-            <Tag key={f} color={C.leaf}>{f}</Tag>
-          ))}
-        </div>
-      </Card>
-
-      {/* Avoid today */}
-      <Card>
-        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 10 }}>
-          🚫 Avoid Today
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          {["Eggs", "Dairy", "Gluten", "Corn", "Soy", "Pork", "Canola oil", "Vinegar", "MSG", "Caffeine"].map((f) => (
-            <Tag key={f} color={C.terracotta}>{f}</Tag>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
-          These feed viruses and burden the liver — per Anthony William, Cleanse to Heal.
-        </div>
-      </Card>
 
       {/* Daily teaching — rotates each day */}
       {(() => {
