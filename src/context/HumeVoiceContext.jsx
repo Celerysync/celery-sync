@@ -51,7 +51,6 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const voice = useHumeSDKVoice();
   const memory = useHealingMemory(authUser, profileId);
   const lastUserTurnRef = useRef(null); // { text, at }
-  const userId = authUser?.id;
 
   // Sheet open/closed lives here (not in VoiceOrb's own state) so anything
   // else in the app — e.g. WelcomeVoice handing off to the real companion —
@@ -67,25 +66,6 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const lastActivityRef = useRef(0);
   const playingRef = useRef(false);
   const disconnectRef = useRef(() => {});
-  const sessionIdRef = useRef(null);
-  const lastHeartbeatAtRef = useRef(0);
-
-  // Shared by the gauge display AND the pre-connect cap check (spec §2.4) —
-  // one read path so they can never disagree.
-  const loadMeter = useCallback(async () => {
-    if (!userId) return null;
-    const d = new Date();
-    const periodMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-    const { data } = await supabase.from("voice_usage_meter")
-      .select("evi_seconds_used, evi_seconds_included, topup_seconds_remaining")
-      .eq("user_id", userId)
-      .eq("period_month", periodMonth)
-      .maybeSingle();
-    // No meter row (e.g. pre-billing beta) → null means "unmetered", never a scary zero
-    return data
-      ? Math.max(0, data.evi_seconds_included + data.topup_seconds_remaining - data.evi_seconds_used)
-      : null;
-  }, [userId]);
 
   useEffect(() => {
     playingRef.current = voice.isPlaying;
@@ -98,74 +78,50 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     lastActivityRef.current = Date.now();
   }, [voice.lastUserMessage, voice.lastVoiceMessage, voice.isPlaying]);
 
-  // Track session open/close: start/end a companion_sessions row (spec §2.3),
-  // load the meter for the gauge, and prime the heartbeat clock (spec §2.4).
+  // Track session open/close; on open, load this month's voice meter
   useEffect(() => {
     if (voice.readyState === "open") {
       setSessionStartedAt(Date.now());
       setTimedOut(false);
       lastActivityRef.current = Date.now();
-      lastHeartbeatAtRef.current = Date.now();
-      if (userId) {
-        loadMeter().then(setMeterSecondsRemaining);
-        fetchJSON("/api/hume/session/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, profileId }),
-        }).then(({ sessionId }) => { sessionIdRef.current = sessionId; }).catch(() => {});
+      if (authUser?.id) {
+        const d = new Date();
+        const periodMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+        supabase.from("voice_usage_meter")
+          .select("evi_seconds_used, evi_seconds_included, topup_seconds_remaining")
+          .eq("user_id", authUser.id)
+          .eq("period_month", periodMonth)
+          .maybeSingle()
+          .then(({ data }) => {
+            // No meter row (e.g. pre-billing beta) → show nothing, never a scary zero
+            setMeterSecondsRemaining(data
+              ? Math.max(0, data.evi_seconds_included + data.topup_seconds_remaining - data.evi_seconds_used)
+              : null);
+          });
       }
     } else {
       setSessionStartedAt(null);
       setSilenceWarning(false);
-      // Final partial chunk since the last heartbeat (or the whole session,
-      // if it was shorter than one 60s heartbeat interval).
-      if (userId && lastHeartbeatAtRef.current) {
-        const finalSeconds = Math.round((Date.now() - lastHeartbeatAtRef.current) / 1000);
-        const sid = sessionIdRef.current;
-        sessionIdRef.current = null;
-        lastHeartbeatAtRef.current = 0;
-        fetch("/api/hume/session/end", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId: sid, userId, seconds: finalSeconds }),
-        }).catch(() => {});
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voice.readyState, userId]);
+  }, [voice.readyState]);
 
-  // Silence containment (warn at 20s, close at 30s) + 60s usage heartbeats
-  // (spec §2.4, so a crash mid-session only loses at most the last <60s) —
-  // one interval for both, not two competing timers.
+  // Silence containment: warn at 20s of mutual silence, close gently at 30s
   useEffect(() => {
     if (voice.readyState !== "open") return;
     const id = setInterval(() => {
-      if (!playingRef.current) {
-        const idle = Date.now() - lastActivityRef.current;
-        if (idle >= SILENCE_CLOSE_MS) {
-          setTimedOut(true);
-          setSilenceWarning(false);
-          disconnectRef.current();
-        } else {
-          setSilenceWarning(idle >= SILENCE_WARN_MS);
-        }
-      }
-
-      const sinceHeartbeat = Date.now() - lastHeartbeatAtRef.current;
-      if (userId && sinceHeartbeat >= 60_000) {
-        const seconds = Math.round(sinceHeartbeat / 1000);
-        lastHeartbeatAtRef.current = Date.now();
-        fetchJSON("/api/hume/session/heartbeat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, seconds }),
-        }).then((meter) => {
-          if (typeof meter.remainingSeconds === "number") setMeterSecondsRemaining(meter.remainingSeconds);
-        }).catch(() => {});
+      if (playingRef.current) return;
+      const idle = Date.now() - lastActivityRef.current;
+      if (idle >= SILENCE_CLOSE_MS) {
+        setTimedOut(true);
+        setSilenceWarning(false);
+        disconnectRef.current();
+      } else {
+        setSilenceWarning(idle >= SILENCE_WARN_MS);
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [voice.readyState, userId]);
+  }, [voice.readyState]);
 
   useEffect(() => {
     if (!enabled || !authUser?.id || !profileId) return;
@@ -198,14 +154,6 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const connect = useCallback(async (extraContext) => {
     if (!enabled) return;
     setTimedOut(false);
-
-    // Pre-session cap check (spec §2.4) — never open the WebSocket at all
-    // if the user is already at (or over) their monthly allowance.
-    const remaining = await loadMeter();
-    if (remaining !== null && remaining <= 0) {
-      throw new Error("You've used all your voice minutes for this month. Text chat is still available — voice minutes reset next month, or a top-up is coming soon.");
-    }
-
     const [{ accessToken }, { configId }] = await Promise.all([
       fetchJSON("/api/hume/token", { method: "POST" }),
       fetchJSON("/api/hume/config"),
@@ -223,7 +171,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         ? { context: { text: contextText, type: "persistent" } }
         : undefined,
     });
-  }, [enabled, voice, memory.healingProfile, tab, loadMeter]);
+  }, [enabled, voice, memory.healingProfile, tab]);
 
   // Ambient tab-change context — pushed into the live session instead of
   // reconnecting, so the assistant knows where the user is without dropping
