@@ -50,6 +50,8 @@ function Toggle({ on, onChange, label, desc }) {
 // fallback group while the Hume account is still being set up.
 export default function CompanionVoiceSettings({ authUser }) {
   const { prefs, loaded, savePrefs } = useVoicePrefs(authUser);
+  const [topupBusy, setTopupBusy] = useState(false);
+  const [topupMsg, setTopupMsg] = useState("");
   const [humeVoices, setHumeVoices] = useState([]);
   const [nameDraft, setNameDraft] = useState(null); // null = not editing, show saved value
   const { speak, speaking, stopSpeaking } = useVoice(prefs.voice_id || "");
@@ -152,6 +154,47 @@ export default function CompanionVoiceSettings({ authUser }) {
         label="Evening reflection"
         desc="A short spoken wrap-up of your day and a moment to note how you're feeling."
       />
+
+      {/* Voice minute top-up — Stripe one-off payment; minutes are credited
+          by the webhook only after payment confirms, never by the client. */}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 4 }}>
+          Voice minutes
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 10 }}>
+          Your plan's voice minutes refresh each month. Running low? Add a one-off top-up —
+          it's applied to your account as soon as payment completes.
+        </div>
+        <button
+          onClick={async () => {
+            setTopupBusy(true);
+            try {
+              const res = await fetch("/api/stripe/topup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: authUser?.id, email: authUser?.email }),
+              });
+              const { url, error } = await res.json();
+              if (url) window.location.href = url;
+              else setTopupMsg(error || "Top-up isn't available right now.");
+            } catch {
+              setTopupMsg("Couldn't reach the payment server — try again in a moment.");
+            }
+            setTopupBusy(false);
+          }}
+          disabled={topupBusy}
+          style={{
+            background: C.sageDark, color: "#fff", border: "none", borderRadius: 20,
+            padding: "9px 18px", fontFamily: "Georgia,serif", fontWeight: 700,
+            fontSize: 12.5, cursor: "pointer", opacity: topupBusy ? 0.6 : 1,
+          }}
+        >
+          {topupBusy ? "Opening checkout…" : "＋ Top up voice minutes"}
+        </button>
+        {topupMsg && (
+          <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{topupMsg}</div>
+        )}
+      </div>
     </Card>
   );
 }

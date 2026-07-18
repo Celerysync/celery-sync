@@ -80,6 +80,32 @@ router.post('/checkout/practitioner', async (req, res) => {
   }
 })
 
+// One-off voice top-up purchase (mode: payment, not subscription).
+// The webhook credits the minutes only after Stripe confirms payment —
+// nothing in the app trusts the client's word that they paid.
+router.post('/topup', async (req, res) => {
+  const { userId, email } = req.body
+  if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
+  if (!process.env.STRIPE_TOPUP_PRICE_ID) return res.status(500).json({ error: 'Top-up not configured' })
+  const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
+  const topupSeconds = (parseInt(process.env.TOPUP_MINUTES, 10) || 30) * 60
+  try {
+    const customerId = await getOrCreateCustomer(userId, email)
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{ price: process.env.STRIPE_TOPUP_PRICE_ID, quantity: 1 }],
+      metadata: { supabase_user_id: userId, topup_seconds: String(topupSeconds) },
+      success_url: `${CLIENT_URL}?topup=success`,
+      cancel_url: `${CLIENT_URL}?tab=settings`,
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Stripe webhook — keeps subscription status in sync
 router.post('/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature']
@@ -100,6 +126,35 @@ router.post('/webhook', async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
+
+        // Voice top-up: credit the minutes onto this month's meter row.
+        // Additive update (read-then-write via the service role) so buying
+        // twice in a month stacks rather than replaces.
+        if (session.mode === 'payment' && session.metadata?.topup_seconds) {
+          const userId = session.metadata.supabase_user_id
+          const seconds = parseInt(session.metadata.topup_seconds, 10) || 0
+          if (userId && seconds > 0) {
+            const d = new Date()
+            const periodMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+            const { data: meter } = await supabase
+              .from('voice_usage_meter')
+              .select('evi_seconds_used, evi_seconds_included, topup_seconds_remaining')
+              .eq('user_id', userId)
+              .eq('period_month', periodMonth)
+              .maybeSingle()
+            await supabase.from('voice_usage_meter').upsert({
+              user_id: userId,
+              period_month: periodMonth,
+              evi_seconds_used: meter?.evi_seconds_used ?? 0,
+              evi_seconds_included: meter?.evi_seconds_included ?? 0,
+              topup_seconds_remaining: (meter?.topup_seconds_remaining ?? 0) + seconds,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id,period_month' })
+            console.log(`Voice top-up credited: ${seconds}s for ${userId}`)
+          }
+          break
+        }
+
         if (session.mode !== 'subscription') break
         const userId = await getUserId(session.customer)
         if (!userId) break

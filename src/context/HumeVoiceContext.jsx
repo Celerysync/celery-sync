@@ -64,6 +64,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const [silenceWarning, setSilenceWarning] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [meterSecondsRemaining, setMeterSecondsRemaining] = useState(null);
+  const [capReached, setCapReached] = useState(false);
   const lastActivityRef = useRef(0);
   const playingRef = useRef(false);
   const disconnectRef = useRef(() => {});
@@ -160,7 +161,17 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, seconds }),
         }).then((meter) => {
-          if (typeof meter.remainingSeconds === "number") setMeterSecondsRemaining(meter.remainingSeconds);
+          if (typeof meter.remainingSeconds === "number") {
+            setMeterSecondsRemaining(meter.remainingSeconds);
+            // Hard mid-session cutoff: the connect-time check bounds the
+            // start, this bounds the middle — without it a session could
+            // run to the 30-min max after the balance hits zero, all of it
+            // billable to us. Worst overrun is now one heartbeat (<60s).
+            if (meter.remainingSeconds <= 0) {
+              setCapReached(true);
+              disconnectRef.current();
+            }
+          }
         }).catch(() => {});
       }
     }, 1000);
@@ -198,13 +209,25 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const connect = useCallback(async (extraContext) => {
     if (!enabled) return;
     setTimedOut(false);
+    setCapReached(false);
 
-    // Pre-session cap check (spec §2.4) — never open the WebSocket at all
-    // if the user is already at (or over) their monthly allowance.
-    const remaining = await loadMeter();
-    if (remaining !== null && remaining <= 0) {
-      throw new Error("You've used all your voice minutes for this month. Text chat is still available — voice minutes reset next month, or a top-up is coming soon.");
+    // Pre-session cap check (spec §2.4) — never open the WebSocket at all if
+    // the user is at (or over) their allowance. The SERVER is the authority
+    // (it knows the tier and the trial-pool breaker; a new user has no meter
+    // row for the client to read). Falls back to the client-side read only if
+    // the endpoint is unreachable.
+    let remaining;
+    try {
+      const a = await fetchJSON(`/api/hume/allowance?userId=${userId}`);
+      remaining = typeof a.remainingSeconds === "number" ? a.remainingSeconds : null;
+    } catch {
+      remaining = await loadMeter();
     }
+    if (remaining !== null && remaining <= 0) {
+      setMeterSecondsRemaining(0);
+      throw new Error("Voice minutes are used up for now. Text chat is always available — minutes refresh monthly, or you can add a top-up from Settings → Companion Voice.");
+    }
+    setMeterSecondsRemaining(remaining);
 
     const [{ accessToken }, { configId }] = await Promise.all([
       fetchJSON("/api/hume/token", { method: "POST" }),
@@ -313,6 +336,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     silenceWarning,
     timedOut,
     meterSecondsRemaining,
+    capReached,
     sheetOpen,
     openSheet: () => setSheetOpen(true),
     closeSheet: () => setSheetOpen(false),

@@ -78,9 +78,9 @@ const FEATURES = [
     desc: "Share your journey with someone who supports you. They see your trends, check-ins, and milestones — so they can show up for you better.",
   },
   {
-    emoji: "👨‍👩‍👧‍👦",
-    title: "Your whole family, one subscription",
-    desc: "Separate profiles for every family member. Each person gets their own rhythm, companion memory, weekly summaries, and journal.",
+    emoji: "👥",
+    title: "The adults you care for, one subscription",
+    desc: "Separate profiles for the adults in your household (18+). Each gets their own rhythm, companion memory, weekly summaries, and journal — and carer mode lets you support a loved one's journey.",
   },
 ];
 
@@ -575,7 +575,7 @@ export default function Landing({ onGetStarted }) {
             or $119/year — save $61
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
-            Powered by the world's most advanced AI · Unlimited family members included
+            Powered by the world's most advanced AI · Adult household profiles included (18+)
           </div>
 
           <button

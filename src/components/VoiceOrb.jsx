@@ -15,7 +15,7 @@ export default function VoiceOrb() {
   const {
     isConnected, isConnecting, speaking, listening, isMuted,
     connect, disconnect, mute, unmute, error, lastUserMessage, lastVoiceMessage,
-    sessionStartedAt, silenceWarning, timedOut, meterSecondsRemaining,
+    sessionStartedAt, silenceWarning, timedOut, meterSecondsRemaining, capReached,
     sheetOpen: open, openSheet, closeSheet,
   } = useHumeVoiceOrchestrator();
   const [connectError, setConnectError] = useState(null);
@@ -111,10 +111,23 @@ export default function VoiceOrb() {
           </div>
 
           {/* Gentle fuel gauge (spec §7b: minutes, never a stopwatch of seconds;
-              hidden entirely when no meter row exists, e.g. during beta) */}
-          {meterSecondsRemaining != null && (
-            <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>
+              hidden entirely when no meter row exists, e.g. during beta).
+              Turns into a gentle warning when running low — no surprises. */}
+          {meterSecondsRemaining != null && meterSecondsRemaining > 0 && (
+            <div style={{
+              fontSize: 11, marginBottom: 8,
+              color: meterSecondsRemaining <= 300 ? C.terracotta : C.muted,
+              fontWeight: meterSecondsRemaining <= 300 ? 700 : 400,
+            }}>
               ⏳ About {Math.max(1, Math.round(meterSecondsRemaining / 60))} voice minutes left this month
+              {meterSecondsRemaining <= 300 && " — running low. Top up any time in Settings → Companion Voice."}
+            </div>
+          )}
+
+          {capReached && (
+            <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 12, color: C.charcoal, lineHeight: 1.5 }}>
+              🌿 That's all your voice minutes for now — they refresh monthly, or you can add a
+              top-up in Settings → Companion Voice. I'm still right here in text chat.
             </div>
           )}
 

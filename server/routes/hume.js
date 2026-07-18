@@ -169,6 +169,29 @@ const DEFAULT_INCLUDED_SECONDS = 150 * 60
 // the app's only per-minute cost and an uncapped trial is an open tab.
 const TRIAL_INCLUDED_SECONDS = 20 * 60
 
+// Circuit breaker: per-trial caps bound ONE stranger, but 1000 simultaneous
+// trials would still be 1000 × the cap with zero revenue. This bounds the
+// TOTAL voice all trial users combined can burn per month; once tripped, new
+// trial sessions get no voice minutes (text chat unaffected) until next month
+// or a raised limit. Trial meter rows are identifiable by their included
+// allowance. Cached 5 minutes — the breaker may overshoot by one cache window.
+const TRIAL_GLOBAL_VOICE_SECONDS =
+  (parseInt(process.env.TRIAL_GLOBAL_VOICE_MINUTES, 10) || 300) * 60
+let trialPoolCache = { total: 0, fetchedAt: 0 }
+
+async function trialPoolExhausted() {
+  if (Date.now() - trialPoolCache.fetchedAt > 5 * 60_000) {
+    const { data } = await supabase
+      .from('voice_usage_meter')
+      .select('evi_seconds_used')
+      .eq('period_month', currentPeriodMonth())
+      .eq('evi_seconds_included', TRIAL_INCLUDED_SECONDS)
+    const total = (data || []).reduce((sum, r) => sum + (r.evi_seconds_used || 0), 0)
+    trialPoolCache = { total, fetchedAt: Date.now() }
+  }
+  return trialPoolCache.total >= TRIAL_GLOBAL_VOICE_SECONDS
+}
+
 // Recomputed on every metering write (not just row creation) so subscribing
 // mid-month instantly lifts the allowance from trial to full.
 async function includedSecondsFor(userId) {
@@ -187,6 +210,7 @@ async function includedSecondsFor(userId) {
         return DEFAULT_INCLUDED_SECONDS
       }
     }
+    if (await trialPoolExhausted()) return 0
     return TRIAL_INCLUDED_SECONDS
   } catch (err) {
     // Fail open: never shrink a paying user's allowance over a lookup hiccup
@@ -224,6 +248,24 @@ async function incrementMeterUsage(userId, secondsToAdd) {
 
   return { used, included, topup, remainingSeconds: Math.max(0, included + topup - used) }
 }
+
+// Authoritative pre-connect allowance check. The client gates connect() on
+// this, NOT on its own read of the meter row — a brand-new user has no row
+// yet, and only the server knows the subscription tier and the trial pool
+// breaker state. A zero-second increment creates the row with the right
+// allowance as a side effect, so the gauge works from the very first session.
+router.get('/allowance', async (req, res) => {
+  const { userId } = req.query
+  if (!userId) return res.status(400).json({ error: 'userId required' })
+  try {
+    const meter = await incrementMeterUsage(userId, 0)
+    res.json({ remainingSeconds: meter.remainingSeconds })
+  } catch (err) {
+    // Fail open — never let an allowance-check hiccup lock a paying user out
+    console.warn('allowance check failed:', err.message)
+    res.status(200).json({ remainingSeconds: null })
+  }
+})
 
 // One row per live EVI session (spec §2.3) — created on connect, closed on
 // disconnect. Session tracking must never block the actual voice session,
