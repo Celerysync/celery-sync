@@ -355,7 +355,7 @@ export default function Landing({ onGetStarted }) {
         }}>
           <div style={{ fontSize: 28, marginBottom: 10, color: C.sage, lineHeight: 1 }}>"</div>
           <div style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.85, fontStyle: "italic", marginBottom: 8 }}>
-            I've lived the Medical Medium lifestyle for over twenty years. The books tell you
+            I've lived the Medical Medium lifestyle for fifteen years. The books tell you
             everything about the what and the why — but nothing ever helped with the how of an
             ordinary Tuesday: remembering the spacing between steps, knowing what day of a
             program you're on, staying consistent when life is loud.
@@ -379,8 +379,24 @@ export default function Landing({ onGetStarted }) {
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
                 Alli · <span style={{ fontWeight: 400, color: C.muted }}>Founder</span>
               </div>
-              <div style={{ fontSize: 11, color: C.sage, marginTop: 2 }}>20+ years living the MM lifestyle</div>
+              <div style={{ fontSize: 11, color: C.sage, marginTop: 2 }}>15 years living the MM lifestyle</div>
             </div>
+          </div>
+        </div>
+
+        {/* Honest, human note — this app is one person's evolving labour of love */}
+        <div style={{
+          marginTop: 12, background: C.mist, borderRadius: 14,
+          padding: "14px 18px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.7 }}>
+            CelerySync is young and always evolving. I'm not a big app company — I'm one
+            person building the thing our community needed. If something feels rough, or
+            you wish it worked differently,{" "}
+            <a href="mailto:allij@live.com.au?subject=CelerySync%20feedback" style={{ color: C.sageDark, fontWeight: 700 }}>
+              tell me
+            </a>{" "}
+            — I read everything, and the app gets better because of it.
           </div>
         </div>
       </div>

@@ -164,6 +164,36 @@ router.get('/voices', async (_req, res) => {
 // Placeholder default until real plans/Stripe pricing locks — matches the
 // spec's stated "~150 EVI min included" placeholder (docs/CELERYSYNC_COMPANION_SPEC.md).
 const DEFAULT_INCLUDED_SECONDS = 150 * 60
+// Free-trial users (no subscription row) get a bounded taste of voice — enough
+// for the welcome tour + several mornings of hands-free ticking, but voice is
+// the app's only per-minute cost and an uncapped trial is an open tab.
+const TRIAL_INCLUDED_SECONDS = 20 * 60
+
+// Recomputed on every metering write (not just row creation) so subscribing
+// mid-month instantly lifts the allowance from trial to full.
+async function includedSecondsFor(userId) {
+  try {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (sub?.status === 'active' || sub?.status === 'trialing') return DEFAULT_INCLUDED_SECONDS
+
+    // The admin/owner account has no subscription row but is not a trial user
+    if (process.env.ADMIN_EMAIL) {
+      const { data: userRes } = await supabase.auth.admin.getUserById(userId)
+      if (userRes?.user?.email?.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()) {
+        return DEFAULT_INCLUDED_SECONDS
+      }
+    }
+    return TRIAL_INCLUDED_SECONDS
+  } catch (err) {
+    // Fail open: never shrink a paying user's allowance over a lookup hiccup
+    console.warn('includedSecondsFor failed:', err.message)
+    return DEFAULT_INCLUDED_SECONDS
+  }
+}
 
 function currentPeriodMonth() {
   const d = new Date()
@@ -179,7 +209,7 @@ async function incrementMeterUsage(userId, secondsToAdd) {
     .eq('period_month', periodMonth)
     .maybeSingle()
 
-  const included = existing?.evi_seconds_included ?? DEFAULT_INCLUDED_SECONDS
+  const included = await includedSecondsFor(userId)
   const topup = existing?.topup_seconds_remaining ?? 0
   const used = (existing?.evi_seconds_used ?? 0) + Math.max(0, Math.round(secondsToAdd))
 
