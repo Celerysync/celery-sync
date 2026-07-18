@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS voice_turns (
   user_transcript text,
   assistant_transcript text,
   latency_ms int,
-  emotion_scores jsonb,                -- Hume prosody/emotion inference, when available on the message event
+  -- No emotion column by design (spec §3.5): Hume's prosody data may shape
+  -- tone live, in-session, but is never accepted or stored.
   tool_calls jsonb,
   success boolean DEFAULT true,
   error_message text,
