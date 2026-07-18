@@ -4,122 +4,101 @@ import C from "../lib/colors.js";
 // ─── Copy ────────────────────────────────────────────────────────────────────
 
 const PAIN_POINTS = [
-  "You know the protocols but life gets in the way and you fall off track",
-  "You have questions at 2am that nobody around you understands",
-  "You started a cleanse but aren't sure if what you're feeling is normal",
-  "You forget the adrenal snack window... again",
-  "You know which supplements to take but can never remember the exact dosages",
+  "You know your routine inside out — but life gets in the way and you fall off track",
+  "It's 2am, you can't sleep, and nobody around you understands the lifestyle",
+  "You forget the snack window... again",
+  "Your routine lives on sticky notes, phone alarms, and memory",
+  "You started a multi-day program and lost track of which day you're on",
   "The people in your life don't understand why celery juice matters so much to you",
 ];
 
 const TRANSFORMATION = [
-  { before: "Drowning in books, unsure what applies to you", after: "An AI companion that paraphrases AW's teachings in plain English — and always points you to the right book" },
-  { before: "Alone with questions no one around you can answer", after: "An AI that speaks your language, any time you need it" },
-  { before: "Starting cleanses, falling off, starting again", after: "Guided through every single day with reminders and support" },
-  { before: "No idea if you're actually getting better", after: "Weekly summaries that track your energy, progress, and patterns over time" },
-  { before: "No way to show your doctor what you've been doing", after: "A professional health report — one tap, ready to hand to any practitioner" },
-  { before: "Doing it alone, nobody around you truly understands", after: "Invite a carer to see your journey — and get a personal letter on every healing anniversary" },
+  { before: "A routine scattered across sticky notes and memory", after: "Your whole day sequenced from one wake-time anchor — entered once from your own book" },
+  { before: "Alone at 2am with no one who gets it", after: "A voice companion that speaks your language, any time you need it" },
+  { before: "Starting programs, losing track, starting again", after: "Your program mapped into your days, with reminders — you always know which day you're on" },
+  { before: "No record of what you've actually been doing", after: "Weekly summaries of your own logged trends — energy, mood, consistency" },
+  { before: "No way to show your doctor what you've been doing", after: "A professional report of your own logged data — one tap, ready for any appointment" },
+  { before: "Doing it alone, nobody around you truly understands", after: "Invite a carer to see your journey — and get a personal letter on every anniversary of it" },
 ];
 
 const FEATURES = [
   {
     emoji: "🎙",
-    title: "AI Guide that never forgets you",
-    desc: "Speaks your language, paraphrases Anthony William's teachings attributed to the source, and permanently remembers your conditions, milestones, setbacks, and wins — building deeper understanding with every single session.",
+    title: "Say it — watch it tick",
+    desc: "“Just finished my celery juice” — and the checkbox ticks itself on screen. Log your whole morning hands-free while you're actually living it.",
+  },
+  {
+    emoji: "📖",
+    title: "Your book stays the source",
+    desc: "Read your routine or program straight from your own copy of the books and speak it in — the companion builds it into your day. We never sell you content; you already own it.",
+  },
+  {
+    emoji: "🌅",
+    title: "Your day, sequenced",
+    desc: "Set one wake anchor and your whole rhythm cascades from it — lemon water, juice, snacks, supplements, whatever your routine holds. Reorder, space, and time everything your way.",
+  },
+  {
+    emoji: "🗓",
+    title: "Multi-day programs, tracked",
+    desc: "Enter any program once — 5 days, 9 days, 28 days — and the app walks it with you: which day you're on, what today involves, how consistently you showed up.",
   },
   {
     emoji: "🧠",
-    title: "Healing memory that lasts forever",
-    desc: "Every conversation is distilled into milestones — insights your AI keeps permanently. Years from now it still knows your full story. Nothing is ever lost.",
+    title: "A companion that remembers you",
+    desc: "Every conversation is distilled into milestones your companion keeps. Months from now it still knows your story, your wins, and your hard days.",
   },
   {
     emoji: "📊",
-    title: "See your healing in numbers",
-    desc: "Track energy, mood, celery juice, symptoms, morning protocol. Your charts reveal patterns you'd never spot otherwise — including die-off reactions.",
+    title: "Your trends, in numbers",
+    desc: "Energy, mood, juice, streaks, consistency. Your own logged data, charted so you can spot your patterns — and two streaks: showed-up and perfect.",
   },
   {
     emoji: "📋",
     title: "Weekly summary + doctor report",
-    desc: "Every Sunday your AI writes a personal summary of your week. One tap generates a professional PDF for any medical appointment — energy trends, supplements, symptoms, timeline.",
-  },
-  {
-    emoji: "💌",
-    title: "Your healing anniversary letter",
-    desc: "Each year on your healing anniversary, your AI writes you a personal letter — reflecting on how far you've come and what it sees ahead. Yours to keep forever.",
+    desc: "Every Sunday, a personal summary of your week. One tap generates a professional PDF of your logged data for any medical appointment.",
   },
   {
     emoji: "⏰",
     title: "Reminders that keep you on track",
-    desc: "Adrenal snack every 1.5 hours. Morning protocol sequence. The nudges that stop you from forgetting the details that make the biggest difference.",
-  },
-  {
-    emoji: "💚",
-    title: "Log how you feel — get support",
-    desc: "Describe what you're experiencing and your companion shares what Anthony William teaches about it — supportive foods, general supplements, and which book goes deepest. Not a diagnosis — real support.",
+    desc: "The snack windows, spacings, and sequences you set — nudged at exactly the right moment, so the details stop slipping.",
   },
   {
     emoji: "💊",
-    title: "Supplement tracker + shop",
-    desc: "Track what you're taking each day and when. Shop Anthony William's recommended Vimergy brands on iHerb in one tap — commissions support the Healing Access Fund.",
-  },
-  {
-    emoji: "🍽",
-    title: "MM-compliant meals, planned for you",
-    desc: "50+ MM-inspired recipes, a weekly meal planner, and an auto shopping list. Snap a photo of your fridge and get meal ideas instantly.",
+    title: "Supplement tracker + restock",
+    desc: "Track what you take and when. Say “I bought more zinc” and inventory updates itself — with a nudge before anything runs out.",
   },
   {
     emoji: "🔗",
-    title: "Resources that point to the source",
-    desc: "Direct links to Anthony William's official website, YouTube channel, podcast, and books — so you can always go deeper at the source.",
+    title: "Always points to the source",
+    desc: "Direct links to Anthony William's official website, YouTube, podcast, and books — the companion always sends you to the source for the full detail.",
   },
   {
     emoji: "💜",
-    title: "Invite a carer to see your progress",
-    desc: "Share your healing journey with someone who supports you. They see your energy trends, check-ins, and milestones — so they can show up for you better.",
+    title: "Invite a carer",
+    desc: "Share your journey with someone who supports you. They see your trends, check-ins, and milestones — so they can show up for you better.",
   },
   {
     emoji: "👨‍👩‍👧‍👦",
     title: "Your whole family, one subscription",
-    desc: "Separate profiles for every family member. Each person gets their own healing journey, AI memory, weekly summaries, and daily journal.",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "I've had Hashimoto's for seven years. I've read every AW book twice. But I kept forgetting dosages, skipping the adrenal snack, losing track of what was working. This app is the missing piece — my AI literally remembers my last conversation and picks up where we left off.",
-    name: "Michelle R.",
-    loc: "Brisbane, AU",
-    condition: "Hashimoto's · 7 years on MM",
-  },
-  {
-    quote: "The 3:6:9 cleanse guide alone is worth it. Having it mapped out day by day with exactly what to eat, a reminder when to drink the celery juice, and an AI to ask questions — I finally completed it properly for the first time.",
-    name: "Tanya W.",
-    loc: "Auckland, NZ",
-    condition: "Liver support · chronic fatigue",
-  },
-  {
-    quote: "My daughter has eczema and I have fibromyalgia. We both have our own profiles and our AI knows our separate symptoms and protocols. It feels like having Anthony William on speed dial — without the wait.",
-    name: "Karen S.",
-    loc: "Melbourne, AU",
-    condition: "Fibromyalgia · family of 3",
+    desc: "Separate profiles for every family member. Each person gets their own rhythm, companion memory, weekly summaries, and journal.",
   },
 ];
 
 const HOW_IT_WORKS = [
   {
     step: "1",
-    title: "Tell it about you",
-    desc: "Enter your name, your conditions, and your healing goal. Takes 2 minutes. Your AI companion is immediately personalised to you.",
+    title: "Bring your routine",
+    desc: "Open your own book, and tell the companion what you follow — or tap it in. Two minutes, and your day is mapped.",
   },
   {
     step: "2",
-    title: "Track how you're feeling",
-    desc: "Log your energy, mood, and symptoms daily. Describe what you're experiencing and your companion shares what Anthony William teaches about it — always pointing you to his books for the full detail.",
+    title: "Live it out loud",
+    desc: "“Done my lemon water.” “Just finished the smoothie.” Your checklist keeps itself. Log energy and mood in a sentence.",
   },
   {
     step: "3",
-    title: "Let it guide your day",
-    desc: "Morning protocol reminders, adrenal snack alerts, AI answers to your questions, a journal to track your progress. Your healing becomes consistent.",
+    title: "Watch it hold",
+    desc: "Reminders at the right moments, streaks that honour showing up, and a weekly summary of your own data. Your routine becomes consistent.",
   },
 ];
 
@@ -360,47 +339,49 @@ export default function Landing({ onGetStarted }) {
 
       <Divider />
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ── FOUNDER STORY ── */}
       <div style={{ padding: "40px 24px", maxWidth: 500, margin: "0 auto" }}>
         <h2 style={{
           fontFamily: "Georgia,serif", fontWeight: 700,
           fontSize: 22, color: C.charcoal,
-          marginBottom: 6, textAlign: "center",
+          marginBottom: 20, textAlign: "center",
         }}>
-          From people on the same path
+          Why CelerySync exists
         </h2>
-        <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 24, lineHeight: 1.6 }}>
-          Real people. Real journeys.
-        </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {TESTIMONIALS.map((t, i) => (
-            <div key={i} style={{
-              background: "#fff", borderRadius: 18, padding: "20px 18px",
-              border: `1px solid ${C.border}`, boxShadow: "0 2px 12px #00000008",
+        <div style={{
+          background: "#fff", borderRadius: 18, padding: "24px 22px",
+          border: `1px solid ${C.border}`, boxShadow: "0 2px 12px #00000008",
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 10, color: C.sage, lineHeight: 1 }}>"</div>
+          <div style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.85, fontStyle: "italic", marginBottom: 8 }}>
+            I've lived the Medical Medium lifestyle for over twenty years. The books tell you
+            everything about the what and the why — but nothing ever helped with the how of an
+            ordinary Tuesday: remembering the spacing between steps, knowing what day of a
+            program you're on, staying consistent when life is loud.
+          </div>
+          <div style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.85, fontStyle: "italic", marginBottom: 16 }}>
+            So I built the thing I couldn't find — for myself and my own family first. Not
+            another source of information. An engine for living what you've already chosen:
+            reminders, rhythm, and a companion that listens. Your books stay the source.
+            CelerySync keeps you living them.
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: C.sageLight, border: `2px solid ${C.sage}50`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, flexShrink: 0,
             }}>
-              <div style={{ fontSize: 28, marginBottom: 10, color: C.sage, lineHeight: 1 }}>"</div>
-              <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.8, fontStyle: "italic", marginBottom: 14 }}>
-                {t.quote}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: C.sageLight, border: `2px solid ${C.sage}50`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 16, flexShrink: 0,
-                }}>
-                  🌿
-                </div>
-                <div>
-                  <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
-                    {t.name} · <span style={{ fontWeight: 400, color: C.muted }}>{t.loc}</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: C.sage, marginTop: 2 }}>{t.condition}</div>
-                </div>
-              </div>
+              🌿
             </div>
-          ))}
+            <div>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
+                Alli · <span style={{ fontWeight: 400, color: C.muted }}>Founder</span>
+              </div>
+              <div style={{ fontSize: 11, color: C.sage, marginTop: 2 }}>20+ years living the MM lifestyle</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -445,10 +426,13 @@ export default function Landing({ onGetStarted }) {
             fontSize: 22, color: C.charcoal,
             marginBottom: 12, textAlign: "center",
           }}>
-            An AI that actually knows Medical Medium
+            A companion you can actually talk to
           </h2>
           <p style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.8, marginBottom: 20, textAlign: "center" }}>
-            Not a generic chatbot with a prompt. CelerySync's AI paraphrases and attributes Anthony William's publicly shared teachings — always pointing you back to his books and official sources. It permanently remembers your milestones, patterns, and setbacks — building a deeper picture of <em>you</em> with every single conversation.
+            Not a chatbot in a box. A real voice that lives across the whole app — it knows what's
+            on your rhythm, hears you say you've done it, and ticks it off on screen while you
+            watch. It remembers your milestones and always points you to the official books
+            and sources for anything deeper.
           </p>
 
           {/* Mock AI conversation */}
@@ -458,19 +442,24 @@ export default function Landing({ onGetStarted }) {
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
               <div style={{ background: C.sage, color: "#fff", borderRadius: 14, padding: "9px 13px", maxWidth: "75%", fontSize: 13 }}>
-                I have Hashimoto's and my hair is falling out again — what should I do?
+                Just finished my celery juice — what's next?
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 0 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
               <div style={{ fontSize: 18, flexShrink: 0 }}>🌿</div>
               <div style={{ background: C.mist, borderRadius: 14, padding: "10px 13px", fontSize: 12.5, color: C.charcoal, lineHeight: 1.7 }}>
-                Anthony William associates hair loss with Hashimoto's with EBV activity and zinc deficiency — this is explored in depth in <em>Thyroid Healing</em>. He generally suggests zinc and L-lysine to support the immune system, alongside avoiding eggs, which he says feed EBV. For exact amounts, <em>Thyroid Healing</em> is your authority. Based on your history, I'd also look at your adrenal snack consistency — adrenaline surges can worsen viral activity...
+                Lovely — ticked it off for you ✓ That's three mornings in a row. Next in your
+                rhythm is your smoothie, in about twenty minutes. Want me to log how your
+                energy's feeling while we wait?
               </div>
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>
+              The checkbox ticks itself on screen as you speak — that's the moment people don't go back from.
             </div>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {["Permanent healing memory", "Speaks & listens", "Links to official AW sources", "Weekly summaries", "Doctor reports"].map((t) => (
+            {["Hands-free logging", "Remembers your journey", "Links to official AW sources", "Weekly summaries", "Doctor reports"].map((t) => (
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",
@@ -496,7 +485,7 @@ export default function Landing({ onGetStarted }) {
               Works best on your home screen
             </h2>
             <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 20, lineHeight: 1.65 }}>
-              Install CelerySync like a native app — no App Store needed. You get healing reminders even when the app is closed.
+              Install CelerySync like a native app — no App Store needed. You get your routine reminders even when the app is closed.
             </p>
 
             <div style={{
@@ -541,7 +530,7 @@ export default function Landing({ onGetStarted }) {
                 </div>
               )}
               <div style={{ marginTop: 14, padding: "10px 14px", background: C.sageLight, borderRadius: 12, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
-                ✓ Background healing reminders · ✓ Offline access · ✓ Full-screen experience
+                ✓ Background reminders · ✓ Offline access · ✓ Full-screen experience
               </div>
             </div>
           </div>
@@ -557,10 +546,10 @@ export default function Landing({ onGetStarted }) {
         }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 24, marginBottom: 8, lineHeight: 1.3 }}>
-            Your healing journey deserves real support.
+            The lifestyle you chose deserves real support.
           </h2>
           <p style={{ fontSize: 14, opacity: 0.88, lineHeight: 1.7, marginBottom: 24 }}>
-            Try CelerySync free for 7 days. No credit card. No commitment. Just your healing, supported the way it should be.
+            Try CelerySync free for 7 days. No credit card. No commitment. Just your routine, supported the way it should be.
           </p>
 
           <div style={{ fontSize: 28, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>

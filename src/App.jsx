@@ -296,7 +296,7 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} onNavigate={setTab} />
+          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={setTab} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
 
       case "companion":
@@ -359,7 +359,7 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome user={activeProfile} profileId={activeProfileId} onGraduate={graduateToFullApp} onNavigate={setTab} />
+          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={setTab} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };

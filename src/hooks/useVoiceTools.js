@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { TODAY, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
+import { buildProgramItem, programDescription } from "../lib/savedRhythms.js";
 import { TAB_CONTEXT } from "../lib/voiceTabContext.js";
 
 const todayStr = TODAY;
@@ -222,22 +223,10 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
 
       const items = [];
       for (const [idx, it] of rawItems.entries()) {
-        const itemName = String(it?.name || "").trim();
-        if (!itemName) return { error: "invalid_item", message: `Item ${idx + 1} has no name. Ask the user to repeat it.` };
-        const from = Math.max(1, Math.min(Number(it.from_day) || 1, totalDays));
-        const to = Math.max(from, Math.min(Number(it.to_day) || totalDays, totalDays));
-        items.push({
-          id: crypto.randomUUID(),
-          name: itemName,
-          emoji: it.emoji || "✨",
-          category: it.category || "other",
-          spacingMinutes: Number(it.spacing_minutes) || 30,
-          frequency: "daily",
-          durationType: "cleanse",
-          note: it.note || "",
-          programDayRange: [from, to],
-          sortOrder: idx + 1,
-        });
+        if (!String(it?.name || "").trim()) {
+          return { error: "invalid_item", message: `Item ${idx + 1} has no name. Ask the user to repeat it.` };
+        }
+        items.push(buildProgramItem(it, totalDays, idx + 1));
       }
 
       // Same name = update in place, so voice corrections don't pile up copies
@@ -252,7 +241,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         profile_id: profileId,
         name,
         emoji: args.emoji || "✨",
-        description: `${totalDays}-day program`,
+        description: programDescription(totalDays),
         items,
       };
       const { error } = existing

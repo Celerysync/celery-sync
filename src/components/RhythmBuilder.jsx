@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
+import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -18,8 +19,6 @@ const BLANK_ITEM = {
   durationDays: null,
   startDate: null,
   isMedicine: false,
-  programId: null,
-  programDayRange: null,
   note: "",
   sortOrder: 999,
 };
@@ -33,31 +32,6 @@ const BLANK_PROGRAM_ITEM = {
   fromDay: 1,
   toDay: null, // defaults to the program's total days
 };
-
-// A saved_rhythms row is a multi-day program (vs. a day template) when its
-// items carry per-day ranges. Program length is the furthest day any item runs.
-const isProgramRow = (row) => (row.items || []).some((it) => it.programDayRange);
-const rowTotalDays = (row) =>
-  (row.items || []).reduce((mx, it) => Math.max(mx, it.programDayRange?.[1] || 1), 1);
-
-// The app ships no protocol content (see LEGAL_CONSTRAINTS.md) — every
-// template and program here is built by the user from their own sources.
-function savedRowToProgram(row) {
-  const id = `sr-${row.id}`;
-  return {
-    id,
-    name: row.name,
-    emoji: row.emoji || "✨",
-    totalDays: rowTotalDays(row),
-    items: (row.items || []).map((it, idx) => ({
-      frequency: "daily",
-      durationType: "cleanse",
-      sortOrder: idx + 1,
-      ...it,
-      programId: id,
-    })),
-  };
-}
 
 export default function RhythmBuilder({
   baseItems,
@@ -609,22 +583,9 @@ export default function RhythmBuilder({
                   color={C.plum}
                   disabled={!progItemForm.name.trim()}
                   onClick={() => {
-                    const from = Math.max(1, Math.min(progItemForm.fromDay, progForm.totalDays));
-                    const to = Math.max(from, Math.min(progItemForm.toDay ?? progForm.totalDays, progForm.totalDays));
                     setProgForm((f) => ({
                       ...f,
-                      items: [...f.items, {
-                        id: crypto.randomUUID(),
-                        name: progItemForm.name.trim(),
-                        emoji: progItemForm.emoji || "✨",
-                        category: "other",
-                        spacingMinutes: progItemForm.spacingMinutes,
-                        frequency: "daily",
-                        durationType: "cleanse",
-                        note: progItemForm.note,
-                        programDayRange: [from, to],
-                        sortOrder: f.items.length + 1,
-                      }],
+                      items: [...f.items, buildProgramItem(progItemForm, f.totalDays, f.items.length + 1)],
                     }));
                     setProgItemForm(BLANK_PROGRAM_ITEM);
                   }}
@@ -644,7 +605,7 @@ export default function RhythmBuilder({
                     profile_id: profileId,
                     name: progForm.name.trim(),
                     emoji: progForm.emoji || "✨",
-                    description: `${progForm.totalDays}-day program`,
+                    description: programDescription(progForm.totalDays),
                     items: progForm.items,
                   }).select().single();
                   setSavingProgram(false);
