@@ -52,7 +52,7 @@ router.post('/checkout', async (req, res) => {
   }
 })
 
-// Create Stripe Checkout session (practitioner plan — $49/month)
+// Create Stripe Checkout session (practitioner plan — $99/month)
 router.post('/checkout/practitioner', async (req, res) => {
   const { userId, email } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })

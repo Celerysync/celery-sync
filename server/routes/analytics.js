@@ -113,7 +113,7 @@ router.get('/admin/:userId', async (req, res) => {
     },
     subscriptions: subBreakdown,
     revenue: {
-      monthly: (subBreakdown.healer * 14.97 + subBreakdown.practitioner * 79).toFixed(2),
+      monthly: (subBreakdown.healer * 24.97 + subBreakdown.practitioner * 99).toFixed(2),
     },
     events7d: eventCounts,
     topTabs: Object.entries(tabCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),

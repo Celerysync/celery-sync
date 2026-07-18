@@ -208,7 +208,7 @@ export default function Landing({ onGetStarted }) {
         </button>
 
         <div style={{ fontSize: 12, opacity: 0.7 }}>
-          No credit card needed · $14.97/month after · Cancel anytime
+          No credit card needed · $24.97/month after · Cancel anytime
         </div>
       </div>
 
@@ -569,10 +569,10 @@ export default function Landing({ onGetStarted }) {
           </p>
 
           <div style={{ fontSize: 28, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>
-            $14.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
+            $24.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
-            or $119/year — save $61
+            or $249/year — two months free
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
             Powered by the world's most advanced AI · Adult household profiles included (18+)

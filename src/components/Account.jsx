@@ -134,7 +134,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               Healer Plan
             </div>
             <div style={{ fontSize: 32, fontFamily: 'Georgia,serif', fontWeight: 700 }}>
-              {annual ? '$119' : '$14.97'}
+              {annual ? '$249' : '$24.97'}
               <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>{annual ? '/year AUD' : '/month AUD'}</span>
             </div>
             <button
@@ -152,7 +152,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                 padding: 0,
               }}
             >
-              {annual ? 'Switch to monthly — $14.97/mo' : 'Switch to annual — $119/year, save $61'}
+              {annual ? 'Switch to monthly — $24.97/mo' : 'Switch to annual — $249/year, two months free'}
             </button>
             <div style={{
               marginTop: 6,
@@ -284,7 +284,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Subscribe — $14.97/month →'}
+                {loading ? '🌿 Please wait…' : `Subscribe — ${annual ? '$249/year' : '$24.97/month'} →`}
               </button>
             </div>
           )}
@@ -396,7 +396,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                 🏥 Are you a practitioner?
               </div>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 14 }}>
-                Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $79/month and get a full client management portal — AI protocol generation, session notes, and printable healing plans.
+                Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $99/month and get a full client management portal — descriptive session prep, session notes, and printable session summaries.
               </div>
               <Btn full onClick={async () => {
                 setLoading(true)
@@ -407,7 +407,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                   window.location.href = data.url
                 } catch (err) { setError(err.message); setLoading(false) }
               }} color={C.gold} disabled={loading}>
-                {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $79/month →'}
+                {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $99/month →'}
               </Btn>
             </Card>
           )}

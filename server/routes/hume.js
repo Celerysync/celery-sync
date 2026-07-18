@@ -161,9 +161,10 @@ router.get('/voices', async (_req, res) => {
 // writes go through here (service role), so a user can never inflate their
 // own remaining minutes by writing the meter directly from the client.
 
-// Placeholder default until real plans/Stripe pricing locks — matches the
-// spec's stated "~150 EVI min included" placeholder (docs/CELERYSYNC_COMPANION_SPEC.md).
-const DEFAULT_INCLUDED_SECONDS = 150 * 60
+// Healer plan allowance — locked with the 2026-07-18 pricing decision:
+// $24.97 AUD/month with 100 voice minutes (worst-case voice cost ~$11,
+// margin ~$9 even for a subscriber who maxes it). Top-ups extend beyond it.
+const DEFAULT_INCLUDED_SECONDS = 100 * 60
 // Free-trial users (no subscription row) get a bounded taste of voice — enough
 // for the welcome tour + several mornings of hands-free ticking, but voice is
 // the app's only per-minute cost and an uncapped trial is an open tab.
