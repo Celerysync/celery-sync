@@ -201,6 +201,74 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       return { logged: true, newTotal };
     },
 
+    // Voice-first program building: the user reads their own book aloud and the
+    // companion collects the program (name, length, items with day ranges) and
+    // saves it in one call. Same saved_rhythms shape the RhythmBuilder writes —
+    // a row whose items carry programDayRange IS a program (no schema change).
+    // Calling again with the same name replaces the items, so the user can
+    // correct by voice ("actually make the apples days 4 to 6").
+    async save_program(args) {
+      if (!profileId) throw new Error("No active profile");
+      const name = String(args?.name || "").trim();
+      const totalDays = Number(args?.total_days);
+      const rawItems = Array.isArray(args?.items) ? args.items : [];
+      if (!name) throw new Error("name required");
+      if (!Number.isInteger(totalDays) || totalDays < 2 || totalDays > 90) {
+        return { error: "invalid_days", message: "total_days must be a whole number between 2 and 90. Ask the user how many days their program runs." };
+      }
+      if (!rawItems.length) {
+        return { error: "no_items", message: "At least one item is required. Ask the user what the program includes and on which days." };
+      }
+
+      const items = [];
+      for (const [idx, it] of rawItems.entries()) {
+        const itemName = String(it?.name || "").trim();
+        if (!itemName) return { error: "invalid_item", message: `Item ${idx + 1} has no name. Ask the user to repeat it.` };
+        const from = Math.max(1, Math.min(Number(it.from_day) || 1, totalDays));
+        const to = Math.max(from, Math.min(Number(it.to_day) || totalDays, totalDays));
+        items.push({
+          id: crypto.randomUUID(),
+          name: itemName,
+          emoji: it.emoji || "✨",
+          category: it.category || "other",
+          spacingMinutes: Number(it.spacing_minutes) || 30,
+          frequency: "daily",
+          durationType: "cleanse",
+          note: it.note || "",
+          programDayRange: [from, to],
+          sortOrder: idx + 1,
+        });
+      }
+
+      // Same name = update in place, so voice corrections don't pile up copies
+      const { data: existing } = await supabase
+        .from("saved_rhythms")
+        .select("id")
+        .eq("profile_id", profileId)
+        .eq("name", name)
+        .maybeSingle();
+
+      const row = {
+        profile_id: profileId,
+        name,
+        emoji: args.emoji || "✨",
+        description: `${totalDays}-day program`,
+        items,
+      };
+      const { error } = existing
+        ? await supabase.from("saved_rhythms").update(row).eq("id", existing.id)
+        : await supabase.from("saved_rhythms").insert(row);
+      if (error) throw new Error(error.message);
+
+      return {
+        saved: name,
+        updated_existing: !!existing,
+        total_days: totalDays,
+        items: items.map((i) => `${i.name} (days ${i.programDayRange[0]}–${i.programDayRange[1]})`),
+        message: `Program "${name}" saved. The user can start it from the Programs tab of their Rhythm builder — offer to take them there with switch_tab("home").`,
+      };
+    },
+
     async log_rhythm_item(args) {
       if (!profileId) throw new Error("No active profile");
       if (!args?.name) throw new Error("name required");

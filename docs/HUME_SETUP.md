@@ -266,6 +266,45 @@ both bit us during the first setup pass. `enum` was fine.)
 
 ---
 
+**Tool 8 — `save_program`** (added 2026-07-18, voice-first program building —
+the user reads their own book aloud and the companion saves the program)
+
+Description:
+```
+Save a multi-day program the user describes from their own book (e.g. a 9-day cleanse). Collect the program name, how many days it runs, and each item with the days it applies to (from_day to to_day), then call this once with everything. Calling again with the same name replaces the program, so corrections are safe. The app never supplies program content — only save what the user themselves dictates from their own sources. After saving, offer to take them to the Rhythm builder's Programs tab to start it.
+```
+
+Parameters:
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "description": "Program name, e.g. 'My 9-day cleanse'" },
+    "total_days": { "type": "integer", "description": "How many days the program runs (2-90)" },
+    "emoji": { "type": "string", "description": "Optional single emoji for the program" },
+    "items": {
+      "type": "array",
+      "description": "The program's items as the user dictated them",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Item name as the user said it" },
+          "from_day": { "type": "integer", "description": "First day this item applies (1-based). Defaults to 1." },
+          "to_day": { "type": "integer", "description": "Last day this item applies. Defaults to the program's last day." },
+          "category": { "type": "string", "enum": ["morning", "supplement", "food", "medicine", "other"], "description": "Item category (default other)" },
+          "spacing_minutes": { "type": "integer", "description": "Minutes after the previous item (default 30)" },
+          "note": { "type": "string", "description": "Optional note, e.g. a page reference the user mentions" }
+        },
+        "required": ["name"]
+      }
+    }
+  },
+  "required": ["name", "total_days", "items"]
+}
+```
+
+---
+
 ### 2f. Save the configuration
 Copy its **Config ID** → this is `HUME_EVI_CONFIG_ID`.
 
