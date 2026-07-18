@@ -3,7 +3,10 @@
 // never mark something the user wouldn't even see on screen (a weekday-only
 // item on a weekend, an expired multi-day item, etc.). Keeping this in one
 // place means the two can't drift out of sync with each other.
-import { ALL_PROGRAMS } from "../data/rhythmTemplates.js";
+//
+// Program items come from the activeProgram object itself (denormalized when
+// the user starts one of their own saved programs) — the app ships no program
+// content of its own (LEGAL_CONSTRAINTS.md: user supplies the protocol).
 
 // Local calendar day, NOT UTC — toISOString() would put anything ticked
 // before ~10am AEST on yesterday's date (spec §2.1: local_date is computed
@@ -39,14 +42,11 @@ export function filterTodaysItems(baseItems, activeProgram) {
   }
 
   const programItems = [];
-  if (programDay !== null && activeProgram) {
-    const program = ALL_PROGRAMS.find((p) => p.id === activeProgram.id);
-    if (program) {
-      for (const item of program.items) {
-        const [from, to] = item.programDayRange;
-        if (programDay >= from && programDay <= to) {
-          programItems.push(item);
-        }
+  if (programDay !== null && activeProgram?.items) {
+    for (const item of activeProgram.items) {
+      const [from, to] = item.programDayRange || [1, activeProgram.totalDays];
+      if (programDay >= from && programDay <= to) {
+        programItems.push(item);
       }
     }
   }

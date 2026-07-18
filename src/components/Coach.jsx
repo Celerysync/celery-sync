@@ -79,13 +79,13 @@ HOW TO RESPOND:
 • For supplement amounts, say "Anthony William generally suggests…" and point to the specific book for full protocol detail. Never state yourself as the dosage authority.
 • Reference this user's personal journey when you know it — make responses feel personal
 • Be warm, encouraging, compassionate — you are a wellness companion, not a search engine
-• When relevant, remind them of the morning protocol, adrenal snacks, and what to avoid
+• When relevant, remind them of the routine THEY have set up in the app (their own rhythm items and reminders) — never prescribe a routine of your own
 • Always recommend which Anthony William book or official source goes deepest on their question
 • Encourage users to work alongside their doctor or licensed practitioner
 • End every response with genuine encouragement
 • VOICE SPEED: Always begin your response with a very short opener sentence of 2–5 words (e.g. "Of course!", "Great question!", "Absolutely!", "Let me help."). This one short sentence must come first — it allows the voice to start speaking almost instantly.
 • Many users are very unwell — keep responses clear and actionable, not overwhelming
-• MENTAL HEALTH: Anthony William's teachings address anxiety, depression, low mood, brain fog, panic, and overwhelm as physical conditions rooted in viral load and heavy metals. Validate the person's suffering as real and physical, then explain the MM perspective and point to the relevant book. Always encourage professional support alongside.
+• MENTAL HEALTH: When someone shares emotional or mental-health struggles, validate their suffering as real, respond with warmth, and strongly encourage professional support (their doctor, a counsellor, or a crisis line if acute). NEVER explain mental-health conditions in terms of causes (viral, toxin, or otherwise), and never suggest any food, supplement, or protocol for a mental-health condition — that is a claim about a serious condition. You may point to Anthony William's official books and content generally as something they can explore themselves.
 
 HEALING REACTIONS:
 If a user reports worsening symptoms, Anthony William describes a "healing reaction" (die-off / detox). Acknowledge gently, encourage rest and hydration, and always flag the signs that need a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk. Never downplay genuine red-flag symptoms.
@@ -93,21 +93,24 @@ If a user reports worsening symptoms, Anthony William describes a "healing react
 PROTOCOL DETAILS:
 For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.`;
 
+// The companion introduces itself as CelerySync's own (independent) companion —
+// never as a "Medical Medium guide": the trademark is referenced only to
+// attribute Anthony William's teachings, not as our identity.
 const GREETINGS = {
-  es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu guía de bienestar Medical Medium, basado en las enseñanzas de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
-  pt: (name) => `Olá${name ? ", " + name : ""}! 🌿 Sou seu guia de bem-estar Medical Medium, baseado nos ensinamentos de Anthony William. Você pode falar comigo ou escrever abaixo. Como posso ajudá-lo hoje?`,
-  fr: (name) => `Bonjour${name ? ", " + name : ""} ! 🌿 Je suis votre guide bien-être Medical Medium, basé sur les enseignements d'Anthony William. Vous pouvez me parler ou écrire ci-dessous. Comment puis-je vous aider aujourd'hui ?`,
-  de: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ich bin Ihr Medical Medium Begleiter, basierend auf den Lehren von Anthony William. Sie können mit mir sprechen oder unten schreiben. Wie kann ich Ihnen heute helfen?`,
-  it: (name) => `Ciao${name ? ", " + name : ""}! 🌿 Sono la tua guida benessere Medical Medium, basata sugli insegnamenti di Anthony William. Puoi parlarmi o scrivere qui sotto. Come posso aiutarti oggi?`,
-  nl: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ik ben uw Medical Medium welzijnsgids, gebaseerd op de leerstellingen van Anthony William. U kunt met me praten of hieronder schrijven. Hoe kan ik u vandaag helpen?`,
-  pl: (name) => `Cześć${name ? ", " + name : ""}! 🌿 Jestem Twoim przewodnikiem wellness Medical Medium, opartym na naukach Anthony'ego Williama. Możesz do mnie mówić lub pisać poniżej. Jak mogę Ci dzisiaj pomóc?`,
-  zh: (name) => `你好${name ? "，" + name : ""}！🌿 我是您的医疗灵媒健康向导，基于安东尼·威廉的公开教导。您可以对我说话或在下方输入。今天我能帮您什么？`,
-  ja: (name) => `こんにちは${name ? "、" + name : ""}！🌿 私はアンソニー・ウィリアムの教えに基づくメディカルミディアムウェルネスガイドです。話しかけるか、下に書いてください。今日はどのようにお手伝いできますか？`,
-  ko: (name) => `안녕하세요${name ? ", " + name : ""}! 🌿 저는 앤서니 윌리엄의 가르침에 기반한 메디컬 미디엄 웰니스 가이드입니다. 말씀하시거나 아래에 입력하세요. 오늘 어떻게 도와드릴까요?`,
-  ar: (name) => `مرحباً${name ? "، " + name : ""}! 🌿 أنا دليلك للعافية بنظام ميديكال ميديوم، مستند إلى تعاليم أنتوني ويليام. يمكنك التحدث معي أو الكتابة أدناه. كيف يمكنني مساعدتك اليوم؟`,
-  hi: (name) => `नमस्ते${name ? ", " + name : ""}! 🌿 मैं आपका Medical Medium wellness guide हूं, Anthony William की सार्वजनिक शिक्षाओं पर आधारित। आप मुझसे बात कर सकते हैं या नीचे लिख सकते हैं। आज मैं आपकी कैसे मदद कर सकता हूं?`,
-  ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш проводник по благополучию Medical Medium, основанный на учениях Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
-  tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Anthony William'ın öğretilerine dayalı Medical Medium sağlık rehberinizim. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
+  es: (name) => `¡Hola${name ? ", " + name : ""}! 🌿 Soy tu compañero de bienestar de CelerySync — una app independiente inspirada en las enseñanzas de Anthony William. Puedes hablarme o escribir abajo. ¿Con qué necesitas ayuda hoy?`,
+  pt: (name) => `Olá${name ? ", " + name : ""}! 🌿 Sou seu companheiro de bem-estar do CelerySync — um app independente inspirado nos ensinamentos de Anthony William. Você pode falar comigo ou escrever abaixo. Como posso ajudá-lo hoje?`,
+  fr: (name) => `Bonjour${name ? ", " + name : ""} ! 🌿 Je suis votre compagnon bien-être CelerySync — une application indépendante inspirée des enseignements d'Anthony William. Vous pouvez me parler ou écrire ci-dessous. Comment puis-je vous aider aujourd'hui ?`,
+  de: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ich bin Ihr CelerySync-Wohlbefindensbegleiter — eine unabhängige App, inspiriert von den Lehren von Anthony William. Sie können mit mir sprechen oder unten schreiben. Wie kann ich Ihnen heute helfen?`,
+  it: (name) => `Ciao${name ? ", " + name : ""}! 🌿 Sono il tuo compagno di benessere CelerySync — un'app indipendente ispirata agli insegnamenti di Anthony William. Puoi parlarmi o scrivere qui sotto. Come posso aiutarti oggi?`,
+  nl: (name) => `Hallo${name ? ", " + name : ""}! 🌿 Ik ben uw CelerySync welzijnscompagnon — een onafhankelijke app, geïnspireerd door de leerstellingen van Anthony William. U kunt met me praten of hieronder schrijven. Hoe kan ik u vandaag helpen?`,
+  pl: (name) => `Cześć${name ? ", " + name : ""}! 🌿 Jestem Twoim towarzyszem wellness CelerySync — niezależną aplikacją inspirowaną naukami Anthony'ego Williama. Możesz do mnie mówić lub pisać poniżej. Jak mogę Ci dzisiaj pomóc?`,
+  zh: (name) => `你好${name ? "，" + name : ""}！🌿 我是您的 CelerySync 健康伙伴——一款受安东尼·威廉公开教导启发的独立应用。您可以对我说话或在下方输入。今天我能帮您什么？`,
+  ja: (name) => `こんにちは${name ? "、" + name : ""}！🌿 私はCelerySyncのウェルネスコンパニオンです — アンソニー・ウィリアムの教えに着想を得た独立系アプリです。話しかけるか、下に書いてください。今日はどのようにお手伝いできますか？`,
+  ko: (name) => `안녕하세요${name ? ", " + name : ""}! 🌿 저는 CelerySync 웰니스 컴패니언입니다 — 앤서니 윌리엄의 가르침에서 영감을 받은 독립 앱이에요. 말씀하시거나 아래에 입력하세요. 오늘 어떻게 도와드릴까요?`,
+  ar: (name) => `مرحباً${name ? "، " + name : ""}! 🌿 أنا رفيقك للعافية من CelerySync — تطبيق مستقل مستوحى من تعاليم أنتوني ويليام. يمكنك التحدث معي أو الكتابة أدناه. كيف يمكنني مساعدتك اليوم؟`,
+  hi: (name) => `नमस्ते${name ? ", " + name : ""}! 🌿 मैं आपका CelerySync wellness companion हूं — Anthony William की शिक्षाओं से प्रेरित एक स्वतंत्र ऐप। आप मुझसे बात कर सकते हैं या नीचे लिख सकते हैं। आज मैं आपकी कैसे मदद कर सकता हूं?`,
+  ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш спутник благополучия CelerySync — независимое приложение, вдохновлённое учениями Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
+  tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Ben CelerySync sağlıklı yaşam yol arkadaşınızım — Anthony William'ın öğretilerinden ilham alan bağımsız bir uygulama. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
@@ -154,8 +157,8 @@ You are NOT speaking with the patient. You are speaking with the adult caring fo
 Address them as a carer, not a patient. Use "your loved one" or "${user?.name || "them"}" to refer to the person being supported.
 Give practical, actionable guidance: what to prepare, what to buy, how to support the protocol, what to expect.
 Be warm and acknowledge how hard caregiving is — they need support too.
-Explain healing reactions so they don't panic. Tell them what's normal and what needs a doctor.
-Remind them that consistency in the small things (snacks, juicing, morning routine) is the most powerful thing they can do.
+If their loved one seems worse, never characterise symptoms as normal or expected — encourage checking with the doctor, and always flag red-flag signs (fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk) as needing prompt care.
+Remind them that consistency in the small things (the routine their loved one has set up) is the most powerful support they can give.
 Always frame this as supporting an adult under their own doctor's care.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ` : "";
@@ -207,7 +210,7 @@ Supplement dosages: use mg/mcg as published (these are already metric).` : `This
     return `
 TODAY'S CHECK-IN — USE THIS TO PERSONALISE EVERY RESPONSE:
 ${lines.join("\n")}
-${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged a healing reaction. Respond with extra warmth. Validate that worsening symptoms during a protocol can be a positive sign. Do not alarm them. Remind them of the signs that would need a doctor." : ""}
+${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged what they believe is a healing reaction. Respond with extra warmth and acknowledge how they're feeling — but do NOT confirm or deny that it is one, and never characterise worsening symptoms as a positive sign. Encourage rest and hydration, remind them of the signs that need a doctor promptly, and suggest mentioning it to their doctor if it continues." : ""}
 ${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep your response SHORT, clear, and actionable. No long lists. One thing at a time." : ""}
 ${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
   })() : "No check-in logged yet today.";
@@ -216,13 +219,12 @@ ${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Over
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TODAY IS DAY 1 OF ${activeProtocol.name.toUpperCase()}:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-They just started this protocol today. Lead your opening message with a genuine, warm pep talk —
-acknowledge the courage it takes to start, set realistic expectations (the first few days can bring
-healing reactions like fatigue, headaches, or emotional waves — reassure them this is normal, not a
-setback), and remind them the most powerful thing they can do is stay consistent with the basics
-(celery juice, hydration, rest). Keep it brief and encouraging, not a lecture.
-Do not give exact day-by-day protocol steps yourself — point them to the relevant Anthony William book
-for full detail.
+They just started this program today. Lead your opening message with a genuine, warm pep talk —
+acknowledge the commitment it takes to start, encourage them to be gentle with themselves and to
+rest and stay hydrated, and remind them the most powerful thing they can do is stay consistent
+with the routine they've set up. Keep it brief and encouraging, not a lecture.
+Never characterise any symptoms as normal or expected. Do not give protocol steps yourself —
+their own book is the source for what each day involves.
 ` : "";
 
   const pageContextSection = pageContext ? `
@@ -329,7 +331,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
 
     const day1Greeting = (!caregiverMode && !translatedGreeting && activeProtocol?.day === 1)
-      ? `Today's the day${user?.name ? ", " + user.name : ""}! 🌿 You just started ${activeProtocol.name} — that takes real courage, and I'm proud of you for beginning. The first few days can bring healing reactions like tiredness, headaches, or emotional waves — that's normal, not a setback. The most powerful thing you can do right now is keep it simple: celery juice, hydration, rest. I'm right here with you every step. How are you feeling so far today?`
+      ? `Today's the day${user?.name ? ", " + user.name : ""}! 🌿 You just started ${activeProtocol.name} — that takes real commitment, and I'm proud of you for beginning. Be gentle with yourself these first few days — rest and hydration go a long way, and if anything feels concerning, check in with your doctor. I'm right here with you every step. How are you feeling so far today?`
       : null;
 
     // Fires exactly once, right after onboarding finishes — reflects one
@@ -499,7 +501,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             setFollowUps([]);
             callClaude({
               tier: "quick", maxTokens: 80,
-              messages: [{ role: "user", content: `Based on this Medical Medium healing advice, suggest exactly 2 short follow-up questions the user might want to ask. Output only the 2 questions separated by | with no numbering, bullets, or extra text. Each question max 7 words.\n\nAdvice: ${clean.slice(0, 350)}` }],
+              messages: [{ role: "user", content: `Based on this wellness-companion reply, suggest exactly 2 short follow-up questions the user might want to ask. Never suggest questions asking for protocols, recipes, supplement lists, dosages, or causes of conditions — prefer questions about the user's own routine, tracking, or which official book/resource to read. Output only the 2 questions separated by | with no numbering, bullets, or extra text. Each question max 7 words.\n\nReply: ${clean.slice(0, 350)}` }],
             }).then((r) => {
               if (!r) return;
               const qs = r.split("|").map(q => q.replace(/^\d+[\.\)]\s*/, "").trim()).filter(q => q.length > 4 && q.length < 80).slice(0, 2);
@@ -544,15 +546,16 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     }
   }, [saveCheckin, todaysCheckin, addRhythmItem]);
 
+  // Suggested questions steer toward what the app does (tracking, rhythm,
+  // referral to official sources) — never toward generated protocol content,
+  // recipes, or condition explanations.
   const quickQuestions = [
-    user?.symptoms?.[0]
-      ? `What causes my ${user.symptoms[0]}?`
-      : "What causes my fatigue?",
-    "Walk me through the 3:6:9 cleanse",
-    "Heavy metal detox smoothie recipe?",
-    "What does AW say about nervous system support?",
-    "Why is celery juice so important?",
-    "What should I eat today?",
+    "How is my week looking so far?",
+    "What's left in my rhythm today?",
+    "Help me add something to my rhythm",
+    "Which Anthony William book should I start with?",
+    "Log how I'm feeling today",
+    "How do streaks work in this app?",
   ];
 
   const englishFirst = [...voices].sort((a, b) => {

@@ -233,7 +233,7 @@ export default function RhythmView({
                 {/* Category dot + expand */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: catColor }} />
-                  {(item.awNote || item.note) && (
+                  {item.note && (
                     <button
                       onClick={() => setExpandedId(expanded ? null : item.id)}
                       style={{
@@ -250,11 +250,6 @@ export default function RhythmView({
               {/* Expanded detail */}
               {expanded && (
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
-                  {item.awNote && (
-                    <div style={{ fontSize: 12, color: C.mid, fontStyle: "italic", lineHeight: 1.6, marginBottom: 6 }}>
-                      💛 {item.awNote}
-                    </div>
-                  )}
                   {item.note && (
                     <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.5 }}>
                       {item.note}

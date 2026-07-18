@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
-import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
 import { TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
 
 // scheduledMs is computed for relative items (cascading from the anchor, or
@@ -207,7 +206,7 @@ export function useRhythm(authUser, profileId) {
       return { ...prev, [itemId]: now };
     });
 
-    const item = [...baseItems, ...(ALL_PROGRAMS.find(p => p.id === activeProgram?.id)?.items ?? [])]
+    const item = [...baseItems, ...(activeProgram?.items ?? [])]
       .find((i) => i.id === itemId);
     // Append-only ledger — the single source of truth (spec §1). Every tick
     // is one event row; voice and reports read the same ledger.
@@ -329,9 +328,10 @@ export function useRhythm(authUser, profileId) {
     });
   }, [profileId]);
 
-  const applyTemplate = useCallback(async (presetId, customItems) => {
-    const items = customItems ?? RHYTHM_PRESETS.find((p) => p.id === presetId)?.items;
-    if (!items || !profileId) return;
+  // Replaces the whole schedule with the given items — always the user's own
+  // content (a saved template, or items structured via chat/voice intake).
+  const applyTemplate = useCallback(async (items) => {
+    if (!items?.length || !profileId) return;
     const ordered = items.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
 
     // Replace the whole schedule — delete existing items, insert the template's
@@ -341,16 +341,19 @@ export function useRhythm(authUser, profileId) {
     setBaseItems((data || []).map(rowToItem));
   }, [profileId]);
 
-  const startProgram = useCallback(async (programId, startDate) => {
-    const program = ALL_PROGRAMS.find((p) => p.id === programId);
-    if (!program) return;
+  // Takes a full program object (the user's own, from their saved programs):
+  // { id, name, emoji, totalDays, items } — items carry programDayRange.
+  // Items are denormalized into activeProgram so the day filter and voice
+  // tools never need a shipped program library to resolve them.
+  const startProgram = useCallback(async (program, startDate) => {
+    if (!program?.items?.length || !program.totalDays) return;
     const start = startDate || TODAY();
 
     let dbId = null;
     if (authUser?.id && profileId) {
       const { data } = await supabase.from("active_protocols").insert({
         profile_id: profileId,
-        program_id: programId,
+        program_id: program.id,
         program_name: program.name,
         start_date: start,
         total_days: program.totalDays,
@@ -359,10 +362,11 @@ export function useRhythm(authUser, profileId) {
     }
 
     setActiveProgram({
-      id: programId,
+      id: program.id,
       name: program.name,
       startDate: start,
       totalDays: program.totalDays,
+      items: program.items,
       dbId,
     });
   }, [authUser?.id, profileId, setActiveProgram]);

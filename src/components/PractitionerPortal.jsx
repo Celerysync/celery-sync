@@ -208,41 +208,39 @@ function ClientView({ client, authUser, prac, onBack, onEdit }) {
     loadProtocol(client.id);
   }, [client.id]);
 
+  // Descriptive session-prep only — the app never generates protocol content
+  // (LEGAL_CONSTRAINTS.md: condition→protocol generation is prohibited, and
+  // clinical-practice use makes claims doubly sensitive). The practitioner
+  // supplies any protocol themselves, from their own resources.
   const generateProtocol = async () => {
     setGenLoading(true);
-    const dbContext = client.conditions.length
-      ? `Conditions: ${client.conditions.join(", ")} — draw from Anthony William's publicly shared Medical Medium teachings for each.`
-      : "General wellness — draw from Anthony William's publicly shared Medical Medium teachings.";
-
     const text = await callClaude({
       tier: 'deep',
       maxTokens: 1200,
       messages: [{
         role: "user",
-        content: `You are a Medical Medium practitioner assistant. Generate a complete healing protocol document for this client:
+        content: `You are an assistant helping a wellness practitioner prepare a session summary document for an adult client.
 
 CLIENT: ${client.name}${client.age ? `, age ${client.age}` : ""}
-GOAL: ${client.goal || "General healing"}
-CONDITIONS: ${client.conditions.join(", ") || "General wellness"}
+GOAL: ${client.goal || "General wellbeing"}
+AREAS THE CLIENT LISTED: ${client.conditions.join(", ") || "General wellness"}
 PRACTITIONER NOTES: ${client.notes || "None"}
 
-CONDITION INFORMATION (paraphrased from Anthony William's publicly shared teachings):
-${dbContext || "Draw from Anthony William's publicly shared Medical Medium teachings."}
+⚠️ HARD RULES — do not break any of these:
+- NEVER recommend supplements, foods, avoid lists, cleanses, protocols, routines, or amounts.
+- NEVER explain causes of any condition, and never claim anything treats, cures, heals, or prevents anything.
+- This document is descriptive and organisational only. The practitioner supplies any plan themselves from their own resources.
 
-Generate a professional, structured protocol document with:
-1. 🌅 MORNING PROTOCOL (lemon water, celery juice, HMDS sequence and timing — paraphrased and attributed to Anthony William; direct the client to his books for specific amounts)
-2. 💊 SUPPLEMENT PROTOCOL (supplements Anthony William associates with their conditions — paraphrased and attributed to him; NEVER state exact dosages; always direct the client to the relevant book for amounts)
-3. 🍎 DAILY FOOD PROTOCOL (what to eat, when, and in what combination)
-4. 🚫 AVOID LIST (specific to their conditions)
-5. 🌿 CLEANSE RECOMMENDATION (which AW cleanse to start and why)
-6. 📚 BOOKS TO READ (specific titles relevant to their conditions — these are the authoritative source for full protocols and dosage specifics)
-7. 🎯 90-DAY MILESTONES (what to expect and when — supportive and realistic)
-8. 💛 ENCOURAGEMENT (a warm closing message for the client)
+Generate a professional, structured session-prep document with:
+1. 👤 CLIENT SNAPSHOT (restate their goal, the areas they listed — in their own words — and the practitioner's notes, organised clearly; descriptive only)
+2. 🗣 SESSION CONVERSATION STARTERS (open, supportive questions about how their routine is going, their consistency, energy, and what support they want — no medical probing)
+3. 📚 OFFICIAL READING (which of Anthony William's books or official resources cover the topics the client listed — titles only, as pointers to the source; do not summarise their content)
+4. 📝 PRACTITIONER PLAN (output this as an intentionally empty section with the note: "To be completed by the practitioner from their own resources")
+5. 💛 ENCOURAGEMENT (a warm closing message for the client)
 
-Frame everything as Anthony William's publicly shared teachings, paraphrased and attributed. Never reproduce his copyrighted text. Never state yourself as the dosing authority — always point to his books for specifics.
-End with: ⚠️ This document is based on Anthony William's publicly shared Medical Medium teachings, paraphrased and attributed. It is not medical advice. Please consult your healthcare provider before starting any new supplement regime.`,
+End with: ⚠️ This document is descriptive only and is not medical advice. Any plan comes from the practitioner and the client's own sources. Please consult your healthcare provider before starting any new supplement regime.`,
       }],
-    }).catch(err => `Error generating protocol: ${err.message}`);
+    }).catch(err => `Error generating session prep: ${err.message}`);
 
     await saveProtocol(client.id, text);
     setGenLoading(false);
@@ -257,10 +255,10 @@ h1{color:#3d5e42;border-bottom:2px solid #6b9e72;padding-bottom:12px}
 pre{white-space:pre-wrap;font-family:Georgia,serif;font-size:13.5px;line-height:1.85}
 footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:11px;color:#9ca3af}</style>
 </head><body>
-<h1>🌿 Healing Protocol — ${client.name}</h1>
+<h1>🌿 Session Summary — ${client.name}</h1>
 <p style="font-size:12px;color:#6b7280">Generated ${new Date().toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"})} · CelerySync Practitioner Portal</p>
 <pre>${protocol.content}</pre>
-<footer>Based on Anthony William's Medical Medium teachings. Always consult your healthcare provider.</footer>
+<footer>Descriptive session summary — not medical advice. Always consult your healthcare provider.</footer>
 </body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 400);
@@ -316,7 +314,7 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", gap: 8 }}>
             <Btn full onClick={generateProtocol} disabled={genLoading} color={C.sageDark}>
-              {genLoading ? "🌿 Generating…" : protocol ? "🔄 Regenerate Protocol" : "✨ Generate AI Protocol"}
+              {genLoading ? "🌿 Generating…" : protocol ? "🔄 Regenerate Session Prep" : "✨ Generate Session Prep"}
             </Btn>
             {protocol && (
               <button onClick={printProtocol} style={{ background: C.mist, border: "none", borderRadius: 30, padding: "11px 16px", cursor: "pointer", fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif", flexShrink: 0 }}>
@@ -337,8 +335,8 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
           ) : (
             <Card style={{ textAlign: "center", padding: 32 }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
-              <div style={{ fontFamily: "Georgia,serif", fontSize: 15, color: C.charcoal, marginBottom: 6 }}>No protocol yet</div>
-              <div style={{ fontSize: 13, color: C.muted }}>Generate an AI protocol based on {client.name}'s conditions and goal.</div>
+              <div style={{ fontFamily: "Georgia,serif", fontSize: 15, color: C.charcoal, marginBottom: 6 }}>No session prep yet</div>
+              <div style={{ fontSize: 13, color: C.muted }}>Generate a descriptive session-prep summary from {client.name}'s goal and notes — your plan stays yours to write.</div>
             </Card>
           )}
         </div>

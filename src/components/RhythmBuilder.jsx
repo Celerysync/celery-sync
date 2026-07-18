@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
-import { RHYTHM_PRESETS, ALL_PROGRAMS } from "../data/rhythmTemplates.js";
 import { supabase } from "../lib/supabase.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
@@ -18,7 +17,6 @@ const BLANK_ITEM = {
   durationType: "ongoing",
   durationDays: null,
   startDate: null,
-  awNote: "",
   isMedicine: false,
   programId: null,
   programDayRange: null,
@@ -26,12 +24,40 @@ const BLANK_ITEM = {
   sortOrder: 999,
 };
 
-// Group programs by category for display
-const PROGRAM_GROUPS = [
-  { label: "3:6:9 Cleanses", ids: ["369-cleanse", "369-simplified", "369-advanced"] },
-  { label: "Detox Programs", ids: ["hmd-program", "morning-cleanse", "mono-eating"] },
-  { label: "Organ Support", ids: ["liver-rescue-morning"] },
-];
+const BLANK_PROGRAM_ITEM = {
+  name: "",
+  emoji: "✨",
+  category: "other",
+  spacingMinutes: 30,
+  note: "",
+  fromDay: 1,
+  toDay: null, // defaults to the program's total days
+};
+
+// A saved_rhythms row is a multi-day program (vs. a day template) when its
+// items carry per-day ranges. Program length is the furthest day any item runs.
+const isProgramRow = (row) => (row.items || []).some((it) => it.programDayRange);
+const rowTotalDays = (row) =>
+  (row.items || []).reduce((mx, it) => Math.max(mx, it.programDayRange?.[1] || 1), 1);
+
+// The app ships no protocol content (see LEGAL_CONSTRAINTS.md) — every
+// template and program here is built by the user from their own sources.
+function savedRowToProgram(row) {
+  const id = `sr-${row.id}`;
+  return {
+    id,
+    name: row.name,
+    emoji: row.emoji || "✨",
+    totalDays: rowTotalDays(row),
+    items: (row.items || []).map((it, idx) => ({
+      frequency: "daily",
+      durationType: "cleanse",
+      sortOrder: idx + 1,
+      ...it,
+      programId: id,
+    })),
+  };
+}
 
 export default function RhythmBuilder({
   baseItems,
@@ -49,7 +75,7 @@ export default function RhythmBuilder({
   onStartProgram,
   onCancelProgram,
 }) {
-  const [level, setLevel] = useState("templates"); // templates | programs | edit | add | save-template
+  const [level, setLevel] = useState("templates"); // templates | programs | program-new | edit | add | save-template
   const [editingId, setEditingId] = useState(null);
   const [addForm, setAddForm] = useState(BLANK_ITEM);
   const [localAnchor, setLocalAnchor] = useState(anchorTime || "07:00");
@@ -61,6 +87,35 @@ export default function RhythmBuilder({
   const [saveTemplateEmoji, setSaveTemplateEmoji] = useState("✨");
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [savedTemplateMsg, setSavedTemplateMsg] = useState("");
+
+  // The user's own saved day templates and programs (saved_rhythms)
+  const [savedRows, setSavedRows] = useState([]);
+  const [confirmDeleteSavedId, setConfirmDeleteSavedId] = useState(null);
+
+  // New-program builder
+  const [progForm, setProgForm] = useState({ name: "", emoji: "✨", totalDays: 9, items: [] });
+  const [progItemForm, setProgItemForm] = useState(BLANK_PROGRAM_ITEM);
+  const [savingProgram, setSavingProgram] = useState(false);
+
+  useEffect(() => {
+    if (!profileId) return;
+    supabase
+      .from("saved_rhythms")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setSavedRows(data || []));
+  }, [profileId]);
+
+  const savedTemplates = savedRows.filter((r) => !isProgramRow(r));
+  const savedPrograms = savedRows.filter(isProgramRow);
+
+  const deleteSavedRow = async (id) => {
+    if (confirmDeleteSavedId !== id) { setConfirmDeleteSavedId(id); return; }
+    setConfirmDeleteSavedId(null);
+    await supabase.from("saved_rhythms").delete().eq("id", id);
+    setSavedRows((prev) => prev.filter((r) => r.id !== id));
+  };
 
   const editingItem = editingId ? baseItems.find((i) => i.id === editingId) : null;
   const [editForm, setEditForm] = useState({});
@@ -190,26 +245,37 @@ export default function RhythmBuilder({
               </Card>
 
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                AW day templates
+                My day templates
               </div>
-              <div style={{ fontSize: 12, color: C.muted }}>
-                Tap a template to load it into your rhythm. You can customise every item after.
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                Build your daily rhythm from your own copy of the books — add each item under
+                <strong> + Add Item</strong>, then save the day as a template here so you can
+                reload it any time.
               </div>
 
-              {RHYTHM_PRESETS.map((preset) => (
-                <Card key={preset.id}>
+              {savedTemplates.length === 0 && (
+                <Card>
+                  <div style={{ textAlign: "center", padding: "10px 0", color: C.muted }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📖</div>
+                    <div style={{ fontSize: 13, lineHeight: 1.65 }}>
+                      No saved templates yet. Set up your rhythm in <strong>My Rhythm</strong>,
+                      then tap “Save as my custom template” — it will appear here.
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {savedTemplates.map((row) => (
+                <Card key={row.id}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{ fontSize: 26, flexShrink: 0 }}>{preset.emoji}</div>
+                    <div style={{ fontSize: 26, flexShrink: 0 }}>{row.emoji || "✨"}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                        {preset.name}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
-                        {preset.description}
+                        {row.name}
                       </div>
                       <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
-                        {preset.items.map((item) => (
-                          <span key={item.id} style={{
+                        {(row.items || []).map((item, i) => (
+                          <span key={i} style={{
                             fontSize: 10, background: `${C.sage}15`, color: C.sageDark,
                             borderRadius: 20, padding: "2px 7px",
                           }}>
@@ -218,11 +284,25 @@ export default function RhythmBuilder({
                         ))}
                       </div>
                     </div>
+                    <button
+                      onClick={() => deleteSavedRow(row.id)}
+                      style={{
+                        background: confirmDeleteSavedId === row.id ? C.terracotta : "transparent",
+                        border: `1px solid ${C.terracotta}`, borderRadius: 8,
+                        width: 28, height: 28, cursor: "pointer", flexShrink: 0,
+                        color: confirmDeleteSavedId === row.id ? C.white : C.terracotta, fontSize: 13,
+                      }}
+                    >✕</button>
                   </div>
+                  {confirmDeleteSavedId === row.id && (
+                    <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6 }}>
+                      Tap ✕ again to delete this template
+                    </div>
+                  )}
                   <button
                     onClick={() => {
-                      if (window.confirm(`Apply "${preset.name}" template? This will replace your current rhythm items.`)) {
-                        onApplyTemplate(preset.id);
+                      if (window.confirm(`Apply "${row.name}"? This will replace your current rhythm items.`)) {
+                        onApplyTemplate(row.items || []);
                         setLevel("edit");
                       }
                     }}
@@ -268,72 +348,313 @@ export default function RhythmBuilder({
                 </div>
               )}
 
-              <div style={{ fontSize: 12, color: C.muted }}>
-                Start a multi-day program and the app tracks your progress day by day — and tells your healing companion where you are.
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                Build a multi-day program from your own copy of the books — set which days each
+                item runs, and the app tracks your progress day by day and tells your companion
+                where you are. For what belongs in a cleanse and when, refer to your book.
               </div>
 
-              {PROGRAM_GROUPS.map((group) => {
-                const groupPrograms = ALL_PROGRAMS.filter(p => group.ids.includes(p.id));
-                if (!groupPrograms.length) return null;
-                return (
-                  <div key={group.label}>
-                    <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 8, marginTop: 4 }}>
-                      {group.label}
-                    </div>
-                    {groupPrograms.map((prog) => {
-                      const isActive = activeProgram?.id === prog.id;
-                      return (
-                        <Card key={prog.id} style={{ border: isActive ? `2px solid ${C.plum}` : undefined, marginBottom: 10 }}>
-                          <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                            <div style={{ fontSize: 26, flexShrink: 0 }}>{prog.emoji}</div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                                  {prog.name}
-                                </div>
-                                <span style={{ fontSize: 10, background: `${C.plum}15`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
-                                  {prog.totalDays} days
-                                </span>
-                              </div>
-                              <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
-                                {prog.description}
-                              </div>
-                              <div style={{ fontSize: 11, color: C.plum, marginTop: 4 }}>
-                                📖 {prog.awSource}
-                              </div>
-                            </div>
-                          </div>
+              <Btn full color={C.plum} onClick={() => {
+                setProgForm({ name: "", emoji: "✨", totalDays: 9, items: [] });
+                setProgItemForm(BLANK_PROGRAM_ITEM);
+                setLevel("program-new");
+              }}>
+                + Build a program from my book
+              </Btn>
 
-                          {!isActive && (
-                            <div style={{ marginTop: 12 }}>
-                              <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Start date:</div>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <input
-                                  type="date"
-                                  value={programStartDate}
-                                  onChange={(e) => setProgramStartDate(e.target.value)}
-                                  style={{
-                                    border: `1.5px solid ${C.border}`, borderRadius: 8,
-                                    padding: "6px 10px", fontSize: 13, color: C.charcoal,
-                                    background: C.white, outline: "none",
-                                  }}
-                                />
-                                <Btn small color={C.plum} onClick={() => {
-                                  onStartProgram(prog.id, programStartDate);
-                                  setLevel("edit");
-                                }}>
-                                  Start →
-                                </Btn>
-                              </div>
-                            </div>
-                          )}
-                        </Card>
-                      );
-                    })}
+              {savedPrograms.length === 0 && (
+                <Card>
+                  <div style={{ textAlign: "center", padding: "10px 0", color: C.muted }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>🗓</div>
+                    <div style={{ fontSize: 13, lineHeight: 1.65 }}>
+                      No programs yet. Build one above using your own book as the source —
+                      it saves here so you can run it again any time.
+                    </div>
                   </div>
+                </Card>
+              )}
+
+              {savedPrograms.map((row) => {
+                const prog = savedRowToProgram(row);
+                const isActive = activeProgram?.id === prog.id;
+                return (
+                  <Card key={row.id} style={{ border: isActive ? `2px solid ${C.plum}` : undefined, marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ fontSize: 26, flexShrink: 0 }}>{prog.emoji}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
+                            {prog.name}
+                          </div>
+                          <span style={{ fontSize: 10, background: `${C.plum}15`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
+                            {prog.totalDays} days
+                          </span>
+                        </div>
+                        {row.description && (
+                          <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
+                            {row.description}
+                          </div>
+                        )}
+                        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {prog.items.map((item, i) => (
+                            <span key={i} style={{
+                              fontSize: 10, background: `${C.plum}12`, color: C.plum,
+                              borderRadius: 20, padding: "2px 7px",
+                            }}>
+                              {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteSavedRow(row.id)}
+                        style={{
+                          background: confirmDeleteSavedId === row.id ? C.terracotta : "transparent",
+                          border: `1px solid ${C.terracotta}`, borderRadius: 8,
+                          width: 28, height: 28, cursor: "pointer", flexShrink: 0,
+                          color: confirmDeleteSavedId === row.id ? C.white : C.terracotta, fontSize: 13,
+                        }}
+                      >✕</button>
+                    </div>
+                    {confirmDeleteSavedId === row.id && (
+                      <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6 }}>
+                        Tap ✕ again to delete this program
+                      </div>
+                    )}
+
+                    {!isActive && (
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Start date:</div>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <input
+                            type="date"
+                            value={programStartDate}
+                            onChange={(e) => setProgramStartDate(e.target.value)}
+                            style={{
+                              border: `1.5px solid ${C.border}`, borderRadius: 8,
+                              padding: "6px 10px", fontSize: 13, color: C.charcoal,
+                              background: C.white, outline: "none",
+                            }}
+                          />
+                          <Btn small color={C.plum} onClick={() => {
+                            onStartProgram(prog, programStartDate);
+                            setLevel("edit");
+                          }}>
+                            Start →
+                          </Btn>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
                 );
               })}
             </>
+          )}
+
+          {/* ── LEVEL: BUILD A PROGRAM ────────────────────────────────────────── */}
+          {level === "program-new" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
+                  Build a program
+                </div>
+                <button onClick={() => setLevel("programs")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer" }}>
+                  Cancel
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                Enter the program as it appears in your own book — name it, set how many days it
+                runs, and add each item with the days it applies to.
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  value={progForm.emoji}
+                  onChange={(e) => setProgForm((f) => ({ ...f, emoji: e.target.value }))}
+                  maxLength={2}
+                  style={{
+                    width: 52, border: `2px solid ${C.border}`, borderRadius: 10,
+                    padding: "10px 8px", fontSize: 22, textAlign: "center",
+                    background: C.white, outline: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={progForm.name}
+                  onChange={(e) => setProgForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Program name (e.g. My 9-day cleanse)"
+                  style={{
+                    flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
+                    padding: "10px 14px", fontSize: 14, color: C.charcoal,
+                    background: C.white, outline: "none",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 13, color: C.muted }}>Program length:</span>
+                <input
+                  type="number"
+                  min={2}
+                  max={90}
+                  value={progForm.totalDays}
+                  onChange={(e) => setProgForm((f) => ({ ...f, totalDays: parseInt(e.target.value) || 9 }))}
+                  style={{
+                    width: 65, border: `2px solid ${C.border}`, borderRadius: 8,
+                    padding: "6px 10px", fontSize: 14, textAlign: "center",
+                    background: C.white, outline: "none",
+                  }}
+                />
+                <span style={{ fontSize: 13, color: C.muted }}>days</span>
+              </div>
+
+              {progForm.items.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {progForm.items.map((item, idx) => (
+                    <div key={idx} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      background: C.white, border: `1.5px solid ${C.border}`,
+                      borderRadius: 12, padding: "10px 12px",
+                    }}>
+                      <span style={{ fontSize: 18 }}>{item.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.muted }}>
+                          Days {item.programDayRange[0]}–{item.programDayRange[1]} · +{item.spacingMinutes}min
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setProgForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== idx) }))}
+                        style={{
+                          background: "none", border: `1px solid ${C.terracotta}`,
+                          borderRadius: 8, width: 26, height: 26, cursor: "pointer",
+                          color: C.terracotta, fontSize: 12, flexShrink: 0,
+                        }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add an item to the program */}
+              <Card>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Add program item
+                </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                  <input
+                    type="text"
+                    value={progItemForm.emoji}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, emoji: e.target.value }))}
+                    maxLength={2}
+                    style={{
+                      width: 46, border: `1.5px solid ${C.border}`, borderRadius: 10,
+                      padding: "8px 6px", fontSize: 18, textAlign: "center",
+                      background: C.white, outline: "none",
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={progItemForm.name}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="Item name (from your book)"
+                    style={{
+                      flex: 1, border: `1.5px solid ${C.border}`, borderRadius: 10,
+                      padding: "8px 12px", fontSize: 13, color: C.charcoal,
+                      background: C.white, outline: "none",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>Days</span>
+                  <input
+                    type="number" min={1} max={progForm.totalDays}
+                    value={progItemForm.fromDay}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, fromDay: parseInt(e.target.value) || 1 }))}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                  />
+                  <span style={{ fontSize: 12, color: C.muted }}>to</span>
+                  <input
+                    type="number" min={1} max={progForm.totalDays}
+                    value={progItemForm.toDay ?? progForm.totalDays}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, toDay: parseInt(e.target.value) || progForm.totalDays }))}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                  />
+                  <span style={{ fontSize: 12, color: C.muted, marginLeft: 6 }}>· wait</span>
+                  <input
+                    type="number" min={0} max={480}
+                    value={progItemForm.spacingMinutes}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, spacingMinutes: parseInt(e.target.value) || 0 }))}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                  />
+                  <span style={{ fontSize: 12, color: C.muted }}>min</span>
+                </div>
+                <input
+                  type="text"
+                  value={progItemForm.note}
+                  onChange={(e) => setProgItemForm((f) => ({ ...f, note: e.target.value }))}
+                  placeholder="Your note (optional, e.g. page reference)"
+                  style={{
+                    width: "100%", boxSizing: "border-box", border: `1.5px solid ${C.border}`,
+                    borderRadius: 10, padding: "8px 12px", fontSize: 12, color: C.charcoal,
+                    background: C.white, outline: "none", marginBottom: 10,
+                  }}
+                />
+                <Btn
+                  small
+                  color={C.plum}
+                  disabled={!progItemForm.name.trim()}
+                  onClick={() => {
+                    const from = Math.max(1, Math.min(progItemForm.fromDay, progForm.totalDays));
+                    const to = Math.max(from, Math.min(progItemForm.toDay ?? progForm.totalDays, progForm.totalDays));
+                    setProgForm((f) => ({
+                      ...f,
+                      items: [...f.items, {
+                        id: crypto.randomUUID(),
+                        name: progItemForm.name.trim(),
+                        emoji: progItemForm.emoji || "✨",
+                        category: "other",
+                        spacingMinutes: progItemForm.spacingMinutes,
+                        frequency: "daily",
+                        durationType: "cleanse",
+                        note: progItemForm.note,
+                        programDayRange: [from, to],
+                        sortOrder: f.items.length + 1,
+                      }],
+                    }));
+                    setProgItemForm(BLANK_PROGRAM_ITEM);
+                  }}
+                >
+                  + Add to program
+                </Btn>
+              </Card>
+
+              <Btn
+                full
+                color={C.plum}
+                disabled={!progForm.name.trim() || progForm.items.length === 0 || savingProgram}
+                onClick={async () => {
+                  if (!profileId) return;
+                  setSavingProgram(true);
+                  const { data } = await supabase.from("saved_rhythms").insert({
+                    profile_id: profileId,
+                    name: progForm.name.trim(),
+                    emoji: progForm.emoji || "✨",
+                    description: `${progForm.totalDays}-day program`,
+                    items: progForm.items,
+                  }).select().single();
+                  setSavingProgram(false);
+                  if (data) setSavedRows((prev) => [data, ...prev]);
+                  setLevel("programs");
+                }}
+              >
+                {savingProgram ? "Saving…" : "Save program"}
+              </Btn>
+            </div>
           )}
 
           {/* ── LEVEL: MY RHYTHM (edit list) ──────────────────────────────────── */}
@@ -529,12 +850,13 @@ export default function RhythmBuilder({
                 onClick={async () => {
                   if (!saveTemplateName.trim() || !profileId) return;
                   setSavingTemplate(true);
-                  await supabase.from("saved_rhythms").insert({
+                  const { data } = await supabase.from("saved_rhythms").insert({
                     profile_id: profileId,
                     name: saveTemplateName.trim(),
                     emoji: saveTemplateEmoji || "✨",
                     items: baseItems,
-                  });
+                  }).select().single();
+                  if (data) setSavedRows((prev) => [data, ...prev]);
                   setSavingTemplate(false);
                   setSavedTemplateMsg(`✓ "${saveTemplateName}" saved! Find it in My Rhythm.`);
                   setTimeout(() => { setSavedTemplateMsg(""); setLevel("edit"); }, 1800);
