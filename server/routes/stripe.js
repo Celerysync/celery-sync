@@ -21,14 +21,20 @@ async function getOrCreateCustomer(userId, email) {
   return customer.id
 }
 
-// Create Stripe Checkout session (healer plan — monthly or annual)
+// Monthly-only since 2026-07-19 (user decision: annual refund liability if
+// the app ever winds down). STRIPE_ANNUAL_PRICE_ID stays in the env unused
+// so annuals can come back with one line once the app has earned its keep.
+const PLAN_PRICES = () => ({
+  rhythm: process.env.STRIPE_RHYTHM_PRICE_ID,   // $7.97/mo engine-only
+  healer: process.env.STRIPE_PRICE_ID,           // $24.97/mo full companion
+})
+
+// Create Stripe Checkout session (rhythm or healer plan)
 router.post('/checkout', async (req, res) => {
-  const { userId, email, interval } = req.body
+  const { userId, email, plan = 'healer' } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
-  if (interval === 'annual' && !process.env.STRIPE_ANNUAL_PRICE_ID) {
-    return res.status(500).json({ error: 'Annual plan not configured' })
-  }
-  const priceId = interval === 'annual' ? process.env.STRIPE_ANNUAL_PRICE_ID : process.env.STRIPE_PRICE_ID
+  const priceId = PLAN_PRICES()[plan]
+  if (!priceId) return res.status(400).json({ error: `Unknown or unconfigured plan: ${plan}` })
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
   try {
     const customerId = await getOrCreateCustomer(userId, email)
@@ -49,6 +55,40 @@ router.post('/checkout', async (req, res) => {
       status: 'pending', updated_at: new Date().toISOString(),
     })
     res.json({ url: session.url })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Switch an EXISTING subscription between rhythm and healer — updates the
+// live subscription item (with proration) instead of opening a new checkout,
+// which would leave the old subscription billing alongside the new one.
+router.post('/change-plan', async (req, res) => {
+  const { userId, plan } = req.body
+  if (!userId || !plan) return res.status(400).json({ error: 'userId and plan required' })
+  const priceId = PLAN_PRICES()[plan]
+  if (!priceId) return res.status(400).json({ error: `Unknown or unconfigured plan: ${plan}` })
+  try {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .single()
+    if (!sub?.stripe_subscription_id) return res.status(404).json({ error: 'No subscription to change — subscribe first' })
+    const current = await stripe.subscriptions.retrieve(sub.stripe_subscription_id)
+    const item = current.items.data[0]
+    if (item?.price?.id === priceId) return res.json({ plan, unchanged: true })
+    const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      items: [{ id: item.id, price: priceId }],
+      proration_behavior: 'create_prorations',
+    })
+    await supabase.from('subscriptions').update({
+      plan,
+      status: updated.status,
+      current_period_end: new Date(updated.current_period_end * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', userId)
+    res.json({ plan, status: updated.status })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -124,6 +164,11 @@ router.post('/webhook', async (req, res) => {
     return customer.deleted ? null : customer.metadata?.supabase_user_id
   }
 
+  const planForPrice = (priceId) =>
+    priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner'
+    : priceId === process.env.STRIPE_RHYTHM_PRICE_ID ? 'rhythm'
+    : 'healer'
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -161,8 +206,7 @@ router.post('/webhook', async (req, res) => {
         const userId = await getUserId(session.customer)
         if (!userId) break
         const sub = await stripe.subscriptions.retrieve(session.subscription)
-        const priceId = sub.items.data[0]?.price?.id
-        const plan = priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner' : 'healer'
+        const plan = planForPrice(sub.items.data[0]?.price?.id)
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: session.customer,
@@ -180,8 +224,7 @@ router.post('/webhook', async (req, res) => {
         const sub = event.data.object
         const userId = await getUserId(sub.customer)
         if (!userId) break
-        const priceId = sub.items.data[0]?.price?.id
-        const plan = priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner' : 'healer'
+        const plan = planForPrice(sub.items.data[0]?.price?.id)
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: sub.customer,

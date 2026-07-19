@@ -37,6 +37,8 @@ const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"))
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
 const CompanionVoiceSettings = lazy(() => import("./components/CompanionVoiceSettings.jsx"));
+const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
+const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
 
 const TABS = [
   { id: "home",        label: "Today",       emoji: "🏠", free: true  },
@@ -135,7 +137,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
 
 export default function App() {
   const { authUser, authLoading, signOut } = useAuth();
-  const { isSubscribed, isPractitioner, subData, subLoading, refetch: refetchSub, isInTrial, trialDaysLeft } = useSubscription(authUser);
+  const { isSubscribed, isPractitioner, isRhythm, subData, subLoading, refetch: refetchSub, isInTrial, trialDaysLeft } = useSubscription(authUser);
   const {
     profiles, activeProfile, activeProfileId,
     profilesLoading, loadProfiles,
@@ -161,8 +163,22 @@ export default function App() {
 
   // Hume EVI is the app's one voice stack — full rollout 2026-07-19, before
   // the first subscriber. The legacy ElevenLabs/browser-SpeechRecognition
-  // stack is removed.
-  const humeEnabled = true;
+  // stack is removed. Rhythm-plan subscribers get the engine without the
+  // companion, so the voice layer never mounts for them (orb included).
+  const humeEnabled = !isRhythm;
+
+  // Rhythm → Healer upgrade modifies the live Stripe subscription in place
+  // (prorated) — never a second checkout, which would double-bill.
+  const upgradeToHealer = async () => {
+    const res = await fetch("/api/stripe/change-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: authUser.id, plan: "healer" }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    await refetchSub();
+  };
 
   // Migrate old tab IDs saved in localStorage
   useEffect(() => {
@@ -297,6 +313,9 @@ export default function App() {
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
 
       case "companion":
+        // Rhythm plan = engine without the companion — this tab becomes the
+        // upgrade door rather than the Coach.
+        if (isRhythm) return <HealerUpsell onUpgrade={upgradeToHealer} />;
         return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} justOnboarded={justOnboarded} onConsumedJustOnboarded={() => setJustOnboarded(null)} />;
 
       case "track":
@@ -318,15 +337,17 @@ export default function App() {
               authUser={authUser}
               isSubscribed={isSubscribed}
               isPractitioner={isPractitioner}
+              isRhythm={isRhythm}
               subData={subData}
               subLoading={subLoading}
               isInTrial={isInTrial}
               trialDaysLeft={trialDaysLeft}
               onSignOut={signOut}
               onReplayWelcome={() => setShowWelcome(true)}
+              onRefetchSub={refetchSub}
               profileId={activeProfileId}
             />
-            <CompanionVoiceSettings authUser={authUser} />
+            <CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} />
             <ReminderSettings authUser={authUser} />
             <ProfileManager
               profiles={profiles}
@@ -394,7 +415,7 @@ export default function App() {
                 padding: "3px 10px", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
                 whiteSpace: "nowrap",
               }}>
-                {isPractitioner ? "🏥 Practitioner" : "✨ Healer"}
+                {isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Healer"}
               </div>
             )}
 
@@ -507,7 +528,9 @@ export default function App() {
           <WelcomeVoice onDone={() => setShowWelcome(false)} />
         </Suspense>
       )}
-      <VoiceOrb />
+      {isRhythm
+        ? <Suspense fallback={null}><UpsellOrb onTap={() => setTab("companion")} /></Suspense>
+        : <VoiceOrb />}
     </div>
     </HumeVoiceProvider>
     </VoiceProvider>

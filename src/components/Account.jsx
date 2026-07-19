@@ -36,17 +36,26 @@ function MemoryField({ label, value }) {
   )
 }
 
-const FEATURES = [
-  { emoji: '🎙', label: 'Voice AI Wellness Guide', desc: 'Speak to it, it speaks back — warm companion that remembers your journey' },
-  { emoji: '🌿', label: 'Complete Cleanse Protocols', desc: 'Every day of every cleanse with audio read-aloud' },
-  { emoji: '🔍', label: 'Symptom Checker', desc: 'Protocol guidance for 100+ conditions, paraphrased from Anthony William\'s teachings' },
-  { emoji: '🔗', label: 'Resources — Official AW Links', desc: 'Direct links to Anthony William\'s books, YouTube, podcast, and website' },
-  { emoji: '💓', label: 'Wearable Integration', desc: 'Connect Oura Ring for automatic sleep & HRV data — interpreted through Anthony William\'s teachings' },
-  { emoji: '⏰', label: 'Adrenal Snack Reminders', desc: 'Never miss a 2-hour snack window — keeps blood sugar and adrenals stable' },
-  { emoji: '🍎', label: 'What to Eat Right Now', desc: 'Time-aware food guidance from sunrise to bedtime' },
+// Compliance (CLAUDE.md rails): descriptive app features only — the app is
+// the engine for the user's OWN routine, never a source of protocol content
+// or health-outcome claims.
+const ENGINE_FEATURES = [
+  { emoji: '🌿', label: 'Your Daily Rhythm', desc: 'Build your own routine from your own books — tap to complete, day by day' },
+  { emoji: '🗓', label: 'Multi-day programs', desc: 'Set up cleanses and programs from your own copy of the books, tracked day by day' },
+  { emoji: '📊', label: 'Check-ins, streaks & reports', desc: 'Log energy, mood and symptoms — see your own trends and streaks over time' },
+  { emoji: '⏰', label: 'Reminders', desc: 'Gentle nudges for the routine and snack windows you set yourself' },
+  { emoji: '💊', label: 'Supplement tracker', desc: 'Your own supplement list, ticked off daily, with restock notes' },
+  { emoji: '💜', label: 'Carer mode', desc: 'A carer\'s view of the day for someone looking after you' },
+  { emoji: '🔗', label: 'Official AW resources', desc: 'Direct links to Anthony William\'s books, YouTube, podcast, and website' },
+]
+const COMPANION_FEATURES = [
+  { emoji: '🎙', label: 'Voice companion', desc: 'Say "just finished my juice" and it\'s ticked off — hands-free, anywhere in the app' },
+  { emoji: '💬', label: 'AI chat that knows your journey', desc: 'Ask questions, think out loud, get pointed to the right official source' },
+  { emoji: '🌅', label: 'Spoken mornings & evenings', desc: 'A good-morning with your rhythm, an evening reflection, and a Sunday week-in-review' },
+  { emoji: '💓', label: 'Wearable integration', desc: 'Connect Oura Ring to log sleep & HRV alongside your check-ins automatically' },
 ]
 
-export default function Account({ authUser, isSubscribed, isPractitioner, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, profileId }) {
+export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId }) {
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -54,7 +63,6 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [memoryData, setMemoryData] = useState(null)
   const [memoryClearing, setMemoryClearing] = useState(false)
   const [memoryExpanded, setMemoryExpanded] = useState(false)
-  const [annual, setAnnual] = useState(false)
 
   useEffect(() => {
     if (!isSubscribed || !profileId) return
@@ -72,14 +80,14 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
   const [darkMode, setDarkMode] = useLocalStorage("cs_darkMode", false)
   const [largeText, setLargeText] = useLocalStorage("cs_largeText", false)
 
-  const subscribe = async () => {
+  const subscribe = async (plan = 'healer') => {
     setLoading(true)
     setError(null)
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: authUser.id, email: authUser.email, interval: annual ? 'annual' : 'monthly' }),
+        body: JSON.stringify({ userId: authUser.id, email: authUser.email, plan }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -88,6 +96,26 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
       setError(err.message)
       setLoading(false)
     }
+  }
+
+  // Rhythm ↔ Healer switches update the live subscription in place (prorated)
+  // — never a second checkout, which would double-bill.
+  const changePlan = async (plan) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/stripe/change-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: authUser.id, plan }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      await onRefetchSub?.()
+    } catch (err) {
+      setError(err.message)
+    }
+    setLoading(false)
   }
 
   const openPortal = async () => {
@@ -121,68 +149,102 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
 
       {!isSubscribed ? (
         <>
-          {/* Pricing hero */}
+          {/* Choose-your-plan hero */}
           <div style={{
             background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
             borderRadius: 22,
-            padding: '28px 24px',
+            padding: '26px 24px',
             color: C.white,
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 44, marginBottom: 10 }}>🌿</div>
-            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 23, marginBottom: 6 }}>
-              Healer Plan
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🌿</div>
+            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 22, marginBottom: 6 }}>
+              Choose how supported you want to be
             </div>
-            <div style={{ fontSize: 32, fontFamily: 'Georgia,serif', fontWeight: 700 }}>
-              {annual ? '$249' : '$24.97'}
-              <span style={{ fontSize: 15, fontWeight: 400, opacity: 0.85 }}>{annual ? '/year AUD' : '/month AUD'}</span>
+            <div style={{ fontSize: 13, opacity: 0.85, lineHeight: 1.6 }}>
+              Both plans are monthly — no lock-in, cancel anytime.
             </div>
-            <button
-              onClick={() => setAnnual(a => !a)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: C.white,
-                textDecoration: 'underline',
-                fontSize: 12,
-                opacity: 0.85,
-                marginTop: 4,
-                marginBottom: 8,
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              {annual ? 'Switch to monthly — $24.97/mo' : 'Switch to annual — $249/year, two months free'}
-            </button>
-            <div style={{
-              marginTop: 6,
-              background: 'rgba(255,255,255,0.18)',
-              borderRadius: 30,
-              padding: '6px 18px',
-              display: 'inline-block',
-              fontSize: 13,
-              fontWeight: 700,
-            }}>
-              ✨ Cancel anytime
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>Powered by the world's most advanced AI · Cancel anytime</div>
           </div>
 
-          {/* Features */}
-          <Card>
-            <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 14 }}>
-              Everything included:
+          {/* Healer plan (primary) */}
+          <Card style={{ border: `2px solid ${C.sage}`, position: 'relative' }}>
+            <div style={{
+              position: 'absolute', top: -11, left: 18,
+              background: C.sageDark, color: C.white, borderRadius: 20,
+              padding: '3px 12px', fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+            }}>
+              MOST LOVED
             </div>
-            {FEATURES.map(f => (
-              <div key={f.label} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: `1px solid ${C.border}`, alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{f.emoji}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4, marginBottom: 4 }}>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>✨ Healer</div>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
+                $24.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
+              Everything in Rhythm, plus the AI companion you met in your trial:
+            </div>
+            {COMPANION_FEATURES.map(f => (
+              <div key={f.label} style={{ display: 'flex', gap: 12, padding: '8px 0', borderBottom: `1px solid ${C.border}`, alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{f.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, color: C.charcoal }}>{f.label}</div>
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{f.desc}</div>
                 </div>
-                <div style={{ color: C.sage, fontSize: 15, alignSelf: 'center', flexShrink: 0, fontWeight: 700 }}>✓</div>
               </div>
             ))}
+            <div style={{ fontSize: 11, color: C.muted, margin: '8px 0 10px' }}>
+              Includes 100 voice minutes a month — top-ups available if you're chatty.
+            </div>
+            <button
+              onClick={() => subscribe('healer')}
+              disabled={loading}
+              style={{
+                width: '100%', padding: '14px',
+                background: loading ? C.muted : C.sageDark, color: C.white,
+                border: 'none', borderRadius: 40,
+                fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15,
+                cursor: loading ? 'default' : 'pointer',
+              }}
+            >
+              {loading ? '🌿 Please wait…' : 'Subscribe to Healer →'}
+            </button>
+          </Card>
+
+          {/* Rhythm plan */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>🌱 Rhythm</div>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
+                $7.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
+              The full engine for your own routine — without the AI companion:
+            </div>
+            {ENGINE_FEATURES.map(f => (
+              <div key={f.label} style={{ display: 'flex', gap: 10, padding: '7px 0', borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
+                <div style={{ fontSize: 16, flexShrink: 0 }}>{f.emoji}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12.5, color: C.charcoal }}>{f.label}</div>
+                  <div style={{ fontSize: 11.5, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{f.desc}</div>
+                </div>
+                <div style={{ color: C.sage, fontSize: 14, flexShrink: 0, fontWeight: 700 }}>✓</div>
+              </div>
+            ))}
+            <button
+              onClick={() => subscribe('rhythm')}
+              disabled={loading}
+              style={{
+                width: '100%', padding: '13px', marginTop: 10,
+                background: 'transparent', color: C.sageDark,
+                border: `2px solid ${C.sageDark}`, borderRadius: 40,
+                fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14,
+                cursor: loading ? 'default' : 'pointer',
+              }}
+            >
+              {loading ? '🌿 Please wait…' : 'Subscribe to Rhythm →'}
+            </button>
           </Card>
 
           {/* Source policy */}
@@ -203,26 +265,6 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               {error}
             </div>
           )}
-
-          <button
-            onClick={subscribe}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '16px',
-              background: loading ? C.muted : C.sageDark,
-              color: C.white,
-              border: 'none',
-              borderRadius: 40,
-              fontFamily: 'Georgia,serif',
-              fontWeight: 700,
-              fontSize: 17,
-              cursor: loading ? 'default' : 'pointer',
-              boxShadow: loading ? 'none' : '0 4px 24px #3D6B4450',
-            }}
-          >
-            {loading ? '🌿 Please wait…' : 'Subscribe & Unlock Everything →'}
-          </button>
 
           <div style={{ textAlign: 'center', fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
             Billed when you subscribe. Cancel anytime — you keep access until the end of your billing period.{'\n'}
@@ -272,10 +314,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                 {trialDaysLeft === 0 ? 'Your trial ends today' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`}
               </div>
               <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
-                Subscribe now to keep full access to your AI Guide, healing memory, weekly summaries, and everything else.
+                Keep everything you've been using — companion, rhythm, reports and all — or keep just the engine with the Rhythm plan.
               </div>
               <button
-                onClick={subscribe}
+                onClick={() => subscribe('healer')}
                 disabled={loading}
                 style={{
                   width: '100%', padding: '13px', background: loading ? C.muted : C.sageDark,
@@ -284,7 +326,20 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : `Subscribe — ${annual ? '$249/year' : '$24.97/month'} →`}
+                {loading ? '🌿 Please wait…' : 'Keep Everything — Healer $24.97/month →'}
+              </button>
+              <button
+                onClick={() => subscribe('rhythm')}
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '11px', marginTop: 8,
+                  background: 'transparent', color: C.sageDark,
+                  border: `1.5px solid ${C.sageDark}60`, borderRadius: 30,
+                  fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 13,
+                  cursor: loading ? 'default' : 'pointer',
+                }}
+              >
+                {loading ? '🌿 Please wait…' : 'Just the engine — Rhythm $7.97/month →'}
               </button>
             </div>
           )}
@@ -305,9 +360,9 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
             padding: '24px 22px',
             color: C.white,
           }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>{isPractitioner ? '🏥' : '✨'}</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>{isPractitioner ? '🏥' : isRhythm ? '🌱' : '✨'}</div>
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20 }}>
-              {isPractitioner ? 'Practitioner Plan — Active' : 'Healer Plan — Active'}
+              {isPractitioner ? 'Practitioner Plan — Active' : isRhythm ? 'Rhythm Plan — Active' : 'Healer Plan — Active'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
               {cancelPending ? '⚠️ Cancelling at period end' : '🌿 Subscription active'}
@@ -388,6 +443,39 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               </>
             )}
           </Card>
+
+          {/* Plan switching — prorated in-place subscription update */}
+          {isRhythm && (
+            <Card style={{ border: `2px solid ${C.sage}` }}>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
+                🎙 Add the companion
+              </div>
+              <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+                Upgrade to Healer for the voice and chat companion — talk your day through,
+                tick things off by voice, and hear your mornings and evenings spoken. Applies
+                to your current subscription straight away, prorated.
+              </div>
+              <Btn full onClick={() => changePlan('healer')} color={C.sage} disabled={loading}>
+                {loading ? '🌿 Please wait…' : 'Upgrade to Healer — $24.97/month →'}
+              </Btn>
+            </Card>
+          )}
+          {!isPractitioner && !isRhythm && (
+            <div style={{ textAlign: 'center' }}>
+              <button
+                onClick={() => {
+                  if (confirm('Switch to the Rhythm plan ($7.97/month)? You keep your whole routine, tracking and reports, but the voice and chat companion turns off straight away.')) changePlan('rhythm')
+                }}
+                disabled={loading}
+                style={{
+                  background: 'none', border: 'none', fontSize: 12, color: C.muted,
+                  textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Georgia,serif',
+                }}
+              >
+                Need to trim costs? Switch to Rhythm — $7.97/month (keeps the engine, pauses the companion)
+              </button>
+            </div>
+          )}
 
           {/* Practitioner upgrade */}
           {!isPractitioner && (

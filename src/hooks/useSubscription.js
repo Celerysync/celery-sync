@@ -48,7 +48,11 @@ export function useSubscription(authUser) {
     refetch()
   }, [refetch])
 
-  const isPractitioner = (subData?.status === 'active' || subData?.status === 'trialing') && subData?.plan === 'practitioner'
+  const hasActivePlan = subData?.status === 'active' || subData?.status === 'trialing'
+  const isPractitioner = hasActivePlan && subData?.plan === 'practitioner'
+  // Rhythm ($7.97): full engine, no AI companion (voice or text). Trial users
+  // are NOT rhythm — the 7-day trial shows everyone the full Healer experience.
+  const isRhythm = hasActivePlan && subData?.plan === 'rhythm'
 
-  return { isSubscribed, isPractitioner, subData, subLoading, refetch, isInTrial, trialDaysLeft }
+  return { isSubscribed, isPractitioner, isRhythm, plan: subData?.plan ?? null, subData, subLoading, refetch, isInTrial, trialDaysLeft }
 }

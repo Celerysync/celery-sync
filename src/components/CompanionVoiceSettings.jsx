@@ -47,7 +47,7 @@ function Toggle({ on, onChange, label, desc }) {
 // Spec §2.5 + §3.4 — the user's companion voice, its optional name, and the
 // morning/evening TTS nudge toggles. Voice options are the curated CelerySync
 // set from /api/hume/voices (Octave) — the app is Hume-only since 2026-07-19.
-export default function CompanionVoiceSettings({ authUser }) {
+export default function CompanionVoiceSettings({ authUser, isRhythm }) {
   const { voicePrefs: prefs, voicePrefsLoaded: loaded, saveVoicePrefs: savePrefs } = useVoicePrefs();
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupMsg, setTopupMsg] = useState("");
@@ -56,13 +56,30 @@ export default function CompanionVoiceSettings({ authUser }) {
   const { speak, speaking, stopSpeaking } = useVoice(prefs.voice_id || "");
 
   useEffect(() => {
+    if (isRhythm) return;
     let cancelled = false;
     fetch("/api/hume/voices")
       .then((r) => (r.ok ? r.json() : { voices: [] }))
       .then(({ voices }) => { if (!cancelled) setHumeVoices(voices || []); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [isRhythm]);
+
+  // Rhythm plan has no companion — voice settings and top-ups don't apply.
+  // The Companion tab carries the full upgrade pitch; this stays one line.
+  if (isRhythm) {
+    return (
+      <Card>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
+          🎙 Companion voice
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          The voice companion is part of the Healer plan — the Companion tab has
+          the details if you'd like it back.
+        </div>
+      </Card>
+    );
+  }
 
   if (!loaded) return null;
 

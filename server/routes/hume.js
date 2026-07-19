@@ -199,10 +199,15 @@ async function includedSecondsFor(userId) {
   try {
     const { data: sub } = await supabase
       .from('subscriptions')
-      .select('status')
+      .select('status, plan')
       .eq('user_id', userId)
       .maybeSingle()
-    if (sub?.status === 'active' || sub?.status === 'trialing') return DEFAULT_INCLUDED_SECONDS
+    if (sub?.status === 'active' || sub?.status === 'trialing') {
+      // Rhythm ($7.97 engine-only) includes no voice — the companion is what
+      // the Healer plan IS. Any topup_seconds_remaining still spends normally.
+      if (sub.plan === 'rhythm') return 0
+      return DEFAULT_INCLUDED_SECONDS
+    }
 
     // The admin/owner account has no subscription row but is not a trial user
     if (process.env.ADMIN_EMAIL) {
