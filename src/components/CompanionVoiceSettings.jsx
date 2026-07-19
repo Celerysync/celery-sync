@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
-import { useVoicePrefs } from "../hooks/useVoicePrefs.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 
 const PREVIEW_LINE =
@@ -48,7 +48,7 @@ function Toggle({ on, onChange, label, desc }) {
 // morning/evening TTS nudge toggles. Voice options are the curated CelerySync
 // set from /api/hume/voices (Octave) — the app is Hume-only since 2026-07-19.
 export default function CompanionVoiceSettings({ authUser }) {
-  const { prefs, loaded, savePrefs } = useVoicePrefs(authUser);
+  const { voicePrefs: prefs, voicePrefsLoaded: loaded, saveVoicePrefs: savePrefs } = useVoicePrefs();
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupMsg, setTopupMsg] = useState("");
   const [humeVoices, setHumeVoices] = useState([]);

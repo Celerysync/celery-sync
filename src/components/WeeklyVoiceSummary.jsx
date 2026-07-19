@@ -1,7 +1,7 @@
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
-import { useVoicePrefs } from "../hooks/useVoicePrefs.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 // Spec §5 Sunday voice summary — the user's week read back in their
 // companion's voice. Strictly descriptive (TGA rail): it recounts what the
@@ -31,11 +31,11 @@ function buildScript(userName, week) {
   return parts.join(" ");
 }
 
-export default function WeeklyVoiceSummary({ authUser, user, weeklies }) {
-  const { prefs, loaded } = useVoicePrefs(authUser);
-  const { speak, speaking, stopSpeaking } = useVoice(prefs.voice_id || "");
+export default function WeeklyVoiceSummary({ user, weeklies }) {
+  const { voiceName, voicePrefsLoaded } = useVoicePrefs();
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
-  if (!loaded || !weeklies?.length) return null;
+  if (!voicePrefsLoaded || !weeklies?.length) return null;
 
   const latest = [...weeklies].sort((a, b) =>
     String(b.week_start || "").localeCompare(String(a.week_start || ""))

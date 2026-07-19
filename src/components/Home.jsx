@@ -12,7 +12,6 @@ import WeeklyReport from "./WeeklyReport.jsx";
 import RhythmView from "./RhythmView.jsx";
 import MorningCheckIn from "./MorningCheckIn.jsx";
 import EveningReflection from "./EveningReflection.jsx";
-import { useVoicePrefs } from "../hooks/useVoicePrefs.js";
 import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
@@ -193,11 +192,10 @@ export default function Home({ user, authUser, profileId }) {
     return () => clearInterval(id);
   }, []);
 
-  const { speak, speaking, stopSpeaking } = useVoiceOrchestrator();
-
   // Phase 4 (spec §3.1/§4): companion voice prefs drive the guided morning/
-  // evening flows below and the spoken fixed-time nudges.
-  const { prefs: voicePrefs, loaded: voicePrefsLoaded } = useVoicePrefs(authUser);
+  // evening flows below and the spoken fixed-time nudges. One shared copy
+  // lives in VoiceContext so a change in Settings is heard here immediately.
+  const { speak, speaking, stopSpeaking, voicePrefs, voicePrefsLoaded } = useVoiceOrchestrator();
   useProtocolNudges(sequence, voicePrefs, voicePrefsLoaded);
 
   // Rhythm completion comes from the same ledger-backed sequence the Rhythm

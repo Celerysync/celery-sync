@@ -1,6 +1,7 @@
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
 function getNowCareTask() {
   const h = new Date().getHours();
@@ -43,7 +44,8 @@ function getNowCareTask() {
 }
 
 export default function CaregiverDashboard({ patient }) {
-  const { speak, speaking, stopSpeaking } = useVoice();
+  const { voiceName } = useVoicePrefs();
+  const { speak, speaking, stopSpeaking } = useVoice(voiceName);
   const task = getNowCareTask();
 
   const readScript = () => {

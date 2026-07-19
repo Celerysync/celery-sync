@@ -393,7 +393,7 @@ export default function Reports({ authUser, profileId, user }) {
           </Card>
         ) : (
           <>
-            <WeeklyVoiceSummary authUser={authUser} user={user} weeklies={weeklies} />
+            <WeeklyVoiceSummary user={user} weeklies={weeklies} />
             <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
             {loadingProgress ? (
               <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>

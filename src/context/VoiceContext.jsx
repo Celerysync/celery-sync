@@ -1,39 +1,28 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "../lib/supabase.js";
 import { useVoice } from "../hooks/useVoice.js";
+import { useVoicePrefs as useSupabaseVoicePrefs, DEFAULT_PREFS } from "../hooks/useVoicePrefs.js";
 
 // Hume-only since 2026-07-19: hosted voices are 'hume:PROVIDER:id' refs
 // (Octave TTS); anything else falls back to free browser speechSynthesis.
-// Stored 'el:' (ElevenLabs) refs from before the cutover are ignored.
-const DEFAULT_VOICE = "";
-const LS_KEY = "cs_voiceName";
-const migrated = (v) => (v && v.startsWith("el:") ? DEFAULT_VOICE : v);
+//
+// user_voice_prefs.voice_id (spec §2.5) is the ONE voice preference for every
+// TTS surface — readbacks, guided flows, Coach — set in Settings → Companion
+// voice. The provider owns the single fetched copy so a change there is heard
+// everywhere immediately; the legacy per-user localStorage/user_metadata
+// voice_name is gone.
 
 const VoiceContext = createContext(null);
 
 export function VoiceProvider({ authUser, children }) {
   // ── Preferences ──────────────────────────────────────────────────────────────
-  const [voiceName, setVoiceNameState] = useState(
-    () => migrated(localStorage.getItem(LS_KEY)) || DEFAULT_VOICE
+  const { prefs: voicePrefs, loaded: voicePrefsLoaded, savePrefs: saveVoicePrefs } =
+    useSupabaseVoicePrefs(authUser);
+  const voiceName = voicePrefs.voice_id || "";
+
+  const setVoiceName = useCallback(
+    (name) => saveVoicePrefs({ voice_id: name || null }),
+    [saveVoicePrefs]
   );
-
-  useEffect(() => {
-    if (!authUser) return;
-    const remote = migrated(authUser.user_metadata?.voice_name);
-    if (remote && remote !== voiceName) {
-      setVoiceNameState(remote);
-      localStorage.setItem(LS_KEY, remote);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser?.id]);
-
-  const setVoiceName = useCallback(async (name) => {
-    setVoiceNameState(name);
-    localStorage.setItem(LS_KEY, name);
-    if (authUser) {
-      supabase.auth.updateUser({ data: { voice_name: name } }).catch(() => {});
-    }
-  }, [authUser]);
 
   // ── Single shared audio/STT instance for Today, Track, Companion, and GlobalVoice ──
   // Other TTS-only components (WeeklyReport, Cleanse, Body, Symptom) keep their
@@ -85,6 +74,9 @@ export function VoiceProvider({ authUser, children }) {
     <VoiceContext.Provider value={{
       voiceName,
       setVoiceName,
+      voicePrefs,
+      voicePrefsLoaded,
+      saveVoicePrefs,
       ...voice,
       getAbortSignal,
       cancelPending,
@@ -95,10 +87,17 @@ export function VoiceProvider({ authUser, children }) {
   );
 }
 
-// Backward-compatible: components that only need voice name preference (Account, WelcomeVoice, etc.)
+// Prefs-only accessor for components that don't need the shared audio/STT
+// instance (readbacks, settings). voiceName mirrors voicePrefs.voice_id.
 export const useVoicePrefs = () => {
   const ctx = useContext(VoiceContext);
-  return { voiceName: ctx?.voiceName ?? "", setVoiceName: ctx?.setVoiceName ?? (() => {}) };
+  return {
+    voiceName: ctx?.voiceName ?? "",
+    setVoiceName: ctx?.setVoiceName ?? (() => {}),
+    voicePrefs: ctx?.voicePrefs ?? DEFAULT_PREFS,
+    voicePrefsLoaded: ctx?.voicePrefsLoaded ?? false,
+    saveVoicePrefs: ctx?.saveVoicePrefs ?? (() => {}),
+  };
 };
 
 // Safe no-op fallback if a component ever renders without a VoiceProvider
@@ -110,6 +109,7 @@ const NOOP_VOICE = {
   speak: () => {}, stopSpeaking: () => {}, startListening: () => {}, stopListening: () => {},
   queueSentence: () => {}, endQueue: () => {}, resetQueue: () => {},
   voiceName: "", setVoiceName: () => {},
+  voicePrefs: DEFAULT_PREFS, voicePrefsLoaded: false, saveVoicePrefs: () => {},
   getAbortSignal: () => new AbortController().signal, cancelPending: () => {},
   audioUnlocked: false,
 };

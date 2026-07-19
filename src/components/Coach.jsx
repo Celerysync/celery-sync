@@ -267,13 +267,12 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [crisisDetected, setCrisisDetected] = useState(false);
-  const [voices, setVoices] = useState([]);
   const [showMemory, setShowMemory] = useState(false);
   const [followUps, setFollowUps] = useState([]);
   const [tappedMsg, setTappedMsg] = useState(null);
   const [copied, setCopied] = useState(false);
   const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
-  const { voiceName: selectedVoiceName, setVoiceName: setSelectedVoiceName,
+  const { voiceName: selectedVoiceName,
           listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } = useVoiceOrchestrator();
   const [lang] = useLocalStorage("cs_lang", "en");
@@ -291,15 +290,6 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
 
   // Keep voiceModeRef in sync with handsFree preference
   useEffect(() => { voiceModeRef.current = handsFree; }, [handsFree]);
-
-  useEffect(() => {
-    const load = () => setVoices(window.speechSynthesis.getVoices());
-    load();
-    window.speechSynthesis.onvoiceschanged = load;
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
-  }, []);
 
   // Reload memory and restart conversation when profile switches
   useEffect(() => {
@@ -538,12 +528,6 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     "How do streaks work in this app?",
   ];
 
-  const englishFirst = [...voices].sort((a, b) => {
-    const aEn = a.lang.startsWith("en") ? 0 : 1;
-    const bEn = b.lang.startsWith("en") ? 0 : 1;
-    return aEn - bEn || a.name.localeCompare(b.name);
-  });
-
   // Unlock audio context on first user gesture — browsers block autoplay before interaction
   const unlockAudio = () => {
     if (audioUnlockedRef.current) return;
@@ -614,8 +598,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         </div>
       )}
 
-      {/* Voice selector */}
-      <div
+      {/* Voice comes from the one shared preference (Settings → Companion
+          voice) — the old per-tab browser-voice picker is gone. */}
+      <button
+        onClick={() => onNavigate?.("settings")}
         style={{
           display: "flex",
           alignItems: "center",
@@ -624,43 +610,16 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           border: `1px solid ${C.border}`,
           borderRadius: 12,
           padding: "9px 14px",
+          width: "100%",
+          cursor: onNavigate ? "pointer" : "default",
+          textAlign: "left",
         }}
       >
         <span style={{ fontSize: 15 }}>🔊</span>
-        <label
-          htmlFor="voice-select"
-          style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flexShrink: 0 }}
-        >
-          Voice
-        </label>
-        <select
-          id="voice-select"
-          value={selectedVoiceName}
-          onChange={(e) => setSelectedVoiceName(e.target.value)}
-          style={{
-            flex: 1,
-            fontFamily: "Georgia,serif",
-            fontSize: 12.5,
-            color: C.charcoal,
-            background: C.white,
-            border: `1.5px solid ${C.border}`,
-            borderRadius: 8,
-            padding: "5px 8px",
-            cursor: "pointer",
-            outline: "none",
-            touchAction: "manipulation",
-          }}
-        >
-          <optgroup label="Browser voices (no internet needed)">
-            <option value="">Default (Samantha / Karen)</option>
-            {englishFirst.map((v) => (
-              <option key={v.name} value={v.name}>
-                {v.name} ({v.lang})
-              </option>
-            ))}
-          </optgroup>
-        </select>
-      </div>
+        <span style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flex: 1 }}>
+          I speak in your companion voice — change it in Settings → Companion voice
+        </span>
+      </button>
 
       {/* Hands-free status banner */}
       {handsFree && srSupported && (

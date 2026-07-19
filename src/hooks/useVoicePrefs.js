@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase.js";
 // user_voice_prefs (spec §2.5) — one row per auth user (not per profile):
 // the companion's voice, its optional name, and the morning/evening TTS
 // nudge toggles. RLS restricts every row to its owner.
-const DEFAULT_PREFS = {
+export const DEFAULT_PREFS = {
   voice_id: null,        // 'hume:<PROVIDER>:<id>' (see voiceService.js)
   companion_name: null,
   morning_nudge: true,
