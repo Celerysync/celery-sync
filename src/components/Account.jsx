@@ -163,7 +163,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               fontSize: 13,
               fontWeight: 700,
             }}>
-              ✨ Try free for 7 days
+              ✨ Cancel anytime
             </div>
             <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>Powered by the world's most advanced AI · Cancel anytime</div>
           </div>
@@ -221,11 +221,11 @@ export default function Account({ authUser, isSubscribed, isPractitioner, subDat
               boxShadow: loading ? 'none' : '0 4px 24px #3D6B4450',
             }}
           >
-            {loading ? '🌿 Please wait…' : 'Start My 7-Day Free Trial →'}
+            {loading ? '🌿 Please wait…' : 'Subscribe & Unlock Everything →'}
           </button>
 
           <div style={{ textAlign: 'center', fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
-            No charge during your trial. Cancel before day 7 and pay nothing.{'\n'}
+            Billed when you subscribe. Cancel anytime — you keep access until the end of your billing period.{'\n'}
             Secure payment powered by Stripe.
           </div>
 

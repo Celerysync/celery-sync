@@ -36,8 +36,10 @@ router.post('/checkout', async (req, res) => {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
+      // No Stripe-side trial: the 7 free days live in the app (useSubscription
+      // counts from account creation). Card is charged as soon as they subscribe —
+      // otherwise the two trials stack into 14 free days.
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: { trial_period_days: 7 },
       success_url: `${CLIENT_URL}?subscribed=true`,
       cancel_url: `${CLIENT_URL}?tab=account`,
       allow_promotion_codes: true,
@@ -64,8 +66,8 @@ router.post('/checkout/practitioner', async (req, res) => {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
+      // No Stripe-side trial — same reasoning as the healer checkout above.
       line_items: [{ price: process.env.STRIPE_PRACTITIONER_PRICE_ID, quantity: 1 }],
-      subscription_data: { trial_period_days: 7 },
       success_url: `${CLIENT_URL}?subscribed=true&plan=practitioner`,
       cancel_url: `${CLIENT_URL}?tab=account`,
       allow_promotion_codes: true,

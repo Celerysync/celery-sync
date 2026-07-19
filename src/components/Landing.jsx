@@ -592,7 +592,7 @@ export default function Landing({ onGetStarted }) {
           </button>
 
           <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.8 }}>
-            Cancel before day 7 and pay nothing · Secure checkout via Stripe{"\n"}
+            7 days free, no card needed · Then $24.97/month via secure Stripe checkout{"\n"}
             Your data is private and never shared
           </div>
         </div>

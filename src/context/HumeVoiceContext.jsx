@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { VoiceProvider as HumeSDKProvider, useVoice as useHumeSDKVoice } from "@humeai/voice-react";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { useVoiceTools } from "../hooks/useVoiceTools.js";
-import { TAB_CONTEXT } from "../lib/voiceTabContext.js";
+import { TAB_CONTEXT, APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
 
 // Spec §3.2 session containment: warn after this much silence, close a beat
@@ -249,7 +249,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         nameLine = `The user has named you ${voicePrefs.companion_name} — refer to yourself by that name.`;
       }
     }
-    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], extraContext]
+    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], APP_DELETE_HOWTO, extraContext]
       .filter(Boolean)
       .join("\n\n");
     await voice.connect({

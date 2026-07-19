@@ -8,6 +8,7 @@ import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
+import { APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -89,7 +90,10 @@ HEALING REACTIONS:
 If a user reports worsening symptoms, Anthony William describes a "healing reaction" (die-off / detox). Acknowledge gently, encourage rest and hydration, and always flag the signs that need a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk. Never downplay genuine red-flag symptoms.
 
 PROTOCOL DETAILS:
-For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.`;
+For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.
+
+DELETING & CLEARING DATA:
+${APP_DELETE_HOWTO}`;
 
 // The companion introduces itself as CelerySync's own (independent) companion —
 // never as a "Medical Medium guide": the trademark is referenced only to
