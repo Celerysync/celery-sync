@@ -17,12 +17,12 @@ const WEARABLES = [
   },
   {
     id: "apple_watch",
-    name: "Apple Watch",
+    name: "Apple Watch / iPhone",
     emoji: "⌚",
-    desc: "Log your Apple Health data manually after checking the Health app",
-    type: "manual",
+    desc: "Automatic — a one-time iPhone Shortcut sends last night's sleep every morning",
+    type: "auto",
     color: "#1C1C1E",
-    metrics: ["Sleep hours (Health → Sleep)", "HRV (Health → Heart Rate → HRV)", "Resting HR (Health → Heart Rate)", "Steps (Health → Activity)"],
+    metrics: ["Sleep hours (from the Health app)", "Manual extras anytime: HRV, resting HR, steps"],
     howTo: "Open the Health app on your iPhone → Browse → Sleep / Heart / Activity → enter the numbers below",
   },
   {
@@ -32,7 +32,7 @@ const WEARABLES = [
     desc: "Log your Garmin Connect data manually after checking the app",
     type: "manual",
     color: "#007CC3",
-    metrics: ["Sleep (Garmin Connect → Sleep)", "HRV (Health Stats → HRV)", "Resting HR (Health Stats)", "Body Battery (maps to readiness)"],
+    metrics: ["Sleep (Garmin Connect → Sleep)", "HRV (Health Stats → HRV)", "Resting HR (Health Stats)"],
     howTo: "Open Garmin Connect → Today → check Sleep, Health Stats, and Body Battery → enter below",
   },
   {
@@ -42,7 +42,7 @@ const WEARABLES = [
     desc: "Log your Whoop data manually — Recovery, sleep, and HRV",
     type: "manual",
     color: "#00A6FF",
-    metrics: ["Recovery % (maps to readiness)", "Sleep hours", "HRV", "Resting HR"],
+    metrics: ["Sleep hours", "HRV", "Resting HR"],
     howTo: "Open Whoop app → Today → check your Recovery, Sleep, and Health Monitor stats → enter below",
   },
   {
@@ -52,7 +52,7 @@ const WEARABLES = [
     desc: "Log your Fitbit or Google Fit data manually",
     type: "manual",
     color: "#00B0B9",
-    metrics: ["Sleep hours & score", "Resting HR", "Steps", "Active Zone Minutes (maps to readiness)"],
+    metrics: ["Sleep hours & quality", "Resting HR", "HRV (if your device shows it)"],
     howTo: "Open Fitbit app → Today tab → check Sleep, Heart Rate, and Activity → enter below",
   },
   {
@@ -62,13 +62,97 @@ const WEARABLES = [
     desc: "Log your Samsung Health data manually",
     type: "manual",
     color: "#1428A0",
-    metrics: ["Sleep hours & score", "Resting HR", "Stress score (maps to HRV)", "Steps"],
+    metrics: ["Sleep hours & quality", "Resting HR", "HRV (if your device shows it)"],
     howTo: "Open Samsung Health app → Today → check Sleep, Heart Rate, and Activity → enter below",
   },
 ];
 
+// Apple Health has no cloud API (native apps only) — a personal iOS Shortcut
+// automation is the no-app path to automatic sync. This block issues the
+// user's private ingest link and walks them through building the Shortcut.
+function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIssued }) {
+  const [ingestToken, setIngestToken] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const issueToken = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/wearable/shortcut/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: authUser.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Couldn't create your link");
+      setIngestToken(data.token);
+      onTokenIssued?.();
+    } catch (e) {
+      setErr(e.message);
+    }
+    setBusy(false);
+  };
+
+  const ingestUrl = `${window.location.origin}/api/wearable/shortcut/ingest`;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {connected && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.sage }} />
+          <div style={{ fontSize: 12, color: C.mid }}>Shortcut connected · Last data received: {fmtSync(lastSync)}</div>
+        </div>
+      )}
+      {!ingestToken ? (
+        <Btn full onClick={issueToken} disabled={busy} color={C.sageDark}>
+          {busy ? "One moment…" : connected ? "Show my setup details again" : "Set up automatic sleep sync →"}
+        </Btn>
+      ) : (
+        <div style={{ background: C.mist, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: C.charcoal, lineHeight: 1.7 }}>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>Build this Shortcut once on your iPhone (~3 min):</div>
+          1. Open the <strong>Shortcuts</strong> app → <strong>+</strong> to create a new shortcut{"\n"}
+          2. Add action <strong>Find Health Samples</strong> → type <strong>Sleep</strong>, where <strong>Value is Asleep</strong>, <strong>Start Date is in the last 1 day</strong>{"\n"}
+          3. Add <strong>Calculate Statistics</strong> → <strong>Sum</strong> of the samples' <strong>Duration</strong> (in minutes){"\n"}
+          4. Add <strong>Calculate</strong> → divide that by <strong>60</strong>{"\n"}
+          5. Add <strong>Format Date</strong> → Current Date, custom format <strong>yyyy-MM-dd</strong>{"\n"}
+          6. Add <strong>Get Contents of URL</strong> → the URL below, Method <strong>POST</strong>, Request Body <strong>JSON</strong>, with fields:{"\n"}
+          &nbsp;&nbsp;&nbsp;<strong>token</strong> = your key below · <strong>sleep_hours</strong> = the Calculate result · <strong>date</strong> = the formatted date{"\n"}
+          7. In <strong>Automation</strong> → new personal automation → <strong>Time of Day</strong>, e.g. 9:00am daily → <strong>Run Immediately</strong> → pick this shortcut
+          <div style={{ marginTop: 10, fontWeight: 700 }}>Your URL:</div>
+          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.white, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
+          <div style={{ marginTop: 8, fontWeight: 700 }}>Your private key (keep it to yourself):</div>
+          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.white, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(`URL: ${ingestUrl}\nKey: ${ingestToken}`).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
+              });
+            }}
+            style={{
+              marginTop: 10, width: "100%", padding: "9px", borderRadius: 8,
+              border: `1.5px solid ${C.sage}`, background: copied ? C.sage : "none",
+              color: copied ? C.white : C.sageDark, fontFamily: "Georgia,serif",
+              fontWeight: 700, fontSize: 12, cursor: "pointer",
+            }}
+          >
+            {copied ? "✓ Copied!" : "📋 Copy URL + key"}
+          </button>
+        </div>
+      )}
+      {err && <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{err}</div>}
+      <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+        Once the automation runs each morning, last night's sleep appears in your check-in
+        automatically. Prefer to type it in? Manual entry still works below.
+      </div>
+    </div>
+  );
+}
+
 function ManualEntryForm({ wearable, authUser, onSaved }) {
-  const [form, setForm] = useState({ sleep_hours: "", sleep_quality: "", hrv: "", resting_hr: "", steps: "", readiness_score: "" });
+  const [form, setForm] = useState({ sleep_hours: "", sleep_quality: "", hrv: "", resting_hr: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -80,8 +164,6 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
     if (form.sleep_quality) payload.sleep_quality = form.sleep_quality;
     if (form.hrv) payload.hrv = form.hrv;
     if (form.resting_hr) payload.resting_hr = form.resting_hr;
-    if (form.steps) payload.steps = form.steps;
-    if (form.readiness_score) payload.readiness_score = form.readiness_score;
     try {
       const res = await fetch(`/api/wearable/manual`, {
         method: "POST",
@@ -103,8 +185,6 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
     { key: "sleep_quality", label: "Sleep quality (1–5)", placeholder: "1 = poor, 5 = great", type: "number" },
     { key: "hrv", label: "HRV (ms)", placeholder: "e.g. 45", type: "number" },
     { key: "resting_hr", label: "Resting heart rate", placeholder: "e.g. 58 bpm", type: "number" },
-    { key: "steps", label: "Steps today", placeholder: "e.g. 8500", type: "number" },
-    { key: "readiness_score", label: "Readiness / Recovery %", placeholder: "0–100", type: "number" },
   ];
 
   return (
@@ -165,6 +245,7 @@ export default function WearableConnect({ authUser }) {
   useEffect(() => { loadStatus(); }, [loadStatus]);
 
   const ouraToken = status?.find((t) => t.source === "oura");
+  const shortcutToken = status?.find((t) => t.source === "shortcut");
 
   const connectOura = async () => {
     if (!token.trim()) return;
@@ -242,7 +323,7 @@ export default function WearableConnect({ authUser }) {
         💓 Wearable Integration
       </div>
       <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>
-        Connect your wearable to track sleep, HRV, and readiness — all interpreted through Anthony William's healing lens. Oura Ring syncs automatically; all others use quick manual entry.
+        Connect your wearable so sleep, HRV, and readiness land in your daily check-ins by themselves. Oura Ring and Apple Watch sync automatically; the others use quick manual entry.
       </div>
 
       {(success || manualSuccess) && (
@@ -260,18 +341,19 @@ export default function WearableConnect({ authUser }) {
         {WEARABLES.map(w => {
           const isExpanded = expanded === w.id;
           const isOuraConnected = w.id === "oura" && ouraToken;
+          const isConnected = isOuraConnected || (w.id === "apple_watch" && !!shortcutToken);
           const oura = w.id === "oura";
 
           return (
             <div key={w.id} style={{
-              border: `1.5px solid ${isOuraConnected ? C.sage : C.border}`,
+              border: `1.5px solid ${isConnected ? C.sage : C.border}`,
               borderRadius: 14, overflow: "hidden",
             }}>
               {/* Header row */}
               <button
                 onClick={() => setExpanded(isExpanded ? null : w.id)}
                 style={{
-                  width: "100%", padding: "12px 14px", background: isOuraConnected ? C.sageLight : C.white,
+                  width: "100%", padding: "12px 14px", background: isConnected ? C.sageLight : C.white,
                   border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
                   touchAction: "manipulation", textAlign: "left",
                 }}
@@ -280,12 +362,12 @@ export default function WearableConnect({ authUser }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{w.name}</div>
-                    {isOuraConnected && (
+                    {isConnected && (
                       <div style={{ fontSize: 10, background: C.sage, color: "#fff", borderRadius: 10, padding: "1px 7px", fontWeight: 700 }}>
                         Connected
                       </div>
                     )}
-                    {w.type === "auto" && !isOuraConnected && (
+                    {w.type === "auto" && !isConnected && (
                       <div style={{ fontSize: 10, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
                         Auto sync
                       </div>
@@ -370,6 +452,17 @@ export default function WearableConnect({ authUser }) {
                     )
                   )}
 
+                  {/* Apple — automatic via iOS Shortcut, manual as fallback */}
+                  {w.id === "apple_watch" && (
+                    <AppleShortcutSetup
+                      authUser={authUser}
+                      connected={!!shortcutToken}
+                      lastSync={shortcutToken?.last_sync}
+                      fmtSync={fmtSync}
+                      onTokenIssued={loadStatus}
+                    />
+                  )}
+
                   {/* All other wearables — manual entry */}
                   {!oura && (
                     <ManualEntryForm
@@ -390,7 +483,7 @@ export default function WearableConnect({ authUser }) {
       </div>
 
       <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 11, color: C.mid, lineHeight: 1.6 }}>
-        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in. All data is interpreted through Anthony William's healing lens in your Healing Trends.
+        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up alongside your own logged trends in Healing Trends.
       </div>
     </Card>
   );
