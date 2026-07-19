@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import C from "../lib/colors.js";
-import { ELEVENLABS_VOICES, srSupported } from "../hooks/useVoice.js";
+import { srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
-import { useRhythm } from "../hooks/useRhythm.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
-import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -281,9 +279,8 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [lang] = useLocalStorage("cs_lang", "en");
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
-  const { todaysCheckin, celeryStreak, loadCheckins, saveCheckin } = useDailyCheckins(authUser, profileId);
+  const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const { activeProtocol, loadActiveProtocol } = useActiveProtocol(authUser, profileId);
-  const { addItem: addRhythmItem } = useRhythm(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
   const voiceModeRef = useRef(handsFree);
@@ -404,7 +401,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         let firstToken = true;
         let streamBuffer = "";
         let sentenceBuffer = "";
-        const isElVoice = selectedVoiceName.startsWith("el:");
+        const isElVoice = selectedVoiceName.startsWith("hume:");
         resetQueue();
         chatAbortRef.current?.abort();
         chatAbortRef.current = new AbortController();
@@ -428,7 +425,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 return [...m.slice(0, -1), { role: "assistant", content: clean }];
               });
             }
-            // Sentence-streaming TTS — fire ElevenLabs as each sentence completes
+            // Sentence-streaming TTS — fire hosted TTS as each sentence completes
             if (isElVoice) {
               sentenceBuffer += delta;
               const boundaryIdx = sentenceBuffer.search(/[.!?]["']?[ \n]/);
@@ -528,23 +525,6 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   // Voice intake callback — merges voice-captured check-in fields into Supabase.
   // Only real daily_checkins columns get spread into saveCheckin — restock/
   // scheduleItem are handled separately, each with their own destination.
-  const handleVoiceWrite = useCallback(async (fields) => {
-    const { energy, mood, symptoms, celery_oz, morning_protocol, notes } = fields;
-    const checkinFields = { energy, mood, symptoms, celery_oz, morning_protocol, notes };
-    const hasCheckinData = Object.values(checkinFields).some((v) => v != null);
-    if (hasCheckinData) await saveCheckin({ ...todaysCheckin, ...checkinFields });
-
-    for (const item of fields.scheduleItems || []) {
-      if (!item?.name) continue;
-      await addRhythmItem({
-        name: item.name,
-        category: item.category || "other",
-        fixedTime: item.fixedTime || null,
-        note: item.note || "",
-        frequency: item.frequency || "daily",
-      });
-    }
-  }, [saveCheckin, todaysCheckin, addRhythmItem]);
 
   // Suggested questions steer toward what the app does (tracking, rhythm,
   // referral to official sources) — never toward generated protocol content,
@@ -671,16 +651,6 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             touchAction: "manipulation",
           }}
         >
-          {["Warm & Healing", "Professional", "Male Voices", "Australian / NZ"].map(group => {
-            const groupVoices = ELEVENLABS_VOICES.filter(v => v.group === group);
-            return (
-              <optgroup key={group} label={`✨ ${group}`}>
-                {groupVoices.map((v) => (
-                  <option key={v.id} value={v.id}>{v.name}</option>
-                ))}
-              </optgroup>
-            );
-          })}
           <optgroup label="Browser voices (no internet needed)">
             <option value="">Default (Samantha / Karen)</option>
             {englishFirst.map((v) => (
@@ -1033,15 +1003,6 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           ➤
         </button>
       </div>
-
-      {/* Voice intake — log how you feel, what you took, etc. by speaking */}
-      {authUser && (
-        <VoiceIntakeButton
-          inline
-          onWrite={handleVoiceWrite}
-          onQuestion={(text) => send(text)}
-        />
-      )}
 
       {/* Follow-up suggestions — appear after each AI response */}
       {followUps.length > 0 && (

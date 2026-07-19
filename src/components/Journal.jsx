@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
-import { useRhythm } from "../hooks/useRhythm.js";
 import { callClaude } from "../lib/api.js";
-import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const MOODS = [
   { val: 1, emoji: "😫", label: "Rough" },
@@ -87,7 +85,6 @@ export default function Journal({ authUser, user, profileId }) {
     checkins, todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
     loading, loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
-  const { addItem: addRhythmItem } = useRhythm(authUser, profileId);
   const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
 
   // Form state
@@ -234,39 +231,6 @@ Write as if you know this person and genuinely care about their healing.`,
   };
 
   // Voice intake — merges parsed fields into form state + saves to Supabase
-  const handleVoiceWrite = useCallback(async (fields) => {
-    if (fields.energy    != null) setEnergy(fields.energy);
-    if (fields.mood      != null) setMood(fields.mood);
-    if (fields.celery_oz != null) setCeleryOz(fields.celery_oz);
-    if (fields.morning_protocol != null) setMorningProtocol(fields.morning_protocol);
-    if (fields.symptoms?.length) {
-      setSymptoms((prev) => [...new Set([...prev, ...fields.symptoms])]);
-    }
-    if (fields.notes) {
-      setNote((prev) => prev ? `${prev}\n${fields.notes}` : fields.notes);
-    }
-    setSaving(true);
-    await saveCheckin({
-      energy:           fields.energy      ?? energy,
-      mood:             fields.mood        ?? mood,
-      symptoms:         fields.symptoms?.length ? [...new Set([...symptoms, ...fields.symptoms])] : symptoms,
-      celery_oz:        fields.celery_oz   ?? celeryOz,
-      morning_protocol: fields.morning_protocol ?? morningProtocol,
-      notes:            fields.notes ? (note ? `${note}\n${fields.notes}` : fields.notes) : note,
-    });
-    for (const item of fields.scheduleItems || []) {
-      if (!item?.name) continue;
-      await addRhythmItem({
-        name: item.name,
-        category: item.category || "other",
-        fixedTime: item.fixedTime || null,
-        note: item.note || "",
-        frequency: item.frequency || "daily",
-      });
-    }
-    setSaving(false);
-    setSaved(true);
-  }, [saveCheckin, energy, mood, symptoms, celeryOz, morningProtocol, note, addRhythmItem]);
 
   const getHour = () => new Date().getHours();
   const greeting = getHour() < 12 ? "Good morning" : getHour() < 17 ? "Good afternoon" : "Good evening";
@@ -314,9 +278,6 @@ Write as if you know this person and genuinely care about their healing.`,
           />
         </div>
       )}
-
-      {/* Voice intake — speak your check-in */}
-      <VoiceIntakeButton inline onWrite={handleVoiceWrite} />
 
       {/* Today's check-in */}
       <Card>

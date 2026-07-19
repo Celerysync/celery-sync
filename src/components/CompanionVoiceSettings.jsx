@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoicePrefs } from "../hooks/useVoicePrefs.js";
-import { useVoice, ELEVENLABS_VOICES } from "../hooks/useVoice.js";
+import { useVoice } from "../hooks/useVoice.js";
 
 const PREVIEW_LINE =
   "Hello — I'm your CelerySync companion. I'm here whenever you'd like a hand with your day.";
@@ -46,8 +46,7 @@ function Toggle({ on, onChange, label, desc }) {
 
 // Spec §2.5 + §3.4 — the user's companion voice, its optional name, and the
 // morning/evening TTS nudge toggles. Voice options are the curated CelerySync
-// set from /api/hume/voices (Octave); the warm ElevenLabs voices remain as a
-// fallback group while the Hume account is still being set up.
+// set from /api/hume/voices (Octave) — the app is Hume-only since 2026-07-19.
 export default function CompanionVoiceSettings({ authUser }) {
   const { prefs, loaded, savePrefs } = useVoicePrefs(authUser);
   const [topupBusy, setTopupBusy] = useState(false);
@@ -67,7 +66,6 @@ export default function CompanionVoiceSettings({ authUser }) {
 
   if (!loaded) return null;
 
-  const elWarmVoices = ELEVENLABS_VOICES.filter((v) => v.group === "Warm & Healing");
   const hasVoice = !!prefs.voice_id;
 
   return (
@@ -98,11 +96,6 @@ export default function CompanionVoiceSettings({ authUser }) {
               ))}
             </optgroup>
           )}
-          <optgroup label="Classic voices">
-            {elWarmVoices.map((v) => (
-              <option key={v.id} value={v.id}>{v.name}</option>
-            ))}
-          </optgroup>
         </select>
         <button
           onClick={() => (speaking ? stopSpeaking() : speak(PREVIEW_LINE))}

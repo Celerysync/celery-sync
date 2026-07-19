@@ -15,7 +15,6 @@ import VoiceOrb from "./components/VoiceOrb.jsx";
 import Auth from "./components/Auth.jsx";
 import Home from "./components/Home.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
-import GlobalVoice from "./components/GlobalVoice.jsx";
 
 // Lazy-loaded: only fetched when first needed
 const Onboarding         = lazy(() => import("./components/Onboarding.jsx"));
@@ -160,12 +159,10 @@ export default function App() {
   const { track } = useAnalytics(authUser);
   const isAdmin = authUser?.email === "allij@live.com.au";
 
-  // Hume EVI rollout flag — default "legacy" so existing users see zero
-  // behaviour change. Phase 1 of the rollout also gates on isAdmin so only
-  // the admin account can opt in while the new stack is being validated,
-  // even if the flag is somehow flipped elsewhere.
-  const [voiceProvider] = useLocalStorage("cs_voiceProvider", "legacy");
-  const humeEnabled = voiceProvider === "hume" && isAdmin;
+  // Hume EVI is the app's one voice stack — full rollout 2026-07-19, before
+  // the first subscriber. The legacy ElevenLabs/browser-SpeechRecognition
+  // stack is removed.
+  const humeEnabled = true;
 
   // Migrate old tab IDs saved in localStorage
   useEffect(() => {
@@ -507,15 +504,10 @@ export default function App() {
 
       {showWelcome && (
         <Suspense fallback={null}>
-          <WelcomeVoice
-            userId={authUser?.id}
-            onDone={() => setShowWelcome(false)}
-            onNavigate={(tabId) => setTab(TAB_MIGRATIONS[tabId] || tabId)}
-            humeEnabled={humeEnabled}
-          />
+          <WelcomeVoice onDone={() => setShowWelcome(false)} />
         </Suspense>
       )}
-      {humeEnabled ? <VoiceOrb /> : <GlobalVoice currentTab={tab} user={activeProfile} />}
+      <VoiceOrb />
     </div>
     </HumeVoiceProvider>
     </VoiceProvider>

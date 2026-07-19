@@ -3,7 +3,6 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
-import VoiceIntakeButton from "./VoiceIntakeButton.jsx";
 
 const CORE_SUPPS = [
   { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
@@ -135,17 +134,6 @@ export default function SupplementTracker({ profileId }) {
     });
   };
 
-  const handleVoiceWrite = async (fields) => {
-    if (!profileId || !fields.restock?.name || !fields.restock?.unitsAdded) return;
-    const name = fields.restock.name.trim();
-    const existing = inventoryFor(name);
-    const newTotal = (existing?.units_on_hand ?? 0) + fields.restock.unitsAdded;
-    await setInventoryFor(name, {
-      unitsOnHand: newTotal,
-      unitsPerDose: existing?.units_per_dose ?? 1,
-      restockThresholdDays: existing?.restock_threshold_days ?? 7,
-    });
-  };
 
   const openStockEditor = (name) => {
     const existing = inventoryFor(name);
@@ -226,12 +214,6 @@ export default function SupplementTracker({ profileId }) {
 
       {expanded && (
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 2 }}>
-          {profileId && (
-            <div style={{ marginBottom: 10 }}>
-              <VoiceIntakeButton inline onWrite={handleVoiceWrite} />
-            </div>
-          )}
-
           {TIMINGS.map((t) => {
             const group = byTiming[t.id];
             if (!group.length) return null;

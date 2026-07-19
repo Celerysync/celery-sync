@@ -2,20 +2,24 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { supabase } from "../lib/supabase.js";
 import { useVoice } from "../hooks/useVoice.js";
 
-const DEFAULT_VOICE = "el:IKne3meq5aSn9XLyUdCD"; // Charlie — friendly Aussie
+// Hume-only since 2026-07-19: hosted voices are 'hume:PROVIDER:id' refs
+// (Octave TTS); anything else falls back to free browser speechSynthesis.
+// Stored 'el:' (ElevenLabs) refs from before the cutover are ignored.
+const DEFAULT_VOICE = "";
 const LS_KEY = "cs_voiceName";
+const migrated = (v) => (v && v.startsWith("el:") ? DEFAULT_VOICE : v);
 
 const VoiceContext = createContext(null);
 
 export function VoiceProvider({ authUser, children }) {
   // ── Preferences ──────────────────────────────────────────────────────────────
   const [voiceName, setVoiceNameState] = useState(
-    () => localStorage.getItem(LS_KEY) || DEFAULT_VOICE
+    () => migrated(localStorage.getItem(LS_KEY)) || DEFAULT_VOICE
   );
 
   useEffect(() => {
     if (!authUser) return;
-    const remote = authUser.user_metadata?.voice_name;
+    const remote = migrated(authUser.user_metadata?.voice_name);
     if (remote && remote !== voiceName) {
       setVoiceNameState(remote);
       localStorage.setItem(LS_KEY, remote);
