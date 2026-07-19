@@ -1,45 +1,49 @@
 import C from "../lib/colors.js";
-import { Card, Btn } from "./ui.jsx";
+import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
+// Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
+// protocol content of its own — no recipes, quantities, or food lists. Each
+// window points the carer to the patient's OWN Daily Rhythm (single source of
+// truth) and to their own copy of the books for preparation specifics.
 function getNowCareTask() {
   const h = new Date().getHours();
   if (h >= 5 && h < 9) return {
-    emoji: "🌅", label: "Morning protocol time",
-    prep: ["Juice 16oz fresh celery — pure, nothing added", "Squeeze 1–2 lemons into 16–32oz water", "Prepare HMDS: blended wild blueberries, banana, spirulina, barley grass, Atlantic dulse, cilantro, orange juice"],
-    offer: "Offer lemon water first. Wait 15–30 min before celery juice. Then HMDS.",
-    tip: "Tip: Cold-press juicing retains the most healing properties. If they're too tired to drink, warm the lemon water slightly — it's easier to get down.",
+    emoji: "🌅", label: "Morning routine time",
+    prep: ["Open their Daily Rhythm and see what they've chosen to start the day with", "Prepare their morning items with them, or have them ready when they wake", "Keep the start of the day calm and unhurried"],
+    offer: "Offer their morning items in the order they've set in their rhythm — tick each one off as it's done.",
+    tip: "Tip: For exactly how to prepare any drink or recipe, go to their copy of the Medical Medium books — the app leaves the specifics to the source they own.",
   };
   if (h >= 9 && h < 12) return {
     emoji: "☀️", label: "Mid-morning care",
-    prep: ["Prepare a fruit plate: apple slices, banana, papaya, mango", "Or fresh orange juice", "Ensure they're hydrated — sip water throughout"],
-    offer: "Offer mono fruit — one type at a time is easiest on their system.",
-    tip: "Tip: If they have brain fog or fatigue, banana + dates is the fastest energy source. Don't worry if they want to eat slowly.",
+    prep: ["Check their rhythm for any mid-morning items", "Keep water within easy reach — steady sips through the morning", "Have something simple from their own food plan ready in case they're hungry"],
+    offer: "Follow their rhythm; if nothing's scheduled, this is a good window for hydration and rest.",
+    tip: "Tip: Anthony William encourages steady hydration through the morning — his books explain his reasoning and his suggestions.",
   };
   if (h >= 12 && h < 14) return {
-    emoji: "🥗", label: "Lunch preparation",
-    prep: ["Wash and prepare leafy greens: spinach, romaine, cucumber", "Steam or bake potato/sweet potato", "Make simple lemon dressing: lemon juice + olive oil + herbs"],
-    offer: "A large salad with steamed potato is ideal. Keep it simple.",
-    tip: "Tip: Heavy dressings, cheese, and oils burden the liver. Lemon + quality olive oil is the AW-approved choice.",
+    emoji: "🥗", label: "Lunch time",
+    prep: ["See what they've planned for lunch in their rhythm", "Prepare it early so eating isn't rushed", "Sit with them if you can — company makes meals easier"],
+    offer: "Keep it simple and follow what they've chosen from their own books.",
+    tip: "Tip: If they're building their meals from a Medical Medium book, keep it open in the kitchen — the book is the recipe source, and it saves second-guessing.",
   };
   if (h >= 14 && h < 17) return {
-    emoji: "🍎", label: "Adrenal snack time",
-    prep: ["Apple + celery sticks (the most powerful AW combo)", "Banana + 3–4 Medjool dates", "Coconut water + banana", "Keep snacks ready every 2 hours"],
-    offer: "Offer a snack now and set a 2-hour reminder for the next one.",
-    tip: "Tip: This window is critical — Anthony William teaches that adrenals restore between 3–4pm. Even small snacks matter enormously for very unwell people.",
+    emoji: "🍎", label: "Afternoon snack window",
+    prep: ["Check their rhythm for afternoon items or snacks", "Have their chosen snacks prepared ahead so they're effortless", "This is also a natural rest window — quiet helps"],
+    offer: "Offer a snack from their own plan now, and note it in the app so their record stays complete.",
+    tip: "Tip: Anthony William encourages small, regular snacks through the day — the combinations he suggests are in his books.",
   };
   if (h >= 17 && h < 20) return {
     emoji: "🌆", label: "Dinner time",
-    prep: ["Steam vegetables: broccoli, zucchini, asparagus, Brussels sprouts", "Bake potato or sweet potato (filling, gentle)", "Option: warm vegetable soup or mashed potato"],
-    offer: "Dinner light and early. Their liver needs to rest from 1–3am, so finishing by 7pm is ideal.",
-    tip: "Tip: If they're very fatigued, a warming mashed potato with lemon and a few herbs is both nourishing and easy to eat lying down.",
+    prep: ["See what they've planned for dinner in their rhythm", "Earlier and lighter tends to make evenings easier", "Start winding the household down as dinner finishes"],
+    offer: "Follow their plan, and keep the evening gentle afterwards.",
+    tip: "Tip: Anthony William writes about the value of an earlier, lighter evening meal — his books explain his approach if they'd like to follow it.",
   };
   return {
     emoji: "🌙", label: "Evening care",
-    prep: ["Cucumber slices or watermelon", "Herbal tea: lemon balm, peppermint, or ginger", "Ensure they've had water throughout the day"],
-    offer: "If they need something, light fruit only. The goal now is rest.",
-    tip: "Tip: Lemon balm tea is especially powerful for the nervous system — Anthony William calls it one of the most healing herbs. Good before bed.",
+    prep: ["Check their rhythm for any evening items", "A warm herbal tea from their own plan can be a nice wind-down", "Make sure tomorrow morning's items are easy to reach"],
+    offer: "The goal now is rest — keep lights low and the evening quiet.",
+    tip: "Tip: Good sleep is one of the kindest things you can protect for them. Anything they take before bed should come from their own plan and their own books.",
   };
 }
 
@@ -142,7 +146,9 @@ export default function CaregiverDashboard({ patient }) {
             ))}
           </div>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            Ask the AI Guide (below) for specific care guidance for these conditions — what to prepare, what to avoid, what healing reactions to expect.
+            These are the areas {patient?.name ? `${patient.name} has` : "they've"} chosen to focus on. For what Anthony
+            William says about them, go to their copy of his books — the companion can help you
+            with their rhythm, reminders, and keeping their log up to date.
           </div>
         </Card>
       )}
@@ -154,10 +160,11 @@ export default function CaregiverDashboard({ patient }) {
           borderRadius: 16, padding: "14px 16px",
         }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
-            ⏰ Adrenal snack reminder
+            ⏰ Snack window
           </div>
           <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
-            Anthony William teaches adrenal snacks every 2 hours between 10am–6pm are critical for very unwell patients. Don't skip this — even small amounts help. Apple + celery, banana + dates, or coconut water + banana.
+            Anthony William encourages small, regular snacks through the day — a gentle reminder to
+            have something from their own plan ready. The combinations he suggests are in his books.
           </div>
         </div>
       )}
@@ -177,34 +184,39 @@ export default function CaregiverDashboard({ patient }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
           👁 What to watch for
         </div>
-        {[
-          { label: "Healing reactions (normal)", items: ["Increased fatigue (the body is working)", "Temporary skin breakouts", "Loose stools or digestive changes", "Heightened emotions or mood shifts", "Temporary increase in symptoms before improvement"], color: C.sage },
-          { label: "When to pause and consult a doctor", items: ["Fever above 38.5°C", "Severe pain or inability to keep anything down", "Signs of dehydration", "Any chest pain or breathing difficulty"], color: C.terracotta },
-        ].map(({ label, items, color }) => (
-          <div key={label} style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color, marginBottom: 6 }}>{label}</div>
-            {items.map((item) => (
-              <div key={item} style={{ display: "flex", gap: 8, fontSize: 12, color: C.charcoal, marginBottom: 3 }}>
-                <span style={{ color, flexShrink: 0 }}>•</span>
-                {item}
-              </div>
-            ))}
+        {/* Descriptive only (TGA rail): the app never interprets symptoms —
+            it encourages noting changes and leaves judgement to the doctor. */}
+        <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.7, marginBottom: 10 }}>
+          You know {patient?.name || "your loved one"} best. Note any changes you observe — energy,
+          appetite, mood, sleep — in their daily check-in, so their own record builds over time and
+          they can share it with their doctor.
+        </div>
+        <div style={{
+          background: `${C.terracotta}10`, border: `1px solid ${C.terracotta}30`,
+          borderRadius: 10, padding: "10px 12px", marginBottom: 10,
+        }}>
+          <div style={{ fontSize: 12, color: C.terracotta, fontWeight: 700, marginBottom: 2 }}>
+            If something feels seriously wrong
           </div>
-        ))}
+          <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>
+            High fever, severe pain, trouble breathing, can't keep fluids down, or anything that
+            frightens you — don't wait. Contact their doctor or emergency services straight away.
+          </div>
+        </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
-          Anthony William teaches that healing reactions are a sign the protocol is working. Always trust your instincts and consult your doctor for anything serious.
+          Anthony William writes about what he calls healing reactions — his books explain what he
+          means by that. For anything that concerns you, always check with their doctor first.
         </div>
       </Card>
 
-      {/* AW quote for carers */}
+      {/* Encouragement for carers — our own words, unattributed (no invented
+          or "inspired by" quotes credited to Anthony William). */}
       <div style={{
         background: C.goldLight, border: `1px solid ${C.gold}50`, borderRadius: 16, padding: 18,
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
-          💛 "The people who love and care for those with chronic illness are angels on earth. Your consistency, your patience, and your willingness to learn gives your loved one the most powerful medicine there is — hope."
-        </div>
-        <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginTop: 8 }}>
-          — Inspired by Anthony William, Medical Medium
+          💛 Caring for someone on this path takes patience, consistency, and love. Showing up the
+          way you do gives your loved one something nothing else can — steady support, and hope.
         </div>
       </div>
     </div>
