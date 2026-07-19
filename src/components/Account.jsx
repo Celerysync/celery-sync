@@ -487,13 +487,11 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 Naturopath, health coach, kinesiologist, or MM guide? Upgrade to the Practitioner Plan for $99/month and get a full client management portal — descriptive session prep, session notes, and printable session summaries.
               </div>
               <Btn full onClick={async () => {
-                setLoading(true)
-                try {
-                  const res = await fetch('/api/stripe/checkout/practitioner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: authUser.id, email: authUser.email }) })
-                  const data = await res.json()
-                  if (data.error) throw new Error(data.error)
-                  window.location.href = data.url
-                } catch (err) { setError(err.message); setLoading(false) }
+                // Everyone who sees this button already has an active
+                // subscription — switch it in place (prorated) rather than
+                // opening a second checkout, which would bill both plans.
+                if (!confirm('Upgrade to the Practitioner plan ($99/month)? Your current subscription switches over straight away, prorated.')) return
+                await changePlan('practitioner')
               }} color={C.gold} disabled={loading}>
                 {loading ? '🌿 Please wait…' : 'Upgrade to Practitioner — $99/month →'}
               </Btn>

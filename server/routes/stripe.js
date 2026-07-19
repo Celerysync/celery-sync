@@ -25,8 +25,9 @@ async function getOrCreateCustomer(userId, email) {
 // the app ever winds down). STRIPE_ANNUAL_PRICE_ID stays in the env unused
 // so annuals can come back with one line once the app has earned its keep.
 const PLAN_PRICES = () => ({
-  rhythm: process.env.STRIPE_RHYTHM_PRICE_ID,   // $7.97/mo engine-only
-  healer: process.env.STRIPE_PRICE_ID,           // $24.97/mo full companion
+  rhythm: process.env.STRIPE_RHYTHM_PRICE_ID,             // $7.97/mo engine-only
+  healer: process.env.STRIPE_PRICE_ID,                     // $24.97/mo full companion
+  practitioner: process.env.STRIPE_PRACTITIONER_PRICE_ID,  // $99/mo client portal
 })
 
 // Create Stripe Checkout session (rhythm or healer plan)
