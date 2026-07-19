@@ -48,6 +48,11 @@ const FEATURES = [
     desc: "Every conversation is distilled into milestones your companion keeps. Months from now it still knows your story, your wins, and your hard days.",
   },
   {
+    emoji: "🌐",
+    title: "Chats in your language",
+    desc: "The companion chats naturally in 15 languages — Español, Português, Deutsch, 中文 and more. Pick yours and it thinks in it, not just translates.",
+  },
+  {
     emoji: "📊",
     title: "Your trends, in numbers",
     desc: "Energy, mood, juice, streaks, consistency. Your own logged data, charted so you can spot your patterns — and two streaks: showed-up and perfect.",

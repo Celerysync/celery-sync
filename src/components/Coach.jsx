@@ -9,6 +9,7 @@ import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
+import { LANGUAGES } from "../lib/languages.js";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -279,7 +280,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const { voiceName: selectedVoiceName,
           listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } = useVoiceOrchestrator();
-  const [lang] = useLocalStorage("cs_lang", "en");
+  const [lang, setLang] = useLocalStorage("cs_lang", "en");
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
   const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
@@ -601,6 +602,53 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           )}
         </div>
       )}
+
+      {/* Chat language — the companion thinks and replies natively in the
+          chosen language (UI chrome stays English for now). Same cs_lang the
+          Settings picker uses; surfaced here because this is where it's felt. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: C.mist,
+          border: `1px solid ${C.border}`,
+          borderRadius: 12,
+          padding: "9px 14px",
+        }}
+      >
+        <span style={{ fontSize: 15 }}>🌐</span>
+        <label
+          htmlFor="coach-lang"
+          style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flexShrink: 0 }}
+        >
+          I chat in
+        </label>
+        <select
+          id="coach-lang"
+          value={lang}
+          onChange={(e) => setLang(e.target.value)}
+          style={{
+            flex: 1,
+            fontFamily: "Georgia,serif",
+            fontSize: 12.5,
+            color: C.charcoal,
+            background: C.white,
+            border: `1.5px solid ${C.border}`,
+            borderRadius: 8,
+            padding: "5px 8px",
+            cursor: "pointer",
+            outline: "none",
+            touchAction: "manipulation",
+          }}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.native}{l.code !== "en" ? ` (${l.label})` : ""}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Voice comes from the one shared preference (Settings → Companion
           voice) — the old per-tab browser-voice picker is gone. */}
