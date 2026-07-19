@@ -18,7 +18,7 @@ const BOOKS = [
 
 const LINKS = [
   { label: "🌿 medicalmedium.com",     url: "https://medicalmedium.com",                                        desc: "Free articles, healing reports, podcast episodes, live stream archive" },
-  { label: "▶️ YouTube",               url: "https://youtube.com/@MedicalMedium",                              desc: "Hundreds of free healing videos — subscribe and share with everyone you know" },
+  { label: "▶️ YouTube",               url: "https://www.youtube.com/channel/UCUORv_qpgmg8N5plVqlYjXg",                              desc: "Hundreds of free healing videos — subscribe and share with everyone you know" },
   { label: "📸 Instagram",             url: "https://instagram.com/medicalmedium",                             desc: "Daily healing tips, recipes, and community" },
   { label: "🎙 Podcast",               url: "https://medicalmedium.com/medical-medium-podcast",                desc: "Free episodes — deep dives on conditions, foods, supplements, and healing" },
   { label: "📘 Facebook",              url: "https://facebook.com/medicalmedium",                              desc: "Community groups and daily posts" },
@@ -193,7 +193,7 @@ function YouTubeSection() {
                     Search AW's free content on {activeTopic}:
                   </div>
                   <a
-                    href="https://www.youtube.com/@MedicalMedium"
+                    href="https://www.youtube.com/channel/UCUORv_qpgmg8N5plVqlYjXg"
                     target="_blank" rel="noopener noreferrer"
                     style={{
                       display: "inline-block", background: "#FF0000", color: C.white,
@@ -210,7 +210,7 @@ function YouTubeSection() {
 
           {/* Browse all CTA */}
           <a
-            href="https://www.youtube.com/@MedicalMedium"
+            href="https://www.youtube.com/channel/UCUORv_qpgmg8N5plVqlYjXg"
             target="_blank" rel="noopener noreferrer"
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -344,7 +344,7 @@ function HealingStorySection() {
               {copied ? "✓ Copied!" : "📋 Copy story"}
             </button>
             <a
-              href="https://medicalmedium.com/contact"
+              href="https://www.medicalmedium.com/medical-medium-blog-testimonials"
               target="_blank" rel="noopener noreferrer"
               style={{
                 flex: 1, background: C.sageDark, color: C.white, textDecoration: "none",

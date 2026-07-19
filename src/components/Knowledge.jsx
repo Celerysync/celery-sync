@@ -3,21 +3,25 @@ import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
+// All book links go to AW's own books page (link-rot-proof, and the rails say
+// official sources only) — 4 of the old hardcoded Amazon ASINs were dead by
+// 2026-07-19, and Amazon isn't an official AW property anyway.
+const AW_BOOKS_URL = "https://www.medicalmedium.com/books";
 const AW_BOOKS = [
-  { title: "Medical Medium", emoji: "📗", url: "https://www.amazon.com/dp/1401944450" },
-  { title: "Life-Changing Foods", emoji: "📗", url: "https://www.amazon.com/dp/1401948456" },
-  { title: "Thyroid Healing", emoji: "📗", url: "https://www.amazon.com/dp/1401948499" },
-  { title: "Liver Rescue", emoji: "📗", url: "https://www.amazon.com/dp/1401954030" },
-  { title: "Celery Juice", emoji: "📗", url: "https://www.amazon.com/dp/1401957684" },
-  { title: "Cleanse to Heal", emoji: "📗", url: "https://www.amazon.com/dp/1401958915" },
-  { title: "Brain Saver", emoji: "📗", url: "https://www.amazon.com/dp/1401969011" },
-  { title: "Brain Saver Protocols", emoji: "📗", url: "https://www.amazon.com/dp/1401969038" },
+  { title: "Medical Medium", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Life-Changing Foods", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Thyroid Healing", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Liver Rescue", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Celery Juice", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Cleanse to Heal", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Brain Saver", emoji: "📗", url: AW_BOOKS_URL },
+  { title: "Brain Saver Protocols", emoji: "📗", url: AW_BOOKS_URL },
 ];
 
 const AW_LINKS = [
   { label: "medicalmedium.com", emoji: "🌐", url: "https://www.medicalmedium.com", desc: "Official website — free protocols, recipes, and articles" },
-  { label: "YouTube", emoji: "▶️", url: "https://www.youtube.com/@MedicalMedium", desc: "Thousands of hours of free teachings" },
-  { label: "Podcast", emoji: "🎙", url: "https://www.medicalmedium.com/podcast", desc: "Medical Medium Podcast — free episodes" },
+  { label: "YouTube", emoji: "▶️", url: "https://www.youtube.com/channel/UCUORv_qpgmg8N5plVqlYjXg", desc: "Thousands of hours of free teachings" },
+  { label: "Podcast", emoji: "🎙", url: "https://medicalmedium.com/medical-medium-podcast", desc: "Medical Medium Podcast — free episodes" },
   { label: "Instagram", emoji: "📸", url: "https://www.instagram.com/medicalmedium", desc: "Daily tips and healing information" },
 ];
 

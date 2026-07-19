@@ -62,8 +62,8 @@ function ArticleCard({ article, defaultOpen = false }) {
 }
 
 const RECIPE_LINKS = [
-  { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/blog/recipes", desc: "Anthony William's official recipe collection" },
-  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/blog/juices-and-smoothies", desc: "Official juice, smoothie, and healing water recipes" },
+  { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/medical-medium-categories/recipes", desc: "Anthony William's official recipe collection" },
+  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/medical-medium-categories/juices", desc: "Official juice, smoothie, and healing water recipes" },
 ];
 
 

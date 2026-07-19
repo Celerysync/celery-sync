@@ -1059,7 +1059,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             </a>
             <span style={{ color: C.border }}>·</span>
             <a
-              href="https://medicalmedium.com/podcast"
+              href="https://medicalmedium.com/medical-medium-podcast"
               target="_blank" rel="noopener noreferrer"
               style={{ fontSize: 11, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
             >
