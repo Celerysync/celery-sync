@@ -4,12 +4,6 @@ import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
 
-const CORE_SUPPS = [
-  { id: "lemon", label: "🍋 Lemon water (16–32oz on empty stomach)", timing: "morning_empty" },
-  { id: "celery", label: "🥬 Celery juice (16oz minimum)", timing: "morning_empty" },
-  { id: "hmds", label: "🫐 Heavy Metal Detox Smoothie", timing: "morning_food" },
-];
-
 const TIMINGS = [
   { id: "morning_empty", label: "Morning · empty stomach", color: C.leaf },
   { id: "morning_food", label: "Morning · with food", color: C.sage },
@@ -161,7 +155,7 @@ export default function SupplementTracker({ profileId }) {
     name: s.name,
     source: "custom",
   }));
-  const allSupps = [...CORE_SUPPS.map(s => ({ ...s, source: "core" })), ...customSuppItems];
+  const allSupps = customSuppItems;
   const suppKey = (s) => `${s.label}__${s.timing}`;
   const doneCount = allSupps.filter((s) => checked[suppKey(s)]).length;
   const pct = allSupps.length ? Math.round((doneCount / allSupps.length) * 100) : 0;

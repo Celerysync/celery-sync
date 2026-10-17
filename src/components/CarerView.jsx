@@ -2,14 +2,18 @@ import { useState, useEffect } from "react";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
+// Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
+// protocol content of its own — no recipes, quantities, or food lists. Each
+// window points the carer to the patient's OWN Daily Rhythm (single source of
+// truth) and to their own copy of the books for preparation specifics.
 function getNowTask() {
   const h = new Date().getHours();
-  if (h >= 5 && h < 7)  return { emoji: "🍋", label: "Lemon water time", detail: "16–32oz warm lemon water on an empty stomach" };
-  if (h >= 7 && h < 9)  return { emoji: "🥬", label: "Celery juice time", detail: "16oz pure celery juice, nothing added — at least 30 min after lemon water" };
-  if (h >= 9 && h < 11) return { emoji: "🫐", label: "Heavy Metal Detox Smoothie", detail: "Wild blueberries, banana, spirulina, barley grass, Atlantic dulse, cilantro, orange juice" };
-  if (h >= 10 && h < 17) return { emoji: "🍎", label: "Adrenal snack time", detail: "Apple + celery, banana + dates, or coconut water + banana — every 2 hours" };
-  if (h >= 17 && h < 20) return { emoji: "🌆", label: "Light dinner", detail: "Steamed vegetables, baked potato, or warm soup — finish by 7pm ideally" };
-  return { emoji: "🌙", label: "Evening rest", detail: "Light fruit only if needed. The liver does its deepest healing work 1–3am" };
+  if (h >= 5 && h < 9)  return { emoji: "🌅", label: "Morning routine", detail: "Check their Daily Rhythm for what they've chosen to start the day with, and help them work through it in order." };
+  if (h >= 9 && h < 12) return { emoji: "☀️", label: "Mid-morning care", detail: "Follow their rhythm for any mid-morning items; otherwise this is a good window for steady hydration and rest." };
+  if (h >= 12 && h < 14) return { emoji: "🥗", label: "Lunch time", detail: "See what they've planned for lunch in their rhythm, and keep it simple — their own books are the recipe source." };
+  if (h >= 14 && h < 17) return { emoji: "🍎", label: "Afternoon snack window", detail: "Check their rhythm for afternoon items or snacks, and treat this as a natural rest window too." };
+  if (h >= 17 && h < 20) return { emoji: "🌆", label: "Dinner time", detail: "Follow what they've planned for dinner in their rhythm — earlier and lighter tends to make evenings easier." };
+  return { emoji: "🌙", label: "Evening rest", detail: "Check their rhythm for any evening items, then keep things quiet — rest is the priority now." };
 }
 
 const CATEGORY_COLORS = {
