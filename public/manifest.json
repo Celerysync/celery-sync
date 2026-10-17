@@ -1,13 +1,13 @@
 {
-  "name": "CelerySync — Medical Medium Companion",
+  "name": "CelerySync — Wellness Rhythm Companion",
   "short_name": "CelerySync",
-  "description": "Your personal Medical Medium healing companion — daily check-ins, protocols, AI guide, and healing community",
+  "description": "An independent wellness companion for the daily routine you choose to follow — your own rhythm, reminders, tracking, and a voice companion. Not affiliated with or endorsed by Medical Medium LLC.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAF7F0",
   "theme_color": "#3D6B44",
   "orientation": "portrait",
-  "categories": ["health", "lifestyle", "medical"],
+  "categories": ["health", "lifestyle"],
   "lang": "en",
   "icons": [
     {
@@ -17,19 +17,19 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -37,31 +37,31 @@
   ],
   "shortcuts": [
     {
-      "name": "Today's Check-in",
-      "short_name": "Check-in",
-      "description": "Log today's energy, celery juice and symptoms",
+      "name": "Today",
+      "short_name": "Today",
+      "description": "Open today's rhythm and check in",
       "url": "/?tab=home",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "AI Guide",
-      "short_name": "AI Guide",
-      "description": "Ask your Medical Medium healing guide",
-      "url": "/?tab=coach",
+      "name": "Companion",
+      "short_name": "Companion",
+      "description": "Talk things through with your voice companion",
+      "url": "/?tab=companion",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Symptom Checker",
-      "short_name": "Symptoms",
-      "description": "Look up protocols for your conditions",
-      "url": "/?tab=symptom",
+      "name": "Track",
+      "short_name": "Track",
+      "description": "Log how you're feeling today",
+      "url": "/?tab=track",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Healing Recipes",
-      "short_name": "Recipes",
-      "description": "Medical Medium healing recipes",
-      "url": "/?tab=recipes",
+      "name": "Progress",
+      "short_name": "Progress",
+      "description": "See your own consistency and trends",
+      "url": "/?tab=progress",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

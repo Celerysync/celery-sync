@@ -1,4 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="40" fill="#3D6B44"/>
-  <text x="256" y="350" font-size="300" text-anchor="middle" font-family="serif">🌿</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#3D6B44"/>
+  <g transform="translate(256 256) scale(0.96) translate(-256 -256)">
+    
+    <path d="M256 430 C248 366 247 306 260 246 C270 202 278 176 284 156"
+          stroke="#5FA368" stroke-width="19" stroke-linecap="round" fill="none"/>
+    
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#6FB477"   transform="translate(250 356) rotate(-152) scale(1.32)"/>
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#9BD189" transform="translate(250 356) rotate(-28)  scale(1.32)"/>
+    
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#6FB477"   transform="translate(258 288) rotate(-152) scale(1.14)"/>
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#9BD189" transform="translate(258 288) rotate(-28)  scale(1.14)"/>
+    
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#6FB477"   transform="translate(268 224) rotate(-152) scale(0.94)"/>
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#9BD189" transform="translate(268 224) rotate(-28)  scale(0.94)"/>
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#9BD189" transform="translate(281 164) rotate(-62) scale(0.8)"/>
+    <path d="M0 0 C30 -26 78 -24 96 0 C78 24 30 26 0 0 Z" fill="#6FB477"   transform="translate(281 164) rotate(-124) scale(0.66)"/>
+  </g>
 </svg>
