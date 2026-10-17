@@ -809,13 +809,15 @@ async function buildProgressReportPDF({ profileName, range, periodStart, periodE
 
     // ── Stat strip ──
     const stripY = doc.y
-    const tileW = (pageW - 30) / 4
+    // Streaks are intentionally absent: they were counted from celery_oz, so
+    // the figure printed here was "days celery juice was logged" under a label
+    // that read as overall consistency — misleading in a document written to
+    // be handed to a doctor.
     const tiles = [
       { label: 'DAYS LOGGED', value: `${stats.daysLogged}` },
       { label: 'ADHERENCE', value: stats.adherence.pct != null ? `${stats.adherence.pct}%` : '—' },
-      { label: 'CURRENT STREAK', value: `${stats.streaks.current}d` },
-      { label: 'LONGEST STREAK', value: `${stats.streaks.longest}d` },
     ]
+    const tileW = (pageW - 30) / Math.max(tiles.length, 2)
     tiles.forEach((t, i) => {
       const x = 50 + i * (tileW + 10)
       doc.rect(x, stripY, tileW, 46).fill(BAND)
@@ -892,21 +894,6 @@ async function buildProgressReportPDF({ profileName, range, periodStart, periodE
       50, doc.y
     )
     doc.y += 22
-
-    // ── Streaks ──
-    sectionTitle('Streaks', 'what you logged')
-    const streakItems = [
-      { num: stats.streaks.current, label: 'current streak (days)' },
-      { num: stats.streaks.longest, label: 'longest this period' },
-      { num: stats.daysLogged, label: 'total days logged' },
-    ]
-    const streakY = doc.y
-    streakItems.forEach((s, i) => {
-      const x = 50 + i * 160
-      doc.font('Heading').fontSize(20).fillColor(SAGE).text(`${s.num}`, x, streakY, { width: 150, lineBreak: false })
-      doc.font('Body').fontSize(8.5).fillColor(MUTED).text(s.label, x, streakY + 24, { width: 150 })
-    })
-    doc.y = streakY + 46
 
     // ── Footer ──
     doc.rect(0, doc.page.height - 60, doc.page.width, 60).fill(SAGE)

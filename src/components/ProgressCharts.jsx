@@ -50,10 +50,16 @@ export default function ProgressCharts({ checkins, periodStartDates = [], bucket
       {/* Stat strip */}
       <Card>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
+          {/* Streaks are not shown here — AdherenceStreaks owns them, derived
+              from the event ledger. Two sets on one screen contradicted each
+              other. This adherence figure is for the selected period, which is
+              a different span from the weekly one above, so it is labelled. */}
           <StatTile label="Days logged" value={stats.daysLogged} />
-          <StatTile label="Adherence" value={stats.adherence.pct != null ? `${stats.adherence.pct}%` : "—"} sub={stats.adherence.scheduled ? `${stats.adherence.completed} of ${stats.adherence.scheduled} doses` : null} />
-          <StatTile label="Current streak" value={`${stats.streaks.current}d`} />
-          <StatTile label="Longest streak" value={`${stats.streaks.longest}d`} />
+          <StatTile
+            label="Adherence this period"
+            value={stats.adherence.pct != null ? `${stats.adherence.pct}%` : "—"}
+            sub={stats.adherence.scheduled ? `${stats.adherence.completed} of ${stats.adherence.scheduled} logged` : null}
+          />
         </div>
       </Card>
 

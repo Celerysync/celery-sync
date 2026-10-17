@@ -57,21 +57,21 @@ export function computeProgressStats(checkins, { bucket = "day" } = {}) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
+  // Adherence over the period. rhythm_completed/rhythm_total are written by
+  // useRhythm's syncRhythmCountsToCheckin from the ledger-backed completion
+  // state, so this is a denormalised view of activity_events rather than a
+  // competing definition of "done".
+  //
+  // Streaks deliberately do NOT live here. They are owned by
+  // AdherenceStreaks.jsx, which derives them from activity_events/v_daily_status
+  // per spec §5. A second implementation here previously counted consecutive
+  // days with celery_oz > 0 — which both contradicted those figures on the same
+  // screen and silently reported zero forever for anyone whose own protocol
+  // doesn't include celery juice.
+
   const totalScheduled = sorted.reduce((s, c) => s + (c.rhythm_total || 0), 0);
   const totalCompleted = sorted.reduce((s, c) => s + (c.rhythm_completed || 0), 0);
   const adherencePct = totalScheduled ? Math.round((totalCompleted / totalScheduled) * 100) : null;
-
-  // Streaks — consecutive days with celery juice logged
-  let currentStreak = 0;
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    if ((sorted[i].celery_oz || 0) > 0) currentStreak++;
-    else break;
-  }
-  let longestStreak = 0, run = 0;
-  for (const c of sorted) {
-    if ((c.celery_oz || 0) > 0) { run++; longestStreak = Math.max(longestStreak, run); }
-    else run = 0;
-  }
 
   // Weekly rhythm — average energy by day of week across the period
   const weeklyRhythm = DOW_LABELS.map((label, idx) => {
@@ -89,7 +89,6 @@ export function computeProgressStats(checkins, { bucket = "day" } = {}) {
     moodTrend,
     symptomFrequency,
     adherence: { completed: totalCompleted, scheduled: totalScheduled, pct: adherencePct },
-    streaks: { current: currentStreak, longest: longestStreak },
     weeklyRhythm,
   };
 }
