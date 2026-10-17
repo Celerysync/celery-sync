@@ -38,6 +38,21 @@
   <body>
     <div id="root"></div>
     <script>
+      // Capture the install prompt before React mounts — Chrome fires
+      // beforeinstallprompt early and the event is only usable if its default
+      // is prevented. Stashed on window for useInstallPrompt() to pick up.
+      window.__csInstallPrompt = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        window.__csInstallPrompt = e;
+        window.dispatchEvent(new Event("cs-install-available"));
+      });
+      window.addEventListener("appinstalled", function () {
+        window.__csInstallPrompt = null;
+        window.dispatchEvent(new Event("cs-installed"));
+      });
+    </script>
+    <script>
       // Dev-only guard, runs before any module loads: a service worker left
       // over from a past production-mode run on localhost cache-first-serves
       // stale /src modules and blanks the page. Classic inline script so it

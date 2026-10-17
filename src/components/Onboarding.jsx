@@ -3,6 +3,8 @@ import C from "../lib/colors.js";
 import { CONDITIONS } from "../data/conditions.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { useWebPush } from "../hooks/useWebPush.js";
+import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
+import InstallCard from "./InstallCard.jsx";
 import { parseVoiceTranscript } from "../lib/voiceIntake.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { srSupported } from "../hooks/useVoice.js";
@@ -89,6 +91,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
 
   const { addItem } = useRhythm(authUser, profile?.id);
   const { supported: pushSupported, subscribe, subscribed } = useWebPush(authUser);
+  const { shouldOfferInstall, isIOS } = useInstallPrompt();
   const [notifChoice, setNotifChoice] = useState(null); // 'yes' | 'no' | null
 
   const handleCreateProfile = async () => {
@@ -257,6 +260,9 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   }
 
   // ── Step 3: Notifications ────────────────────────────────────────────────
+  // Install comes first when it's still available: on iOS, push cannot work
+  // from a Safari tab at all, so asking for notifications before offering the
+  // install would dead-end the user with "not available" and no way forward.
   if (step === 3) {
     const handleYes = async () => {
       setNotifChoice("yes");
@@ -272,11 +278,21 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <div style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.7, marginBottom: 18 }}>
             This only works if I can nudge you. Without notifications, I can still track everything — I just can't remind you when it's time.
           </div>
-          {!pushSupported && (
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, fontStyle: "italic" }}>
-              Notifications aren't available in this browser — you can still use everything else.
+
+          {shouldOfferInstall && (
+            <div style={{ marginBottom: 16 }}>
+              <InstallCard compact />
             </div>
           )}
+
+          {!pushSupported && (
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, fontStyle: "italic", lineHeight: 1.6 }}>
+              {isIOS
+                ? "Add CelerySync to your home screen using the steps above, then open it from there — the reminder switch appears once you do."
+                : "Notifications aren't available in this browser — you can still use everything else."}
+            </div>
+          )}
+
           <button style={primaryBtn} onClick={handleYes} disabled={!pushSupported}>
             🔔 Yes, remind me
           </button>

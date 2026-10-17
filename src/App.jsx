@@ -37,6 +37,7 @@ const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"))
 const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
 const CompanionVoiceSettings = lazy(() => import("./components/CompanionVoiceSettings.jsx"));
+const GettingTheMostCard = lazy(() => import("./components/GettingTheMostCard.jsx"));
 const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
 const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
 
@@ -348,6 +349,7 @@ export default function App() {
               profileId={activeProfileId}
             />
             <CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} />
+            <GettingTheMostCard />
             <ReminderSettings authUser={authUser} />
             <ProfileManager
               profiles={profiles}
