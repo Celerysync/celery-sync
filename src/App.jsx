@@ -282,14 +282,14 @@ export default function App() {
   }
 
   const handleTabClick = (t) => {
-    if (!t.free && !isSubscribed && !subLoading) setTab("settings");
+    if (!t.free && !isSubscribed && !isAdmin && !subLoading) setTab("settings");
     else { setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
   const renderTab = () => {
     const effectiveTab = TAB_MIGRATIONS[tab] || tab;
     const current = TABS.find((t) => t.id === effectiveTab);
-    if (current && !current.free && !isSubscribed && !subLoading) {
+    if (current && !current.free && !isSubscribed && !isAdmin && !subLoading) {
       return (
         <Account
           authUser={authUser}
@@ -482,7 +482,7 @@ export default function App() {
       }}>
         <div className="scrollbar-none" style={{ display: "flex", overflowX: "auto" }}>
           {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
-            const locked = !t.free && !isSubscribed && !subLoading;
+            const locked = !t.free && !isSubscribed && !isAdmin && !subLoading;
             const active = (TAB_MIGRATIONS[tab] || tab) === t.id;
             return (
               <button
