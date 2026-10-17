@@ -78,12 +78,21 @@ self.addEventListener("push", (event) => {
     data = { title: "CelerySync", body: event.data.text() };
   }
 
+  // Browsers do not let a web app choose its own notification sound — the
+  // `sound` property never shipped. The tone comes from the OS notification
+  // channel (on Android: Chrome's, or CelerySync's own once installed to the
+  // home screen). What we can control is that the notification alerts rather
+  // than arriving silently: silent:false, renotify so a repeated tag still
+  // alerts, and a vibration pattern Android honours even when the channel's
+  // sound is off.
   const options = {
     body: data.body || "",
     icon: "/icons/icon-192.svg",
     badge: "/icons/icon-192.svg",
     tag: data.tag || "celerysync",
     renotify: true,
+    silent: false,
+    vibrate: [200, 100, 200],
     requireInteraction: false,
     data: { url: data.url || "/" },
     actions: data.actions || [],
