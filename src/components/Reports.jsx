@@ -4,6 +4,7 @@ import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
 import AdherenceStreaks from "./AdherenceStreaks.jsx";
+import ThenAndNow from "./ThenAndNow.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
@@ -431,6 +432,7 @@ export default function Reports({ authUser, profileId, user }) {
           <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your patterns…</div></Card>
         ) : (
           <>
+            <ThenAndNow checkins={progressCheckins} />
             <ProgressCharts checkins={progressCheckins} periodStartDates={periodStartDates} bucket="week" />
             <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
           </>

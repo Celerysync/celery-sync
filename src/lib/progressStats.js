@@ -93,6 +93,121 @@ export function computeProgressStats(checkins, { bucket = "day" } = {}) {
   };
 }
 
+// ── Then and now ───────────────────────────────────────────────────────────
+// Compares the user's first N logged days against their most recent N. The
+// trend charts already hold this information, but a column of weekly bars
+// does not answer "am I different than when I started" for someone with brain
+// fog, which is the question people actually have.
+//
+// Descriptive only, and deliberately constrained:
+//  - Adherence is NOT compared here. Showing "adherence up" beside "energy up"
+//    asserts a cause even with no words between them, which the compliance
+//    rails forbid (see the encouragement engine's rule 7).
+//  - Output is plain numbers for a template to render. No generated prose —
+//    causal phrasing is exactly what an LLM would add here.
+//  - A misleading "you improved" to someone deciding whether to keep going is
+//    a real harm, so thin data returns null rather than a flattering guess.
+
+const YMD = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+const parseYMD = (s) => new Date(s + "T12:00:00");
+
+function shiftDays(dateStr, n) {
+  const d = parseYMD(dateStr);
+  d.setDate(d.getDate() + n);
+  return YMD(d);
+}
+
+function spanDays(a, b) {
+  return Math.round((parseYMD(b) - parseYMD(a)) / 86_400_000) + 1;
+}
+
+function average(rows, field) {
+  const vals = rows.map((r) => r[field]).filter((v) => typeof v === "number" && v > 0);
+  if (!vals.length) return null;
+  return { avg: Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10, n: vals.length };
+}
+
+// Scale-appropriate floors: below these, a difference is indistinguishable
+// from day-to-day noise and is reported as "about the same" rather than an
+// arrow that implies a real move.
+const METRICS = [
+  { key: "energy", label: "Energy", scale: 10, noiseFloor: 0.5 },
+  { key: "mood", label: "Mood", scale: 5, noiseFloor: 0.3 },
+  { key: "sleep_hours", label: "Sleep", scale: 12, noiseFloor: 0.5, unit: "h" },
+];
+
+export function computeThenAndNow(
+  checkins,
+  { windowDays = 30, minPerWindow = 10, minHistoryDays = 60 } = {}
+) {
+  const sorted = [...(checkins || [])].sort((a, b) => a.check_date.localeCompare(b.check_date));
+  if (sorted.length < minPerWindow * 2) return null;
+
+  const firstDate = sorted[0].check_date;
+  const lastDate = sorted[sorted.length - 1].check_date;
+  if (spanDays(firstDate, lastDate) < minHistoryDays) return null;
+
+  const thenEnd = shiftDays(firstDate, windowDays - 1);
+  const nowStart = shiftDays(lastDate, -(windowDays - 1));
+  // Overlapping windows would compare a period against itself.
+  if (thenEnd >= nowStart) return null;
+
+  const thenRows = sorted.filter((c) => c.check_date <= thenEnd);
+  const nowRows = sorted.filter((c) => c.check_date >= nowStart);
+  if (thenRows.length < minPerWindow || nowRows.length < minPerWindow) return null;
+
+  const metrics = [];
+  for (const m of METRICS) {
+    const then = average(thenRows, m.key);
+    const now = average(nowRows, m.key);
+    // Each metric earns its place independently — energy and mood are required
+    // at check-in, but sleep only arrives via voice or a wearable.
+    if (!then || !now || then.n < minPerWindow || now.n < minPerWindow) continue;
+    const delta = Math.round((now.avg - then.avg) * 10) / 10;
+    metrics.push({
+      ...m,
+      then,
+      now,
+      delta,
+      direction: Math.abs(delta) < m.noiseFloor ? "same" : delta > 0 ? "up" : "down",
+    });
+  }
+
+  // Symptoms compare as a rate, since the two windows rarely hold the same
+  // number of logged days.
+  const rateFor = (rows, name) => rows.filter((r) => (r.symptoms || []).includes(name)).length;
+  const names = new Set([...thenRows, ...nowRows].flatMap((r) => r.symptoms || []));
+  const symptoms = [...names]
+    .map((name) => {
+      const thenCount = rateFor(thenRows, name);
+      const nowCount = rateFor(nowRows, name);
+      const thenPct = thenCount / thenRows.length;
+      const nowPct = nowCount / nowRows.length;
+      return {
+        name,
+        then: { count: thenCount, of: thenRows.length },
+        now: { count: nowCount, of: nowRows.length },
+        // 10 percentage points — below that, call it unchanged.
+        direction: Math.abs(nowPct - thenPct) < 0.1 ? "same" : nowPct > thenPct ? "up" : "down",
+        weight: Math.max(thenCount, nowCount),
+      };
+    })
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 4);
+
+  if (!metrics.length && !symptoms.length) return null;
+
+  return {
+    windowDays,
+    then: { start: firstDate, end: thenEnd, daysLogged: thenRows.length },
+    now: { start: nowStart, end: lastDate, daysLogged: nowRows.length },
+    metrics,
+    symptoms,
+  };
+}
+
 // Cycle-day for each check-in, given a sorted list of period start dates
 // (ascending). null if no period has been logged yet, or the gap since the
 // last logged start is implausibly long (> 60 days — likely missed logging
