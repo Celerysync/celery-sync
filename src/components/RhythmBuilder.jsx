@@ -9,11 +9,15 @@ const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", med
 const FREQ_LABELS = { daily: "Every day", weekdays: "Weekdays only", "as-needed": "As needed" };
 const DUR_LABELS = { ongoing: "Ongoing", days: "For N days", cleanse: "During cleanse only" };
 
+const formatFixedTime = (t) =>
+  t ? new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
+
 const BLANK_ITEM = {
   name: "",
   emoji: "✨",
   category: "other",
   spacingMinutes: 30,
+  fixedTime: null,
   frequency: "daily",
   durationType: "ongoing",
   durationDays: null,
@@ -662,7 +666,10 @@ export default function RhythmBuilder({
                             {item.name}
                           </div>
                           <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                            +{item.spacingMinutes}min · {FREQ_LABELS[item.frequency] || item.frequency} · {DUR_LABELS[item.durationType] || item.durationType}
+                            {item.fixedTime
+                              ? <span style={{ color: C.sageDark, fontWeight: 700 }}>🔔 {formatFixedTime(item.fixedTime)}</span>
+                              : `+${item.spacingMinutes}min`}
+                            {" · "}{FREQ_LABELS[item.frequency] || item.frequency} · {DUR_LABELS[item.durationType] || item.durationType}
                             {item.isMedicine && " · Rx"}
                           </div>
                         </div>
@@ -900,26 +907,83 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
         )}
       </FieldGroup>
 
-      {/* Spacing */}
-      <FieldGroup label="Wait time after previous step">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type="number"
-            min={0}
-            max={480}
-            value={form.spacingMinutes}
-            onChange={(e) => setForm((f) => ({ ...f, spacingMinutes: parseInt(e.target.value) || 0 }))}
+      {/* When — the two scheduling modes are mutually exclusive in
+          calculateSequence(): a fixedTime item is placed at its absolute clock
+          time and ignores the wake anchor and the previous item entirely, so
+          showing both fields as independent would misrepresent the engine.
+          A set time is also what lets the server send a push reminder for this
+          item (server/routes/rhythm.js). */}
+      <FieldGroup label="When">
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            onClick={() => setForm((f) => ({ ...f, fixedTime: null }))}
             style={{
-              width: 70, border: `2px solid ${C.border}`, borderRadius: 10,
-              padding: "8px 12px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
-              color: C.charcoal, background: C.white, outline: "none", textAlign: "center",
+              flex: 1,
+              background: !form.fixedTime ? C.sage : C.mist,
+              color: !form.fixedTime ? C.white : C.mid,
+              border: "none", borderRadius: 10, padding: "8px 4px",
+              fontSize: 11, cursor: "pointer",
             }}
-          />
-          <span style={{ fontSize: 13, color: C.muted }}>minutes</span>
+          >
+            After previous step
+          </button>
+          <button
+            onClick={() => setForm((f) => ({ ...f, fixedTime: f.fixedTime || "08:00" }))}
+            style={{
+              flex: 1,
+              background: form.fixedTime ? C.sage : C.mist,
+              color: form.fixedTime ? C.white : C.mid,
+              border: "none", borderRadius: 10, padding: "8px 4px",
+              fontSize: 11, cursor: "pointer",
+            }}
+          >
+            At a set time
+          </button>
         </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-          How many minutes after the previous item completes (or after your wake anchor for the first item).
-        </div>
+
+        {form.fixedTime ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+              <input
+                type="time"
+                value={form.fixedTime}
+                onChange={(e) => setForm((f) => ({ ...f, fixedTime: e.target.value || null }))}
+                style={{
+                  border: `2px solid ${C.sage}`, borderRadius: 10,
+                  padding: "8px 14px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
+                  color: C.charcoal, background: C.sageLight, outline: "none",
+                }}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 6, lineHeight: 1.6 }}>
+              🔔 You'll get a reminder at this time each day, if background notifications
+              are switched on in Settings. This item sits at its own time and isn't
+              affected by your wake anchor.
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+              <input
+                type="number"
+                min={0}
+                max={480}
+                value={form.spacingMinutes}
+                onChange={(e) => setForm((f) => ({ ...f, spacingMinutes: parseInt(e.target.value) || 0 }))}
+                style={{
+                  width: 70, border: `2px solid ${C.border}`, borderRadius: 10,
+                  padding: "8px 12px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
+                  color: C.charcoal, background: C.white, outline: "none", textAlign: "center",
+                }}
+              />
+              <span style={{ fontSize: 13, color: C.muted }}>minutes after the previous step</span>
+            </div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+              How many minutes after the previous item completes (or after your wake anchor
+              for the first item). Choose “At a set time” instead if you want a reminder.
+            </div>
+          </>
+        )}
       </FieldGroup>
 
       {/* Frequency */}

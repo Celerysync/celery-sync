@@ -199,7 +199,7 @@ async function primaryProfileFor(userId) {
   return data?.id || null
 }
 
-// Called every hour (piggybacks on the existing PUSH_SCHEDULE cron tick). For each
+// Called every hour (piggybacks on the shared hourly cron tick). For each
 // subscriber: at their local generation hour, batch-create today's two messages if
 // not already done (one model call, not per-send); at an enabled window's local
 // hour, deliver the pre-generated message for that window if not already sent.

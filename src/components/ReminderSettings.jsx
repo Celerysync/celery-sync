@@ -4,7 +4,6 @@ import { Card, Btn } from "./ui.jsx";
 import { useReminders } from "../hooks/useReminders.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useEncouragementPrefs } from "../hooks/useEncouragementPrefs.js";
-import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
 function Toggle({ on, onChange, label, desc }) {
   return (
@@ -40,16 +39,6 @@ function Toggle({ on, onChange, label, desc }) {
     </div>
   );
 }
-
-const HOUR_OPTIONS = [
-  { value: 4, label: "4:00 am" },
-  { value: 5, label: "5:00 am" },
-  { value: 6, label: "6:00 am (default)" },
-  { value: 7, label: "7:00 am" },
-  { value: 8, label: "8:00 am" },
-  { value: 9, label: "9:00 am" },
-  { value: 10, label: "10:00 am" },
-];
 
 // Kept to sensible daytime/evening ranges — no scheduling into quiet hours
 const AFTERNOON_HOURS = [
@@ -98,11 +87,8 @@ function EncouragementWindowRow({ label, desc, window, hourOptions, prefs, updat
 
 export default function ReminderSettings({ authUser }) {
   const { settings, updateSetting } = useReminders(authUser);
-  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, updateMorningTime, sendTest } = useWebPush(authUser);
+  const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, sendTest } = useWebPush(authUser);
   const { prefs: encouragementPrefs, updateWindow: updateEncouragementWindow } = useEncouragementPrefs(authUser, subscribed);
-  const [morningHour, setMorningHour] = useLocalStorage("cs_morning_hour", 6);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [testSending, setTestSending] = useState(false);
   const [testSent, setTestSent] = useState(false);
 
@@ -115,24 +101,7 @@ export default function ReminderSettings({ authUser }) {
     setTimeout(() => setTestSent(false), 4000);
   };
 
-  const handleHourChange = async (hour) => {
-    setMorningHour(hour);
-    if (subscribed) {
-      setSaving(true);
-      setSaved(false);
-      await updateMorningTime(hour).catch(() => {});
-      setSaving(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }
-  };
-
-  const handleSubscribe = () => subscribe(morningHour);
-
-  // Compute what times the user will get based on their morning hour
-  const lemonTime = `${morningHour}:00 am`;
-  const celeryTime = `${morningHour + 1}:00 am`;
-  const hmdsTime = `${morningHour + 2}:00 am`;
+  const handleSubscribe = () => subscribe();
 
   return (
     <Card>
@@ -143,20 +112,14 @@ export default function ReminderSettings({ authUser }) {
       <Toggle
         on={settings.morningProtocol}
         onChange={(v) => updateSetting("morningProtocol", v)}
-        label="Morning protocol reminder"
-        desc="Reminds you at the right time each morning — lemon water, celery juice, HMDS in sequence"
+        label="Morning check-in banner"
+        desc="A gentle nudge in the app each morning to start your rhythm"
       />
       <Toggle
         on={settings.adrenalSnack}
         onChange={(v) => updateSetting("adrenalSnack", v)}
-        label="Adrenal snack reminder"
-        desc="Every 1.5 hours during the day — keeps blood sugar stable and adrenals supported"
-      />
-      <Toggle
-        on={settings.supplements}
-        onChange={(v) => updateSetting("supplements", v)}
-        label="Supplement reminders"
-        desc="Coming soon — will remind you based on your specific condition protocols"
+        label="Snack break banner"
+        desc="An in-app prompt every 1.5 hours through the day, with a simple pairing idea"
       />
 
       {/* Push notifications */}
@@ -165,42 +128,24 @@ export default function ReminderSettings({ authUser }) {
           🔔 Background notifications
         </div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-          Get healing reminders even when the app is closed — lemon water, celery juice, adrenal snacks, and evening wind-down. Works best when you add CelerySync to your home screen.
+          Get reminders even when the app is closed. Each reminder comes from your own
+          Daily Rhythm — set a time on any item and you'll be nudged then. Works best
+          when you add CelerySync to your home screen.
         </div>
 
-        {/* Morning time picker — shown always so they can set before subscribing */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 12, color: C.charcoal, fontWeight: 600, marginBottom: 6, fontFamily: "Georgia,serif" }}>
-            What time do you wake up?
-          </div>
-          <select
-            value={morningHour}
-            onChange={(e) => handleHourChange(Number(e.target.value))}
-            style={{
-              border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 12px",
-              fontSize: 13, color: C.charcoal, background: "#fff",
-              fontFamily: "Georgia,serif", cursor: "pointer", width: "100%",
-            }}
-          >
-            {HOUR_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          {subscribed && (
-            <div style={{ fontSize: 11, color: saving ? C.muted : saved ? C.sage : C.muted, marginTop: 5, transition: "color 0.3s" }}>
-              {saving ? "Saving…" : saved ? "✓ Saved — reminders updated" : `Lemon water at ${lemonTime} · Celery juice at ${celeryTime} · HMDS at ${hmdsTime}`}
-            </div>
-          )}
-          {!subscribed && (
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>
-              Lemon water at {lemonTime} · Celery juice at {celeryTime} · HMDS at {hmdsTime}
-            </div>
-          )}
+        <div style={{
+          fontSize: 11, color: C.mid, lineHeight: 1.6, marginBottom: 14,
+          background: C.mist, borderRadius: 10, padding: "10px 12px",
+        }}>
+          💡 To add or change a reminder time, open <strong>My Rhythm</strong>, edit an
+          item, and choose <strong>“At a set time”</strong>.
         </div>
 
         {!supported ? (
           <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>
-            Push notifications aren't supported in this browser. Add to Home Screen on iPhone first (Share → Add to Home Screen).
+            Push notifications aren't supported in this browser. On iPhone, add CelerySync
+            to your Home Screen first (Share → Add to Home Screen), then come back. On
+            Android, try Chrome or your browser's latest version.
           </div>
         ) : permission === "denied" ? (
           <div style={{ fontSize: 12, color: C.terracotta, lineHeight: 1.5 }}>

@@ -260,7 +260,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   if (step === 3) {
     const handleYes = async () => {
       setNotifChoice("yes");
-      if (pushSupported) await subscribe(6).catch(() => {});
+      if (pushSupported) await subscribe().catch(() => {});
       setStep(4);
     };
     return (

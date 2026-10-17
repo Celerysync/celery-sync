@@ -21,15 +21,14 @@ export function useReminders(authUser) {
   const [settings, setSettings] = useLocalStorage("cs_reminders", {
     adrenalSnack: true,
     morningProtocol: true,
-    supplements: false,
   });
   const [activeReminder, setActiveReminder] = useState(null);
   const snackTimerRef = useRef(null);
   const lastSnackRef = useRef(null);
 
-  // These two toggles also gate the server-side push reminders (not just the
-  // in-app banners below) — pull the server's current state in on mount so
-  // they don't silently drift apart.
+  // These two toggles gate the in-app reminder banners below. They're stored
+  // server-side as well so the choice follows the user across devices — pull
+  // the server's current state in on mount so they don't silently drift apart.
   useEffect(() => {
     if (!authUser) return;
     fetch(`/api/notifications/reminder-preferences?userId=${authUser.id}`)

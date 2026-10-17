@@ -17,9 +17,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// Save push subscription
+// Save push subscription. The timezone is what matters for delivery — rhythm
+// item reminders fire at each item's own time in the user's local zone. (The
+// push_subscriptions.morning_start_hour column is a leftover from the retired
+// app-defined schedule; nothing reads it, left in place to avoid a migration.)
 router.post("/subscribe", async (req, res) => {
-  const { userId, subscription, timezone, morningStartHour } = req.body;
+  const { userId, subscription, timezone } = req.body;
   if (!userId || !subscription?.endpoint) return res.status(400).json({ error: "Missing data" });
 
   const { error } = await supabase.from("push_subscriptions").upsert(
@@ -28,7 +31,6 @@ router.post("/subscribe", async (req, res) => {
       endpoint: subscription.endpoint,
       keys: subscription.keys,
       timezone: timezone || "UTC",
-      morning_start_hour: morningStartHour ?? 6,
     },
     { onConflict: "user_id,endpoint" }
   );
@@ -36,20 +38,9 @@ router.post("/subscribe", async (req, res) => {
   res.json({ ok: true });
 });
 
-// Update notification preferences (morning start time, etc.)
-router.post("/preferences", async (req, res) => {
-  const { userId, morningStartHour } = req.body;
-  if (!userId) return res.status(400).json({ error: "Missing userId" });
-  const { error } = await supabase.from("push_subscriptions")
-    .update({ morning_start_hour: morningStartHour ?? 6 })
-    .eq("user_id", userId);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ ok: true });
-});
-
 const DEFAULT_REMINDER_PREFS = { morningProtocol: true, adrenalSnack: true };
 
-// Read current reminder toggle prefs (morningProtocol/adrenalSnack push categories)
+// Read current reminder toggle prefs (in-app banner categories)
 router.get("/reminder-preferences", async (req, res) => {
   const { userId } = req.query;
   if (!userId) return res.status(400).json({ error: "Missing userId" });
@@ -62,8 +53,10 @@ router.get("/reminder-preferences", async (req, res) => {
   res.json({ reminderPrefs: data?.reminder_prefs || DEFAULT_REMINDER_PREFS });
 });
 
-// Update reminder toggle prefs — makes the Settings toggles actually control
-// the server-side pushes, not just the client-side in-app banners.
+// Update reminder toggle prefs. These gate the in-app reminder banners
+// (useReminders.js) and are persisted here so they follow the user across
+// devices. Scheduled pushes come from the user's own rhythm items, not from
+// these categories.
 router.post("/reminder-preferences", async (req, res) => {
   const { userId, reminderPrefs } = req.body;
   if (!userId || !reminderPrefs) return res.status(400).json({ error: "Missing data" });
@@ -134,55 +127,6 @@ export async function sendPushToAll({ title, body, tag, url }) {
   const sent = results.filter((r) => r.status === "fulfilled").length;
   console.log(`Push "${title}": sent ${sent}/${subs.length}`);
   return sent;
-}
-
-// Internal: send to users whose adjusted local hour matches (respects per-user morning start time)
-// Maps a PUSH_SCHEDULE tag to the reminder_prefs category it's gated by.
-// Tags not listed here (e.g. "evening") aren't gated by any toggle.
-function reminderCategoryForTag(tag) {
-  if (tag?.startsWith("morning-")) return "morningProtocol";
-  if (tag?.startsWith("snack-")) return "adrenalSnack";
-  return null;
-}
-
-export async function sendToUsersAtLocalHour({ hour, title, body, tag, url }) {
-  const { data: subs } = await supabase.from("push_subscriptions").select("*");
-  if (!subs?.length) return;
-
-  const category = reminderCategoryForTag(tag);
-
-  const matching = subs.filter((sub) => {
-    try {
-      if (category && sub.reminder_prefs?.[category] === false) return false;
-      const now = new Date();
-      const localHour = parseInt(
-        now.toLocaleTimeString("en-US", { timeZone: sub.timezone || "UTC", hour: "numeric", hour12: false }),
-        10
-      );
-      // Shift scheduled hour by user's morning preference offset (default wake 6am)
-      const offset = (sub.morning_start_hour ?? 6) - 6;
-      const adjustedHour = (hour + offset + 24) % 24;
-      return localHour === adjustedHour;
-    } catch {
-      return false;
-    }
-  });
-
-  if (!matching.length) return;
-  const payload = JSON.stringify({ title, body, tag, url });
-  const results = await Promise.allSettled(
-    matching.map((sub) =>
-      webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
-        .catch(async (err) => {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-          }
-          throw err;
-        })
-    )
-  );
-  const sent = results.filter((r) => r.status === "fulfilled").length;
-  if (sent > 0) console.log(`Push [hour=${hour}] "${title}": sent ${sent}/${matching.length}`);
 }
 
 export default router;

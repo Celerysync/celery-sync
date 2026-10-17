@@ -6,7 +6,7 @@ import { rateLimit } from 'express-rate-limit'
 import claudeRoutes from './routes/claude.js'
 import stripeRoutes from './routes/stripe.js'
 import humeRoutes from './routes/hume.js'
-import notificationRoutes, { sendToUsersAtLocalHour } from './routes/notifications.js'
+import notificationRoutes from './routes/notifications.js'
 import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
 import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
@@ -76,28 +76,14 @@ app.use('/api/encouragement', generalLimit, encouragementRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
-// ─── Healing Protocol Push Notification Schedule ───────────────────────────
-const PUSH_SCHEDULE = [
-  { hour: 6,  title: "🍋 Good morning, healer!",       body: "Time for your lemon water — 16–32oz on an empty stomach. Your healing day starts now.",           tag: "morning-lemon"  },
-  { hour: 7,  title: "🥬 Celery juice time!",           body: "It's been 30+ minutes since lemon water. Fresh celery juice now — 16oz pure, nothing added.",     tag: "morning-celery" },
-  { hour: 8,  title: "🫐 Heavy Metal Detox Smoothie",  body: "Round out your morning protocol with your HMDS. Wild blueberries, banana, spirulina + the Big 5.", tag: "morning-hmds"   },
-  { hour: 10, title: "🍎 Adrenal snack time",           body: "Stabilise your blood sugar — apple + celery, banana + dates, or coconut water + banana.",          tag: "snack-10"       },
-  { hour: 12, title: "🌿 Midday snack reminder",        body: "Your adrenals need support every 2 hours. Apple + dates, or banana + Medjool dates.",              tag: "snack-12"       },
-  { hour: 14, title: "🍊 Afternoon adrenal support",    body: "Don't let your blood sugar drop — Anthony William says this is the most healing time of day.",     tag: "snack-14"       },
-  { hour: 16, title: "🌿 Late afternoon snack",         body: "One more adrenal snack before dinner. Keep those glucose reserves stable for healing.",             tag: "snack-16"       },
-  { hour: 19, title: "🌙 Evening wind-down",            body: "Dinner should be light and early. Let your liver do its deep cleansing work from 1–3am.",          tag: "evening"        },
-];
-
+// ─── Scheduled push notifications ──────────────────────────────────────────
+// There is deliberately NO app-defined protocol schedule here. Scheduled
+// reminders come from the user's OWN rhythm items (sendRhythmReminders, one
+// push per item that carries its own time), never from a routine the app
+// invented. See CLAUDE.md compliance rails + LEGAL_CONSTRAINTS.md.
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  // Run at the top of every hour — check which users are at a scheduled local hour
+  // Run at the top of every hour — each sender decides who is due.
   cron.schedule('0 * * * *', async () => {
-    for (const s of PUSH_SCHEDULE) {
-      try {
-        await sendToUsersAtLocalHour({ hour: s.hour, title: s.title, body: s.body, tag: s.tag, url: '/' });
-      } catch (err) {
-        console.warn('Push schedule error:', err.message);
-      }
-    }
     try {
       await runEncouragementTick();
     } catch (err) {
@@ -114,7 +100,6 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       console.warn('Rhythm reminder error:', err.message);
     }
   });
-  console.log('🔔 Push notification scheduler active')
   console.log('💬 Encouragement engine scheduler active')
   console.log('📦 Supplement restock scheduler active')
   console.log('🕐 Rhythm item reminder scheduler active')
