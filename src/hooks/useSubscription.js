@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { isAdminEmail } from '../lib/admin.js'
 
 const TRIAL_DAYS = 7
 
@@ -48,11 +49,30 @@ export function useSubscription(authUser) {
     refetch()
   }, [refetch])
 
+  // The owner gets full entitlement regardless of billing state. Decided here
+  // so every consumer agrees: patching this in at individual gates previously
+  // left the owner able to open paid tabs while wearables and companion memory
+  // stayed hidden, because those read isSubscribed directly. Practitioner is
+  // included so the owner can exercise every tier. Server-side checks are
+  // unaffected — this only governs what the owner's own client renders.
+  const isOwner = isAdminEmail(authUser?.email)
+
   const hasActivePlan = subData?.status === 'active' || subData?.status === 'trialing'
-  const isPractitioner = hasActivePlan && subData?.plan === 'practitioner'
+  const isPractitioner = isOwner || (hasActivePlan && subData?.plan === 'practitioner')
   // Rhythm ($7.97): full engine, no AI companion (voice or text). Trial users
   // are NOT rhythm — the 7-day trial shows everyone the full Healer experience.
-  const isRhythm = hasActivePlan && subData?.plan === 'rhythm'
+  const isRhythm = !isOwner && hasActivePlan && subData?.plan === 'rhythm'
 
-  return { isSubscribed, isPractitioner, isRhythm, plan: subData?.plan ?? null, subData, subLoading, refetch, isInTrial, trialDaysLeft }
+  return {
+    isSubscribed: isSubscribed || isOwner,
+    isPractitioner,
+    isRhythm,
+    isOwner,
+    plan: isOwner ? (subData?.plan ?? 'owner') : (subData?.plan ?? null),
+    subData,
+    subLoading,
+    refetch,
+    isInTrial,
+    trialDaysLeft,
+  }
 }

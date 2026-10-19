@@ -4,6 +4,7 @@ import C from "./lib/colors.js";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useSubscription } from "./hooks/useSubscription.js";
+import { isAdminEmail } from "./lib/admin.js";
 import { useProfiles } from "./hooks/useProfiles.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
@@ -160,7 +161,10 @@ export default function App() {
   const [darkMode] = useLocalStorage("cs_darkMode", false);
   const [largeText] = useLocalStorage("cs_largeText", false);
   const { track } = useAnalytics(authUser);
-  const isAdmin = authUser?.email === "allij@live.com.au";
+  // Entitlement (paid tabs, wearables, companion memory) comes from
+  // useSubscription, which grants the owner everything. isAdmin here is only
+  // about showing the Admin tab itself.
+  const isAdmin = isAdminEmail(authUser?.email);
 
   // Hume EVI is the app's one voice stack — full rollout 2026-07-19, before
   // the first subscriber. The legacy ElevenLabs/browser-SpeechRecognition
@@ -283,14 +287,14 @@ export default function App() {
   }
 
   const handleTabClick = (t) => {
-    if (!t.free && !isSubscribed && !isAdmin && !subLoading) setTab("settings");
+    if (!t.free && !isSubscribed && !subLoading) setTab("settings");
     else { setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
   const renderTab = () => {
     const effectiveTab = TAB_MIGRATIONS[tab] || tab;
     const current = TABS.find((t) => t.id === effectiveTab);
-    if (current && !current.free && !isSubscribed && !isAdmin && !subLoading) {
+    if (current && !current.free && !isSubscribed && !subLoading) {
       return (
         <Account
           authUser={authUser}
@@ -484,7 +488,7 @@ export default function App() {
       }}>
         <div className="scrollbar-none" style={{ display: "flex", overflowX: "auto" }}>
           {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
-            const locked = !t.free && !isSubscribed && !isAdmin && !subLoading;
+            const locked = !t.free && !isSubscribed && !subLoading;
             const active = (TAB_MIGRATIONS[tab] || tab) === t.id;
             return (
               <button
