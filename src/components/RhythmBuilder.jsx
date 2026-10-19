@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
+import { scheduleTimes } from "../lib/rhythmSchedule.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -18,6 +19,7 @@ const BLANK_ITEM = {
   category: "other",
   spacingMinutes: 30,
   fixedTime: null,
+  schedule: null,
   frequency: "daily",
   durationType: "ongoing",
   durationDays: null,
@@ -666,8 +668,10 @@ export default function RhythmBuilder({
                             {item.name}
                           </div>
                           <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                            {item.fixedTime
-                              ? <span style={{ color: C.sageDark, fontWeight: 700 }}>🔔 {formatFixedTime(item.fixedTime)}</span>
+                            {scheduleTimes(item).length
+                              ? <span style={{ color: C.sageDark, fontWeight: 700 }}>
+                                  🔔 {scheduleTimes(item).map(formatFixedTime).join(" · ")}
+                                </span>
                               : `+${item.spacingMinutes}min`}
                             {" · "}{FREQ_LABELS[item.frequency] || item.frequency} · {DUR_LABELS[item.durationType] || item.durationType}
                             {item.isMedicine && " · Rx"}
@@ -840,8 +844,35 @@ export default function RhythmBuilder({
   );
 }
 
+const TIME_PRESETS = [
+  { label: "Once a day", times: ["08:00"] },
+  { label: "Morning + night", times: ["08:00", "20:00"] },
+  { label: "Three times", times: ["08:00", "13:00", "20:00"] },
+];
+
+const sameTimes = (a, b) => a.length === b.length && a.every((t, i) => t === b[i]);
+
 function ItemForm({ form, setForm, onSave, onCancel, title }) {
   const TODAY = new Date().toISOString().split("T")[0];
+
+  // The schedule is the source of truth; fixedTime is kept in step with the
+  // first time purely so the legacy column stays valid as a rollback path.
+  const times =
+    form.schedule?.type === "times" && Array.isArray(form.schedule.times)
+      ? form.schedule.times
+      : form.fixedTime
+        ? [form.fixedTime]
+        : [];
+  const timed = times.length > 0;
+
+  const setTimes = (next) => {
+    const clean = [...new Set(next.filter(Boolean))].sort();
+    setForm((f) => ({
+      ...f,
+      schedule: clean.length ? { type: "times", times: clean } : null,
+      fixedTime: clean[0] ?? null,
+    }));
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -907,20 +938,22 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
         )}
       </FieldGroup>
 
-      {/* When — the two scheduling modes are mutually exclusive in
-          calculateSequence(): a fixedTime item is placed at its absolute clock
-          time and ignores the wake anchor and the previous item entirely, so
-          showing both fields as independent would misrepresent the engine.
-          A set time is also what lets the server send a push reminder for this
-          item (server/routes/rhythm.js). */}
+      {/* When — set times and the anchor cascade are mutually exclusive in
+          calculateSequence(): a timed item is placed at its own clock time and
+          ignores the wake anchor and the previous item entirely, so showing
+          both as independent fields would misrepresent the engine. Set times
+          are also what let the server send reminders (server/routes/rhythm.js).
+
+          Presets first, free-form second: the people who most need reminders
+          are the least able to spend executive function assembling a schedule. */}
       <FieldGroup label="When">
         <div style={{ display: "flex", gap: 6 }}>
           <button
-            onClick={() => setForm((f) => ({ ...f, fixedTime: null }))}
+            onClick={() => setTimes([])}
             style={{
               flex: 1,
-              background: !form.fixedTime ? C.sage : C.mist,
-              color: !form.fixedTime ? C.white : C.mid,
+              background: !timed ? C.sage : C.mist,
+              color: !timed ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
               fontSize: 11, cursor: "pointer",
             }}
@@ -928,37 +961,90 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
             After previous step
           </button>
           <button
-            onClick={() => setForm((f) => ({ ...f, fixedTime: f.fixedTime || "08:00" }))}
+            onClick={() => setTimes(times.length ? times : ["08:00"])}
             style={{
               flex: 1,
-              background: form.fixedTime ? C.sage : C.mist,
-              color: form.fixedTime ? C.white : C.mid,
+              background: timed ? C.sage : C.mist,
+              color: timed ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
               fontSize: 11, cursor: "pointer",
             }}
           >
-            At a set time
+            At set times
           </button>
         </div>
 
-        {form.fixedTime ? (
+        {timed ? (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-              <input
-                type="time"
-                value={form.fixedTime}
-                onChange={(e) => setForm((f) => ({ ...f, fixedTime: e.target.value || null }))}
-                style={{
-                  border: `2px solid ${C.sage}`, borderRadius: 10,
-                  padding: "8px 14px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
-                  color: C.charcoal, background: C.sageLight, outline: "none",
-                }}
-              />
+            <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+              {TIME_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => setTimes(p.times)}
+                  style={{
+                    background: sameTimes(times, p.times) ? C.sageDark : C.mist,
+                    color: sameTimes(times, p.times) ? C.white : C.mid,
+                    border: "none", borderRadius: 20, padding: "6px 12px",
+                    fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 6, lineHeight: 1.6 }}>
-              🔔 You'll get a reminder at this time each day, if background notifications
-              are switched on in Settings. This item sits at its own time and isn't
-              affected by your wake anchor.
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+              {times.map((t, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="time"
+                    value={t}
+                    onChange={(e) => {
+                      const next = [...times];
+                      next[idx] = e.target.value;
+                      setTimes(next);
+                    }}
+                    style={{
+                      border: `2px solid ${C.sage}`, borderRadius: 10,
+                      padding: "8px 14px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
+                      color: C.charcoal, background: C.sageLight, outline: "none",
+                    }}
+                  />
+                  {times.length > 1 && (
+                    <button
+                      onClick={() => setTimes(times.filter((_, i) => i !== idx))}
+                      aria-label="Remove this time"
+                      style={{
+                        background: "transparent", border: `1px solid ${C.terracotta}`,
+                        borderRadius: 8, width: 28, height: 28,
+                        color: C.terracotta, cursor: "pointer", fontSize: 13,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <button
+                onClick={() => setTimes([...times, "20:00"])}
+                style={{
+                  background: "none", border: `1.5px dashed ${C.border}`,
+                  borderRadius: 10, padding: "8px 12px", fontSize: 12,
+                  color: C.muted, cursor: "pointer", width: "fit-content",
+                  fontFamily: "Georgia,serif",
+                }}
+              >
+                + Add another time
+              </button>
+            </div>
+
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+              🔔 {times.length === 1
+                ? "You'll get one reminder a day at this time"
+                : `You'll get ${times.length} reminders a day, and this item appears ${times.length} times on your rhythm so you can tick each one off`}
+              , if background notifications are on in Settings. Timed items sit at
+              their own time and aren't affected by your wake anchor.
             </div>
           </>
         ) : (

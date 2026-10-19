@@ -1,7 +1,10 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
-import { TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
+import {
+  TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem,
+  expandOccurrences, occurrenceId, parseOccurrenceId,
+} from "../lib/rhythmSchedule.js";
 
 // scheduledMs is computed for relative items (cascading from the anchor, or
 // the previous item's actual completion time) AND for fixedTime items
@@ -55,6 +58,7 @@ function itemToRow(item, profileId) {
     category: item.category || "other",
     spacing_minutes: item.spacingMinutes ?? 0,
     fixed_time: item.fixedTime ?? null,
+    schedule: item.schedule ?? null,
     frequency: item.frequency ?? "daily",
     duration_type: item.durationType ?? "ongoing",
     duration_days: item.durationDays ?? null,
@@ -128,13 +132,16 @@ export function useRhythm(authUser, profileId) {
     (async () => {
       const { data, error } = await supabase
         .from("v_daily_status")
-        .select("item_id, status, occurred_at")
+        .select("item_id, occurrence_slot, status, occurred_at")
         .eq("profile_id", profileId)
         .eq("local_date", TODAY());
       if (error) return;
       const fromDb = {};
       (data || []).forEach((r) => {
-        if (r.status === "completed") fromDb[r.item_id] = r.occurred_at;
+        // Keyed by occurrence, so an item scheduled twice a day tracks each
+        // time separately. Rows written before slots existed have a null
+        // slot and key to the plain item id, exactly as they used to.
+        if (r.status === "completed") fromDb[occurrenceId(r.item_id, r.occurrence_slot)] = r.occurred_at;
       });
       setCompletions(fromDb);
     })();
@@ -153,14 +160,15 @@ export function useRhythm(authUser, profileId) {
         filter: `profile_id=eq.${profileId}`,
       }, ({ new: row }) => {
         if (row.local_date !== TODAY()) return;
+        const key = occurrenceId(row.item_id, row.occurrence_slot);
         setCompletions((prev) => {
           if (row.event_type === "completed") {
-            if (prev[row.item_id]) return prev;
-            return { ...prev, [row.item_id]: row.occurred_at };
+            if (prev[key]) return prev;
+            return { ...prev, [key]: row.occurred_at };
           }
-          if (!(row.item_id in prev)) return prev;
+          if (!(key in prev)) return prev;
           const next = { ...prev };
-          delete next[row.item_id];
+          delete next[key];
           return next;
         });
       })
@@ -175,7 +183,9 @@ export function useRhythm(authUser, profileId) {
 
   const sequence = useMemo(() => {
     const todaysItems = filterTodaysItems(baseItems, activeProgram);
-    return calculateSequence(todaysItems, anchorTime, completions);
+    // Expanded before sequencing so an item scheduled twice a day is two
+    // separate tickable rows, each with its own id.
+    return calculateSequence(expandOccurrences(todaysItems), anchorTime, completions);
   }, [baseItems, activeProgram, anchorTime, completions]);
 
   const hasMedicine = useMemo(() => baseItems.some((i) => i.isMedicine), [baseItems]);
@@ -193,17 +203,20 @@ export function useRhythm(authUser, profileId) {
     setActiveProgram(null);
   }, [activeProgram, currentProgramDay, authUser?.id, setActiveProgram]);
 
-  const completeItem = useCallback(async (itemId) => {
+  // Takes an OCCURRENCE id — plain item id for a once-a-day item, or
+  // "<itemId>@HH:MM" for one slot of a multi-time item.
+  const completeItem = useCallback(async (occId) => {
     if (!authUser?.id || !profileId) {
       // Can't persist yet (profile still loading) — don't show a false "done"
       setSyncError("Still loading your profile — try again in a moment.");
       return;
     }
+    const { itemId, slot } = parseOccurrenceId(occId);
     const now = new Date().toISOString();
     let previous;
     setCompletions((prev) => {
       previous = prev;
-      return { ...prev, [itemId]: now };
+      return { ...prev, [occId]: now };
     });
 
     const item = [...baseItems, ...(activeProgram?.items ?? [])]
@@ -214,6 +227,7 @@ export function useRhythm(authUser, profileId) {
       user_id: authUser.id,
       profile_id: profileId,
       item_id: itemId,
+      occurrence_slot: slot,
       item_name: item?.name ?? itemId,
       item_category: item?.category ?? "other",
       event_type: "completed",
@@ -232,34 +246,39 @@ export function useRhythm(authUser, profileId) {
     }
 
     setCompletions((latest) => {
-      const todaysItems = filterTodaysItems(baseItems, activeProgram);
-      const total = todaysItems.length;
-      const completed = todaysItems.filter((i) => latest[i.id]).length;
+      // Counted per occurrence, so an item due twice a day counts twice —
+      // "3 of 5" rather than "1 of 2" when two of the five are the same item.
+      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram));
+      const total = occs.length;
+      const completed = occs.filter((o) => latest[o.id]).length;
       syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
       return latest;
     });
   }, [authUser?.id, profileId, baseItems, activeProgram, currentProgramDay, setCompletions]);
 
-  const uncompleteItem = useCallback(async (itemId) => {
+  const uncompleteItem = useCallback(async (occId) => {
     if (!authUser?.id || !profileId) {
       setSyncError("Still loading your profile — try again in a moment.");
       return;
     }
+    const { itemId, slot } = parseOccurrenceId(occId);
     let previous;
     setCompletions((prev) => {
       previous = prev;
       const next = { ...prev };
-      delete next[itemId];
+      delete next[occId];
       return next;
     });
 
     // Un-ticking is a reversal EVENT, not a deletion — the ledger is
-    // append-only, and the latest event per item/day wins (v_daily_status).
+    // append-only, and the latest event per item/day/slot wins
+    // (v_daily_status).
     const item = baseItems.find((i) => i.id === itemId);
     const { error } = await supabase.from("activity_events").insert({
       user_id: authUser.id,
       profile_id: profileId,
       item_id: itemId,
+      occurrence_slot: slot,
       item_name: item?.name ?? itemId,
       item_category: item?.category ?? "other",
       event_type: "uncompleted",
@@ -278,9 +297,11 @@ export function useRhythm(authUser, profileId) {
     }
 
     setCompletions((latest) => {
-      const todaysItems = filterTodaysItems(baseItems, activeProgram);
-      const total = todaysItems.length;
-      const completed = todaysItems.filter((i) => latest[i.id]).length;
+      // Counted per occurrence, so an item due twice a day counts twice —
+      // "3 of 5" rather than "1 of 2" when two of the five are the same item.
+      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram));
+      const total = occs.length;
+      const completed = occs.filter((o) => latest[o.id]).length;
       syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
       return latest;
     });

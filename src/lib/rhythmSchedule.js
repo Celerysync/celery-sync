@@ -70,6 +70,7 @@ export function rhythmRowToItem(row) {
     category: row.category,
     spacingMinutes: row.spacing_minutes,
     fixedTime: row.fixed_time,
+    schedule: row.schedule || null,
     frequency: row.frequency,
     durationType: row.duration_type,
     durationDays: row.duration_days,
@@ -78,4 +79,72 @@ export function rhythmRowToItem(row) {
     note: row.note,
     sortOrder: row.sort_order,
   };
+}
+
+// ── Occurrences ────────────────────────────────────────────────────────────
+// An item can happen more than once a day ("supplements morning and night",
+// "a snack every 90 minutes"), so the screen, the reminder cron and the voice
+// tools all expand items into occurrences through here. One implementation,
+// or they drift and a voice tick marks a slot the screen never showed.
+
+const toMinutes = (hhmm) => {
+  const [h, m] = String(hhmm).split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+};
+
+const toHHMM = (mins) =>
+  `${String(Math.floor(mins / 60) % 24).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+
+// Guards a malformed or hostile schedule from generating an unbounded list.
+const MAX_OCCURRENCES = 24;
+
+export function scheduleTimes(item) {
+  const s = item?.schedule;
+  if (s?.type === "times" && Array.isArray(s.times)) {
+    return [...new Set(s.times.filter((t) => toMinutes(t) !== null))].sort();
+  }
+  if (s?.type === "interval") {
+    const every = Number(s.everyMinutes);
+    const from = toMinutes(s.from);
+    const to = toMinutes(s.to);
+    if (!Number.isFinite(every) || every < 15 || from === null || to === null || to < from) return [];
+    const out = [];
+    for (let t = from; t <= to && out.length < MAX_OCCURRENCES; t += every) out.push(toHHMM(t));
+    return out;
+  }
+  // No schedule yet — fall back to the single legacy fixed_time.
+  return item?.fixedTime ? [item.fixedTime] : [];
+}
+
+// A slot is only assigned when the item genuinely happens more than once that
+// day. Single-occurrence items keep slot === null, which is exactly what every
+// pre-existing ledger row and every single-time item already uses — so this
+// change is invisible to them.
+export function occurrencesFor(item) {
+  const times = scheduleTimes(item);
+  if (times.length <= 1) return [{ slot: null, time: times[0] ?? null }];
+  return times.map((t) => ({ slot: t, time: t }));
+}
+
+// Item ids are uuids, or app-generated program ids like "sr-<uuid>" — neither
+// contains "@", so it is safe as the separator.
+export const occurrenceId = (itemId, slot) => (slot ? `${itemId}@${slot}` : itemId);
+
+export function parseOccurrenceId(occId) {
+  const i = String(occId).lastIndexOf("@");
+  if (i === -1) return { itemId: String(occId), slot: null };
+  return { itemId: String(occId).slice(0, i), slot: String(occId).slice(i + 1) };
+}
+
+// Expands today's items into the tickable occurrences the screen shows.
+export function expandOccurrences(items) {
+  return items.flatMap((item) =>
+    occurrencesFor(item).map((occ) => ({
+      ...item,
+      id: occurrenceId(item.id, occ.slot),
+      baseItemId: item.id,
+      slot: occ.slot,
+      fixedTime: occ.time ?? item.fixedTime ?? null,
+    }))
+  );
 }
