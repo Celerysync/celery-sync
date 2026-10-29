@@ -37,13 +37,28 @@ const TIPS = [
 ];
 
 export default function GettingTheMostCard() {
-  const [open, setOpen] = useState(false);
+  // Open until it has been read once. Collapsed-by-default meant nobody ever
+  // found it — nothing in the app links here, so a new user would have had to
+  // open Settings and guess. After the first read it stays shut and out of
+  // the way.
+  const [seen, setSeen] = useState(() => localStorage.getItem("cs_guide_seen") === "1");
+  const [open, setOpen] = useState(() => localStorage.getItem("cs_guide_seen") !== "1");
   const { shouldOfferInstall } = useInstallPrompt();
+
+  const toggle = () => {
+    setOpen((v) => {
+      if (v && !seen) {
+        localStorage.setItem("cs_guide_seen", "1");
+        setSeen(true);
+      }
+      return !v;
+    });
+  };
 
   return (
     <Card>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           width: "100%", background: "none", border: "none", cursor: "pointer",

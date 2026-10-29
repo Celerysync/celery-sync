@@ -318,6 +318,34 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
             ? `${first.name}${first.fixedTime ? ` at ${first.fixedTime}` : ""} is on your rhythm — I'll remind you.`
             : "Your day is ready — add to it anytime from Track or by just talking to me."}
         </div>
+        {/* Three concrete things to actually do. Ending on "you're all set"
+            alone left people on the Today screen with no idea what to touch,
+            and nothing anywhere taught them what they can say out loud —
+            which is the whole point of the companion. */}
+        <div style={{
+          background: C.sageLight, borderRadius: 12,
+          padding: "12px 14px", marginTop: 14, textAlign: "left",
+        }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 8 }}>
+            Three things to try first
+          </div>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: C.mid, lineHeight: 1.9 }}>
+            <li>Tick something off on <strong>Today</strong> when you do it.</li>
+            <li>
+              Tap the green button and say{" "}
+              <em>“just finished my juice”</em> — it ticks off by itself.
+            </li>
+            <li>
+              Ask it anything, like <em>“what's left today?”</em> or{" "}
+              <em>“add magnesium at 9pm”</em>.
+            </li>
+          </ol>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+            There's a short guide any time in <strong>Settings → Getting the most
+            out of CelerySync</strong>.
+          </div>
+        </div>
+
         <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 12, marginBottom: 4 }}>
           🎉 Your 7-day free trial starts now
         </div>

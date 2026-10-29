@@ -144,6 +144,23 @@ export default function VoiceOrb() {
             </div>
           )}
 
+          {/* People don't know what they're allowed to say to an AI, so they
+              say nothing and decide it's useless. Shown only before the first
+              conversation connects. */}
+          {!isConnected && !isConnecting && !timedOut && !connectError && (
+            <div style={{
+              background: C.sageLight, borderRadius: 10,
+              padding: "10px 12px", marginBottom: 8,
+              fontSize: 12, color: C.mid, lineHeight: 1.7,
+            }}>
+              <div style={{ fontWeight: 700, color: C.charcoal, marginBottom: 4 }}>
+                Things you can say
+              </div>
+              “Just finished my juice” · “What's left today?” ·
+              “Add magnesium at 9pm” · “I'm wiped out today”
+            </div>
+          )}
+
           {/* A blocked mic is the likeliest failure, and "Permission denied"
               helps nobody — show the actual steps for this platform instead. */}
           {(() => {
