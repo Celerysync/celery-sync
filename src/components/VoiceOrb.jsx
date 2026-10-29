@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import C from "../lib/colors.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
+import { micHelp } from "../lib/micPermission.js";
 
 function fmtElapsed(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -143,12 +144,35 @@ export default function VoiceOrb() {
             </div>
           )}
 
-          {connectError && (
+          {/* A blocked mic is the likeliest failure, and "Permission denied"
+              helps nobody — show the actual steps for this platform instead. */}
+          {(() => {
+            const help = micHelp(connectError) || micHelp(error);
+            if (!help) return null;
+            return (
+              <div style={{
+                background: C.terracottaLight, borderRadius: 12,
+                padding: "12px 14px", margin: "4px 0 8px",
+              }}>
+                <div style={{
+                  fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13,
+                  color: C.charcoal, marginBottom: 6,
+                }}>
+                  🎙 {help.title}
+                </div>
+                <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: C.mid, lineHeight: 1.8 }}>
+                  {help.steps.map((s) => <li key={s}>{s}</li>)}
+                </ol>
+              </div>
+            );
+          })()}
+
+          {connectError && !micHelp(connectError) && (
             <div style={{ fontSize: 13, color: C.terracotta, lineHeight: 1.6, padding: "4px 0 8px" }}>
               {connectError}
             </div>
           )}
-          {error && (
+          {error && !micHelp(error) && (
             <div style={{ fontSize: 13, color: C.terracotta, lineHeight: 1.6, padding: "4px 0 8px" }}>
               {error.message}
             </div>
