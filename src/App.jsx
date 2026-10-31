@@ -319,7 +319,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} />;
 
       case "companion":
         // Rhythm plan = engine without the companion — this tab becomes the
@@ -393,7 +393,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} />;
     }
   };
 

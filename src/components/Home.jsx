@@ -149,12 +149,66 @@ function getNowWindow() {
   };
 }
 
-export default function Home({ user, authUser, profileId }) {
+// Shown when someone returns after 3+ days with nothing ticked or logged.
+// Chronic illness means bad patches; the worst thing an app can do then is
+// greet them with a zeroed streak. No guilt, nothing to catch up on — one
+// thing today is a full win, and the companion is a tap away.
+function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismiss }) {
+  if (doneToday) {
+    return (
+      <div style={{ background: C.sageLight, border: `2px solid ${C.sage}50`, borderRadius: 18, padding: "14px 18px" }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark }}>
+          💚 That's it — you're back.
+        </div>
+        <div style={{ fontSize: 13, color: C.charcoal, marginTop: 4, lineHeight: 1.6 }}>
+          One thing done is a full win today. Anything more is a bonus.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{
+      background: `linear-gradient(135deg, ${C.sageLight}, #fff)`, border: `2px solid ${C.sage}50`,
+      borderRadius: 18, padding: "18px 18px 14px", position: "relative",
+    }}>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", fontSize: 16, color: C.muted, cursor: "pointer" }}
+      >✕</button>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.sageDark, marginBottom: 6 }}>
+        🌿 Welcome back{name ? `, ${name}` : ""}
+      </div>
+      <div style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.7 }}>
+        {daysAway >= 14 ? "It's been a while" : `It's been ${daysAway} days`} — and that's okay. Life and health
+        don't run in straight lines. There's nothing to catch up on: today is a fresh start.
+      </div>
+      <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginTop: 8 }}>
+        Just <strong>one thing</strong> from your rhythm today is a full win.
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+        <button onClick={onShowRhythm} style={{
+          background: C.sageDark, color: C.white, border: "none", borderRadius: 30,
+          padding: "9px 16px", fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, cursor: "pointer",
+        }}>Pick one thing →</button>
+        {onTalk && (
+          <button onClick={onTalk} style={{
+            background: "transparent", color: C.sageDark, border: `1.5px solid ${C.sage}`, borderRadius: 30,
+            padding: "9px 16px", fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, cursor: "pointer",
+          }}>🎙 Talk it through</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Home({ user, authUser, profileId, onNavigate }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
   const [showSupplements, setShowSupplements] = useState(false);
+  const [welcomeBackDismissed, setWelcomeBackDismissed] = useLocalStorage("cs_welcomeBackDismissed", null);
 
   const {
     sequence,
@@ -182,6 +236,7 @@ export default function Home({ user, authUser, profileId }) {
 
   const {
     todaysCheckin, last7, showedUpStreak, protocolDays, avgEnergy7,
+    daysAway, totalShowedUpDays, activeToday,
     loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
 
@@ -235,6 +290,18 @@ export default function Home({ user, authUser, profileId }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+      {/* Welcome back — after 3+ days away; stays (as a "you're back" note) once they tick one thing */}
+      {daysAway != null && daysAway >= 3 && welcomeBackDismissed !== TODAY && (!activeToday || rhythmDoneCount > 0) && (
+        <WelcomeBack
+          name={user?.name}
+          daysAway={daysAway}
+          doneToday={rhythmDoneCount > 0}
+          onShowRhythm={() => document.getElementById("section-rhythm")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          onTalk={onNavigate ? () => onNavigate("companion:talk") : null}
+          onDismiss={() => setWelcomeBackDismissed(TODAY)}
+        />
+      )}
+
       {/* Header banner */}
       <div style={{
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
@@ -250,9 +317,14 @@ export default function Home({ user, authUser, profileId }) {
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your healing journey continues</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-          {showedUpStreak > 0 && (
+          {showedUpStreak > 0 ? (
             <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
               🌿 {showedUpStreak}-day streak
+            </div>
+          ) : totalShowedUpDays > 0 && (
+            // A broken streak never shows as zero — the total never resets.
+            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+              🌿 {totalShowedUpDays} {totalShowedUpDays === 1 ? "day" : "days"} shown up
             </div>
           )}
           {healingScore > 0 && (

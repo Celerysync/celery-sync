@@ -11,6 +11,19 @@ function dayLabel(dateStr) {
   return ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][d.getDay()];
 }
 
+// Shared definition of the "showed up" streak (spec §5): consecutive calendar
+// days, ending today or yesterday, with at least one rhythm item ticked off.
+// Today doesn't break it while it's still in progress.
+export function countShowedUpStreak(checkins, today) {
+  const active = new Set(checkins.filter((c) => (c.rhythm_completed || 0) > 0).map((c) => c.check_date));
+  const d = new Date(today + "T12:00:00");
+  if (!active.has(today)) d.setDate(d.getDate() - 1);
+  let streak = 0;
+  const key = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+  while (active.has(key(d))) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+
 export function useDailyCheckins(authUser, profileId) {
   const [checkins, setCheckins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,14 +100,32 @@ export function useDailyCheckins(authUser, profileId) {
   // AdherenceStreaks rather than inventing a second definition. It used to
   // count celery_oz > 0, i.e. it measured a protocol the app supplied and
   // read zero forever for anyone whose own routine has no celery juice.
-  const showedUpStreak = useMemo(() => {
-    let streak = 0;
+  //
+  // Today is still in progress: a check-in saved before anything is ticked
+  // must not read as a missed day (it used to zero the streak every morning).
+  // Walks real calendar days back from today: rows alone aren't enough, since
+  // a day with no row at all is a missed day too (counting consecutive rows
+  // turned "last active 5 days ago" into a 1-day streak).
+  const showedUpStreak = useMemo(() => countShowedUpStreak(checkins, todayStr()), [checkins]);
+
+  // Coming back after a hard patch (missed days are normal with chronic
+  // illness). daysAway = whole days since they last ticked anything or
+  // checked in, counting only before today; null if they've never been
+  // active. totalShowedUpDays never resets, so a broken streak still has
+  // something kind to show ("42 days you've shown up").
+  const { daysAway, totalShowedUpDays, activeToday } = useMemo(() => {
+    const today = todayStr();
+    const isActive = (c) => (c.rhythm_completed || 0) > 0 || (c.energy || 0) > 0;
     const sorted = [...checkins].sort((a, b) => b.check_date.localeCompare(a.check_date));
-    for (const c of sorted) {
-      if ((c.rhythm_completed || 0) > 0) streak++;
-      else break;
-    }
-    return streak;
+    const last = sorted.find((c) => c.check_date < today && isActive(c));
+    const days = last
+      ? Math.round((new Date(today + "T12:00:00") - new Date(last.check_date + "T12:00:00")) / 86_400_000)
+      : null;
+    return {
+      daysAway: days,
+      totalShowedUpDays: checkins.filter((c) => (c.rhythm_completed || 0) > 0).length,
+      activeToday: checkins.some((c) => c.check_date === today && isActive(c)),
+    };
   }, [checkins]);
 
   const protocolDays = checkins.length;
@@ -109,6 +140,9 @@ export function useDailyCheckins(authUser, profileId) {
     todaysCheckin,
     last7,
     showedUpStreak,
+    daysAway,
+    totalShowedUpDays,
+    activeToday,
     protocolDays,
     avgEnergy7,
     loading,

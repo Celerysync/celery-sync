@@ -147,11 +147,13 @@ export async function buildContextForProfile(profileId) {
   // Showed-up streak: consecutive days with at least one item of their OWN
   // rhythm ticked off (spec §5). It used to count celery_oz > 0, which read
   // zero forever for anyone whose routine has no celery juice.
+  // Consecutive calendar days ending today or yesterday (a missing row is a
+  // missed day — counting consecutive rows ignored gaps).
+  const active = new Set(checkins.filter(c => (c.rhythm_completed || 0) > 0).map(c => c.check_date))
+  const cursor = new Date(today + 'T12:00:00Z')
+  if (!active.has(today)) cursor.setUTCDate(cursor.getUTCDate() - 1)
   let streakDays = 0
-  for (const c of checkins) {
-    if ((c.rhythm_completed || 0) > 0) streakDays++
-    else break
-  }
+  while (active.has(cursor.toISOString().split('T')[0])) { streakDays++; cursor.setUTCDate(cursor.getUTCDate() - 1) }
 
   const todays = checkins.find(c => c.check_date === today)
   const yest = checkins.find(c => c.check_date === yesterday)

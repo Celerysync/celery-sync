@@ -256,11 +256,30 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       const parts = (voicePrefs?.voice_id || "").split(":");
       if (parts[0] === "hume" && parts[2]) chosenVoiceId = parts.slice(2).join(":");
     }
+    // Back after a hard patch? Same rule as Today's welcome-back card and the
+    // text companion (useDailyCheckins): 3+ days since anything was ticked or
+    // logged, counting only days before today.
+    let returningLine = null;
+    if (profileId) {
+      const { data: recent } = await supabase
+        .from("daily_checkins")
+        .select("check_date, energy, rhythm_completed")
+        .eq("profile_id", profileId)
+        .order("check_date", { ascending: false })
+        .limit(30);
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const last = (recent || []).find((c) => c.check_date < today && ((c.rhythm_completed || 0) > 0 || (c.energy || 0) > 0));
+      const daysAway = last ? Math.round((new Date(today + "T12:00:00") - new Date(last.check_date + "T12:00:00")) / 86_400_000) : null;
+      if (daysAway != null && daysAway >= 3) {
+        returningLine = `The user is coming back after ${daysAway} days away. Welcome them back warmly first. No guilt, no mention of a broken streak, nothing to catch up on — hard patches are normal. Gently ask how they've been, and suggest just one small thing from their own rhythm today.`;
+      }
+    }
     // The app map travels with every session so the companion can answer
     // "where do I…?" and take the user anywhere with switch_tab(tab, section),
     // whichever screen they started talking on.
     const appMap = `The app has four tabs. Places you can take the user with switch_tab:\n${destinationsForPrompt()}`;
-    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
+    const contextText = [nameLine, returningLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {
@@ -272,7 +291,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       configId,
       sessionSettings: Object.keys(sessionSettings).length ? sessionSettings : undefined,
     });
-  }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId]);
+  }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId, profileId]);
 
   // Ambient tab-change context — pushed into the live session instead of
   // reconnecting, so the assistant knows where the user is without dropping

@@ -118,7 +118,7 @@ const GREETINGS = {
 };
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
-function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext, activeProtocol }) {
+function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, daysAway, pageContext, activeProtocol }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
 
   const milestonesSection = milestones?.length > 0
@@ -245,6 +245,7 @@ Name: ${user?.name || "friend"}
 Symptoms: ${user?.symptoms?.join(", ") || "general wellness"}
 Goal: ${user?.goal || "wellness and clarity"}
 Showed-up streak (days in a row they ticked off at least one item of their own rhythm): ${showedUpStreak > 0 ? `${showedUpStreak}` : "none yet"}
+${daysAway != null && daysAway >= 3 ? `RETURNING AFTER ${daysAway} DAYS AWAY: welcome them back warmly. No guilt, no mention of a broken streak, nothing to "catch up" on. Hard patches are normal. Suggest just one small thing from their own rhythm today, and ask gently how they've been.` : ""}
 ${checkinSection}
 ${historySection}
 ${unitsSection}
@@ -290,7 +291,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [lang, setLang] = useLocalStorage("cs_lang", "en");
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
-  const { todaysCheckin, showedUpStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
+  const { todaysCheckin, showedUpStreak, daysAway, loadCheckins } = useDailyCheckins(authUser, profileId);
   const { activeProtocol, loadActiveProtocol } = useActiveProtocol(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
@@ -318,7 +319,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     if (memoryLoading) return;
     systemRef.current = {
       staticSystem: STATIC_SYSTEM,
-      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext, activeProtocol }),
+      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, daysAway, pageContext, activeProtocol }),
     };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
@@ -326,7 +327,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : null;
 
     // Evolving greeting based on user's current state
-    const streakNote = showedUpStreak >= 7 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — that's extraordinary.` : showedUpStreak >= 3 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — keep going!` : "";
+    // Back after a hard patch: lead with welcome, never with a streak.
+    const streakNote = daysAway != null && daysAway >= 3
+      ? " However long it's been, there's nothing to catch up on — just one small thing today is plenty."
+      : showedUpStreak >= 7 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — that's extraordinary.` : showedUpStreak >= 3 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — keep going!` : "";
     const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
 
     const day1Greeting = (!caregiverMode && !translatedGreeting && activeProtocol?.day === 1)
@@ -489,7 +493,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             systemRef.current = {
               staticSystem: STATIC_SYSTEM,
               dynamicSystem: buildDynamicSystem({
-                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext,
+                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, daysAway, pageContext,
                 priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
               }),
             };

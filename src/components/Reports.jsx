@@ -7,6 +7,7 @@ import AdherenceStreaks from "./AdherenceStreaks.jsx";
 import ThenAndNow from "./ThenAndNow.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
+import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
 const DISCLAIMER =
@@ -356,8 +357,8 @@ export default function Reports({ authUser, profileId, user }) {
             const avgEnergy7 = energyVals.length
               ? Math.round((energyVals.reduce((s, d) => s + d.energy, 0) / energyVals.length) * 10) / 10
               : null;
-            let streak = 0;
-            for (const c of checkins) { if ((c.rhythm_completed || 0) > 0) streak++; else break; }
+            const now = new Date();
+            const streak = countShowedUpStreak(checkins, `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`);
             return (
               <Suspense fallback={null}>
                 <HealingTrends last7={last7} streak={streak} protocolDays={checkins.length} avgEnergy7={avgEnergy7} />
