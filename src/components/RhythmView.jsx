@@ -34,7 +34,11 @@ export default function RhythmView({
 }) {
   const [expandedId, setExpandedId] = useState(null);
 
-  if (!anchorTime || sequence.length === 0) {
+  // Only empty when there are no items. Items with their own time (or none)
+  // don't need a wake anchor — useRhythm's calculateSequence handles both —
+  // and onboarding never asks for one, so gating on it hid every new user's
+  // freshly entered rhythm behind "Your daily rhythm is empty".
+  if (sequence.length === 0) {
     return (
       <Card style={{ textAlign: "center", padding: "28px 20px" }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
@@ -134,9 +138,11 @@ export default function RhythmView({
       </div>
 
       {/* Anchor time display */}
-      <div style={{ fontSize: 12, color: C.muted }}>
-        ⏰ Wake anchor: <strong style={{ color: C.sageDark }}>{anchorTime}</strong>
-      </div>
+      {anchorTime && (
+        <div style={{ fontSize: 12, color: C.muted }}>
+          ⏰ Wake anchor: <strong style={{ color: C.sageDark }}>{anchorTime}</strong>
+        </div>
+      )}
 
       {/* Sequence items */}
       {sequence.map((item, idx) => {

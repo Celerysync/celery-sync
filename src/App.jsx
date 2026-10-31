@@ -278,7 +278,7 @@ export default function App() {
               localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
               setShowWelcome(false);
               setJustOnboarded({ name, firstItem });
-              setTab("companion");
+              setTab("home"); // the finish button promises Today, and Today is where their new rhythm shows
             }}
           />
         </Suspense>

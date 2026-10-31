@@ -77,9 +77,16 @@ const skipBtn = {
   fontSize: 13, cursor: "pointer", marginTop: 6,
 };
 
+// useProfiles creates a profile named "Me" on first sign-in so the app has
+// something to hang data on. That is a placeholder, not a name the person gave
+// us — treat it as "no name yet" or onboarding skips the question and greets
+// everyone as "Me".
+const PLACEHOLDER_NAME = "Me";
+
 export default function Onboarding({ authUser, existingProfile, createProfile, switchProfile, updateProfile, onDone }) {
-  const [step, setStep] = useState(existingProfile ? 1 : 0);
-  const [name, setName] = useState(existingProfile?.name || "");
+  const hasRealName = !!existingProfile && existingProfile.name !== PLACEHOLDER_NAME;
+  const [step, setStep] = useState(hasRealName ? 1 : 0);
+  const [name, setName] = useState(hasRealName ? existingProfile.name : "");
   const [profile, setProfile] = useState(existingProfile || null);
   const [creating, setCreating] = useState(false);
 
@@ -88,6 +95,13 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   const [condSearch, setCondSearch] = useState("");
 
   const [savedItems, setSavedItems] = useState([]); // { name, fixedTime } — for the finish-screen reflection
+  // Typed text per slot lives here, not inside SlotInput, so Continue can save
+  // whatever was typed. Most people type and tap Continue without pressing
+  // Enter — before, that silently threw their whole routine away.
+  const [slotText, setSlotText] = useState({});
+  const [slotSaving, setSlotSaving] = useState({});
+  const [slotSaved, setSlotSaved] = useState({});
+  const [savingAll, setSavingAll] = useState(false);
 
   const { addItem } = useRhythm(authUser, profile?.id);
   const { supported: pushSupported, subscribe, subscribed } = useWebPush(authUser);
@@ -97,6 +111,14 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   const handleCreateProfile = async () => {
     if (!name.trim() || creating) return;
     setCreating(true);
+    if (profile?.id) {
+      // Rename the placeholder rather than creating a second profile.
+      await updateProfile(profile.id, { name: name.trim() });
+      setProfile({ ...profile, name: name.trim() });
+      setCreating(false);
+      setStep(1);
+      return;
+    }
     const created = await createProfile({ name: name.trim() });
     setCreating(false);
     if (created) {
@@ -104,6 +126,39 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
       switchProfile(created.id);
       setStep(1);
     }
+  };
+
+  const saveSlot = async (slot, rawText) => {
+    const trimmed = rawText.trim();
+    if (!trimmed || slotSaving[slot.key]) return;
+    setSlotSaving((p) => ({ ...p, [slot.key]: true }));
+    const parsed = await parseVoiceTranscript(trimmed).catch(() => null);
+    const items = parsed?.fields?.scheduleItems?.length
+      ? parsed.fields.scheduleItems
+      : [{ name: trimmed.slice(0, 60), category: slot.key, fixedTime: null, note: "", frequency: "daily" }];
+
+    const saved = [];
+    for (const item of items) {
+      const created = await addItem({
+        name: item.name,
+        category: item.category || slot.key,
+        fixedTime: item.fixedTime || null,
+        note: item.note || "",
+        frequency: item.frequency || "daily",
+      });
+      if (created) saved.push(created);
+    }
+    setSlotSaving((p) => ({ ...p, [slot.key]: false }));
+    setSlotSaved((p) => ({ ...p, [slot.key]: saved.map((s) => s.name).join(", ") }));
+    setSlotText((p) => ({ ...p, [slot.key]: "" }));
+    setSavedItems((prev) => [...prev, ...saved]);
+  };
+
+  const continueFromSlots = async () => {
+    setSavingAll(true);
+    await Promise.all(SLOTS.map((slot) => saveSlot(slot, slotText[slot.key] || "")));
+    setSavingAll(false);
+    setStep(2);
   };
 
   const finish = async () => {
@@ -167,11 +222,16 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
             <SlotInput
               key={slot.key}
               slot={slot}
-              addItem={addItem}
-              onSaved={(items) => setSavedItems((prev) => [...prev, ...items])}
+              text={slotText[slot.key] || ""}
+              onTextChange={(t) => setSlotText((p) => ({ ...p, [slot.key]: t }))}
+              onSubmit={(t) => saveSlot(slot, t)}
+              saving={!!slotSaving[slot.key]}
+              savedLabel={slotSaved[slot.key] || null}
             />
           ))}
-          <button style={primaryBtn} onClick={() => setStep(2)}>Continue →</button>
+          <button style={primaryBtn} onClick={continueFromSlots} disabled={savingAll}>
+            {savingAll ? "Saving your rhythm…" : "Continue →"}
+          </button>
           <button style={skipBtn} onClick={() => setStep(2)}>Skip for now</button>
         </div>
       </Shell>
@@ -355,41 +415,12 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   );
 }
 
-function SlotInput({ slot, addItem, onSaved }) {
-  const [text, setText] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [savedLabel, setSavedLabel] = useState(null);
+function SlotInput({ slot, text, onTextChange, onSubmit, saving, savedLabel }) {
   const { listening, startListening, stopListening } = useVoiceOrchestrator();
-
-  const submit = async (rawText) => {
-    const trimmed = rawText.trim();
-    if (!trimmed || saving) return;
-    setSaving(true);
-    const parsed = await parseVoiceTranscript(trimmed).catch(() => null);
-    const items = parsed?.fields?.scheduleItems?.length
-      ? parsed.fields.scheduleItems
-      : [{ name: trimmed.slice(0, 60), category: slot.key, fixedTime: null, note: "", frequency: "daily" }];
-
-    const saved = [];
-    for (const item of items) {
-      const created = await addItem({
-        name: item.name,
-        category: item.category || slot.key,
-        fixedTime: item.fixedTime || null,
-        note: item.note || "",
-        frequency: item.frequency || "daily",
-      });
-      if (created) saved.push(created);
-    }
-    setSaving(false);
-    setSavedLabel(saved.map((s) => s.name).join(", "));
-    onSaved(saved);
-    setText("");
-  };
 
   const handleMic = () => {
     if (listening) { stopListening(); return; }
-    startListening((transcript) => submit(transcript), { silenceMs: 1500 });
+    startListening((transcript) => onSubmit(transcript), { silenceMs: 1500 });
   };
 
   return (
@@ -400,8 +431,8 @@ function SlotInput({ slot, addItem, onSaved }) {
       <div style={{ display: "flex", gap: 6 }}>
         <input
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit(text)}
+          onChange={(e) => onTextChange(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && onSubmit(text)}
           placeholder={slot.placeholder}
           style={{
             flex: 1, padding: "9px 12px", borderRadius: 10,
