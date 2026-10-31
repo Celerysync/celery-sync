@@ -61,6 +61,7 @@ export async function sendRhythmReminders() {
         .from('rhythm_items')
         .select('*')
         .eq('profile_id', profile.id)
+        .is('archived_at', null) // removed items never remind
         .or('schedule.not.is.null,fixed_time.not.is.null')
       if (!items?.length) continue
 

@@ -50,7 +50,8 @@ export default function AdherenceStreaks({ profileId }) {
           .gte("local_date", since60),
         supabase.from("rhythm_items")
           .select("id", { count: "exact", head: true })
-          .eq("profile_id", profileId),
+          .eq("profile_id", profileId)
+          .is("archived_at", null),
         supabase.from("activity_events")
           .select("source")
           .eq("profile_id", profileId)

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { VoiceProvider as HumeSDKProvider, useVoice as useHumeSDKVoice } from "@humeai/voice-react";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { useVoiceTools } from "../hooks/useVoiceTools.js";
-import { TAB_CONTEXT, APP_DELETE_HOWTO, destinationsForPrompt } from "../lib/voiceTabContext.js";
+import { TAB_CONTEXT, VOICE_ACTION_RULES, destinationsForPrompt } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
 import { setCompanionVoiceLive } from "../hooks/useVoice.js";
 
@@ -333,6 +333,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         .from("rhythm_items")
         .select("name, fixed_time, schedule")
         .eq("profile_id", profileId)
+        .is("archived_at", null)
         .order("sort_order", { ascending: true });
       const listed = (items || []).map((i) => {
         const times = i.schedule?.type === "times" && i.schedule.times?.length ? i.schedule.times : i.fixed_time ? [i.fixed_time] : [];
@@ -343,7 +344,6 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         : "The user's daily rhythm is currently EMPTY — they have no items yet.";
       rhythmLine += " If your memory notes mention anything not in this list, they have removed it — never say it's in their rhythm or suggest it as if it still is.";
     }
-    const toolRules = "Adding to the rhythm: call log_rhythm_item once for EACH item the user names, and only say it's added AFTER the tool returns saved:true — never before, and never for an item you didn't call it for. When the user lists several items, add them one by one and confirm them together. Giving an item a time (fixedTime, 24-hour HH:MM) is what sets its reminder; to set or change a time on an item that's already there, call log_rhythm_item again with the same name and the time — it updates that item instead of adding a copy.";
     const memoryLine = memory.healingProfile?.healing_summary
       ? `Background notes from past conversations (may be out of date — the rhythm list above wins):\n${memory.healingProfile.healing_summary}`
       : null;
@@ -351,7 +351,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     // "where do I…?" and take the user anywhere with switch_tab(tab, section),
     // whichever screen they started talking on.
     const appMap = `The app has four tabs. Places you can take the user with switch_tab:\n${destinationsForPrompt()}`;
-    const contextText = [nameLine, historyLine, returningLine, rhythmLine, memoryLine, toolRules, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
+    const contextText = [nameLine, historyLine, returningLine, rhythmLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {

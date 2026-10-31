@@ -72,3 +72,13 @@ export function useLocalStorage(key, initialValue) {
 
   return [stored, setValue];
 }
+
+// Write a key from outside React (e.g. a voice tool) and update every
+// mounted useLocalStorage(key) instance, exactly as setValue does.
+export function setLocalStorageValue(key, value) {
+  try {
+    if (value === null || value === undefined) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* storage unavailable — subscribers still update */ }
+  notify(key, value ?? null);
+}

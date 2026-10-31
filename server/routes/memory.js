@@ -1327,6 +1327,22 @@ export async function refreshAllHealingProfiles() {
         .map(m => `${m.role === 'user' ? 'User' : 'Guide'}: ${m.content.slice(0, 300)}`)
         .join('\n')
 
+      // What their routine is NOW, and how it changed recently — so the notes
+      // stop presenting items they've since removed as current. (Errors, e.g.
+      // before the rhythm_history migration, just leave these lines out.)
+      const since = new Date(Date.now() - 14 * 86_400_000).toISOString()
+      const [itemsRes, suppsRes, changesRes] = await Promise.all([
+        supabaseAdmin.from('rhythm_items').select('name').eq('profile_id', profile_id).is('archived_at', null).order('sort_order'),
+        supabaseAdmin.from('user_supplements').select('name').eq('profile_id', profile_id),
+        supabaseAdmin.from('rhythm_item_changes').select('item_name, change_type, occurred_at').eq('profile_id', profile_id).gte('occurred_at', since).order('occurred_at'),
+      ])
+      const currentLines = [
+        itemsRes.error ? null : `Their daily rhythm RIGHT NOW: ${itemsRes.data?.length ? itemsRes.data.map(i => i.name).join(', ') : 'empty'}.`,
+        suppsRes.error ? null : `Their supplement list RIGHT NOW: ${suppsRes.data?.length ? suppsRes.data.map(i => i.name).join(', ') : 'empty'}.`,
+        changesRes.error || !changesRes.data?.length ? null
+          : `Recent changes they made: ${changesRes.data.map(c => `${c.change_type} ${c.item_name} (${c.occurred_at.slice(0, 10)})`).join('; ')}.`,
+      ].filter(Boolean).join('\n')
+
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 350,
@@ -1335,7 +1351,10 @@ export async function refreshAllHealingProfiles() {
           content: `Summarise this person's healing journey in 200 words max from their Medical Medium conversation log.
 Capture: main conditions, supplements they're taking, recent wins, current challenges, emotional state, patterns.
 Warm flowing notes — not bullet points. Start with their name if mentioned.
-
+${currentLines ? `
+The lists below are the truth about their routine TODAY. Describe their current routine only from these lists; anything from the conversation that isn't in them is something they used to do — mention it only as past ("used to include…"), never as current.
+${currentLines}
+` : ''}
 Conversation:
 ${transcript}`,
         }],

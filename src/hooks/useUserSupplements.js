@@ -5,6 +5,9 @@ function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
+// Fired on window when supplements change outside this hook (voice tools).
+export const SUPPLEMENTS_CHANGED_EVENT = "cs:supplements-changed";
+
 export function useUserSupplements(profileId) {
   const [supplements, setSupplements] = useState([]);
   const [inventory, setInventory] = useState({}); // keyed by lowercase name
@@ -22,6 +25,10 @@ export function useUserSupplements(profileId) {
 
     // One-time migration: if this profile has never synced supplements to
     // Supabase but has a local list, upload it so it's no longer device-only.
+    // The local copy is removed afterwards (and whenever the database already
+    // has a list) — it used to re-upload every time someone removed their
+    // last supplement, bringing deleted ones back.
+    if (existing?.length) localStorage.removeItem("cs_custom_supps");
     if (!existing?.length) {
       let local = [];
       try { local = JSON.parse(localStorage.getItem("cs_custom_supps") || "[]"); } catch { local = []; }
@@ -36,6 +43,7 @@ export function useUserSupplements(profileId) {
           };
         });
         const { data: inserted } = await supabase.from("user_supplements").insert(rows).select("id, name, dose_label, timing");
+        localStorage.removeItem("cs_custom_supps");
         setSupplements(inserted || []);
         setLoading(false);
         return;
@@ -55,6 +63,12 @@ export function useUserSupplements(profileId) {
   }, [profileId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // The voice companion adds/removes supplements directly; reload when it does.
+  useEffect(() => {
+    window.addEventListener(SUPPLEMENTS_CHANGED_EVENT, load);
+    return () => window.removeEventListener(SUPPLEMENTS_CHANGED_EVENT, load);
+  }, [load]);
 
   const addSupplement = useCallback(async (name, doseLabel, timing) => {
     if (!profileId) return null;

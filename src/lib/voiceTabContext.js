@@ -84,9 +84,20 @@ export function destinationsForPrompt() {
     .join("\n");
 }
 
-// The assistant has no delete tools ON PURPOSE — a misheard sentence must
-// never be able to wipe the user's data. Instead of dead-ending ("I can't do
-// that"), it should know the manual paths and guide the user there. Injected
-// into the Hume EVI session context and the Coach text prompt alike.
+// Text chat (Coach) has no tools that change data, so when the user asks it
+// to remove or change something it points them to the voice companion, which
+// can (with a spoken yes first — see useVoiceTools), or to the manual path.
 export const APP_DELETE_HOWTO =
-  "You can add and tick things off, but you can NEVER delete or clear the user's data — you have no delete tools, deliberately, so nothing can be wiped by a misheard sentence. When the user asks to remove or clear something, don't just decline: warmly explain exactly where to do it themselves. To remove a supplement: Today tab, Supplements card, tap 'Manage', then the small ✕ next to the supplement. To stop a running program: Today tab, Daily Rhythm card, tap Edit, open Programs, tap 'End program early'. To delete a saved program or day template: same Programs screen, tap the ✕ on it twice to confirm. To remove a daily rhythm item: Today tab, Daily Rhythm card, tap Edit, then the ✕ next to the item. Offer to take them there.";
+  "In this text chat you can't change the user's rhythm or supplements yourself. When they ask to remove or change something, warmly tell them the voice companion can do it for them — tap the round 🎙 and just say it (it always asks them to confirm before removing anything, and removed items can be brought back) — or show them where to do it themselves. To remove a supplement: Today tab, Supplements card, tap 'Manage', then the small ✕ next to the supplement. To stop a running program: Today tab, Daily Rhythm card, tap Edit, open Programs, tap 'End program early'. To delete a saved program or day template: same Programs screen, tap the ✕ on it twice to confirm. To remove a daily rhythm item: Today tab, Daily Rhythm card, tap Edit, then the ✕ next to the item. Offer to take them there.";
+
+// The voice companion CAN do all of it, by voice — these are the rules that
+// keep that safe. Sent with every voice session.
+export const VOICE_ACTION_RULES = [
+  "You can run the user's whole app for them by voice — many users are bedridden or too exhausted to tap, so do it FOR them rather than sending them to a screen.",
+  "Rhythm items: log_rhythm_item adds one (call it once for EACH item the user names; a time = HH:MM 24-hour sets its daily reminder; the same name again updates that item instead of copying it). update_rhythm_item renames it or changes its times (several reminders a day = several times; times: [] removes the reminder), frequency, note or category. remove_rhythm_item removes one. restore_rhythm_item brings back a removed one — use it when they say undo or bring it back.",
+  "Templates and programs: save_day_template saves their rhythm as it is now; load_day_template swaps their rhythm for a saved one; list_saved_rhythms tells you what they have; save_program records a multi-day program they read to you from their own book; start_program and end_program run one.",
+  "Supplements: add_supplement and remove_supplement (only ever the amount the user tells you from their own bottle or book — never suggest one).",
+  "Only say something is added, changed or removed AFTER the tool returns saved: true — never before, and never for an item you didn't call a tool for. When they list several things, do them one by one, then confirm them together.",
+  "Removing, replacing or ending anything: the tool will first answer needs_confirmation — ask the exact question it gives you, and only call again with confirmed: true if they clearly say yes. If you're not sure you heard them right, ask again. Never pass confirmed: true without hearing a yes in this conversation.",
+  "Removed items are kept in their history and can always be brought back, so reassure them nothing is lost.",
+].join(" ");

@@ -81,6 +81,28 @@ export function rhythmRowToItem(row) {
   };
 }
 
+// The inverse of rhythmRowToItem — one shape for every writer (taps, voice).
+export function rhythmItemToRow(item, profileId) {
+  return {
+    profile_id: profileId,
+    name: item.name,
+    emoji: item.emoji || "🌿",
+    category: item.category || "other",
+    spacing_minutes: item.spacingMinutes ?? 0,
+    fixed_time: item.fixedTime ?? null,
+    schedule: item.schedule ?? null,
+    frequency: item.frequency ?? "daily",
+    duration_type: item.durationType ?? "ongoing",
+    duration_days: item.durationDays ?? null,
+    start_date: item.startDate ?? null,
+    is_medicine: item.isMedicine ?? false,
+    note: item.note ?? "",
+    sort_order: item.sortOrder ?? 0,
+    // Who made the change — read by the rhythm_item_changes diary trigger.
+    changed_via: item.changedVia ?? "tap",
+  };
+}
+
 // ── Occurrences ────────────────────────────────────────────────────────────
 // An item can happen more than once a day ("supplements morning and night",
 // "a snack every 90 minutes"), so the screen, the reminder cron and the voice

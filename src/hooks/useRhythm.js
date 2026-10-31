@@ -1,10 +1,9 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
-import { RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
 import {
-  TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem,
-  expandOccurrences, occurrenceId, parseOccurrenceId,
+  TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
+  expandOccurrences, occurrenceId, parseOccurrenceId, RHYTHM_CHANGED_EVENT,
 } from "../lib/rhythmSchedule.js";
 
 // scheduledMs is computed for relative items (cascading from the anchor, or
@@ -51,24 +50,7 @@ async function syncRhythmCountsToCheckin(profileId, userId, completed, total, ac
 
 const rowToItem = rhythmRowToItem;
 
-function itemToRow(item, profileId) {
-  return {
-    profile_id: profileId,
-    name: item.name,
-    emoji: item.emoji || "🌿",
-    category: item.category || "other",
-    spacing_minutes: item.spacingMinutes ?? 0,
-    fixed_time: item.fixedTime ?? null,
-    schedule: item.schedule ?? null,
-    frequency: item.frequency ?? "daily",
-    duration_type: item.durationType ?? "ongoing",
-    duration_days: item.durationDays ?? null,
-    start_date: item.startDate ?? null,
-    is_medicine: item.isMedicine ?? false,
-    note: item.note ?? "",
-    sort_order: item.sortOrder ?? 0,
-  };
-}
+const itemToRow = rhythmItemToRow;
 
 export function useRhythm(authUser, profileId) {
   const [baseItems, setBaseItems] = useState([]);
@@ -103,20 +85,31 @@ export function useRhythm(authUser, profileId) {
     (async () => {
       if (!reloadTick) setRhythmLoaded(false);
       const [itemsRes, profileRes] = await Promise.all([
-        supabase.from("rhythm_items").select("*").eq("profile_id", profileId).order("sort_order", { ascending: true }),
+        supabase.from("rhythm_items").select("*").eq("profile_id", profileId).is("archived_at", null).order("sort_order", { ascending: true }),
         supabase.from("profiles").select("rhythm_anchor_time").eq("id", profileId).maybeSingle(),
       ]);
 
       let items = itemsRes.data || [];
       let anchor = profileRes.data?.rhythm_anchor_time || "";
 
-      if (!items.length) {
+      // The pre-Supabase localStorage copy is migrated ONCE, for a profile
+      // that has never had a single item. It used to run whenever the list
+      // was empty, so clearing everything to start fresh resurrected that
+      // old device copy. Once the database holds anything, the copy goes.
+      let everHadItems = items.length > 0;
+      if (!everHadItems) {
+        const { count } = await supabase.from("rhythm_items").select("id", { count: "exact", head: true }).eq("profile_id", profileId);
+        everHadItems = (count || 0) > 0;
+      }
+      if (everHadItems) localStorage.removeItem("cs_rhythm_items");
+      if (!items.length && !everHadItems) {
         let localItems = [];
         try { localItems = JSON.parse(localStorage.getItem("cs_rhythm_items") || "[]"); } catch { localItems = []; }
         if (localItems.length) {
           const rows = localItems.map((item) => itemToRow(item, profileId));
           const { data: inserted } = await supabase.from("rhythm_items").insert(rows).select("*");
           items = inserted || [];
+          localStorage.removeItem("cs_rhythm_items");
         }
         if (!anchor) {
           anchor = localStorage.getItem("cs_rhythm_anchor") || "";
@@ -340,9 +333,15 @@ export function useRhythm(authUser, profileId) {
     }
   }, [profileId, baseItems]);
 
+  // Removing hides the item (archived_at) rather than deleting it, so the
+  // change diary and reports keep it, and it can be restored.
   const removeItem = useCallback((id) => {
     setBaseItems((prev) => prev.filter((i) => i.id !== id));
-    if (profileId) supabase.from("rhythm_items").delete().eq("id", id).then(() => {});
+    if (profileId) {
+      supabase.from("rhythm_items")
+        .update({ archived_at: new Date().toISOString(), changed_via: "tap" })
+        .eq("id", id).then(() => {});
+    }
   }, [profileId]);
 
   const reorderItems = useCallback((fromIndex, toIndex) => {
@@ -366,8 +365,11 @@ export function useRhythm(authUser, profileId) {
     if (!items?.length || !profileId) return;
     const ordered = items.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
 
-    // Replace the whole schedule — delete existing items, insert the template's
-    await supabase.from("rhythm_items").delete().eq("profile_id", profileId);
+    // Replace the whole schedule — the current items are archived (kept in
+    // the history), then the template's items are inserted.
+    await supabase.from("rhythm_items")
+      .update({ archived_at: new Date().toISOString(), changed_via: items[0]?.changedVia ?? "tap" })
+      .eq("profile_id", profileId).is("archived_at", null);
     const rows = ordered.map((item) => itemToRow(item, profileId));
     const { data } = await supabase.from("rhythm_items").insert(rows).select("*");
     setBaseItems((data || []).map(rowToItem));

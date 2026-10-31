@@ -3,7 +3,7 @@ import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
-import { scheduleTimes } from "../lib/rhythmSchedule.js";
+import { scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -81,12 +81,16 @@ export default function RhythmBuilder({
 
   useEffect(() => {
     if (!profileId) return;
-    supabase
+    const load = () => supabase
       .from("saved_rhythms")
       .select("*")
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false })
       .then(({ data }) => setSavedRows(data || []));
+    load();
+    // Templates/programs saved by the voice companion show up straight away
+    window.addEventListener(RHYTHM_CHANGED_EVENT, load);
+    return () => window.removeEventListener(RHYTHM_CHANGED_EVENT, load);
   }, [profileId]);
 
   const savedTemplates = savedRows.filter((r) => !isProgramRow(r));
