@@ -52,6 +52,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupMsg, setTopupMsg] = useState("");
   const [humeVoices, setHumeVoices] = useState([]);
+  const [topupInfo, setTopupInfo] = useState(null); // { minutes, amount, currency } from the live Stripe price
   const [nameDraft, setNameDraft] = useState(null); // null = not editing, show saved value
   const { speak, speaking, stopSpeaking } = useVoice(prefs.voice_id || "");
 
@@ -61,6 +62,10 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
     fetch("/api/hume/voices")
       .then((r) => (r.ok ? r.json() : { voices: [] }))
       .then(({ voices }) => { if (!cancelled) setHumeVoices(voices || []); })
+      .catch(() => {});
+    fetch("/api/stripe/topup-info")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((info) => { if (!cancelled && info?.available) setTopupInfo(info); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [isRhythm]);
@@ -179,7 +184,8 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
         </div>
         <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 10 }}>
           Your plan's voice minutes refresh each month. Running low? Add a one-off top-up —
-          it's applied to your account as soon as payment completes.
+          it's applied as soon as payment completes, and any top-up minutes you don't use
+          carry over to next month.
         </div>
         <button
           onClick={async () => {
@@ -205,7 +211,11 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
             fontSize: 12.5, cursor: "pointer", opacity: topupBusy ? 0.6 : 1,
           }}
         >
-          {topupBusy ? "Opening checkout…" : "＋ Top up voice minutes"}
+          {topupBusy
+            ? "Opening checkout…"
+            : topupInfo
+            ? `＋ ${topupInfo.minutes} more minutes · $${topupInfo.amount.toFixed(2)}${topupInfo.currency === "AUD" ? "" : ` ${topupInfo.currency}`}`
+            : "＋ Top up voice minutes"}
         </button>
         {topupMsg && (
           <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{topupMsg}</div>

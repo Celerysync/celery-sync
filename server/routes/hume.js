@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { fetchAccessToken, HumeClient } from 'hume'
 import { createHash } from 'crypto'
+import { carriedTopupSeconds } from '../voiceMeter.js'
 
 const router = Router()
 
@@ -270,7 +271,9 @@ async function incrementMeterUsage(userId, secondsToAdd) {
     .maybeSingle()
 
   const included = await includedSecondsFor(userId)
-  const topup = existing?.topup_seconds_remaining ?? 0
+  const topup = existing
+    ? (existing.topup_seconds_remaining ?? 0)
+    : await carriedTopupSeconds(supabase, userId, periodMonth)
   const used = (existing?.evi_seconds_used ?? 0) + Math.max(0, Math.round(secondsToAdd))
 
   await supabase.from('voice_usage_meter').upsert({

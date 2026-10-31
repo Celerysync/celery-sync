@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { carriedTopupSeconds } from '../voiceMeter.js'
 
 const router = Router()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -123,6 +124,29 @@ router.post('/checkout/practitioner', async (req, res) => {
   }
 })
 
+// What a top-up costs and gives, read from the live Stripe price so the
+// button can say it upfront and can never disagree with checkout.
+let _topupInfoCache = { at: 0, info: null }
+router.get('/topup-info', async (_req, res) => {
+  if (!process.env.STRIPE_TOPUP_PRICE_ID) return res.json({ available: false })
+  if (_topupInfoCache.info && Date.now() - _topupInfoCache.at < 10 * 60 * 1000) {
+    return res.json(_topupInfoCache.info)
+  }
+  try {
+    const price = await stripe.prices.retrieve(process.env.STRIPE_TOPUP_PRICE_ID)
+    const info = {
+      available: price.active,
+      minutes: parseInt(process.env.TOPUP_MINUTES, 10) || 30,
+      amount: price.unit_amount / 100,
+      currency: price.currency.toUpperCase(),
+    }
+    _topupInfoCache = { at: Date.now(), info }
+    res.json(info)
+  } catch (err) {
+    res.json({ available: false, error: err.message })
+  }
+})
+
 // One-off voice top-up purchase (mode: payment, not subscription).
 // The webhook credits the minutes only after Stripe confirms payment —
 // nothing in the app trusts the client's word that they paid.
@@ -190,12 +214,16 @@ router.post('/webhook', async (req, res) => {
               .eq('user_id', userId)
               .eq('period_month', periodMonth)
               .maybeSingle()
+            // First row of the month? Bring last month's unused top-up with it.
+            const priorTopup = meter
+              ? (meter.topup_seconds_remaining ?? 0)
+              : await carriedTopupSeconds(supabase, userId, periodMonth)
             await supabase.from('voice_usage_meter').upsert({
               user_id: userId,
               period_month: periodMonth,
               evi_seconds_used: meter?.evi_seconds_used ?? 0,
               evi_seconds_included: meter?.evi_seconds_included ?? 0,
-              topup_seconds_remaining: (meter?.topup_seconds_remaining ?? 0) + seconds,
+              topup_seconds_remaining: priorTopup + seconds,
               updated_at: new Date().toISOString(),
             }, { onConflict: 'user_id,period_month' })
             console.log(`Voice top-up credited: ${seconds}s for ${userId}`)
