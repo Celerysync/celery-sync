@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 
@@ -127,9 +127,9 @@ export default function AdherenceStreaks({ profileId }) {
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: totalSourceEvents > 0 ? 12 : 0 }}>
         <StatPill label="Showed-up streak" value={`${showedUpStreak}d`} bg={C.sageLight} color={C.sageDark} />
-        <StatPill label="Perfect streak" value={`${perfectStreak}d`} bg="#fffbeb" color={C.gold} />
+        <StatPill label="Perfect streak" value={`${perfectStreak}d`} bg={alpha("#C9963A", "1F")} color={C.gold} />
         {weekAdherence != null && (
-          <StatPill label="This week" value={`${weekAdherence}%`} bg="#f0fdf4" color={C.sage} />
+          <StatPill label="This week" value={`${weekAdherence}%`} bg={alpha("#16a34a", "14")} color={C.sage} />
         )}
       </div>
       {totalSourceEvents > 0 && (

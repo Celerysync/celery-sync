@@ -28,7 +28,7 @@ function Toggle({ on, onChange, label, desc }) {
           position: "relative", transition: "background 0.2s",
         }}>
           <div style={{
-            width: 20, height: 20, borderRadius: "50%", background: "#fff",
+            width: 20, height: 20, borderRadius: "50%", background: C.surface,
             position: "absolute", top: 3,
             left: on ? 23 : 3,
             transition: "left 0.2s",
@@ -72,7 +72,7 @@ function EncouragementWindowRow({ label, desc, window, hourOptions, prefs, updat
           onChange={(e) => updateWindow(window, { hour: Number(e.target.value) })}
           style={{
             border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 12px",
-            fontSize: 13, color: C.charcoal, background: "#fff",
+            fontSize: 13, color: C.charcoal, background: C.surface,
             fontFamily: "Georgia,serif", cursor: "pointer", width: "100%", marginTop: 8,
           }}
         >

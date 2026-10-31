@@ -23,7 +23,7 @@ export const Card = ({ children, style = {}, onClick }) => (
     onClick={onClick}
     className={onClick ? "cs-card-click" : undefined}
     style={{
-      background: C.white,
+      background: C.surface,
       borderRadius: 18,
       boxShadow: "0 2px 16px #1e2a1e0a",
       border: `1px solid ${C.border}`,

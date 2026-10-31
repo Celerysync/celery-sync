@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { callClaude } from "../lib/api.js";
 
@@ -61,7 +61,7 @@ function YouTubeSection() {
   const hasVideos = AW_VIDEOS.length > 0;
 
   if (!open) return (
-    <Card style={{ border: `1.5px solid ${C.gold}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+    <Card style={{ border: `1.5px solid ${alpha(C.gold, "40")}`, cursor: "pointer" }} onClick={() => setOpen(true)}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontSize: 28 }}>▶️</div>
         <div>
@@ -78,7 +78,7 @@ function YouTubeSection() {
   );
 
   return (
-    <Card style={{ border: `1.5px solid ${C.gold}50` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.gold, "50")}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
           ▶️ AW's Healing Videos
@@ -141,7 +141,7 @@ function YouTubeSection() {
                 >
                   <span>{t.emoji}</span>
                   <span>{t.label}</span>
-                  {count > 0 && <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.3)" : C.sage + "30", borderRadius: 10, padding: "1px 6px", color: isActive ? C.white : C.sage }}>{count}</span>}
+                  {count > 0 && <span style={{ fontSize: 10, background: isActive ? "rgba(255,255,255,0.3)" : alpha(C.sage, "30"), borderRadius: 10, padding: "1px 6px", color: isActive ? C.white : C.sage }}>{count}</span>}
                 </button>
               );
             })}
@@ -158,7 +158,7 @@ function YouTubeSection() {
                       onClick={() => setActiveVideo(v)}
                       style={{
                         display: "flex", alignItems: "center", gap: 10,
-                        background: C.white, border: `1px solid ${C.border}`,
+                        background: C.surface, border: `1px solid ${C.border}`,
                         borderRadius: 12, padding: "10px 12px", cursor: "pointer", textAlign: "left",
                       }}
                     >
@@ -262,7 +262,7 @@ function HealingStorySection() {
   };
 
   if (!open) return (
-    <Card style={{ border: `1.5px solid ${C.sage}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+    <Card style={{ border: `1.5px solid ${alpha(C.sage, "40")}`, cursor: "pointer" }} onClick={() => setOpen(true)}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontSize: 28 }}>💚</div>
         <div>
@@ -277,7 +277,7 @@ function HealingStorySection() {
   );
 
   return (
-    <Card style={{ border: `1.5px solid ${C.sage}50` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.sage, "50")}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark }}>💚 Your healing story</div>
         <button onClick={() => { setOpen(false); setStep(0); setStory(""); }} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
@@ -337,7 +337,7 @@ function HealingStorySection() {
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button onClick={handleCopy} style={{
-              flex: 1, background: copied ? C.sage : C.white, color: copied ? C.white : C.sageDark,
+              flex: 1, background: copied ? C.sage : C.surface, color: copied ? C.white : C.sageDark,
               border: `1.5px solid ${C.sage}`, borderRadius: 30, padding: "8px 14px",
               fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
             }}>
@@ -396,7 +396,7 @@ With love`;
   };
 
   if (!open) return (
-    <Card style={{ border: `1.5px solid ${C.gold}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+    <Card style={{ border: `1.5px solid ${alpha(C.gold, "40")}`, cursor: "pointer" }} onClick={() => setOpen(true)}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontSize: 28 }}>💛</div>
         <div>
@@ -411,7 +411,7 @@ With love`;
   );
 
   return (
-    <Card style={{ border: `1.5px solid ${C.gold}50` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.gold, "50")}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>💛 Introduce someone to AW</div>
         <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
@@ -436,7 +436,7 @@ With love`;
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={handleCopy} style={{
-          flex: 1, background: copied ? C.sage : C.white, color: copied ? C.white : C.mid,
+          flex: 1, background: copied ? C.sage : C.surface, color: copied ? C.white : C.mid,
           border: `1px solid ${C.border}`, borderRadius: 30, padding: "8px",
           fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
         }}>
@@ -473,7 +473,7 @@ function GiftBookSection() {
   };
 
   if (!open) return (
-    <Card style={{ border: `1.5px solid ${C.plum}40`, cursor: "pointer" }} onClick={() => setOpen(true)}>
+    <Card style={{ border: `1.5px solid ${alpha(C.plum, "40")}`, cursor: "pointer" }} onClick={() => setOpen(true)}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontSize: 28 }}>📖</div>
         <div>
@@ -488,7 +488,7 @@ function GiftBookSection() {
   );
 
   if (sent) return (
-    <Card style={{ border: `1.5px solid ${C.sage}50`, textAlign: "center" }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.sage, "50")}`, textAlign: "center" }}>
       <div style={{ fontSize: 32, marginBottom: 8 }}>💚</div>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 6 }}>Request sent</div>
       <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
@@ -498,7 +498,7 @@ function GiftBookSection() {
   );
 
   return (
-    <Card style={{ border: `1.5px solid ${C.plum}50` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.plum, "50")}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>📖 Gift an AW book</div>
         <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 16 }}>✕</button>
@@ -532,7 +532,7 @@ function GiftBookSection() {
           style={{
             width: "100%", border: `1px solid ${C.border}`, borderRadius: 10,
             padding: "8px 12px", fontSize: 13, fontFamily: "Georgia,serif",
-            background: C.white, color: C.charcoal,
+            background: C.surface, color: C.charcoal,
           }}
         >
           {BOOK_TITLES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -579,7 +579,7 @@ export default function AW({ onNavigate }) {
       </div>
 
       {/* What CelerySync is — open letter */}
-      <Card style={{ background: C.sageLight, border: `1.5px solid ${C.sage}50` }}>
+      <Card style={{ background: C.sageLight, border: `1.5px solid ${alpha(C.sage, "50")}` }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 10 }}>
           💚 A message from the CelerySync team
         </div>
@@ -673,7 +673,7 @@ export default function AW({ onNavigate }) {
       {/* Buy → Upload → AI flow banner */}
       <div style={{
         background: `linear-gradient(135deg, ${C.sageLight}, #f0f9f0)`,
-        border: `1.5px solid ${C.sage}50`,
+        border: `1.5px solid ${alpha(C.sage, "50")}`,
         borderRadius: 16, padding: "16px 18px",
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 10 }}>
@@ -778,7 +778,7 @@ export default function AW({ onNavigate }) {
       </Card>
 
       {/* Sponsor someone */}
-      <Card style={{ background: C.goldLight, border: `1.5px solid ${C.gold}50` }}>
+      <Card style={{ background: C.goldLight, border: `1.5px solid ${alpha(C.gold, "50")}` }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
           🎁 Sponsor Someone's Healing
         </div>

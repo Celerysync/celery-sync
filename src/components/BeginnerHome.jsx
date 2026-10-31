@@ -68,7 +68,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
       </div>
 
       {/* Getting started */}
-      <div style={{ background: "#fff", borderRadius: 20, padding: "18px 18px" }}>
+      <div style={{ background: C.surface, borderRadius: 20, padding: "18px 18px" }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, color: C.charcoal, marginBottom: 4 }}>
           Getting started
         </div>
@@ -100,7 +100,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
 
       {/* Discovery summary */}
       {discoveryText && (
-        <div style={{ background: "#fff", borderRadius: 20, padding: "18px 18px" }}>
+        <div style={{ background: C.surface, borderRadius: 20, padding: "18px 18px" }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal, marginBottom: 10 }}>
             Your discovery
           </div>
@@ -124,7 +124,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
 
       {/* Graduate / full app link */}
       <div style={{
-        background: "#fff", borderRadius: 20, padding: "18px 18px",
+        background: C.surface, borderRadius: 20, padding: "18px 18px",
         border: `1.5px dashed ${C.border}`,
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>

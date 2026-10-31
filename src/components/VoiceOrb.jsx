@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { micHelp } from "../lib/micPermission.js";
 
@@ -76,7 +76,7 @@ export default function VoiceOrb() {
           alignItems: "center",
           justifyContent: "center",
           boxShadow: isConnected
-            ? `0 0 0 6px ${C.sage}44, 0 4px 20px rgba(0,0,0,0.25)`
+            ? `0 0 0 6px ${alpha(C.sage, "44")}, 0 4px 20px rgba(0,0,0,0.25)`
             : "0 4px 20px rgba(0,0,0,0.2)",
           transition: "background 0.2s, box-shadow 0.2s",
           zIndex: 200,
@@ -91,7 +91,7 @@ export default function VoiceOrb() {
           bottom: "calc(144px + env(safe-area-inset-bottom, 0px))",
           right: 16,
           width: "min(320px, calc(100vw - 32px))",
-          background: C.white,
+          background: C.surface,
           borderRadius: 16,
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           padding: "16px 18px",

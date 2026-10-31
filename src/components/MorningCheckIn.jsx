@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { TODAY } from "../lib/rhythmSchedule.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
@@ -76,8 +76,8 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
 
   return (
     <div style={{
-      background: `linear-gradient(135deg, ${C.gold}22, ${C.cream})`,
-      border: `1.5px solid ${C.gold}55`,
+      background: `linear-gradient(135deg, ${alpha(C.gold, "22")}, ${C.cream})`,
+      border: `1.5px solid ${alpha(C.gold, "55")}`,
       borderRadius: 20, padding: "16px 18px",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -132,7 +132,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
                 disabled={saving}
                 style={{
                   padding: "6px 12px", borderRadius: 50, cursor: "pointer",
-                  border: `1.5px solid ${C.sage}66`, background: C.white,
+                  border: `1.5px solid ${alpha(C.sage, "66")}`, background: C.surface,
                   fontFamily: "Georgia,serif", fontSize: 12, color: C.sageDark,
                 }}
               >
@@ -191,7 +191,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
               onClick={() => { finish(); setDismissed(true); }}
               style={{
                 padding: "9px 16px", borderRadius: 50, cursor: "pointer",
-                border: `1.5px solid ${C.border}`, background: C.white,
+                border: `1.5px solid ${C.border}`, background: C.surface,
                 fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
               }}
             >

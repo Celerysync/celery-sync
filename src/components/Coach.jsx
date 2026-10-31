@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
@@ -574,7 +574,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         <div
           style={{
             background: "linear-gradient(135deg, #f0f7f0, #e8f4e8)",
-            border: `1px solid ${C.sage}40`,
+            border: `1px solid ${alpha(C.sage, "40")}`,
             borderRadius: 14,
             padding: "12px 16px",
             cursor: "pointer",
@@ -644,7 +644,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             fontFamily: "Georgia,serif",
             fontSize: 12.5,
             color: C.charcoal,
-            background: C.white,
+            background: C.surface,
             border: `1.5px solid ${C.border}`,
             borderRadius: 8,
             padding: "5px 8px",
@@ -687,8 +687,8 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Hands-free status banner */}
       {handsFree && srSupported && (
         <div style={{
-          background: `${C.sage}18`,
-          border: `1.5px solid ${C.sage}50`,
+          background: `${alpha(C.sage, "18")}`,
+          border: `1.5px solid ${alpha(C.sage, "50")}`,
           borderRadius: 12, padding: "10px 14px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
@@ -711,7 +711,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {crisisDetected && (
         <div
           style={{
-            background: "#FEF2F2",
+            background: alpha("#DC2626", "14"),
             border: "2px solid #EF444460",
             borderRadius: 16,
             padding: "14px 16px",
@@ -800,7 +800,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 <div
                   onClick={() => m.role === "assistant" && setTappedMsg(tappedMsg === i ? null : i)}
                   style={{
-                    background: m.role === "user" ? C.sage : C.white,
+                    background: m.role === "user" ? C.sage : C.surface,
                     color: m.role === "user" ? C.white : C.charcoal,
                     borderRadius: 14,
                     padding: "10px 14px",
@@ -810,7 +810,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     whiteSpace: "pre-wrap",
                     boxShadow: "0 1px 6px #0000000d",
                     cursor: m.role === "assistant" ? "pointer" : "default",
-                    border: tappedMsg === i ? `1.5px solid ${C.sage}60` : "1.5px solid transparent",
+                    border: tappedMsg === i ? `1.5px solid ${alpha(C.sage, "60")}` : "1.5px solid transparent",
                     transition: "border 0.15s",
                   }}
                 >
@@ -827,7 +827,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                       setTimeout(() => { setCopied(false); setTappedMsg(null); }, 1500);
                     }}
                     style={{
-                      background: copied ? C.sage : C.white, color: copied ? C.white : C.mid,
+                      background: copied ? C.sage : C.surface, color: copied ? C.white : C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
                       padding: "5px 12px", fontSize: 11, cursor: "pointer",
                       fontFamily: "Georgia,serif", transition: "all 0.2s",
@@ -838,7 +838,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                   <button
                     onClick={() => { speak(m.content); setTappedMsg(null); }}
                     style={{
-                      background: C.white, color: C.mid,
+                      background: C.surface, color: C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
                       padding: "5px 12px", fontSize: 11, cursor: "pointer",
                       fontFamily: "Georgia,serif",
@@ -865,7 +865,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <div style={{ fontSize: 20 }}>🌿</div>
             <div
               style={{
-                background: C.white,
+                background: C.surface,
                 borderRadius: 14,
                 padding: "10px 14px",
                 fontSize: 13,
@@ -915,7 +915,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           onClick={stopSpeaking}
           style={{
             background: C.goldLight,
-            border: `1.5px solid ${C.gold}80`,
+            border: `1.5px solid ${alpha(C.gold, "80")}`,
             borderRadius: 12,
             padding: "12px 16px",
             display: "flex",
@@ -946,11 +946,11 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               flexShrink: 0, height: 44, borderRadius: 22,
               padding: "0 12px",
               border: `1.5px solid ${handsFree ? C.sage : C.border}`,
-              background: handsFree ? C.sage : C.white,
+              background: handsFree ? C.sage : C.surface,
               color: handsFree ? C.white : C.muted,
               fontSize: 11, fontFamily: "Georgia,serif", fontWeight: 700,
               cursor: "pointer", whiteSpace: "nowrap",
-              boxShadow: handsFree ? `0 0 0 3px ${C.sage}30` : "none",
+              boxShadow: handsFree ? `0 0 0 3px ${alpha(C.sage, "30")}` : "none",
               transition: "all 0.2s",
             }}
           >
@@ -970,7 +970,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             fontFamily: "Georgia,serif",
             fontSize: 14,
             outline: "none",
-            background: C.white,
+            background: C.surface,
           }}
         />
         {srSupported && (
@@ -1039,12 +1039,12 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               style={{
                 padding: "7px 14px",
                 borderRadius: 30,
-                border: `1.5px solid ${C.sage}60`,
+                border: `1.5px solid ${alpha(C.sage, "60")}`,
                 fontSize: 12,
                 cursor: "pointer",
                 color: C.sageDark,
                 fontFamily: "Georgia,serif",
-                background: `${C.sageLight}80`,
+                background: `${alpha(C.sageLight, "80")}`,
               }}
             >
               {q}

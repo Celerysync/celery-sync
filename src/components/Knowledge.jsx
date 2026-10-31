@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 
@@ -69,7 +69,7 @@ export default function Knowledge({ authUser }) {
         </div>
       </div>
 
-      <div style={{ padding: "10px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${C.sage}40`, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
+      <div style={{ padding: "10px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${alpha(C.sage, "40")}`, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
         <strong>Independent app notice:</strong> CelerySync paraphrases and attributes Anthony William's publicly shared teachings. For complete protocols, exact wording, and full healing plans, always refer to his official books and content below.
       </div>
 
@@ -210,7 +210,7 @@ export default function Knowledge({ authUser }) {
       </Card>
 
       {/* Disclaimer */}
-      <div style={{ padding: "10px 14px", background: "#f9f9f7", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 11, color: C.muted, lineHeight: 1.7, textAlign: "center" }}>
+      <div style={{ padding: "10px 14px", background: C.mist, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 11, color: C.muted, lineHeight: 1.7, textAlign: "center" }}>
         CelerySync is an <strong>independent</strong> app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc.
       </div>
     </div>

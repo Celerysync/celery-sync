@@ -1,4 +1,4 @@
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
@@ -43,7 +43,7 @@ export default function WeeklyVoiceSummary({ user, weeklies }) {
   const script = buildScript(user?.name, latest);
 
   return (
-    <Card style={{ border: `1.5px solid ${C.gold}40` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.gold, "40")}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
@@ -256,7 +256,7 @@ export default function RhythmBuilder({
                       <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                         {(row.items || []).map((item, i) => (
                           <span key={i} style={{
-                            fontSize: 10, background: `${C.sage}15`, color: C.sageDark,
+                            fontSize: 10, background: `${alpha(C.sage, "15")}`, color: C.sageDark,
                             borderRadius: 20, padding: "2px 7px",
                           }}>
                             {item.emoji} {item.name}
@@ -289,7 +289,7 @@ export default function RhythmBuilder({
                     style={{
                       marginTop: 12, width: "100%",
                       background: C.sageLight, color: C.sageDark,
-                      border: `1.5px solid ${C.sage}40`, borderRadius: 12,
+                      border: `1.5px solid ${alpha(C.sage, "40")}`, borderRadius: 12,
                       padding: "9px", fontSize: 12, fontFamily: "Georgia,serif",
                       fontWeight: 700, cursor: "pointer",
                     }}
@@ -306,8 +306,8 @@ export default function RhythmBuilder({
             <>
               {activeProgram && (
                 <div style={{
-                  background: `linear-gradient(135deg,${C.plum}22,${C.plumLight})`,
-                  border: `2px solid ${C.plum}60`, borderRadius: 14, padding: "14px 16px",
+                  background: `linear-gradient(135deg,${alpha(C.plum, "22")},${C.plumLight})`,
+                  border: `2px solid ${alpha(C.plum, "60")}`, borderRadius: 14, padding: "14px 16px",
                 }}>
                   <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
                     ✨ Active: {activeProgram.name}
@@ -318,8 +318,8 @@ export default function RhythmBuilder({
                   <button
                     onClick={onCancelProgram}
                     style={{
-                      marginTop: 10, background: `${C.plum}15`, color: C.plum,
-                      border: `1.5px solid ${C.plum}40`, borderRadius: 10,
+                      marginTop: 10, background: `${alpha(C.plum, "15")}`, color: C.plum,
+                      border: `1.5px solid ${alpha(C.plum, "40")}`, borderRadius: 10,
                       padding: "7px 14px", fontSize: 12, cursor: "pointer",
                     }}
                   >
@@ -366,7 +366,7 @@ export default function RhythmBuilder({
                           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
                             {prog.name}
                           </div>
-                          <span style={{ fontSize: 10, background: `${C.plum}15`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
+                          <span style={{ fontSize: 10, background: `${alpha(C.plum, "15")}`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
                             {prog.totalDays} days
                           </span>
                         </div>
@@ -378,7 +378,7 @@ export default function RhythmBuilder({
                         <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                           {prog.items.map((item, i) => (
                             <span key={i} style={{
-                              fontSize: 10, background: `${C.plum}12`, color: C.plum,
+                              fontSize: 10, background: `${alpha(C.plum, "12")}`, color: C.plum,
                               borderRadius: 20, padding: "2px 7px",
                             }}>
                               {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}
@@ -413,7 +413,7 @@ export default function RhythmBuilder({
                             style={{
                               border: `1.5px solid ${C.border}`, borderRadius: 8,
                               padding: "6px 10px", fontSize: 13, color: C.charcoal,
-                              background: C.white, outline: "none",
+                              background: C.surface, outline: "none",
                             }}
                           />
                           <Btn small color={C.plum} onClick={() => {
@@ -457,7 +457,7 @@ export default function RhythmBuilder({
                   style={{
                     width: 52, border: `2px solid ${C.border}`, borderRadius: 10,
                     padding: "10px 8px", fontSize: 22, textAlign: "center",
-                    background: C.white, outline: "none",
+                    background: C.surface, outline: "none",
                   }}
                 />
                 <input
@@ -468,7 +468,7 @@ export default function RhythmBuilder({
                   style={{
                     flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
                     padding: "10px 14px", fontSize: 14, color: C.charcoal,
-                    background: C.white, outline: "none",
+                    background: C.surface, outline: "none",
                   }}
                 />
               </div>
@@ -484,7 +484,7 @@ export default function RhythmBuilder({
                   style={{
                     width: 65, border: `2px solid ${C.border}`, borderRadius: 8,
                     padding: "6px 10px", fontSize: 14, textAlign: "center",
-                    background: C.white, outline: "none",
+                    background: C.surface, outline: "none",
                   }}
                 />
                 <span style={{ fontSize: 13, color: C.muted }}>days</span>
@@ -495,7 +495,7 @@ export default function RhythmBuilder({
                   {progForm.items.map((item, idx) => (
                     <div key={idx} style={{
                       display: "flex", alignItems: "center", gap: 10,
-                      background: C.white, border: `1.5px solid ${C.border}`,
+                      background: C.surface, border: `1.5px solid ${C.border}`,
                       borderRadius: 12, padding: "10px 12px",
                     }}>
                       <span style={{ fontSize: 18 }}>{item.emoji}</span>
@@ -534,7 +534,7 @@ export default function RhythmBuilder({
                     style={{
                       width: 46, border: `1.5px solid ${C.border}`, borderRadius: 10,
                       padding: "8px 6px", fontSize: 18, textAlign: "center",
-                      background: C.white, outline: "none",
+                      background: C.surface, outline: "none",
                     }}
                   />
                   <input
@@ -545,7 +545,7 @@ export default function RhythmBuilder({
                     style={{
                       flex: 1, border: `1.5px solid ${C.border}`, borderRadius: 10,
                       padding: "8px 12px", fontSize: 13, color: C.charcoal,
-                      background: C.white, outline: "none",
+                      background: C.surface, outline: "none",
                     }}
                   />
                 </div>
@@ -555,21 +555,21 @@ export default function RhythmBuilder({
                     type="number" min={1} max={progForm.totalDays}
                     value={progItemForm.fromDay}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, fromDay: parseInt(e.target.value) || 1 }))}
-                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
                   <span style={{ fontSize: 12, color: C.muted }}>to</span>
                   <input
                     type="number" min={1} max={progForm.totalDays}
                     value={progItemForm.toDay ?? progForm.totalDays}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, toDay: parseInt(e.target.value) || progForm.totalDays }))}
-                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
                   <span style={{ fontSize: 12, color: C.muted, marginLeft: 6 }}>· wait</span>
                   <input
                     type="number" min={0} max={480}
                     value={progItemForm.spacingMinutes}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, spacingMinutes: parseInt(e.target.value) || 0 }))}
-                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.white, outline: "none" }}
+                    style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
                   <span style={{ fontSize: 12, color: C.muted }}>min</span>
                 </div>
@@ -581,7 +581,7 @@ export default function RhythmBuilder({
                   style={{
                     width: "100%", boxSizing: "border-box", border: `1.5px solid ${C.border}`,
                     borderRadius: 10, padding: "8px 12px", fontSize: 12, color: C.charcoal,
-                    background: C.white, outline: "none", marginBottom: 10,
+                    background: C.surface, outline: "none", marginBottom: 10,
                   }}
                 />
                 <Btn
@@ -657,7 +657,7 @@ export default function RhythmBuilder({
                     <div
                       key={item.id}
                       style={{
-                        background: C.white, border: `1.5px solid ${C.border}`,
+                        background: C.surface, border: `1.5px solid ${C.border}`,
                         borderRadius: 14, padding: "12px 14px",
                       }}
                     >
@@ -702,7 +702,7 @@ export default function RhythmBuilder({
                           <button
                             onClick={() => startEdit(item)}
                             style={{
-                              background: `${C.sage}15`, border: "none",
+                              background: `${alpha(C.sage, "15")}`, border: "none",
                               borderRadius: 8, padding: "4px 10px",
                               fontSize: 11, color: C.sageDark, cursor: "pointer",
                             }}
@@ -793,7 +793,7 @@ export default function RhythmBuilder({
                   style={{
                     width: 52, border: `2px solid ${C.border}`, borderRadius: 10,
                     padding: "10px 8px", fontSize: 22, textAlign: "center",
-                    background: C.white, outline: "none",
+                    background: C.surface, outline: "none",
                   }}
                 />
                 <input
@@ -804,7 +804,7 @@ export default function RhythmBuilder({
                   style={{
                     flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
                     padding: "10px 14px", fontSize: 14, color: C.charcoal,
-                    background: C.white, outline: "none",
+                    background: C.surface, outline: "none",
                   }}
                 />
               </div>
@@ -894,7 +894,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
           style={{
             width: 52, border: `2px solid ${C.border}`, borderRadius: 10,
             padding: "10px 8px", fontSize: 22, textAlign: "center",
-            background: C.white, outline: "none",
+            background: C.surface, outline: "none",
           }}
         />
         <input
@@ -905,7 +905,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
           style={{
             flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
             padding: "10px 14px", fontSize: 14, color: C.charcoal,
-            background: C.white, outline: "none",
+            background: C.surface, outline: "none",
           }}
         />
       </div>
@@ -931,7 +931,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
         {form.isMedicine && (
           <div style={{
             marginTop: 8, fontSize: 11, color: C.plum, lineHeight: 1.6,
-            background: `${C.plum}12`, borderRadius: 10, padding: "8px 12px",
+            background: `${alpha(C.plum, "12")}`, borderRadius: 10, padding: "8px 12px",
           }}>
             ⚕️ This item will be marked as a prescribed medicine. The app will show a standing note to confirm timing with your doctor or pharmacist. The app and AI will never advise on prescribed medication timing or interactions.
           </div>
@@ -1059,7 +1059,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
                 style={{
                   width: 70, border: `2px solid ${C.border}`, borderRadius: 10,
                   padding: "8px 12px", fontSize: 16, fontFamily: "Georgia,serif", fontWeight: 700,
-                  color: C.charcoal, background: C.white, outline: "none", textAlign: "center",
+                  color: C.charcoal, background: C.surface, outline: "none", textAlign: "center",
                 }}
               />
               <span style={{ fontSize: 13, color: C.muted }}>minutes after the previous step</span>
@@ -1129,7 +1129,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               style={{
                 width: 65, border: `2px solid ${C.border}`, borderRadius: 8,
                 padding: "6px 10px", fontSize: 14, textAlign: "center",
-                background: C.white, outline: "none",
+                background: C.surface, outline: "none",
               }}
             />
             <span style={{ fontSize: 13, color: C.muted }}>Starting:</span>
@@ -1140,7 +1140,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               style={{
                 border: `1.5px solid ${C.border}`, borderRadius: 8,
                 padding: "6px 10px", fontSize: 12, color: C.charcoal,
-                background: C.white, outline: "none",
+                background: C.surface, outline: "none",
               }}
             />
           </div>
@@ -1158,7 +1158,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
             width: "100%", boxSizing: "border-box",
             border: `2px solid ${C.border}`, borderRadius: 10,
             padding: "10px 12px", fontSize: 13, color: C.charcoal,
-            background: C.white, outline: "none", resize: "vertical",
+            background: C.surface, outline: "none", resize: "vertical",
           }}
         />
       </FieldGroup>

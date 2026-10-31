@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 
@@ -111,12 +111,12 @@ export default function AdminDashboard({ authUser }) {
           <StatCard value={data.users.onTrial ?? "—"} label="On free trial" color={C.gold} bg={C.goldLight} />
           <StatCard value={data.users.paid ?? "—"} label="Paid subscribers" color={C.sageDark} bg={C.sageLight} />
           <StatCard value={`${data.users.conversionRate ?? "0.0"}%`} label="Conversion rate" color={C.plum} bg={C.plumLight} />
-          <StatCard value={data.users.activeWeek} label="Active this week" color={C.sage} bg="#f0fdf4" />
+          <StatCard value={data.users.activeWeek} label="Active this week" color={C.sage} bg={alpha("#16a34a", "14")} />
         </div>
       </Card>
 
       {/* Revenue */}
-      <Card style={{ background: C.goldLight, border: `1.5px solid ${C.gold}40` }}>
+      <Card style={{ background: C.goldLight, border: `1.5px solid ${alpha(C.gold, "40")}` }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 12 }}>
           💰 Revenue
         </div>
@@ -179,7 +179,7 @@ export default function AdminDashboard({ authUser }) {
 
       {/* Weekly AI digest */}
       {latestDigest && (
-        <Card style={{ background: C.goldLight, border: `1.5px solid ${C.gold}40` }}>
+        <Card style={{ background: C.goldLight, border: `1.5px solid ${alpha(C.gold, "40")}` }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
             ✨ Weekly AI Digest
           </div>

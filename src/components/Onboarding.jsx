@@ -354,7 +354,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
                 background: cycleTracking ? C.sage : "#d1d5db", cursor: "pointer", position: "relative",
               }}
             >
-              <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: cycleTracking ? 21 : 3, transition: "left 0.2s" }} />
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: C.surface, position: "absolute", top: 3, left: cycleTracking ? 21 : 3, transition: "left 0.2s" }} />
             </button>
           </div>
 

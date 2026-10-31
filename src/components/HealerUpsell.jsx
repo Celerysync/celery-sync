@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 // What Rhythm-plan ($7.97 engine-only) subscribers see in place of the AI
@@ -56,7 +56,7 @@ export default function HealerUpsell({ onUpgrade }) {
       </Card>
 
       {error && (
-        <div style={{ background: C.terracottaLight, border: `1px solid ${C.terracotta}50`, borderRadius: 12, padding: 12, fontSize: 13, color: C.terracotta }}>
+        <div style={{ background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "50")}`, borderRadius: 12, padding: 12, fontSize: 13, color: C.terracotta }}>
           {error}
         </div>
       )}

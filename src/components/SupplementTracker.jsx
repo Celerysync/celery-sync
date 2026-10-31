@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
@@ -169,7 +169,7 @@ export default function SupplementTracker({ profileId }) {
   }
 
   return (
-    <Card style={{ border: `1.5px solid ${C.sage}30` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.sage, "30")}` }}>
       <button
         onClick={() => setExpanded((v) => !v)}
         style={{
@@ -188,17 +188,17 @@ export default function SupplementTracker({ profileId }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <svg width={36} height={36} viewBox="0 0 36 36">
-            <circle cx={18} cy={18} r={15} fill="none" stroke={C.border} strokeWidth={3} />
+            <circle cx={18} cy={18} r={15} fill="none" style={{ stroke: C.border }} strokeWidth={3} />
             <circle
               cx={18} cy={18} r={15} fill="none"
-              stroke={pct === 100 ? C.sage : C.leaf}
+              style={{ stroke: pct === 100 ? C.sage : C.leaf }}
               strokeWidth={3}
               strokeDasharray={`${(pct / 100) * 94.2} 94.2`}
               strokeLinecap="round"
               transform="rotate(-90 18 18)"
               style={{ transition: "stroke-dasharray 0.4s" }}
             />
-            <text x={18} y={22} textAnchor="middle" fontSize={9} fill={C.mid} fontFamily="Georgia,serif">
+            <text x={18} y={22} textAnchor="middle" fontSize={9} style={{ fill: C.mid }} fontFamily="Georgia,serif">
               {pct}%
             </text>
           </svg>
@@ -266,7 +266,7 @@ export default function SupplementTracker({ profileId }) {
               + Add your own supplement
             </button>
           ) : (
-            <div style={{ marginTop: 12, padding: "12px", background: `${C.sageLight}60`, borderRadius: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ marginTop: 12, padding: "12px", background: `${alpha(C.sageLight, "60")}`, borderRadius: 12, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>Add supplement</div>
               <input
                 placeholder="Supplement name (e.g. Zinc)"
@@ -356,13 +356,13 @@ export default function SupplementTracker({ profileId }) {
 
 const inputStyle = {
   border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px",
-  fontSize: 13, color: C.charcoal, background: "#fff", width: "100%", boxSizing: "border-box",
+  fontSize: 13, color: C.charcoal, background: C.surface, width: "100%", boxSizing: "border-box",
 };
 
 function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockForm, setStockForm }) {
   if (editing) {
     return (
-      <div style={{ marginLeft: 30, marginBottom: 8, padding: "8px 10px", background: `${C.sageLight}40`, borderRadius: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ marginLeft: 30, marginBottom: 8, padding: "8px 10px", background: `${alpha(C.sageLight, "40")}`, borderRadius: 8, display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", gap: 6 }}>
           <input
             placeholder="Units on hand"
@@ -426,7 +426,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
 
 function SuppRow({ label, checked, onToggle, isCustom, onRemove, timingColor }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", borderBottom: `1px solid ${C.border}40` }}>
+    <div style={{ display: "flex", alignItems: "center", borderBottom: `1px solid ${alpha(C.border, "40")}` }}>
       <button
         onClick={onToggle}
         style={{

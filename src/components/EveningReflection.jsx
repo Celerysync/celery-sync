@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { TODAY } from "../lib/rhythmSchedule.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
@@ -82,8 +82,8 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
 
   return (
     <div style={{
-      background: `linear-gradient(135deg, ${C.plum}18, ${C.cream})`,
-      border: `1.5px solid ${C.plum}44`,
+      background: `linear-gradient(135deg, ${alpha(C.plum, "18")}, ${C.cream})`,
+      border: `1.5px solid ${alpha(C.plum, "44")}`,
       borderRadius: 20, padding: "16px 18px",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -140,7 +140,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
                 style={{
                   width: 40, height: 40, borderRadius: 12, cursor: "pointer",
                   border: `1.5px solid ${energy === lvl ? C.sage : C.border}`,
-                  background: energy === lvl ? C.sageLight : C.white,
+                  background: energy === lvl ? C.sageLight : C.surface,
                   fontSize: 14, fontWeight: energy === lvl ? 700 : 400, color: C.charcoal,
                 }}
               >
@@ -200,7 +200,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
               onClick={() => { finish(); setDismissed(true); }}
               style={{
                 padding: "9px 16px", borderRadius: 50, cursor: "pointer",
-                border: `1.5px solid ${C.border}`, background: C.white,
+                border: `1.5px solid ${C.border}`, background: C.surface,
                 fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
               }}
             >

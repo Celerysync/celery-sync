@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 function ordinal(n) {
@@ -43,9 +43,9 @@ function LetterCard({ letter, profileId }) {
 
   return (
     <div style={{
-      background: "#fffef8",
+      background: C.surface,
       borderRadius: 16,
-      border: `1px solid ${C.sage}40`,
+      border: `1px solid ${alpha(C.sage, "40")}`,
       padding: "16px 18px",
       marginBottom: 14,
     }}>
@@ -69,7 +69,7 @@ function LetterCard({ letter, profileId }) {
               padding: "5px 12px", borderRadius: 20, fontSize: 11,
               fontFamily: "Georgia,serif", fontWeight: 600,
               border: `1px solid ${C.border}`,
-              background: expanded ? C.sageLight : "#fff",
+              background: expanded ? C.sageLight : C.surface,
               color: C.charcoal, cursor: "pointer",
             }}
           >
@@ -150,7 +150,7 @@ export default function HealingLetters({ profileId }) {
         <div style={{
           background: C.sageLight,
           borderRadius: 14, padding: "18px 16px",
-          border: `1px solid ${C.sage}30`,
+          border: `1px solid ${alpha(C.sage, "30")}`,
           textAlign: "center",
         }}>
           <div style={{ fontSize: 28, marginBottom: 10 }}>🌱</div>
@@ -171,7 +171,7 @@ export default function HealingLetters({ profileId }) {
         <div style={{
           marginTop: 4, padding: "10px 14px",
           background: C.sageLight, borderRadius: 12,
-          border: `1px solid ${C.sage}30`,
+          border: `1px solid ${alpha(C.sage, "30")}`,
         }}>
           <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
             Letters are generated automatically on your anniversary each year and emailed to you. They're also stored here permanently — you'll never lose them.

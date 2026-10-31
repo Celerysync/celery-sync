@@ -38,14 +38,26 @@ body {
   display: none;
 }
 
-/* ── Dark / Eye-Comfort Mode ─────────────────────────────────────── */
-html[data-dark="true"] body {
-  background: #0a0e0a;
+/* ── Theme palette ─────────────────────────────────────────────────
+   Read by src/lib/colors.js. Light values match the JS fallbacks; dark is
+   a real palette (warm near-black greens, softened text), not a filter. */
+:root {
+  --c-cream: #FAF7F0; --c-surface: #FFFFFF; --c-mist: #F0EDE6;
+  --c-sageDark: #3D6B44; --c-sageLight: #EAF3EB;
+  --c-goldLight: #FDF3DC; --c-terracottaLight: #FAEAE6;
+  --c-plum: #7B4F78; --c-plumLight: #F4EDF3;
+  --c-charcoal: #1E2A1E; --c-mid: #5A6B5A; --c-muted: #9BA89B; --c-border: #E0DDD5;
+  color-scheme: light;
 }
-html[data-dark="true"] #root > div {
-  filter: brightness(0.55) sepia(0.18) contrast(0.92);
-  background: #0a0e0a;
+html[data-dark="true"] {
+  --c-cream: #111714; --c-surface: #1A221D; --c-mist: #232D26;
+  --c-sageDark: #4C8556; --c-sageLight: #213528;
+  --c-goldLight: #3A311F; --c-terracottaLight: #3A2420;
+  --c-plum: #B58AB1; --c-plumLight: #33263A;
+  --c-charcoal: #E6ECE4; --c-mid: #B3BFB2; --c-muted: #88968B; --c-border: #33403A;
+  color-scheme: dark;
 }
+html[data-dark="true"] body { background: #111714; color: #E6ECE4; }
 
 /* ── Large Text Mode ─────────────────────────────────────────────── */
 html[data-large="true"] #root {

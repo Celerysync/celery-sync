@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { AVATAR_OPTIONS } from "../hooks/useProfiles.js";
 import { CONDITIONS } from "../data/conditions.js";
@@ -165,7 +165,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
               background: cycleTracking ? C.sage : "#d1d5db", cursor: "pointer", position: "relative",
             }}
           >
-            <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: cycleTracking ? 21 : 3, transition: "left 0.2s" }} />
+            <div style={{ width: 18, height: 18, borderRadius: "50%", background: C.surface, position: "absolute", top: 3, left: cycleTracking ? 21 : 3, transition: "left 0.2s" }} />
           </button>
         </div>
       )}
@@ -342,7 +342,7 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
       {confirmDelete && (
         <div style={{
           marginTop: 14, padding: "14px 16px",
-          background: "#fef2f2", border: "1px solid #fca5a5",
+          background: alpha("#DC2626", "14"), border: "1px solid #fca5a5",
           borderRadius: 12,
         }}>
           <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: "#dc2626", marginBottom: 10 }}>

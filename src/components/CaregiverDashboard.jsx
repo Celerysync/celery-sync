@@ -1,4 +1,4 @@
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
@@ -92,7 +92,7 @@ export default function CaregiverDashboard({ patient }) {
       </div>
 
       {/* What to do right now */}
-      <Card style={{ border: `2px solid ${C.plum}25` }}>
+      <Card style={{ border: `2px solid ${alpha(C.plum, "25")}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
           <div>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
@@ -101,7 +101,7 @@ export default function CaregiverDashboard({ patient }) {
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>What to prepare right now</div>
           </div>
           <div style={{
-            background: `${C.plum}18`, borderRadius: 20, padding: "3px 10px",
+            background: `${alpha(C.plum, "18")}`, borderRadius: 20, padding: "3px 10px",
             fontSize: 10, color: C.plum, fontWeight: 700, flexShrink: 0,
           }}>
             {new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
@@ -116,7 +116,7 @@ export default function CaregiverDashboard({ patient }) {
           ))}
         </div>
         <div style={{
-          background: `${C.plum}10`, border: `1px solid ${C.plum}25`,
+          background: `${alpha(C.plum, "10")}`, border: `1px solid ${alpha(C.plum, "25")}`,
           borderRadius: 10, padding: "10px 12px", marginBottom: 10,
         }}>
           <div style={{ fontSize: 12, color: C.plum, fontWeight: 700, marginBottom: 2 }}>When to offer it</div>
@@ -138,7 +138,7 @@ export default function CaregiverDashboard({ patient }) {
               <div key={s} style={{
                 padding: "5px 12px", borderRadius: 20, fontSize: 12,
                 background: C.plumLight, color: C.plum,
-                border: `1px solid ${C.plum}30`, fontFamily: "Georgia,serif",
+                border: `1px solid ${alpha(C.plum, "30")}`, fontFamily: "Georgia,serif",
               }}>
                 {s}
               </div>
@@ -153,7 +153,7 @@ export default function CaregiverDashboard({ patient }) {
       )}
 
       {/* Carer well-being */}
-      <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}40` }}>
+      <Card style={{ background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}` }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.sageDark, marginBottom: 6 }}>
           💚 You matter too
         </div>
@@ -175,7 +175,7 @@ export default function CaregiverDashboard({ patient }) {
           they can share it with their doctor.
         </div>
         <div style={{
-          background: `${C.terracotta}10`, border: `1px solid ${C.terracotta}30`,
+          background: `${alpha(C.terracotta, "10")}`, border: `1px solid ${alpha(C.terracotta, "30")}`,
           borderRadius: 10, padding: "10px 12px", marginBottom: 10,
         }}>
           <div style={{ fontSize: 12, color: C.terracotta, fontWeight: 700, marginBottom: 2 }}>
@@ -195,7 +195,7 @@ export default function CaregiverDashboard({ patient }) {
       {/* Encouragement for carers — our own words, unattributed (no invented
           or "inspired by" quotes credited to Anthony William). */}
       <div style={{
-        background: C.goldLight, border: `1px solid ${C.gold}50`, borderRadius: 16, padding: 18,
+        background: C.goldLight, border: `1px solid ${alpha(C.gold, "50")}`, borderRadius: 16, padding: 18,
       }}>
         <div style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
           💛 Caring for someone on this path takes patience, consistency, and love. Showing up the

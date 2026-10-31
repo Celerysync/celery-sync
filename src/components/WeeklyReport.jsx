@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 
@@ -52,8 +52,8 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
 
   return (
     <div style={{
-      background: "#fff",
-      border: `1.5px solid ${isLatest ? C.sage + "60" : C.border}`,
+      background: C.surface,
+      border: `1.5px solid ${isLatest ? alpha(C.sage, "60") : C.border}`,
       borderRadius: 18, overflow: "hidden",
       boxShadow: isLatest ? "0 4px 20px #3D6B4412" : "none",
       marginBottom: 12,

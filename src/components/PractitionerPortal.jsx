@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { usePractitioner } from "../hooks/usePractitioner.js";
 import { callClaude } from "../lib/api.js";
@@ -46,7 +46,7 @@ function ClientModal({ client, onSave, onClose }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 50, display: "flex", alignItems: "flex-end" }}>
-      <div style={{ background: C.white, borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: C.surface, borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.charcoal, marginBottom: 16 }}>
           {client ? "Edit Client" : "Add New Client"}
         </div>
@@ -76,7 +76,7 @@ function ClientModal({ client, onSave, onClose }) {
             {conditions.map(c => (
               <div key={c} onClick={() => toggleCond(c)} style={{
                 padding: "4px 10px", borderRadius: 20, fontSize: 12, cursor: "pointer",
-                background: C.plumLight, color: C.plum, border: `1px solid ${C.plum}30`, fontFamily: "Georgia,serif",
+                background: C.plumLight, color: C.plum, border: `1px solid ${alpha(C.plum, "30")}`, fontFamily: "Georgia,serif",
               }}>
                 {c} ✕
               </div>
@@ -128,7 +128,7 @@ function SessionModal({ client, session, onSave, onClose }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 50, display: "flex", alignItems: "flex-end" }}>
-      <div style={{ background: C.white, borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: C.surface, borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, color: C.charcoal, marginBottom: 4 }}>
           Session — {client.name}
         </div>

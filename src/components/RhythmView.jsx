@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 function formatTime(ms) {
@@ -76,8 +76,8 @@ export default function RhythmView({
       {/* Program progress banner */}
       {activeProgram && currentProgramDay !== null && (
         <div style={{
-          background: `linear-gradient(135deg,${C.plum}22,${C.plumLight})`,
-          border: `1.5px solid ${C.plum}40`,
+          background: `linear-gradient(135deg,${alpha(C.plum, "22")},${C.plumLight})`,
+          border: `1.5px solid ${alpha(C.plum, "40")}`,
           borderRadius: 14, padding: "12px 16px",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -90,7 +90,7 @@ export default function RhythmView({
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ width: 80, height: 6, background: `${C.plum}30`, borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ width: 80, height: 6, background: `${alpha(C.plum, "30")}`, borderRadius: 3, overflow: "hidden" }}>
                 <div style={{
                   width: `${(currentProgramDay / activeProgram.totalDays) * 100}%`,
                   height: "100%", background: C.plum, borderRadius: 3,
@@ -108,8 +108,8 @@ export default function RhythmView({
       {/* Prescription medicine notice */}
       {hasMedicine && (
         <div style={{
-          background: `${C.plum}12`,
-          border: `1.5px solid ${C.plum}40`,
+          background: `${alpha(C.plum, "12")}`,
+          border: `1.5px solid ${alpha(C.plum, "40")}`,
           borderRadius: 14, padding: "10px 14px",
           display: "flex", alignItems: "flex-start", gap: 10,
         }}>
@@ -181,15 +181,15 @@ export default function RhythmView({
                 marginBottom: 4, paddingLeft: 2,
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.leaf, flexShrink: 0 }} />
-                <div style={{ flex: 1, height: 1, background: `${C.leaf}60` }} />
+                <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
                 <div style={{ fontSize: 10, color: C.leaf, fontWeight: 700, letterSpacing: 0.5 }}>NOW</div>
-                <div style={{ flex: 1, height: 1, background: `${C.leaf}60` }} />
+                <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
               </div>
             )}
 
             <div
               style={{
-                background: isNext ? C.sageLight : isDone ? "#f9f9f9" : C.white,
+                background: isNext ? C.sageLight : isDone ? C.mist : C.surface,
                 border: `1.5px solid ${isNext ? C.sage : C.border}${isDone ? "80" : ""}`,
                 borderRadius: 14,
                 padding: "12px 14px",
@@ -226,7 +226,7 @@ export default function RhythmView({
                     </span>
                     {isMed && (
                       <span style={{
-                        fontSize: 9, background: `${C.plum}20`, color: C.plum,
+                        fontSize: 9, background: `${alpha(C.plum, "20")}`, color: C.plum,
                         borderRadius: 20, padding: "1px 6px", fontWeight: 700,
                       }}>Rx</span>
                     )}

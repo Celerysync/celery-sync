@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import C from '../lib/colors.js'
+import C, { alpha } from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import WearableConnect from './WearableConnect.jsx'
@@ -232,7 +232,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </Card>
 
           {/* Source policy */}
-          <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}40` }}>
+          <Card style={{ background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}` }}>
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.sageDark, marginBottom: 6 }}>
               🔗 Always attributed. Always at the source.
             </div>
@@ -245,7 +245,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </Card>
 
           {error && (
-            <div style={{ background: C.terracottaLight, border: `1px solid ${C.terracotta}50`, borderRadius: 12, padding: 12, fontSize: 13, color: C.terracotta }}>
+            <div style={{ background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "50")}`, borderRadius: 12, padding: 12, fontSize: 13, color: C.terracotta }}>
               {error}
             </div>
           )}
@@ -291,7 +291,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
 
           {trialDaysLeft <= 3 && (
             <div style={{
-              background: C.goldLight, border: `1.5px solid ${C.gold}50`,
+              background: C.goldLight, border: `1.5px solid ${alpha(C.gold, "50")}`,
               borderRadius: 16, padding: '14px 16px',
             }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
@@ -318,7 +318,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 style={{
                   width: '100%', padding: '11px', marginTop: 8,
                   background: 'transparent', color: C.sageDark,
-                  border: `1.5px solid ${C.sageDark}60`, borderRadius: 30,
+                  border: `1.5px solid ${alpha(C.sageDark, "60")}`, borderRadius: 30,
                   fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 13,
                   cursor: loading ? 'default' : 'pointer',
                 }}
@@ -372,7 +372,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </Card>
 
           {/* Cancel / Resume subscription */}
-          <Card style={{ border: `1px solid ${cancelPending ? C.terracotta + '40' : C.border}`, background: cancelPending ? C.terracottaLight : C.white }}>
+          <Card style={{ border: `1px solid ${cancelPending ? alpha(C.terracotta, "40") : C.border}`, background: cancelPending ? C.terracottaLight : C.surface }}>
             {cancelPending ? (
               <>
                 <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.terracotta, marginBottom: 6 }}>
@@ -463,7 +463,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
 
           {/* Practitioner upgrade */}
           {!isPractitioner && (
-            <Card style={{ border: `1.5px solid ${C.gold}50`, background: C.goldLight }}>
+            <Card style={{ border: `1.5px solid ${alpha(C.gold, "50")}`, background: C.goldLight }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
                 🏥 Are you a practitioner?
               </div>
@@ -508,7 +508,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             }}
           >
             <div style={{
-              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              width: 20, height: 20, borderRadius: '50%', background: C.surface,
               position: 'absolute', top: 3,
               left: caregiver ? 23 : 3,
               transition: 'left 0.2s',
@@ -537,7 +537,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           style={{
             width: '100%', padding: '10px 14px', borderRadius: 10,
             border: `1.5px solid ${C.border}`, fontFamily: 'Georgia,serif',
-            fontSize: 14, color: C.charcoal, background: C.white, outline: 'none',
+            fontSize: 14, color: C.charcoal, background: C.surface, outline: 'none',
           }}
         >
           {LANGUAGES.map((l) => (
@@ -572,7 +572,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               style={{
                 flex: 1, padding: '12px 10px', borderRadius: 12,
                 border: `2px solid ${units === opt.val ? C.sage : C.border}`,
-                background: units === opt.val ? C.sageLight : C.white,
+                background: units === opt.val ? C.sageLight : C.surface,
                 cursor: 'pointer', touchAction: 'manipulation',
               }}
             >
@@ -628,7 +628,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn full onClick={() => { setDarkMode(false); document.documentElement.setAttribute("data-dark","false"); }} color={!darkMode ? C.sage : C.muted} style={{ opacity: !darkMode ? 1 : 0.6 }}>☀️ Normal</Btn>
-          <Btn full onClick={() => { setDarkMode(true); document.documentElement.setAttribute("data-dark","true"); }} color={darkMode ? C.sageDark : C.muted} style={{ opacity: darkMode ? 1 : 0.6 }}>🌙 Dim</Btn>
+          <Btn full onClick={() => { setDarkMode(true); document.documentElement.setAttribute("data-dark","true"); }} color={darkMode ? C.sageDark : C.muted} style={{ opacity: darkMode ? 1 : 0.6 }}>🌙 Dark</Btn>
         </div>
       </Card>
 
@@ -752,7 +752,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
       </Card>
 
       <div style={{
-        background: "#f9f9f7",
+        background: C.mist,
         border: `1px solid ${C.border}`,
         borderRadius: 16, padding: "14px 16px",
         textAlign: "center",

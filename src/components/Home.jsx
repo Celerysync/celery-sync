@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
@@ -156,7 +156,7 @@ function getNowWindow() {
 function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismiss }) {
   if (doneToday) {
     return (
-      <div style={{ background: C.sageLight, border: `2px solid ${C.sage}50`, borderRadius: 18, padding: "14px 18px" }}>
+      <div style={{ background: C.sageLight, border: `2px solid ${alpha(C.sage, "50")}`, borderRadius: 18, padding: "14px 18px" }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark }}>
           💚 That's it — you're back.
         </div>
@@ -168,7 +168,7 @@ function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismis
   }
   return (
     <div style={{
-      background: `linear-gradient(135deg, ${C.sageLight}, #fff)`, border: `2px solid ${C.sage}50`,
+      background: `linear-gradient(135deg, ${C.sageLight}, #fff)`, border: `2px solid ${alpha(C.sage, "50")}`,
       borderRadius: 18, padding: "18px 18px 14px", position: "relative",
     }}>
       <button
@@ -377,8 +377,8 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
       {/* Daily rhythm sequence */}
       {syncError && (
         <div style={{
-          background: `${C.plum}18`,
-          border: `1.5px solid ${C.plum}60`,
+          background: `${alpha(C.plum, "18")}`,
+          border: `1.5px solid ${alpha(C.plum, "60")}`,
           borderRadius: 12,
           padding: "10px 14px",
           fontSize: 13,
@@ -505,7 +505,7 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
       {/* Streak protection warning */}
       {streakAtRisk && (
         <div style={{
-          background: "#FEF3C7", border: "2px solid #F59E0B80",
+          background: alpha("#F59E0B", "26"), border: "2px solid #F59E0B80",
           borderRadius: 16, padding: "14px 16px",
           display: "flex", alignItems: "center", gap: 12,
         }}>
@@ -556,7 +556,7 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
 
       {/* Water tracker */}
       <div style={{
-        background: "#EFF6FF", border: "2px solid #BFDBFE60",
+        background: alpha("#3b82f6", "14"), border: "2px solid #BFDBFE60",
         borderRadius: 16, padding: "14px 16px",
         display: "flex", alignItems: "center", gap: 12,
       }}>
@@ -633,7 +633,7 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
         return (
           <div style={{
             background: C.goldLight,
-            border: `1px solid ${C.gold}50`,
+            border: `1px solid ${alpha(C.gold, "50")}`,
             borderRadius: 16,
             padding: 18,
           }}>

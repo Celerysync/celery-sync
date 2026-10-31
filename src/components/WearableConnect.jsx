@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 
 const TODAY = new Date().toISOString().split("T")[0];
@@ -121,9 +121,9 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
           &nbsp;&nbsp;&nbsp;<strong>token</strong> = your key below · <strong>sleep_hours</strong> = the Calculate result · <strong>date</strong> = the formatted date{"\n"}
           7. In <strong>Automation</strong> → new personal automation → <strong>Time of Day</strong>, e.g. 9:00am daily → <strong>Run Immediately</strong> → pick this shortcut
           <div style={{ marginTop: 10, fontWeight: 700 }}>Your URL:</div>
-          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.white, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
+          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
           <div style={{ marginTop: 8, fontWeight: 700 }}>Your private key (keep it to yourself):</div>
-          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.white, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
+          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
           <button
             onClick={() => {
               navigator.clipboard?.writeText(`URL: ${ingestUrl}\nKey: ${ingestToken}`).then(() => {
@@ -327,12 +327,12 @@ export default function WearableConnect({ authUser }) {
       </div>
 
       {(success || manualSuccess) && (
-        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.sageLight, border: `1px solid ${C.sage}40`, borderRadius: 10, fontSize: 12, color: C.sageDark }}>
+        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`, borderRadius: 10, fontSize: 12, color: C.sageDark }}>
           ✓ {success || manualSuccess}
         </div>
       )}
       {error && (
-        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.terracottaLight, border: `1px solid ${C.terracotta}40`, borderRadius: 10, fontSize: 12, color: C.terracotta }}>
+        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "40")}`, borderRadius: 10, fontSize: 12, color: C.terracotta }}>
           {error}
         </div>
       )}
@@ -353,7 +353,7 @@ export default function WearableConnect({ authUser }) {
               <button
                 onClick={() => setExpanded(isExpanded ? null : w.id)}
                 style={{
-                  width: "100%", padding: "12px 14px", background: isConnected ? C.sageLight : C.white,
+                  width: "100%", padding: "12px 14px", background: isConnected ? C.sageLight : C.surface,
                   border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
                   touchAction: "manipulation", textAlign: "left",
                 }}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 const PERIODS = [
@@ -60,7 +60,7 @@ export default function DoctorReport({ profileId }) {
                 padding: "7px 16px", borderRadius: 20, fontSize: 12,
                 fontFamily: "Georgia,serif", fontWeight: 600, cursor: "pointer",
                 border: `1.5px solid ${months === p.months ? C.sageDark : C.border}`,
-                background: months === p.months ? C.sageDark : "#fff",
+                background: months === p.months ? C.sageDark : C.surface,
                 color: months === p.months ? "#fff" : C.charcoal,
               }}
             >
@@ -73,7 +73,7 @@ export default function DoctorReport({ profileId }) {
       {/* Standard / Extended toggle */}
       <div style={{
         background: C.sageLight, borderRadius: 14, padding: "12px 14px",
-        marginBottom: 16, border: `1px solid ${C.sage}30`,
+        marginBottom: 16, border: `1px solid ${alpha(C.sage, "30")}`,
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -95,7 +95,7 @@ export default function DoctorReport({ profileId }) {
             }}
           >
             <div style={{
-              width: 20, height: 20, borderRadius: "50%", background: "#fff",
+              width: 20, height: 20, borderRadius: "50%", background: C.surface,
               position: "absolute", top: 3,
               left: extended ? 23 : 3,
               transition: "left 0.2s",

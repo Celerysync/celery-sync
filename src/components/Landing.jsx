@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 
 // ─── Copy ────────────────────────────────────────────────────────────────────
 
@@ -200,7 +200,7 @@ export default function Landing({ onGetStarted }) {
         <button
           onClick={onGetStarted}
           style={{
-            background: "#fff", color: C.sageDark,
+            background: C.surface, color: C.sageDark,
             border: "none", borderRadius: 40,
             padding: "17px 40px",
             fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17,
@@ -234,7 +234,7 @@ export default function Landing({ onGetStarted }) {
           {(openPain ? PAIN_POINTS : PAIN_POINTS.slice(0, 3)).map((p, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "flex-start", gap: 12,
-              background: "#fff", borderRadius: 14, padding: "13px 16px",
+              background: C.surface, borderRadius: 14, padding: "13px 16px",
               border: `1px solid ${C.border}`, boxShadow: "0 1px 6px #00000006",
             }}>
               <div style={{ color: C.sage, fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</div>
@@ -254,7 +254,7 @@ export default function Landing({ onGetStarted }) {
 
         <div style={{
           marginTop: 24, background: C.sageLight,
-          border: `1.5px solid ${C.sage}40`,
+          border: `1.5px solid ${alpha(C.sage, "40")}`,
           borderRadius: 16, padding: "16px 18px",
           textAlign: "center",
         }}>
@@ -285,7 +285,7 @@ export default function Landing({ onGetStarted }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {TRANSFORMATION.map((t, i) => (
             <div key={i} style={{
-              background: "#fff", borderRadius: 16, overflow: "hidden",
+              background: C.surface, borderRadius: 16, overflow: "hidden",
               border: `1px solid ${C.border}`, boxShadow: "0 2px 8px #00000008",
             }}>
               <div style={{ display: "flex", alignItems: "stretch" }}>
@@ -355,7 +355,7 @@ export default function Landing({ onGetStarted }) {
         </h2>
 
         <div style={{
-          background: "#fff", borderRadius: 18, padding: "24px 22px",
+          background: C.surface, borderRadius: 18, padding: "24px 22px",
           border: `1px solid ${C.border}`, boxShadow: "0 2px 12px #00000008",
         }}>
           <div style={{ fontSize: 28, marginBottom: 10, color: C.sage, lineHeight: 1 }}>"</div>
@@ -374,7 +374,7 @@ export default function Landing({ onGetStarted }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 36, height: 36, borderRadius: "50%",
-              background: C.sageLight, border: `2px solid ${C.sage}50`,
+              background: C.sageLight, border: `2px solid ${alpha(C.sage, "50")}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 16, flexShrink: 0,
             }}>
@@ -424,7 +424,7 @@ export default function Landing({ onGetStarted }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {FEATURES.map((f) => (
             <div key={f.title} style={{
-              background: "#fff", borderRadius: 16, padding: "16px 14px",
+              background: C.surface, borderRadius: 16, padding: "16px 14px",
               border: `1px solid ${C.border}`, boxShadow: "0 2px 8px #00000008",
             }}>
               <div style={{ fontSize: 26, marginBottom: 8 }}>{f.emoji}</div>
@@ -457,7 +457,7 @@ export default function Landing({ onGetStarted }) {
           </p>
 
           {/* Mock AI conversation */}
-          <div style={{ background: "#fff", borderRadius: 18, padding: "18px 16px", border: `1px solid ${C.border}`, marginBottom: 16 }}>
+          <div style={{ background: C.surface, borderRadius: 18, padding: "18px 16px", border: `1px solid ${C.border}`, marginBottom: 16 }}>
             <div style={{ fontSize: 11, color: C.muted, fontFamily: "Georgia,serif", marginBottom: 12, textAlign: "center" }}>
               Example conversation
             </div>
@@ -510,7 +510,7 @@ export default function Landing({ onGetStarted }) {
             </p>
 
             <div style={{
-              background: "#fff", borderRadius: 18, padding: "18px 16px",
+              background: C.surface, borderRadius: 18, padding: "18px 16px",
               border: `1px solid ${C.border}`, boxShadow: "0 2px 10px #00000008",
             }}>
               {isIOS ? (
@@ -586,7 +586,7 @@ export default function Landing({ onGetStarted }) {
           <button
             onClick={onGetStarted}
             style={{
-              background: "#fff", color: C.sageDark,
+              background: C.surface, color: C.sageDark,
               border: "none", borderRadius: 40, padding: "16px 32px",
               fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17,
               cursor: "pointer", width: "100%", marginBottom: 12,

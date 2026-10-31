@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
@@ -77,7 +77,7 @@ function DailyTable({ checkins }) {
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
         <thead>
-          <tr style={{ borderBottom: `2px solid ${C.sage}50` }}>
+          <tr style={{ borderBottom: `2px solid ${alpha(C.sage, "50")}` }}>
             {headers.map((h) => (
               <th key={h} style={{
                 padding: "8px 6px", textAlign: "left",
@@ -93,7 +93,7 @@ function DailyTable({ checkins }) {
           {checkins.map((c, i) => (
             <tr key={c.check_date} style={{
               borderBottom: `1px solid ${C.border}`,
-              background: i % 2 === 0 ? "#fff" : C.cream,
+              background: i % 2 === 0 ? C.surface : C.cream,
             }}>
               <td style={{ padding: "9px 6px", fontWeight: 600, color: C.charcoal, whiteSpace: "nowrap" }}>
                 {fmtDate(c.check_date)}
@@ -124,7 +124,7 @@ function DailyTable({ checkins }) {
 function MonthCard({ month }) {
   return (
     <div style={{
-      background: "#fff", border: `1.5px solid ${C.border}`,
+      background: C.surface, border: `1.5px solid ${C.border}`,
       borderRadius: 16, padding: "16px", marginBottom: 10,
     }}>
       <div style={{
@@ -141,11 +141,11 @@ function MonthCard({ month }) {
           <StatPill label="Avg Energy" value={`${month.avgEnergy}/10`} bg={C.sageLight} color={C.leaf} />
         )}
         {month.avgMood && (
-          <StatPill label="Avg Mood" value={`${month.avgMood}/5`} bg="#fffbeb" color={C.gold} />
+          <StatPill label="Avg Mood" value={`${month.avgMood}/5`} bg={alpha("#C9963A", "1F")} color={C.gold} />
         )}
         <StatPill label="Days tracked" value={`${month.protocolDays}`} bg={C.sageLight} color={C.sageDark} />
         {month.journalEntries > 0 && (
-          <StatPill label="Journal entries" value={`${month.journalEntries}`} bg="#f5f3ff" color="#7c3aed" />
+          <StatPill label="Journal entries" value={`${month.journalEntries}`} bg={alpha("#7c3aed", "14")} color="#7c3aed" />
         )}
       </div>
     </div>
@@ -276,7 +276,7 @@ export default function Reports({ authUser, profileId, user }) {
           A summary of your self-logged data — designed to share with your GP or health practitioner.
         </div>
         <div style={{
-          marginTop: 10, background: "#fff9f0",
+          marginTop: 10, background: C.goldLight,
           border: "1px solid #f59e0b30", borderRadius: 10,
           padding: "10px 12px", fontSize: 11, color: "#92400e", lineHeight: 1.6,
         }}>
@@ -328,7 +328,7 @@ export default function Reports({ authUser, profileId, user }) {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {meals.map((m, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: `1px solid ${C.border}40` }}>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: `1px solid ${alpha(C.border, "40")}` }}>
                       <span style={{ fontSize: 20 }}>{m.emoji}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{m.name}</div>

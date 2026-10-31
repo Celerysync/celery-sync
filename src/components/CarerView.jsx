@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
@@ -58,13 +58,13 @@ function PatientCard({ patient }) {
 
   return (
     <div style={{
-      background: "#fff", borderRadius: 18,
-      border: `1.5px solid ${C.plum}25`,
+      background: C.surface, borderRadius: 18,
+      border: `1.5px solid ${alpha(C.plum, "25")}`,
       marginBottom: 14, overflow: "hidden",
     }}>
       {/* Header */}
       <div style={{
-        background: `linear-gradient(135deg, ${C.plum}18, ${C.plumLight})`,
+        background: `linear-gradient(135deg, ${alpha(C.plum, "18")}, ${C.plumLight})`,
         padding: "16px 18px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
@@ -82,7 +82,7 @@ function PatientCard({ patient }) {
             style={{
               padding: "6px 14px", borderRadius: 20, fontSize: 11,
               fontFamily: "Georgia,serif", fontWeight: 700,
-              border: `1.5px solid ${C.plum}40`,
+              border: `1.5px solid ${alpha(C.plum, "40")}`,
               background: expanded ? C.plum : "transparent",
               color: expanded ? "#fff" : C.plum,
               cursor: "pointer",
@@ -98,7 +98,7 @@ function PatientCard({ patient }) {
             {patient.symptoms.slice(0, 4).map(s => (
               <span key={s} style={{
                 padding: "3px 10px", borderRadius: 20, fontSize: 10,
-                background: `${C.plum}15`, color: C.plum,
+                background: `${alpha(C.plum, "15")}`, color: C.plum,
                 fontFamily: "Georgia,serif",
               }}>
                 {s}
@@ -147,7 +147,7 @@ function PatientCard({ patient }) {
           <div style={{
             background: C.sageLight, borderRadius: 12,
             padding: "12px 14px", marginBottom: 14,
-            border: `1px solid ${C.sage}30`,
+            border: `1px solid ${alpha(C.sage, "30")}`,
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif", marginBottom: 4 }}>
               {task.emoji} Right now: {task.label}
@@ -164,7 +164,7 @@ function PatientCard({ patient }) {
               {checkins.map(c => (
                 <div key={c.check_date} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "7px 0", borderBottom: `1px solid ${C.border}40`,
+                  padding: "7px 0", borderBottom: `1px solid ${alpha(C.border, "40")}`,
                 }}>
                   <div style={{ fontSize: 12, color: C.charcoal, fontFamily: "Georgia,serif" }}>
                     {new Date(c.check_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}

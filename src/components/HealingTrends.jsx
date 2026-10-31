@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { callClaude } from "../lib/api.js";
 
@@ -31,7 +31,7 @@ function Sparkline({ points, color, min = 0, max = 10 }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }} preserveAspectRatio="none">
       {[YTOP, (YTOP + YBOT) / 2, YBOT].map((y) => (
-        <line key={y} x1={0} y1={y} x2={W} y2={y} stroke={C.border} strokeWidth={0.8} />
+        <line key={y} x1={0} y1={y} x2={W} y2={y} style={{ stroke: C.border }} strokeWidth={0.8} />
       ))}
       {segs.map((seg, si) => (
         <polyline
@@ -46,9 +46,9 @@ function Sparkline({ points, color, min = 0, max = 10 }) {
       ))}
       {mapped.map((y, i) =>
         y !== null ? (
-          <circle key={i} cx={XS[i]} cy={y} r={4} fill={color} stroke={C.white} strokeWidth={1.5} />
+          <circle key={i} cx={XS[i]} cy={y} r={4} fill={color} style={{ stroke: C.surface }} strokeWidth={1.5} />
         ) : (
-          <circle key={i} cx={XS[i]} cy={(YTOP + YBOT) / 2} r={2.5} fill={C.border} opacity={0.5} />
+          <circle key={i} cx={XS[i]} cy={(YTOP + YBOT) / 2} r={2.5} style={{ fill: C.border }} opacity={0.5} />
         )
       )}
     </svg>
@@ -154,7 +154,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
                 <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>avg energy</div>
               </div>
             )}
-            <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: "#f0fdf4", borderRadius: 12 }}>
+            <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: alpha("#16a34a", "14"), borderRadius: 12 }}>
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{streak}</div>
               <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🌿 day streak</div>
             </div>
@@ -165,7 +165,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
               </div>
             )}
             {avgHrv && (
-              <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: "#fef0f0", borderRadius: 12 }}>
+              <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: alpha("#e05252", "14"), borderRadius: 12 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: "#e05252" }}>{avgHrv}</div>
                 <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>HRV ms</div>
               </div>
@@ -180,7 +180,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
 
           {/* AI weekly insight */}
           {(insight || loadingInsight || insightError) && (
-            <div style={{ background: C.goldLight, border: `1px solid ${C.gold}40`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+            <div style={{ background: C.goldLight, border: `1px solid ${alpha(C.gold, "40")}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 5 }}>✨ Weekly Insight</div>
               {loadingInsight
                 ? <div style={{ fontSize: 12, color: C.mid }}>Generating your insight…</div>

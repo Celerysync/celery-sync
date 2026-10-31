@@ -32,7 +32,7 @@ function Toggle({ on, onChange, label, desc }) {
           position: "relative", transition: "background 0.2s",
         }}>
           <div style={{
-            width: 20, height: 20, borderRadius: "50%", background: "#fff",
+            width: 20, height: 20, borderRadius: "50%", background: C.surface,
             position: "absolute", top: 3,
             left: on ? 23 : 3,
             transition: "left 0.2s",
@@ -106,7 +106,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           onChange={(e) => savePrefs({ voice_id: e.target.value || null })}
           style={{
             flex: 1, padding: "10px 12px", borderRadius: 12,
-            border: `1.5px solid ${C.border}`, background: C.white,
+            border: `1.5px solid ${C.border}`, background: C.surface,
             fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif",
           }}
         >

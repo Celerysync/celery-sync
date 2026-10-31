@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { Card, Btn } from "./ui.jsx";
@@ -250,7 +250,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
 
           {showDrNote && (
             <div style={{
-              background: "#f0f7f0", border: `1px solid ${C.sage}50`,
+              background: alpha("#6B9E72", "1A"), border: `1px solid ${alpha(C.sage, "50")}`,
               borderRadius: 12, padding: "14px 16px", marginBottom: 12,
             }}>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 8 }}>
@@ -272,7 +272,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
       )}
 
       <div style={{
-        background: C.sageLight, border: `1px solid ${C.sage}40`,
+        background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`,
         borderRadius: 12, padding: 10, fontSize: 11.5, color: C.sageDark,
       }}>
         📖 Descriptive only — this screen reflects what you share, it never interprets it. Not medical advice — always work with your healthcare provider. Your own copy of Anthony William's books (linked in <strong>Learn</strong>) is the source for anything you follow.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
@@ -130,7 +130,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
     const e = ENERGY_OPTS.find(o => o.val === todaysCheckin.energy);
     const c = CLARITY_OPTS.find(o => o.val === todaysCheckin.mental_clarity);
     return (
-      <Card style={{ background: C.sageLight, border: `1.5px solid ${C.sage}40` }}>
+      <Card style={{ background: C.sageLight, border: `1.5px solid ${alpha(C.sage, "40")}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
             📋 Today's Check-in ✓
@@ -173,7 +173,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
   }
 
   return (
-    <Card style={{ border: `1.5px solid ${C.plum}30` }}>
+    <Card style={{ border: `1.5px solid ${alpha(C.plum, "30")}` }}>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         📋 How are you today?
       </div>
@@ -265,7 +265,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 width: "100%", boxSizing: "border-box", padding: "10px 12px",
                 borderRadius: 10, border: `1.5px solid ${C.border}`,
                 fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal,
-                background: C.white, outline: "none",
+                background: C.surface, outline: "none",
               }}
             />
           </Section>
@@ -306,9 +306,9 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               rows={2}
               style={{
                 width: "100%", boxSizing: "border-box", padding: "10px 12px",
-                borderRadius: 10, border: `1.5px solid ${C.gold}60`,
+                borderRadius: 10, border: `1.5px solid ${alpha(C.gold, "60")}`,
                 fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
-                background: "#fffbeb", resize: "none", outline: "none", marginBottom: 12,
+                background: alpha("#C9963A", "1F"), resize: "none", outline: "none", marginBottom: 12,
               }}
             />
           )}
@@ -474,7 +474,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               width: "100%", boxSizing: "border-box", padding: "10px 12px",
               borderRadius: 10, border: `1.5px solid ${C.border}`,
               fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal,
-              background: C.white, resize: "none", outline: "none", marginBottom: 12,
+              background: C.surface, resize: "none", outline: "none", marginBottom: 12,
             }}
           />
         </>

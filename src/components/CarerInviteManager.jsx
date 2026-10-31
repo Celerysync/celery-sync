@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
 function StatusBadge({ status }) {
@@ -108,7 +108,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
                 disabled={revoking === c.id}
                 style={{
                   padding: "5px 12px", borderRadius: 20, fontSize: 11,
-                  border: `1px solid ${C.terracotta}40`,
+                  border: `1px solid ${alpha(C.terracotta, "40")}`,
                   background: "transparent", color: C.terracotta,
                   cursor: revoking === c.id ? "default" : "pointer",
                   fontFamily: "Georgia,serif",
@@ -137,7 +137,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
               flex: 1, padding: "10px 14px", borderRadius: 20,
               border: `1.5px solid ${C.border}`, fontSize: 13,
               fontFamily: "Georgia,serif", outline: "none",
-              background: "#fff", color: C.charcoal,
+              background: C.surface, color: C.charcoal,
             }}
           />
           <button
@@ -160,7 +160,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
       {inviteLink && (
         <div style={{
           background: C.plumLight, borderRadius: 14,
-          padding: "14px 16px", border: `1px solid ${C.plum}30`,
+          padding: "14px 16px", border: `1px solid ${alpha(C.plum, "30")}`,
         }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.plum, fontFamily: "Georgia,serif", marginBottom: 6 }}>
             💜 Invite link ready
@@ -169,7 +169,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
             Copy this link and send it via WhatsApp, text, or email. They'll need to sign in to CelerySync (free) to accept.
           </div>
           <div style={{
-            background: "#fff", borderRadius: 10, padding: "9px 12px",
+            background: C.surface, borderRadius: 10, padding: "9px 12px",
             fontSize: 11, color: C.charcoal, wordBreak: "break-all",
             border: `1px solid ${C.border}`, marginBottom: 10,
             fontFamily: "monospace",

@@ -1,4 +1,4 @@
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { computeThenAndNow } from "../lib/progressStats.js";
 
@@ -13,7 +13,7 @@ const MARK = { up: "↑", down: "↓", same: "≈" };
 
 function Row({ title, then, now, direction, sub }) {
   return (
-    <div style={{ padding: "11px 0", borderBottom: `1px solid ${C.border}60` }}>
+    <div style={{ padding: "11px 0", borderBottom: `1px solid ${alpha(C.border, "60")}` }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
           {title}

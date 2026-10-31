@@ -1,4 +1,4 @@
-import C from "../lib/colors.js";
+import C, { alpha } from "../lib/colors.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
 
 // Shown wherever installing matters. On Chrome this is a one-tap native
@@ -13,7 +13,7 @@ export default function InstallCard({ onDismiss, compact = false }) {
   return (
     <div style={{
       background: C.sageLight,
-      border: `1.5px solid ${C.sage}40`,
+      border: `1.5px solid ${alpha(C.sage, "40")}`,
       borderRadius: 16,
       padding: compact ? "12px 14px" : "16px 18px",
       position: "relative",
