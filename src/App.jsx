@@ -12,6 +12,7 @@ import { VoiceProvider } from "./context/VoiceContext.jsx";
 import { HumeVoiceProvider } from "./context/HumeVoiceContext.jsx";
 import VoiceOrb from "./components/VoiceOrb.jsx";
 import { resolveDestination } from "./lib/voiceTabContext.js";
+import { supabase } from "./lib/supabase.js";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -138,9 +139,22 @@ export default function App() {
   // companion and started a live Hume session on EVERY app load. Now it's
   // derived once we know who's signed in; null = no override this session.
   const [welcomeOverride, setWelcomeOverride] = useState(null);
-  const showWelcome = welcomeOverride ?? (!!authUser?.id && !localStorage.getItem(`cs_welcomed_${authUser.id}`));
+  // Remembered on the account (user_metadata) as well as this device, so
+  // the tour doesn't replay on every new phone or computer.
+  const welcomedHere = !!authUser?.id && !!localStorage.getItem(`cs_welcomed_${authUser.id}`);
+  const welcomedOnAccount = !!authUser?.user_metadata?.cs_welcomed;
+  const showWelcome = welcomeOverride ?? (!!authUser?.id && !welcomedHere && !welcomedOnAccount);
+  const markWelcomed = () => {
+    if (!authUser?.id) return;
+    localStorage.setItem(`cs_welcomed_${authUser.id}`, "1");
+    if (!authUser.user_metadata?.cs_welcomed) supabase.auth.updateUser({ data: { cs_welcomed: true } }).catch(() => {});
+  };
+  // Devices that were welcomed before this lived on the account carry it over.
+  useEffect(() => {
+    if (welcomedHere && !welcomedOnAccount) supabase.auth.updateUser({ data: { cs_welcomed: true } }).catch(() => {});
+  }, [welcomedHere, welcomedOnAccount]);
   const finishWelcome = () => {
-    if (authUser?.id) localStorage.setItem(`cs_welcomed_${authUser.id}`, "1");
+    markWelcomed();
     setWelcomeOverride(false);
   };
   const [navQuery, setNavQuery] = useState(null);
@@ -293,7 +307,7 @@ export default function App() {
             switchProfile={switchProfile}
             updateProfile={updateProfile}
             onDone={({ name, firstItem }) => {
-              localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
+              markWelcomed(); // skip the separate welcome tour — onboarding already covered it
               setWelcomeOverride(false);
               setJustOnboarded({ name, firstItem });
               setTab("home"); // the finish button promises Today, and Today is where their new rhythm shows

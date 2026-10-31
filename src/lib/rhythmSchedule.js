@@ -148,3 +148,7 @@ export function expandOccurrences(items) {
     }))
   );
 }
+
+// Fired on window whenever rhythm_items change outside useRhythm (the voice
+// companion's tools), so every mounted rhythm list reloads.
+export const RHYTHM_CHANGED_EVENT = "cs:rhythm-changed";

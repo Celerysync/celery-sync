@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
-import { TODAY, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
+import { TODAY, filterTodaysItems, rhythmRowToItem, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { buildProgramItem, programDescription } from "../lib/savedRhythms.js";
 import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 
@@ -264,26 +264,51 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
 
     async log_rhythm_item(args) {
       if (!profileId) throw new Error("No active profile");
-      if (!args?.name) throw new Error("name required");
-      const { data: maxRow } = await supabase
+      const name = String(args?.name || "").trim();
+      if (!name) throw new Error("name required");
+      const time = /^\d{1,2}:\d{2}$/.test(args?.fixedTime || "") ? args.fixedTime.padStart(5, "0") : null;
+      const { data: existingRows } = await supabase
         .from("rhythm_items")
-        .select("sort_order")
+        .select("id, name, sort_order")
         .eq("profile_id", profileId)
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const { error } = await supabase.from("rhythm_items").insert({
-        profile_id: profileId,
-        name: args.name,
-        emoji: "🌿",
-        category: args.category || "other",
-        fixed_time: args.fixedTime || null,
-        note: args.note || "",
-        frequency: args.frequency || "daily",
-        sort_order: (maxRow?.sort_order ?? 0) + 1,
-      });
+        .order("sort_order", { ascending: true });
+      const rows = existingRows || [];
+      // Same name again = the user is adjusting that item (usually adding a
+      // time), not asking for a second copy. This used to insert duplicates.
+      const existing = rows.find((r) => r.name.trim().toLowerCase() === name.toLowerCase());
+      // A set time is what makes the server send a reminder for the item
+      // (server/routes/rhythm.js) — schedule is the source of truth, fixed_time mirrors it.
+      const timing = time ? { fixed_time: time, schedule: { type: "times", times: [time] } } : {};
+      let error;
+      if (existing) {
+        const patch = { ...timing, ...(args.note ? { note: args.note } : {}), ...(args.frequency ? { frequency: args.frequency } : {}) };
+        if (Object.keys(patch).length) ({ error } = await supabase.from("rhythm_items").update(patch).eq("id", existing.id));
+      } else {
+        ({ error } = await supabase.from("rhythm_items").insert({
+          profile_id: profileId,
+          name,
+          emoji: "🌿",
+          category: args.category || "other",
+          fixed_time: null,
+          note: args.note || "",
+          frequency: args.frequency || "daily",
+          sort_order: (rows.at(-1)?.sort_order ?? 0) + 1,
+          ...timing,
+        }));
+      }
       if (error) throw new Error(error.message);
-      return { logged: true };
+      window.dispatchEvent(new Event(RHYTHM_CHANGED_EVENT));
+      const names = existing ? rows.map((r) => r.name) : [...rows.map((r) => r.name), name];
+      return {
+        saved: true,
+        action: existing ? "updated_existing_item" : "added_new_item",
+        item: existing ? existing.name : name,
+        reminder_time: time,
+        rhythm_now: names,
+        message: existing
+          ? `"${existing.name}" was already in their rhythm, so it was updated${time ? ` with a reminder at ${time}` : ""} — no duplicate added.`
+          : `"${name}" is now in their rhythm${time ? ` with a reminder at ${time}` : ""}. It's on their screen now.`,
+      };
     },
   }), [userId, profileId, onSwitchTab]);
 }

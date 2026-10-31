@@ -55,7 +55,9 @@ export default function RhythmBuilder({
   onStartProgram,
   onCancelProgram,
 }) {
-  const [level, setLevel] = useState("templates"); // templates | programs | program-new | edit | add | save-template
+  // Open on the items themselves when there are any — "Edit" opening on an
+  // empty Day Templates page made it look as if nothing had been added.
+  const [level, setLevel] = useState(() => (baseItems.length ? "edit" : "templates")); // templates | programs | program-new | edit | add | save-template
   const [editingId, setEditingId] = useState(null);
   const [addForm, setAddForm] = useState(BLANK_ITEM);
   const [localAnchor, setLocalAnchor] = useState(anchorTime || "07:00");
@@ -672,7 +674,16 @@ export default function RhythmBuilder({
                               ? <span style={{ color: C.sageDark, fontWeight: 700 }}>
                                   🔔 {scheduleTimes(item).map(formatFixedTime).join(" · ")}
                                 </span>
-                              : `+${item.spacingMinutes}min`}
+                              : <button
+                                  onClick={() => startEdit(item)}
+                                  style={{
+                                    background: "none", border: "none", padding: 0, cursor: "pointer",
+                                    fontSize: 11, color: C.sage, fontWeight: 700, fontFamily: "inherit",
+                                    textDecoration: "underline",
+                                  }}
+                                >
+                                  🔔 Add a reminder
+                                </button>}
                             {" · "}{FREQ_LABELS[item.frequency] || item.frequency} · {DUR_LABELS[item.durationType] || item.durationType}
                             {item.isMedicine && " · Rx"}
                           </div>
@@ -946,7 +957,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
 
           Presets first, free-form second: the people who most need reminders
           are the least able to spend executive function assembling a schedule. */}
-      <FieldGroup label="When">
+      <FieldGroup label="When & reminder">
         <div style={{ display: "flex", gap: 6 }}>
           <button
             onClick={() => setTimes([])}
@@ -958,7 +969,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               fontSize: 11, cursor: "pointer",
             }}
           >
-            After previous step
+            No set time
           </button>
           <button
             onClick={() => setTimes(times.length ? times : ["08:00"])}
@@ -970,7 +981,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               fontSize: 11, cursor: "pointer",
             }}
           >
-            At set times
+            🔔 Remind me at…
           </button>
         </div>
 
@@ -1066,7 +1077,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
             </div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
               How many minutes after the previous item completes (or after your wake anchor
-              for the first item). Choose “At a set time” instead if you want a reminder.
+              for the first item). Tap “🔔 Remind me at…” to get a reminder for this item.
             </div>
           </>
         )}

@@ -136,7 +136,7 @@ function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, l
 THIS USER'S JOURNEY — REMEMBER ALL OF THIS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${healingProfile?.healing_summary
-  ? `Rolling summary:\n${healingProfile.healing_summary}`
+  ? `Rolling summary from past conversations (background only — it may mention rhythm items they've since removed; only what they've set up in the app now is current):\n${healingProfile.healing_summary}`
   : ""}
 ${healingProfile?.hard_times ? `\nHard times of day: ${healingProfile.hard_times}` : ""}
 ${healingProfile?.current_focus ? `\nCurrently focused on: ${healingProfile.current_focus}` : ""}

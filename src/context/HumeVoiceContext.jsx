@@ -297,15 +297,61 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const last = (recent || []).find((c) => c.check_date < today && ((c.rhythm_completed || 0) > 0 || (c.energy || 0) > 0));
       const daysAway = last ? Math.round((new Date(today + "T12:00:00") - new Date(last.check_date + "T12:00:00")) / 86_400_000) : null;
-      if (daysAway != null && daysAway >= 3) {
+      // Once a day only — it was greeting people "welcome back" on every
+      // single connect until they ticked something off.
+      const welcomedKey = `cs_voiceWelcomedBack_${today}`;
+      if (daysAway != null && daysAway >= 3 && !localStorage.getItem(welcomedKey)) {
+        localStorage.setItem(welcomedKey, "1");
         returningLine = `The user is coming back after ${daysAway} days away. Welcome them back warmly first. No guilt, no mention of a broken streak, nothing to catch up on — hard patches are normal. Gently ask how they've been, and suggest just one small thing from their own rhythm today.`;
       }
     }
+    // Has the user talked with the companion before, and already today?
+    // Without this every session opened like a first meeting or a big
+    // welcome-back, so it felt like the same greeting every time.
+    let historyLine = null;
+    if (userId) {
+      const { data: past, count } = await supabase
+        .from("companion_sessions")
+        .select("started_at", { count: "exact" })
+        .eq("user_id", userId)
+        .order("started_at", { ascending: false })
+        .limit(1);
+      const last = past?.[0]?.started_at ? new Date(past[0].started_at) : null;
+      if (last && last.toDateString() === new Date().toDateString()) {
+        const mins = Math.max(1, Math.round((Date.now() - last) / 60000));
+        historyLine = `You already spoke with the user earlier today (about ${mins < 90 ? `${mins} minutes` : `${Math.round(mins / 60)} hours`} ago). Don't welcome them or introduce yourself again — just a short, natural hello in fresh words (never the same opener as before) and ask what they'd like to do.`;
+      } else if (count > 0) {
+        historyLine = "You've talked with the user before. Never say \"nice to meet you\" or introduce yourself as if it's the first time. Greet them briefly and naturally, in fresh words each time.";
+      }
+    }
+    // Their rhythm as it is RIGHT NOW. Memory notes are written from old
+    // conversations and still mention items the user has since deleted;
+    // this list is what the companion must treat as true.
+    let rhythmLine = null;
+    if (profileId) {
+      const { data: items } = await supabase
+        .from("rhythm_items")
+        .select("name, fixed_time, schedule")
+        .eq("profile_id", profileId)
+        .order("sort_order", { ascending: true });
+      const listed = (items || []).map((i) => {
+        const times = i.schedule?.type === "times" && i.schedule.times?.length ? i.schedule.times : i.fixed_time ? [i.fixed_time] : [];
+        return times.length ? `${i.name} (reminder ${times.join(", ")})` : i.name;
+      });
+      rhythmLine = listed.length
+        ? `The user's daily rhythm RIGHT NOW (this is the only current truth): ${listed.join("; ")}.`
+        : "The user's daily rhythm is currently EMPTY — they have no items yet.";
+      rhythmLine += " If your memory notes mention anything not in this list, they have removed it — never say it's in their rhythm or suggest it as if it still is.";
+    }
+    const toolRules = "Adding to the rhythm: call log_rhythm_item once for EACH item the user names, and only say it's added AFTER the tool returns saved:true — never before, and never for an item you didn't call it for. When the user lists several items, add them one by one and confirm them together. Giving an item a time (fixedTime, 24-hour HH:MM) is what sets its reminder; to set or change a time on an item that's already there, call log_rhythm_item again with the same name and the time — it updates that item instead of adding a copy.";
+    const memoryLine = memory.healingProfile?.healing_summary
+      ? `Background notes from past conversations (may be out of date — the rhythm list above wins):\n${memory.healingProfile.healing_summary}`
+      : null;
     // The app map travels with every session so the companion can answer
     // "where do I…?" and take the user anywhere with switch_tab(tab, section),
     // whichever screen they started talking on.
     const appMap = `The app has four tabs. Places you can take the user with switch_tab:\n${destinationsForPrompt()}`;
-    const contextText = [nameLine, returningLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
+    const contextText = [nameLine, historyLine, returningLine, rhythmLine, memoryLine, toolRules, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {

@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
+import { RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { supabase } from "../lib/supabase.js";
 import {
@@ -85,12 +86,22 @@ export function useRhythm(authUser, profileId) {
     return () => clearTimeout(id);
   }, [syncError]);
 
+  // The voice companion writes rhythm_items directly (useVoiceTools) and
+  // announces it with this event, so the list on screen updates straight
+  // away instead of only after a reload.
+  const [reloadTick, setReloadTick] = useState(0);
+  useEffect(() => {
+    const onChanged = () => setReloadTick((t) => t + 1);
+    window.addEventListener(RHYTHM_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(RHYTHM_CHANGED_EVENT, onChanged);
+  }, []);
+
   // Load rhythm items + anchor from Supabase, migrating any existing
   // localStorage data on first load so nobody loses their schedule.
   useEffect(() => {
     if (!profileId) { setRhythmLoaded(false); return; }
     (async () => {
-      setRhythmLoaded(false);
+      if (!reloadTick) setRhythmLoaded(false);
       const [itemsRes, profileRes] = await Promise.all([
         supabase.from("rhythm_items").select("*").eq("profile_id", profileId).order("sort_order", { ascending: true }),
         supabase.from("profiles").select("rhythm_anchor_time").eq("id", profileId).maybeSingle(),
@@ -117,7 +128,7 @@ export function useRhythm(authUser, profileId) {
       setAnchorTimeState(anchor);
       setRhythmLoaded(true);
     })();
-  }, [profileId]);
+  }, [profileId, reloadTick]);
 
   const setAnchorTime = useCallback((t) => {
     setAnchorTimeState(t);
