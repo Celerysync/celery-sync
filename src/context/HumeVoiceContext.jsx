@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { VoiceProvider as HumeSDKProvider, useVoice as useHumeSDKVoice } from "@humeai/voice-react";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { useVoiceTools } from "../hooks/useVoiceTools.js";
-import { TAB_CONTEXT, APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
+import { TAB_CONTEXT, APP_DELETE_HOWTO, destinationsForPrompt } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
 
 // Spec §3.2 session containment: warn after this much silence, close a beat
@@ -256,7 +256,11 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       const parts = (voicePrefs?.voice_id || "").split(":");
       if (parts[0] === "hume" && parts[2]) chosenVoiceId = parts.slice(2).join(":");
     }
-    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], APP_DELETE_HOWTO, extraContext]
+    // The app map travels with every session so the companion can answer
+    // "where do I…?" and take the user anywhere with switch_tab(tab, section),
+    // whichever screen they started talking on.
+    const appMap = `The app has four tabs. Places you can take the user with switch_tab:\n${destinationsForPrompt()}`;
+    const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], appMap, APP_DELETE_HOWTO, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {

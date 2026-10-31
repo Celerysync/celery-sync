@@ -682,7 +682,7 @@ export default function AW({ onNavigate }) {
         {[
           { n: "1", label: "Buy from Anthony William's website", desc: "All purchases go directly to his team — he chooses the retailers and earns from every sale." },
           { n: "2", label: "Read the book directly", desc: "His books contain complete protocols, exact guidance, and the full depth of his teachings — they are the authoritative source." },
-          { n: "3", label: "Use Resources in this app", desc: "The Learn tab links directly to his official books, YouTube, and podcast so you can always access his official content." },
+          { n: "3", label: "Use Resources in this app", desc: "Settings → Official sources links directly to his official books, YouTube, and podcast so you can always access his official content." },
         ].map(({ n, label, desc }) => (
           <div key={n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
             <div style={{
@@ -697,7 +697,7 @@ export default function AW({ onNavigate }) {
           </div>
         ))}
         <button
-          onClick={() => onNavigate?.("learn")}
+          onClick={() => onNavigate?.("settings:sources")}
           style={{
             background: C.sage, color: C.white, border: "none",
             borderRadius: 30, padding: "8px 18px",
@@ -705,7 +705,7 @@ export default function AW({ onNavigate }) {
             cursor: "pointer", marginTop: 4,
           }}
         >
-          Go to Learn →
+          Open official sources →
         </button>
       </div>
 
@@ -736,7 +736,7 @@ export default function AW({ onNavigate }) {
                   Buy on medicalmedium.com →
                 </a>
                 <button
-                  onClick={() => onNavigate?.("learn")}
+                  onClick={() => onNavigate?.("settings:sources")}
                   style={{
                     background: "transparent", color: C.sage,
                     border: `1.5px solid ${C.sage}`, borderRadius: 30,

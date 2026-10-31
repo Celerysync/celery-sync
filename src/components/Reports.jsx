@@ -283,9 +283,11 @@ export default function Reports({ authUser, profileId, user }) {
         </div>
       </Card>
 
+      <div id="section-streaks" style={{ scrollMarginTop: 80 }} />
       <AdherenceStreaks profileId={profileId} />
 
-      {/* View selector */}
+      {/* View selector — "history" lands here (the daily table is the default view) */}
+      <div id="section-history" style={{ scrollMarginTop: 80 }} />
       <div style={{
         display: "flex", gap: 6, background: C.sageLight,
         borderRadius: 14, padding: 4,
@@ -435,6 +437,7 @@ export default function Reports({ authUser, profileId, user }) {
       )}
 
       {/* Doctor report download — always shown */}
+      <div id="section-reports" style={{ scrollMarginTop: 80 }} />
       {profileId && (
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>

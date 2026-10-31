@@ -2,6 +2,7 @@ import { useState } from "react";
 import C from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useAnalytics } from "../hooks/useAnalytics.js";
+import { useCycleTracking } from "../hooks/useCycleTracking.js";
 
 const ENERGY_OPTS = [
   { val: 2,  emoji: "😴", label: "Exhausted" },
@@ -59,7 +60,10 @@ const COMMON_SYMPTOMS = [
   "Skin issues", "Heart palpitations", "Panic attacks", "Irritability",
 ];
 
-export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave, saving, authUser }) {
+export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave, saving, authUser, profileId, cycleEnabled }) {
+  // Period-start logging moved here from the old Track tab, so the one
+  // check-in is the one place to log how today is going.
+  const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
   const { track } = useAnalytics(authUser);
 
   // Core (always shown)
@@ -210,6 +214,22 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
           ))}
         </div>
       </Section>
+
+      {cycleEnabled && (
+        <button
+          onClick={() => (periodLoggedToday ? undoPeriodToday() : logPeriodStart())}
+          style={{
+            width: "100%", padding: "9px 12px", borderRadius: 12, marginBottom: 12,
+            border: `1.5px solid ${periodLoggedToday ? C.plum : C.border}`,
+            background: periodLoggedToday ? C.plumLight : "transparent",
+            color: periodLoggedToday ? C.plum : C.mid,
+            fontSize: 12.5, fontFamily: "Georgia,serif", fontWeight: periodLoggedToday ? 700 : 400,
+            cursor: "pointer",
+          }}
+        >
+          {periodLoggedToday ? "✓ Period start logged today — tap to undo" : "🩸 Log period start today"}
+        </button>
+      )}
 
       {/* ── EXPANDED: shown after energy selected ── */}
       {showMore && (

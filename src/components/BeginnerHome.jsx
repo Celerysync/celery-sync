@@ -80,9 +80,9 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         <Step
           emoji="📗"
           title="Start with your book"
-          desc="Everything you follow comes from your own copy of Anthony William's books. If you don't have one yet, the Learn tab links to his official books, site, and free content."
-          cta="Open Learn"
-          onClick={() => onNavigate && onNavigate("learn")}
+          desc="Everything you follow comes from your own copy of Anthony William's books. If you don't have one yet, Settings → Official sources links to his official books, site, and free content."
+          cta="Open official sources"
+          onClick={() => onNavigate && onNavigate("settings:sources")}
         />
         <Step
           emoji="🌅"

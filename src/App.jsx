@@ -11,6 +11,7 @@ import { useAnalytics } from "./hooks/useAnalytics.js";
 import { VoiceProvider } from "./context/VoiceContext.jsx";
 import { HumeVoiceProvider } from "./context/HumeVoiceContext.jsx";
 import VoiceOrb from "./components/VoiceOrb.jsx";
+import { resolveDestination } from "./lib/voiceTabContext.js";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -23,10 +24,8 @@ const Account            = lazy(() => import("./components/Account.jsx"));
 const ProfileManager     = lazy(() => import("./components/ProfileManager.jsx"));
 const ReminderSettings   = lazy(() => import("./components/ReminderSettings.jsx"));
 const WelcomeVoice       = lazy(() => import("./components/WelcomeVoice.jsx"));
-const Coach              = lazy(() => import("./components/Coach.jsx"));
-const TrackView          = lazy(() => import("./components/TrackView.jsx"));
-const Learn              = lazy(() => import("./components/Learn.jsx"));
-const Supplements        = lazy(() => import("./components/Supplements.jsx"));
+const CompanionTab       = lazy(() => import("./components/CompanionTab.jsx"));
+const OfficialSources    = lazy(() => import("./components/OfficialSources.jsx"));
 const Reports            = lazy(() => import("./components/Reports.jsx"));
 const AW                 = lazy(() => import("./components/AW.jsx"));
 const CarerView          = lazy(() => import("./components/CarerView.jsx"));
@@ -42,34 +41,19 @@ const GettingTheMostCard = lazy(() => import("./components/GettingTheMostCard.js
 const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
 const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
 
+// Four tabs: what you do today, who you talk to, how it's going, settings.
+// Track folded into Progress (history) and Today (the one check-in);
+// Supplements into Today; "How I feel" into Companion; Learn's official links
+// into Settings. Old ids still resolve via lib/voiceTabContext.js.
 const TABS = [
-  { id: "home",        label: "Today",       emoji: "🏠", free: true  },
-  { id: "companion",   label: "Companion",   emoji: "🎙", free: false },
-  { id: "track",       label: "Track",       emoji: "📊", free: false },
-  { id: "progress",    label: "Progress",    emoji: "📋", free: false },
-  { id: "supplements", label: "Supplements", emoji: "💊", free: false },
-  { id: "learn",       label: "Learn",       emoji: "🌱", free: false },
-  { id: "settings",    label: "Settings",    emoji: "⚙️", free: true  },
-  { id: "admin",       label: "Admin",       emoji: "📊", free: true, adminOnly: true },
+  { id: "home",      label: "Today",     emoji: "🏠", free: true  },
+  { id: "companion", label: "Companion", emoji: "🎙", free: false },
+  { id: "progress",  label: "Progress",  emoji: "📋", free: false },
+  { id: "settings",  label: "Settings",  emoji: "⚙️", free: true  },
+  { id: "admin",     label: "Admin",     emoji: "📊", free: true, adminOnly: true },
 ];
 
-// Map old tab IDs to new ones — handles existing localStorage values
-const TAB_MIGRATIONS = {
-  coach:     "companion",
-  reports:   "progress",
-  account:   "settings",
-  journal:   "track",
-  symptoms:  "track",
-  recipes:   "learn",
-  juices:    "learn",
-  knowledge: "learn",
-  cleanses:  "home",
-  body:      "home",
-  community: "home",
-  carers:    "settings",
-  practice:  "settings",
-  aw:        "settings",
-};
+const tabOf = (id) => (id === "admin" ? "admin" : resolveDestination(id)?.tab || "home");
 
 function LoadingScreen({ message = "Loading your healing journey…" }) {
   return (
@@ -150,6 +134,7 @@ export default function App() {
   const [pageContext, setPageContext] = useState(null);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
   const [navQuery, setNavQuery] = useState(null);
+  const [navSection, setNavSection] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
   const [justOnboarded, setJustOnboarded] = useState(null); // { name, firstItem } — one-time, not persisted
@@ -187,7 +172,7 @@ export default function App() {
 
   // Migrate old tab IDs saved in localStorage
   useEffect(() => {
-    if (TAB_MIGRATIONS[tab]) setTab(TAB_MIGRATIONS[tab]);
+    if (tabOf(tab) !== tab) setTab(tabOf(tab));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -209,11 +194,30 @@ export default function App() {
     return () => document.removeEventListener("touchstart", unlock);
   }, []);
 
-  const handleNavigate = (tabId, query) => {
-    const resolved = TAB_MIGRATIONS[tabId] || tabId;
+  // Every way of moving around — taps, the voice companion, the text
+  // companion's links — lands here, so they all behave the same.
+  const handleNavigate = (destination, query, section) => {
+    const dest = destination === "admin" ? { tab: "admin", section: null } : resolveDestination(destination, section);
+    if (!dest) return;
     setNavQuery(query || null);
-    setTab(resolved);
+    setNavSection(dest.section);
+    setTab(dest.tab);
   };
+
+  // Bring a requested section into view once its tab has rendered (tabs are
+  // lazy-loaded, so poll briefly for the anchor rather than assume it's there).
+  useEffect(() => {
+    if (!navSection) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      const el = document.getElementById(`section-${navSection}`);
+      if (el || ++tries > 30) {
+        clearInterval(t);
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+    return () => clearInterval(t);
+  }, [tab, navSection]);
   const { activeReminder, dismiss: dismissReminder } = useReminders();
 
   // Load profiles once authenticated
@@ -231,7 +235,7 @@ export default function App() {
     }
     const returnTab = params.get("tab");
     if (returnTab) {
-      setTab(TAB_MIGRATIONS[returnTab] || returnTab);
+      setTab(tabOf(returnTab));
       window.history.replaceState({}, "", "/");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -288,11 +292,11 @@ export default function App() {
 
   const handleTabClick = (t) => {
     if (!t.free && !isSubscribed && !subLoading) setTab("settings");
-    else { setTab(t.id); track("tab_view", { tab: t.id }); }
+    else { setNavSection(null); setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
   const renderTab = () => {
-    const effectiveTab = TAB_MIGRATIONS[tab] || tab;
+    const effectiveTab = tabOf(tab);
     const current = TABS.find((t) => t.id === effectiveTab);
     if (current && !current.free && !isSubscribed && !subLoading) {
       return (
@@ -314,26 +318,28 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={setTab} />
+          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
 
       case "companion":
         // Rhythm plan = engine without the companion — this tab becomes the
         // upgrade door rather than the Coach.
         if (isRhythm) return <HealerUpsell onUpgrade={upgradeToHealer} />;
-        return <Coach authUser={authUser} user={activeProfile} profileId={activeProfileId} onNavigate={handleNavigate} caregiverMode={caregiverMode} units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'} pageContext={pageContext} justOnboarded={justOnboarded} onConsumedJustOnboarded={() => setJustOnboarded(null)} />;
-
-      case "track":
-        return <TrackView authUser={authUser} user={activeProfile} profileId={activeProfileId} navQuery={navQuery} onPageContext={setPageContext} />;
+        return (
+          <CompanionTab
+            section={navSection}
+            navQuery={navQuery}
+            onPageContext={setPageContext}
+            authUser={authUser} user={activeProfile} profileId={activeProfileId}
+            onNavigate={handleNavigate} caregiverMode={caregiverMode}
+            units={localStorage.getItem('cs_units') === 'imperial' ? 'imperial' : 'metric'}
+            pageContext={pageContext} justOnboarded={justOnboarded}
+            onConsumedJustOnboarded={() => setJustOnboarded(null)}
+          />
+        );
 
       case "progress":
         return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
-
-      case "supplements":
-        return <Supplements authUser={authUser} user={activeProfile} profileId={activeProfileId} />;
-
-      case "learn":
-        return <Learn authUser={authUser} user={activeProfile} navQuery={navQuery} />;
 
       case "settings":
         return (
@@ -352,26 +358,29 @@ export default function App() {
               onRefetchSub={refetchSub}
               profileId={activeProfileId}
             />
-            <CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} />
+            <div id="section-voice"><CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} /></div>
             <GettingTheMostCard />
-            <ReminderSettings authUser={authUser} />
-            <ProfileManager
-              profiles={profiles}
-              activeProfileId={activeProfileId}
-              onSwitch={switchProfile}
-              onCreate={createProfile}
-              onUpdate={updateProfile}
-              onDelete={deleteProfile}
-            />
+            <div id="section-reminders"><ReminderSettings authUser={authUser} /></div>
+            <div id="section-profiles">
+              <ProfileManager
+                profiles={profiles}
+                activeProfileId={activeProfileId}
+                onSwitch={switchProfile}
+                onCreate={createProfile}
+                onUpdate={updateProfile}
+                onDelete={deleteProfile}
+              />
+            </div>
             {activeProfileId && (
               <>
-                <CarerInviteManager authUser={authUser} profileId={activeProfileId} />
+                <div id="section-carers"><CarerInviteManager authUser={authUser} profileId={activeProfileId} /></div>
                 <DoctorReport profileId={activeProfileId} />
                 <HealingLetters profileId={activeProfileId} />
               </>
             )}
             <CarerView authUser={authUser} />
             {isPractitioner && <PractitionerPortal authUser={authUser} />}
+            <div id="section-sources"><OfficialSources /></div>
             <AW onNavigate={handleNavigate} />
           </div>
         );
@@ -383,7 +392,7 @@ export default function App() {
         return caregiverMode
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
-          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={setTab} />
+          ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} />;
     }
   };
@@ -395,7 +404,7 @@ export default function App() {
       profileId={activeProfileId}
       tab={tab}
       enabled={humeEnabled}
-      onSwitchTab={(tabId) => setTab(TAB_MIGRATIONS[tabId] || tabId)}
+      onSwitchTab={(tabId, section) => handleNavigate(tabId, null, section)}
     >
     <div style={{ background: C.cream, minHeight: "100dvh" }}>
       {/* Sticky header */}
@@ -489,19 +498,19 @@ export default function App() {
         <div className="scrollbar-none" style={{ display: "flex", overflowX: "auto" }}>
           {TABS.filter(t => (!t.practitionerOnly || isPractitioner) && (!t.adminOnly || isAdmin)).map((t) => {
             const locked = !t.free && !isSubscribed && !subLoading;
-            const active = (TAB_MIGRATIONS[tab] || tab) === t.id;
+            const active = tabOf(tab) === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => handleTabClick(t)}
                 style={{
-                  flexShrink: 0, flex: "1 0 auto", minWidth: 46,
-                  padding: "9px 4px 6px", border: "none", background: "none",
+                  flexShrink: 0, flex: "1 0 auto", minWidth: 64,
+                  padding: "10px 4px 7px", border: "none", background: "none",
                   cursor: "pointer", display: "flex", flexDirection: "column",
                   alignItems: "center", gap: 2, position: "relative",
                 }}
               >
-                <div style={{ fontSize: 18, position: "relative" }}>
+                <div style={{ fontSize: 22, position: "relative" }}>
                   {t.emoji}
                   {locked && (
                     <span style={{
@@ -514,8 +523,8 @@ export default function App() {
                   )}
                 </div>
                 <div style={{
-                  fontSize: 8.5, fontFamily: "Georgia,serif",
-                  color: active ? C.sage : "#bbb",
+                  fontSize: 11.5, fontFamily: "Georgia,serif",
+                  color: active ? C.sage : C.muted,
                   fontWeight: active ? 700 : 400,
                 }}>
                   {t.label}

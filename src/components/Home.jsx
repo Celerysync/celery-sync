@@ -15,6 +15,9 @@ import EveningReflection from "./EveningReflection.jsx";
 import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
+// Full supplements page (list management + shop) — opened from Today's
+// supplements card now that it no longer has its own tab.
+const Supplements = lazy(() => import("./Supplements.jsx"));
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -151,6 +154,7 @@ export default function Home({ user, authUser, profileId }) {
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
+  const [showSupplements, setShowSupplements] = useState(false);
 
   const {
     sequence,
@@ -311,6 +315,7 @@ export default function Home({ user, authUser, profileId }) {
           ⚠️ {syncError}
         </div>
       )}
+      <div id="section-rhythm" style={{ scrollMarginTop: 80 }} />
       <RhythmView
         sequence={sequence}
         anchorTime={anchorTime}
@@ -323,6 +328,31 @@ export default function Home({ user, authUser, profileId }) {
       />
 
       {/* Rhythm builder modal */}
+      {showSupplements && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50, background: C.cream,
+          overflowY: "auto", padding: "calc(14px + env(safe-area-inset-top, 0px)) 14px 40px",
+        }}>
+          <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.charcoal }}>💊 Supplements</div>
+              <button
+                onClick={() => setShowSupplements(false)}
+                style={{
+                  background: C.sageDark, color: C.white, border: "none", borderRadius: 30,
+                  padding: "8px 16px", fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Done
+              </button>
+            </div>
+            <Suspense fallback={<div style={{ textAlign: "center", padding: 32, color: C.muted }}>🌿</div>}>
+              <Supplements authUser={authUser} user={user} profileId={profileId} />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
       {showRhythmBuilder && (
         <Suspense fallback={null}>
           <RhythmBuilder
@@ -421,14 +451,31 @@ export default function Home({ user, authUser, profileId }) {
 
       {/* Supplement tracker */}
       {authUser && (
-        <SupplementTracker profileId={profileId} />
+        <div id="section-supplements" style={{ scrollMarginTop: 80, display: "flex", flexDirection: "column", gap: 6 }}>
+          <SupplementTracker profileId={profileId} />
+          <button
+            onClick={() => setShowSupplements(true)}
+            style={{
+              alignSelf: "flex-end", background: "transparent", border: "none",
+              color: C.sageDark, fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", padding: "2px 6px",
+            }}
+          >
+            Manage & shop supplements →
+          </button>
+        </div>
       )}
 
       {/* Daily check-in */}
       {authUser && (
+        <div id="section-checkin" style={{ scrollMarginTop: 80 }} />
+      )}
+      {authUser && (
         <DailyCheckIn
+          profileId={profileId}
+          cycleEnabled={!!user?.cycle_tracking_enabled}
           todaysCheckin={todaysCheckin}
-          userSymptoms={user?.conditions || []}
+          userSymptoms={user?.symptoms?.length ? user.symptoms : (user?.conditions || [])}
           onSave={handleSaveCheckin}
           saving={savingCheckin}
           authUser={authUser}

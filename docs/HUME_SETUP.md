@@ -241,23 +241,27 @@ the companion could see what tab you're on but not change it)
 
 Description:
 ```
-Switch the app to a different tab when the user asks to navigate, e.g. "take me to Track", "open supplements", "go to settings".
+Take the user to a place in the app when they ask, or when it would help (e.g. 'where are my supplements', 'I want to log how I feel', 'show my progress'). The app has four tabs: home (Today), companion, progress, settings. Optionally pass a section to land on the exact spot.
 ```
 
-Parameters:
+Parameters (updated 2026-10-31 for the four-tab layout — live as tool v1 / config v6):
 ```json
 {
   "type": "object",
   "properties": {
-    "tab": {
+    "tab": { "type": "string", "enum": ["home", "companion", "progress", "settings"], "description": "The tab: home = Today" },
+    "section": {
       "type": "string",
-      "enum": ["home", "companion", "track", "progress", "supplements", "learn", "settings"],
-      "description": "The tab to switch to"
+      "enum": ["rhythm", "checkin", "supplements", "talk", "feelings", "streaks", "history", "reports", "voice", "reminders", "profiles", "carers", "sources"],
+      "description": "Optional spot within the tab. home: rhythm, checkin, supplements. companion: talk, feelings. progress: streaks, history, reports. settings: voice, reminders, profiles, carers, sources."
     }
   },
   "required": ["tab"]
 }
 ```
+The app resolves this through src/lib/voiceTabContext.js, so retired names
+(track, supplements, learn) from an older config still land correctly.
+
 
 (Remember: Hume's schema validator rejects empty `properties: {}` without an
 explicit `"required": []`, and rejects `minimum`/`maximum` on numeric fields —

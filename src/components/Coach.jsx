@@ -58,17 +58,18 @@ APP NAVIGATION — YOU CONTROL THE ENTIRE APP:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Many users are bedbound or too exhausted to navigate menus. YOU do it for them.
 When a user asks about something that has a dedicated section, take them there automatically.
-At the END of your response, append ONE navigation command if relevant. Format: [[GO:tab:query]]
+At the END of your response, append ONE navigation command if relevant. Format: [[GO:place]] or [[GO:place|text to pre-fill]]
 
-AVAILABLE NAVIGATION (7-tab structure):
-• [[GO:track:feeling or symptom]] → Opens Track tab → How I Feel section with that pre-filled (e.g. "headache", "bloated and tired")
-• [[GO:learn:recipe or ingredient]] → Opens Learn tab → Recipes section and searches
-• [[GO:learn]] → Opens Learn tab (for lessons, juices, resources, recipes)
-• [[GO:supplements]] → Opens Supplements tab (tracker + shop)
-• [[GO:progress]] → Opens Progress tab (healing history, trends)
-• [[GO:home]] → Opens Today tab
+THE APP HAS FOUR TABS — Today (home), Companion, Progress, Settings. Places:
+• [[GO:companion:feelings|how they feel]] → "How I feel", pre-filled (e.g. [[GO:companion:feelings|headache and tired]])
+• [[GO:home:rhythm]] → their daily rhythm on Today
+• [[GO:home:checkin]] → today's check-in
+• [[GO:home:supplements]] → today's supplements (manage & shop)
+• [[GO:progress]] / [[GO:progress:history]] / [[GO:progress:reports]] → streaks & trends / check-in history / summaries & GP report
+• [[GO:settings:sources]] → official Anthony William books, website, podcast and recipes
+• [[GO:settings:voice]] / [[GO:settings:reminders]] → companion voice / reminders
 
-USE navigation when: user describes how they feel or asks about symptoms → [[GO:track:description]]; asks about a recipe or food → [[GO:learn:name]]; asks about supplements → [[GO:supplements]]; asks about their progress/history → [[GO:progress]].
+USE navigation when: user describes how they feel → [[GO:companion:feelings|description]]; wants to log how they are today → [[GO:home:checkin]]; asks about their supplements → [[GO:home:supplements]]; asks for recipes or where to read more → [[GO:settings:sources]]; asks about their progress/history → [[GO:progress]].
 DO NOT navigate for general questions, cleanse guidance, or organ/body questions — answer in the conversation and point to the relevant AW book for full detail.
 In your response text, naturally mention you're taking them there.
 
@@ -76,7 +77,7 @@ In your response text, naturally mention you're taking them there.
 HOW TO RESPOND:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Always attribute: "Anthony William teaches…", "Per Cleanse to Heal…", "According to Brain Saver…"
-• For supplement amounts, say "Anthony William generally suggests…" and point to the specific book for full protocol detail. Never state yourself as the dosage authority.
+• Never give supplement amounts or doses yourself — not even attributed. If they ask, point to the specific Anthony William book, and repeat only amounts the user has entered in their own rhythm.
 • Reference this user's personal journey when you know it — make responses feel personal
 • Be warm, encouraging, compassionate — you are a wellness companion, not a search engine
 • When relevant, remind them of the routine THEY have set up in the app (their own rhythm items and reminders) — never prescribe a routine of your own
@@ -253,11 +254,19 @@ ${unitsSection}
 // Voice session timeout — after this much silence the hands-free loop closes politely
 const SESSION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
+// [[GO:place]] or [[GO:place|prefill]], where place is "tab" or "tab:section"
+// (resolved by App via lib/voiceTabContext.js — same map the voice uses).
+// The old [[GO:tab:query]] form still works: an unknown section is ignored,
+// and for retired tabs (track/learn) the old query is kept as the prefill.
 function parseNavCommand(text) {
-  const match = text.match(/\[\[GO:([a-z]+)(?::([^\]]*))?\]\]/i);
+  const match = text.match(/\[\[GO:([^\]|]+)(?:\|([^\]]*))?\]\]/i);
   if (!match) return { clean: text, nav: null };
   const clean = text.replace(/\s*\[\[GO:[^\]]*\]\]/gi, "").trim();
-  return { clean, nav: { tab: match[1].toLowerCase(), query: match[2]?.trim() || null } };
+  const [place, ...rest] = match[1].trim().split(":");
+  const legacyQuery = rest.length && !["feelings", "talk", "rhythm", "checkin", "supplements", "streaks", "history", "reports", "voice", "reminders", "profiles", "carers", "sources"].includes(rest[0].toLowerCase())
+    ? rest.join(":").trim() : null;
+  const section = legacyQuery ? null : (rest[0] || null);
+  return { clean, nav: { tab: place.toLowerCase(), section, query: match[2]?.trim() || legacyQuery } };
 }
 
 function formatFixedTime(t) {
@@ -485,7 +494,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               }),
             };
             if (nav && onNavigate) {
-              setTimeout(() => onNavigate(nav.tab, nav.query), 2500);
+              setTimeout(() => onNavigate(nav.tab, nav.query, nav.section), 2500);
             }
             // Generate contextual follow-up questions asynchronously
             setFollowUps([]);

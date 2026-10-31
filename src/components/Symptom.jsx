@@ -143,7 +143,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
       });
       setResult(text);
       onPageContext?.({
-        tab: 'track',
+        tab: 'companion',
         label: `Feeling: ${all.join(", ")}`,
         detail: text.slice(0, 600),
       });

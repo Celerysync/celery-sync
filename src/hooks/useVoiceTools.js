@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { TODAY, filterTodaysItems, rhythmRowToItem } from "../lib/rhythmSchedule.js";
 import { buildProgramItem, programDescription } from "../lib/savedRhythms.js";
-import { TAB_CONTEXT } from "../lib/voiceTabContext.js";
+import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 
 const todayStr = TODAY;
 
@@ -64,16 +64,18 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     // Ambient tab context (voiceTabContext.js) only tells the companion where
     // the user IS; this is the one tool that actually moves them.
     async switch_tab(args) {
-      const requested = String(args?.tab || "").trim().toLowerCase();
-      const validTabs = Object.keys(TAB_CONTEXT);
-      if (!validTabs.includes(requested)) {
-        return { error: "invalid_tab", message: `"${args?.tab}" isn't a real tab. Valid tabs are: ${validTabs.join(", ")}.` };
+      // Resolves through the shared app map, so retired names ("track",
+      // "supplements", "learn") from an older Hume tool config still land
+      // in the right place.
+      const dest = resolveDestination(args?.tab, args?.section);
+      if (!dest) {
+        return { error: "invalid_tab", message: `"${args?.tab}" isn't a place in the app. Valid: ${Object.keys(TAB_CONTEXT).join(", ")} (optionally with a section, e.g. home:supplements, companion:feelings, settings:sources).` };
       }
       if (!onSwitchTab) {
         return { error: "unavailable", message: "Tab switching isn't available right now." };
       }
-      onSwitchTab(requested);
-      return { switched_to: requested };
+      onSwitchTab(dest.tab, dest.section);
+      return { switched_to: dest.section ? `${dest.tab}:${dest.section}` : dest.tab };
     },
 
     // Spec §3.3 — "done my juice" ticks the real checkbox. Writes the same
