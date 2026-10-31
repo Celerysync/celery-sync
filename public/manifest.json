@@ -51,10 +51,10 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Track",
-      "short_name": "Track",
-      "description": "Log how you're feeling today",
-      "url": "/?tab=track",
+      "name": "How I feel",
+      "short_name": "How I feel",
+      "description": "Tell your companion how you're feeling today",
+      "url": "/?tab=companion:feelings",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {

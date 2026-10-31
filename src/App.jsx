@@ -144,7 +144,11 @@ export default function App() {
     setWelcomeOverride(false);
   };
   const [navQuery, setNavQuery] = useState(null);
-  const [navSection, setNavSection] = useState(null);
+  // ?tab= may carry a section (the "How I feel" home-screen shortcut sends
+  // companion:feelings) — read once at startup rather than set in an effect.
+  const [navSection, setNavSection] = useState(
+    () => resolveDestination(new URLSearchParams(window.location.search).get("tab") || "")?.section ?? null
+  );
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
   const [isBeginnerMode, setIsBeginnerMode] = useState(() => localStorage.getItem("cs_journey_type") === "beginner");
   const [justOnboarded, setJustOnboarded] = useState(null); // { name, firstItem } — one-time, not persisted
