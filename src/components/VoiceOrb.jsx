@@ -42,8 +42,9 @@ export default function VoiceOrb() {
       }
       return;
     }
-    if (isMuted) unmute();
-    else mute();
+    // Already talking: just show the panel. This used to toggle mute, so a
+    // second tap "to turn the mic on" silently muted it and the companion
+    // stopped hearing. Mute lives only on the labelled button below.
     openSheet();
   };
 
@@ -197,6 +198,11 @@ export default function VoiceOrb() {
           {isConnecting && (
             <div style={{ color: C.sageDark, fontSize: 13, fontFamily: "Georgia,serif", textAlign: "center", padding: "8px 0" }}>
               🌿 Connecting…
+            </div>
+          )}
+          {isConnected && isMuted && (
+            <div style={{ background: C.terracottaLight, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 13, color: C.charcoal, textAlign: "center" }}>
+              🔇 Your mic is muted — I can't hear you. Tap <b>Unmute</b> to talk.
             </div>
           )}
           {isConnected && listening && (

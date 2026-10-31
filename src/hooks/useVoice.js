@@ -8,6 +8,24 @@ export const srSupported = !!(window.SpeechRecognition || window.webkitSpeechRec
 // Any new speak() call stops this before starting, and unmounting components clear it.
 let _globalAudio = null;
 
+// Every live browser speech recogniser, app-wide, so they can all be stopped at once.
+const _recognisers = new Set();
+
+// True while the Hume companion owns the mic and speaker (set by
+// HumeVoiceContext). Android gives the mic to one listener at a time, so the
+// browser recogniser here would leave the companion hearing silence, and any
+// TTS here would talk over it. While it's live, this hook neither speaks nor
+// listens.
+let _companionLive = false;
+
+export function setCompanionVoiceLive(live) {
+  _companionLive = live;
+  if (!live) return;
+  _stopGlobalAudio();
+  for (const r of _recognisers) { try { r.stop(); } catch { /* already stopped */ } }
+  _recognisers.clear();
+}
+
 function _stopGlobalAudio() {
   if (_globalAudio) {
     _globalAudio.pause();
@@ -70,6 +88,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     const { promise } = sentenceQueue.current.shift();
     promise.then((url) => {
       if (gen !== generationRef.current) return;
+      if (_companionLive) { setSpeaking(false); return; }
       if (!url) { _playNext(); return; }
       const audio = new Audio(url);
       audioRef.current = audio;
@@ -98,6 +117,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
 
   // Add a sentence to the TTS queue — fires the provider fetch immediately.
   const queueSentence = useCallback((text) => {
+    if (_companionLive) return;
     const voice = preferredVoiceRef.current;
     if (!ttsProvider.isElVoice(voice)) return;
     const voiceId = ttsProvider.extractVoiceId(voice);
@@ -165,6 +185,8 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     setSpeaking(true);
     let i = 0;
     const next = () => {
+      // cancel() fires onend on some browsers — don't chain into the next chunk
+      if (_companionLive) { setSpeaking(false); return; }
       if (i >= chunks.length) {
         setSpeaking(false);
         onDone?.();
@@ -187,6 +209,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
 
   const speak = useCallback(
     async (text, onDone) => {
+      if (_companionLive) return;
       // Cancel whatever is playing globally before starting anything new
       _stopGlobalAudio();
       audioRef.current = null;
@@ -199,6 +222,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
         const voiceId = ttsProvider.extractVoiceId(voice);
         setSpeaking(true);
         const url = await ttsProvider.fetchAudioUrl(text, voiceId);
+        if (_companionLive) { setSpeaking(false); return; }
 
         if (!url) {
           setSpeaking(false);
@@ -251,6 +275,7 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
       onUnsupported?.();
       return;
     }
+    if (_companionLive) return;
 
     const r = new SR();
     r.continuous = silenceMs > 0;
@@ -289,16 +314,19 @@ export function useVoice(preferredVoiceName = "", units = "metric") {
     }
 
     r.onend = () => {
+      _recognisers.delete(r);
       setListening(false);
       setTranscript('');
       clearTimeout(silenceTimer);
     };
     r.onerror = () => {
+      _recognisers.delete(r);
       setListening(false);
       clearTimeout(silenceTimer);
     };
 
     recogRef.current = r;
+    _recognisers.add(r);
     r.start();
   }, []);
 

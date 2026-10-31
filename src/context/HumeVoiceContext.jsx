@@ -4,6 +4,7 @@ import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { useVoiceTools } from "../hooks/useVoiceTools.js";
 import { TAB_CONTEXT, APP_DELETE_HOWTO, destinationsForPrompt } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
+import { setCompanionVoiceLive } from "../hooks/useVoice.js";
 
 // Spec §3.2 session containment: warn after this much silence, close a beat
 // later. Client-side enforcement backs up the EVI config's own timeout.
@@ -70,6 +71,11 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const disconnectRef = useRef(() => {});
   const sessionIdRef = useRef(null);
   const lastHeartbeatAtRef = useRef(0);
+  // connect() spends a second or two on allowance/token/prefs before the SDK
+  // reports "connecting". Without this, a second tap in that gap opened a
+  // second live chat: two voices, and the first one never got the mic.
+  const preparingRef = useRef(false);
+  const [preparing, setPreparing] = useState(false);
 
   // Shared by the gauge display AND the pre-connect cap check (spec §2.4) —
   // one read path so they can never disagree.
@@ -87,6 +93,13 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       ? Math.max(0, data.evi_seconds_included + data.topup_seconds_remaining - data.evi_seconds_used)
       : null;
   }, [userId]);
+
+  // The older browser voice (text chat read-aloud, nudges, its own mic) stands
+  // down whenever the companion is starting or live — one voice, one mic.
+  useEffect(() => {
+    setCompanionVoiceLive(preparing || voice.readyState === "open" || voice.readyState === "connecting");
+  }, [preparing, voice.readyState]);
+  useEffect(() => () => setCompanionVoiceLive(false), []);
 
   useEffect(() => {
     playingRef.current = voice.isPlaying;
@@ -208,6 +221,19 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   // ambient tab/memory context below, just for a one-time situational cue.
   const connect = useCallback(async (extraContext) => {
     if (!enabled) return;
+    if (preparingRef.current || voice.readyState === "open" || voice.readyState === "connecting") return;
+    preparingRef.current = true;
+    setPreparing(true);
+    try {
+      await prepareAndConnect(extraContext);
+    } finally {
+      preparingRef.current = false;
+      setPreparing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId, profileId]);
+
+  async function prepareAndConnect(extraContext) {
     setTimedOut(false);
     setCapReached(false);
 
@@ -291,7 +317,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       configId,
       sessionSettings: Object.keys(sessionSettings).length ? sessionSettings : undefined,
     });
-  }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId, profileId]);
+  }
 
   // Ambient tab-change context — pushed into the live session instead of
   // reconnecting, so the assistant knows where the user is without dropping
@@ -350,7 +376,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const value = {
     enabled,
     isConnected: voice.readyState === "open",
-    isConnecting: voice.readyState === "connecting",
+    isConnecting: preparing || voice.readyState === "connecting",
     isMuted: voice.isMuted,
     speaking: voice.isPlaying,
     listening: voice.readyState === "open" && !voice.isMuted && !voice.isPlaying,

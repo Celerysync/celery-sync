@@ -8,6 +8,7 @@ import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
+import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
 import { LANGUAGES } from "../lib/languages.js";
 
@@ -284,7 +285,17 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [followUps, setFollowUps] = useState([]);
   const [tappedMsg, setTappedMsg] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [handsFree, setHandsFree] = useLocalStorage("cs_handsFree", false);
+  const [handsFreePref, setHandsFree] = useLocalStorage("cs_handsFree", false);
+  // With the voice companion available, speaking always goes through it — one
+  // mic, one voice. The browser recogniser below would take the mic from it
+  // on Android and leave it hearing nothing.
+  const companion = useHumeVoiceOrchestrator();
+  const handsFree = handsFreePref && !companion.enabled;
+  const browserMic = srSupported && !companion.enabled;
+  const startCompanion = () => {
+    companion.openSheet();
+    companion.connect().catch(() => {}); // the companion panel shows why if it can't start
+  };
   const { voiceName: selectedVoiceName,
           listening, transcript, speaking, speak, stopSpeaking, startListening, stopListening,
           queueSentence, endQueue, resetQueue } = useVoiceOrchestrator();
@@ -685,7 +696,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       </button>
 
       {/* Hands-free status banner */}
-      {handsFree && srSupported && (
+      {handsFree && browserMic && (
         <div style={{
           background: `${alpha(C.sage, "18")}`,
           border: `1.5px solid ${alpha(C.sage, "50")}`,
@@ -938,7 +949,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
 
       {/* Input row */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        {srSupported && (
+        {browserMic && (
           <button
             onClick={() => setHandsFree(v => !v)}
             title={handsFree ? "Hands-free ON — tap to turn off" : "Turn on hands-free mode"}
@@ -973,7 +984,28 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             background: C.surface,
           }}
         />
-        {srSupported && (
+        {companion.enabled && (
+          <button
+            onClick={startCompanion}
+            title="Talk with your companion"
+            aria-label="Talk with your companion"
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: "50%",
+              border: "none",
+              cursor: "pointer",
+              background: C.sage,
+              color: C.white,
+              fontSize: 22,
+              flexShrink: 0,
+              boxShadow: "0 2px 12px #0000001a",
+            }}
+          >
+            🎙
+          </button>
+        )}
+        {browserMic && (
           <button
             onClick={() => {
               if (listening) {
