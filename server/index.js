@@ -12,6 +12,7 @@ import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './ro
 import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 import encouragementRoutes, { runEncouragementTick } from './routes/encouragement.js'
+import communityRoutes from './routes/community.js'
 import { sendRhythmReminders } from './routes/rhythm.js'
 import { checkRestockAlerts } from './routes/supplements.js'
 
@@ -73,6 +74,7 @@ app.use('/api/analytics', generalLimit, analyticsRoutes)
 app.use('/api/memory', generalLimit, memoryRoutes)
 app.use('/api/carers', generalLimit, carerRoutes)
 app.use('/api/encouragement', generalLimit, encouragementRoutes)
+app.use('/api/community', generalLimit, communityRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
 

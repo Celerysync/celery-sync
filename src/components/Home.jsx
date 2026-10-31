@@ -210,6 +210,19 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
   const [showSupplements, setShowSupplements] = useState(false);
   const [welcomeBackDismissed, setWelcomeBackDismissed] = useLocalStorage("cs_welcomeBackDismissed", null);
 
+  // "You're not alone": an anonymous count of people who showed up for their
+  // own rhythm today (server returns null below 5, so nothing shows until
+  // there are enough people for it to mean something).
+  const [othersToday, setOthersToday] = useState(null);
+  useEffect(() => {
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    fetch(`/api/community/today?date=${date}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setOthersToday(typeof j?.count === "number" ? j.count : null))
+      .catch(() => {});
+  }, []);
+
   const {
     sequence,
     baseItems,
@@ -385,6 +398,13 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
           color: C.charcoal,
         }}>
           ⚠️ {syncError}
+        </div>
+      )}
+      {othersToday != null && (
+        <div style={{ textAlign: "center", fontSize: 13, color: C.mid, fontFamily: "Georgia,serif", marginTop: -4 }}>
+          🌿 {rhythmDoneCount > 0
+            ? `You're one of ${othersToday.toLocaleString()} people who showed up for their rhythm today.`
+            : `${othersToday.toLocaleString()} people have shown up for their rhythm today — you're not alone.`}
         </div>
       )}
       <div id="section-rhythm" style={{ scrollMarginTop: 80 }} />
