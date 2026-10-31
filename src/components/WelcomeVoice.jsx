@@ -9,14 +9,14 @@ import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 const WELCOME_TAB_TOUR =
   "This is the user's very first time opening CelerySync. Warmly welcome " +
   "them, then briefly explain in your own words what each of the app's " +
-  "tabs is for - Today (daily rhythm, morning routine, supplement " +
-  "checklist), Companion (talking with you, any time), Track (daily " +
-  "check-in: energy, mood, symptoms, celery juice), Supplements (today's " +
-  "supplements plus shopping), Learn (educational library, official " +
-  "Anthony William resources), Progress (their own trends over time), and " +
-  "Settings (account and reminders). Keep it warm and conversational, not " +
-  "a lecture - a sentence or two per tab at most. Then invite them to ask " +
-  "you anything or just start exploring.";
+  "four tabs is for - Today (their own daily rhythm to tick off, today's " +
+  "check-in, and their supplements), Companion (talking with you any time, " +
+  "plus 'How I feel'), Progress (their own streaks and trends over time, " +
+  "and a report for their GP), and Settings (voice, reminders, carers, and " +
+  "official Anthony William sources). Keep it warm and conversational, not " +
+  "a lecture - a sentence or two per tab at most. Mention they can ask you " +
+  "to take them anywhere. Then invite them to ask you anything or just " +
+  "start exploring.";
 
 export default function WelcomeVoice({ onDone }) {
   const companion = useHumeVoiceOrchestrator();

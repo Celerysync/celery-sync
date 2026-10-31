@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import "./App.css";
-import C from "./lib/colors.js";
+import C, { alpha } from "./lib/colors.js";
 import { useLocalStorage } from "./hooks/useLocalStorage.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useSubscription } from "./hooks/useSubscription.js";
@@ -82,7 +82,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
       {/* Dropdown */}
       <div style={{
         position: "absolute", top: "calc(100% + 8px)", right: 0,
-        background: C.white, borderRadius: 16,
+        background: C.surface, borderRadius: 16,
         boxShadow: "0 8px 32px #00000022",
         border: `1px solid ${C.border}`,
         zIndex: 20, minWidth: 200, overflow: "hidden",
@@ -98,7 +98,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
               display: "flex", alignItems: "center", gap: 10,
               width: "100%", padding: "11px 14px",
               background: p.id === activeProfileId ? C.sageLight : "transparent",
-              border: "none", borderBottom: `1px solid ${C.border}40`,
+              border: "none", borderBottom: `1px solid ${alpha(C.border, "40")}`,
               cursor: "pointer", textAlign: "left",
             }}
           >
@@ -132,7 +132,17 @@ export default function App() {
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [pageContext, setPageContext] = useState(null);
-  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(`cs_welcomed_${authUser?.id}`));
+  // The first-run voice welcome. This was a useState initialiser reading
+  // `cs_welcomed_${authUser?.id}` — but authUser is still null on the first
+  // render, so it read "cs_welcomed_undefined", found nothing, and opened the
+  // companion and started a live Hume session on EVERY app load. Now it's
+  // derived once we know who's signed in; null = no override this session.
+  const [welcomeOverride, setWelcomeOverride] = useState(null);
+  const showWelcome = welcomeOverride ?? (!!authUser?.id && !localStorage.getItem(`cs_welcomed_${authUser.id}`));
+  const finishWelcome = () => {
+    if (authUser?.id) localStorage.setItem(`cs_welcomed_${authUser.id}`, "1");
+    setWelcomeOverride(false);
+  };
   const [navQuery, setNavQuery] = useState(null);
   const [navSection, setNavSection] = useState(null);
   const [caregiverMode] = useLocalStorage("cs_caregiver", false);
@@ -280,7 +290,7 @@ export default function App() {
             updateProfile={updateProfile}
             onDone={({ name, firstItem }) => {
               localStorage.setItem(`cs_welcomed_${authUser.id}`, "1"); // skip the separate welcome tour — onboarding already covered it
-              setShowWelcome(false);
+              setWelcomeOverride(false);
               setJustOnboarded({ name, firstItem });
               setTab("home"); // the finish button promises Today, and Today is where their new rhythm shows
             }}
@@ -354,7 +364,7 @@ export default function App() {
               isInTrial={isInTrial}
               trialDaysLeft={trialDaysLeft}
               onSignOut={signOut}
-              onReplayWelcome={() => setShowWelcome(true)}
+              onReplayWelcome={() => setWelcomeOverride(true)}
               onRefetchSub={refetchSub}
               profileId={activeProfileId}
             />
@@ -491,7 +501,7 @@ export default function App() {
       {/* Bottom nav */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: C.white, borderTop: `1px solid ${C.border}`,
+        background: C.surface, borderTop: `1px solid ${C.border}`,
         boxShadow: "0 -4px 24px #1e2a1e12",
         paddingBottom: "env(safe-area-inset-bottom, 6px)",
       }}>
@@ -540,7 +550,7 @@ export default function App() {
 
       {showWelcome && (
         <Suspense fallback={null}>
-          <WelcomeVoice onDone={() => setShowWelcome(false)} />
+          <WelcomeVoice onDone={finishWelcome} />
         </Suspense>
       )}
       {isRhythm
