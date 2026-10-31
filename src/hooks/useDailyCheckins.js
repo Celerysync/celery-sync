@@ -65,7 +65,6 @@ export function useDailyCheckins(authUser, profileId) {
         date: ds, day: dayLabel(ds),
         energy: found?.energy ?? 0,
         mood: found?.mood ?? 0,
-        celery: found?.celery_oz ?? 0,
         sleep_quality: found?.sleep_quality ?? 0,
         sleep_hours: found?.sleep_hours ?? 0,
         hrv: found?.hrv ?? 0,
@@ -81,11 +80,18 @@ export function useDailyCheckins(authUser, profileId) {
     return days;
   }, [checkins]);
 
-  const celeryStreak = useMemo(() => {
+  // Consecutive days (most recent first) on which the person ticked off at
+  // least one item of their OWN rhythm — the spec §5 "showed up" streak.
+  // rhythm_completed is written from the activity_events-backed completion
+  // state by useRhythm's syncRhythmCountsToCheckin, so this agrees with
+  // AdherenceStreaks rather than inventing a second definition. It used to
+  // count celery_oz > 0, i.e. it measured a protocol the app supplied and
+  // read zero forever for anyone whose own routine has no celery juice.
+  const showedUpStreak = useMemo(() => {
     let streak = 0;
     const sorted = [...checkins].sort((a, b) => b.check_date.localeCompare(a.check_date));
     for (const c of sorted) {
-      if (c.celery_oz > 0) streak++;
+      if ((c.rhythm_completed || 0) > 0) streak++;
       else break;
     }
     return streak;
@@ -102,7 +108,7 @@ export function useDailyCheckins(authUser, profileId) {
     checkins,
     todaysCheckin,
     last7,
-    celeryStreak,
+    showedUpStreak,
     protocolDays,
     avgEnergy7,
     loading,

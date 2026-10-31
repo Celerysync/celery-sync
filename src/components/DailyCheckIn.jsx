@@ -19,13 +19,6 @@ const CLARITY_OPTS = [
   { val: 5, emoji: "💡", label: "Clear" },
 ];
 
-const CELERY_OPTS = [
-  { val: 0,  label: "None" },
-  { val: 8,  label: "8 oz" },
-  { val: 16, label: "16 oz" },
-  { val: 32, label: "32 oz+" },
-];
-
 const EMOTIONAL_STATES = [
   "Hopeful", "Grateful", "Calm", "Determined",
   "Anxious", "Overwhelmed", "Discouraged", "Tearful",
@@ -72,7 +65,6 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
   // Core (always shown)
   const [energy, setEnergy] = useState(todaysCheckin?.energy ?? null);
   const [mentalClarity, setMentalClarity] = useState(todaysCheckin?.mental_clarity ?? null);
-  const [celeryOz, setCeleryOz] = useState(todaysCheckin?.celery_oz ?? null);
 
   // Expanded (shown after energy selected, or when editing)
   const [showMore, setShowMore] = useState(!!todaysCheckin);
@@ -80,7 +72,6 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
   const [healingReaction, setHealingReaction] = useState(todaysCheckin?.healing_reaction ?? false);
   const [healingReactionNotes, setHealingReactionNotes] = useState(todaysCheckin?.healing_reaction_notes ?? "");
   const [winToday, setWinToday] = useState(todaysCheckin?.win_today ?? "");
-  const [morningProtocol, setMorningProtocol] = useState(todaysCheckin?.morning_protocol ?? false);
 
   // Symptoms + vitals (optional section)
   const [symptoms, setSymptoms] = useState(todaysCheckin?.symptoms ?? []);
@@ -107,12 +98,10 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
   };
 
   const handleSave = async () => {
-    track("checkin_saved", { energy, celery_oz: celeryOz ?? 0, has_clarity: !!mentalClarity });
+    track("checkin_saved", { energy, has_clarity: !!mentalClarity });
     await onSave({
       energy,
       mental_clarity: mentalClarity ?? null,
-      celery_oz: celeryOz ?? 0,
-      morning_protocol: morningProtocol,
       emotional_state: emotionalState,
       healing_reaction: healingReaction,
       healing_reaction_notes: healingReactionNotes || null,
@@ -165,8 +154,6 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: C.mid }}>
-            {todaysCheckin.celery_oz > 0 && <div>🥬 {todaysCheckin.celery_oz}oz celery juice</div>}
-            {todaysCheckin.morning_protocol && <div>🌅 Morning protocol done</div>}
             {todaysCheckin.healing_reaction && <div>🌀 Healing reaction noted</div>}
             {todaysCheckin.win_today && <div>✨ {todaysCheckin.win_today}</div>}
             {todaysCheckin.emotional_state?.length > 0 && (
@@ -219,23 +206,6 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               }}>
               <div style={{ fontSize: 22 }}>{o.emoji}</div>
               <div style={{ fontSize: 9, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      {/* ── CORE: Celery juice ── */}
-      <Section label="🥬 Celery juice today?">
-        <div style={{ display: "flex", gap: 8 }}>
-          {CELERY_OPTS.map((o) => (
-            <button key={o.val} onClick={() => setCeleryOz(o.val)}
-              style={{
-                flex: 1, padding: "9px 4px", borderRadius: 10, border: "none", cursor: "pointer",
-                fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
-                background: celeryOz === o.val ? C.leaf : C.mist,
-                color: celeryOz === o.val ? C.white : C.charcoal, transition: "all 0.15s",
-              }}>
-              {o.label}
             </button>
           ))}
         </div>
@@ -322,29 +292,6 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               }}
             />
           )}
-
-          {/* Morning protocol */}
-          <div
-            onClick={() => setMorningProtocol((v) => !v)}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 0", borderTop: `1px solid ${C.border}`,
-              cursor: "pointer", marginBottom: 12,
-            }}
-          >
-            <div style={{
-              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-              background: morningProtocol ? C.sage : "transparent",
-              border: `2px solid ${morningProtocol ? C.sage : C.border}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: C.white, fontSize: 13, fontWeight: 700,
-            }}>
-              {morningProtocol ? "✓" : ""}
-            </div>
-            <div style={{ fontSize: 13, color: C.charcoal }}>
-              🌅 Completed morning protocol (lemon water + celery juice + HMD)
-            </div>
-          </div>
 
           {/* Symptoms */}
           <Section label="Any symptoms today? (tap all that apply)">

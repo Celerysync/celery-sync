@@ -585,7 +585,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </div>
         {units === 'metric' && (
           <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
-            ✓ "500ml of celery juice" · "half a litre" · "milligrams"
+            ✓ "500ml" · "half a litre" · "milligrams"
           </div>
         )}
       </Card>

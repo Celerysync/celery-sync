@@ -1,6 +1,5 @@
 import { useState } from "react";
 import C from "../lib/colors.js";
-import { CONDITIONS } from "../data/conditions.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
@@ -10,10 +9,21 @@ import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { srSupported } from "../hooks/useVoice.js";
 
 const SLOTS = [
-  { key: "morning", emoji: "🌅", label: "Morning drink(s)", placeholder: "e.g. \"Lemon water at 6:30, then celery juice at 7\"" },
+  { key: "morning", emoji: "🌅", label: "Morning drink(s)", placeholder: "e.g. \"Warm water when I wake, then my juice at 7\"" },
   { key: "supplement", emoji: "💊", label: "Supplements", placeholder: "e.g. \"B12 and zinc at 9am with breakfast\"" },
   { key: "food", emoji: "🍽", label: "Meals & snacks rhythm", placeholder: "e.g. \"Snack every 2 hours, lunch around 1\"" },
   { key: "other", emoji: "🌙", label: "Wind-down", placeholder: "e.g. \"Herbal tea at 8, in bed by 10\"" },
+];
+
+// Everyday symptoms only — no named diseases. A list of conditions (MS, lupus,
+// autism, diabetes…) in a wellness app reads as "this app is for managing
+// these", which the TGA wellness exclusion does not allow. Same wording as the
+// daily check-in so whatever is picked here shows up there. Anything else, the
+// person types in their own words.
+const EVERYDAY_SYMPTOMS = [
+  "Fatigue", "Brain fog", "Headache", "Bloating", "Joint pain", "Muscle aches",
+  "Anxiety", "Low mood", "Overwhelm", "Insomnia", "Nausea", "Skin issues",
+  "Heart palpitations", "Dizziness", "Hot flushes", "Constipation",
 ];
 
 function Footer() {
@@ -92,7 +102,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
 
   const [symptoms, setSymptoms] = useState(existingProfile?.symptoms || []);
   const [cycleTracking, setCycleTracking] = useState(existingProfile?.cycle_tracking_enabled || false);
-  const [condSearch, setCondSearch] = useState("");
+  const [customSymptom, setCustomSymptom] = useState("");
 
   const [savedItems, setSavedItems] = useState([]); // { name, fixedTime } — for the finish-screen reflection
   // Typed text per slot lives here, not inside SlotInput, so Continue can save
@@ -241,6 +251,12 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   // ── Step 2: What she wants to track ──────────────────────────────────────
   if (step === 2) {
     const toggleSymptom = (s) => setSymptoms((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+    const addCustomSymptom = () => {
+      const t = customSymptom.trim().slice(0, 40);
+      if (!t) return;
+      setSymptoms((p) => (p.includes(t) ? p : [...p, t]));
+      setCustomSymptom("");
+    };
     return (
       <Shell step={2} total={5}>
         <div style={cardStyle}>
@@ -265,36 +281,47 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
             Symptoms to keep an eye on (optional)
           </div>
-          <input
-            value={condSearch}
-            onChange={(e) => setCondSearch(e.target.value)}
-            placeholder="Search…"
-            style={{
-              width: "100%", boxSizing: "border-box", padding: "8px 14px", borderRadius: 30,
-              border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 12,
-              outline: "none", background: C.mist, marginBottom: 8,
-            }}
-          />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 140, overflowY: "auto", marginBottom: 16 }}>
-            {Object.keys(CONDITIONS)
-              .filter((s) => !condSearch || s.toLowerCase().includes(condSearch.toLowerCase()))
-              .slice(0, 40)
-              .map((s) => (
-                <button
-                  key={s}
-                  onClick={() => toggleSymptom(s)}
-                  style={{
-                    padding: "5px 12px", borderRadius: 20,
-                    border: `1.5px solid ${symptoms.includes(s) ? C.sage : C.border}`,
-                    background: symptoms.includes(s) ? C.sageLight : "transparent",
-                    color: symptoms.includes(s) ? C.sageDark : C.mid,
-                    fontSize: 12, fontFamily: "Georgia,serif", cursor: "pointer",
-                    fontWeight: symptoms.includes(s) ? 700 : 400,
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            {[...EVERYDAY_SYMPTOMS, ...symptoms.filter((s) => !EVERYDAY_SYMPTOMS.includes(s))].map((s) => (
+              <button
+                key={s}
+                onClick={() => toggleSymptom(s)}
+                style={{
+                  padding: "5px 12px", borderRadius: 20,
+                  border: `1.5px solid ${symptoms.includes(s) ? C.sage : C.border}`,
+                  background: symptoms.includes(s) ? C.sageLight : "transparent",
+                  color: symptoms.includes(s) ? C.sageDark : C.mid,
+                  fontSize: 12, fontFamily: "Georgia,serif", cursor: "pointer",
+                  fontWeight: symptoms.includes(s) ? 700 : 400,
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+            <input
+              value={customSymptom}
+              onChange={(e) => setCustomSymptom(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addCustomSymptom()}
+              placeholder="Something else? Add it in your words"
+              style={{
+                flex: 1, boxSizing: "border-box", padding: "8px 14px", borderRadius: 30,
+                border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 12,
+                outline: "none", background: C.mist,
+              }}
+            />
+            <button
+              onClick={addCustomSymptom}
+              disabled={!customSymptom.trim()}
+              style={{
+                padding: "8px 14px", borderRadius: 30, border: "none",
+                background: customSymptom.trim() ? C.sage : C.border, color: "#fff",
+                fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              Add
+            </button>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: C.mist, borderRadius: 12, padding: "10px 14px" }}>
@@ -313,7 +340,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
             </button>
           </div>
 
-          <button style={primaryBtn} onClick={() => setStep(3)}>Continue →</button>
+          <button style={primaryBtn} onClick={() => { addCustomSymptom(); setStep(3); }}>Continue →</button>
         </div>
       </Shell>
     );

@@ -13,13 +13,6 @@ const MOODS = [
   { val: 5, emoji: "✨", label: "Great" },
 ];
 
-const metric = localStorage.getItem("cs_units") !== "imperial";
-const CELERY = [
-  { val: 0,  label: "Skipped",                     color: "#e5e7eb" },
-  { val: 8,  label: metric ? "240ml" : "8 oz",     color: "#86efac" },
-  { val: 16, label: metric ? "500ml" : "16 oz",    color: "#4ade80" },
-  { val: 32, label: metric ? "1 litre+" : "32 oz+",color: "#16a34a" },
-];
 
 const SYMPTOMS = [
   "Fatigue", "Brain fog", "Anxiety", "Depression", "Joint pain",
@@ -82,7 +75,7 @@ function StatPill({ value, label, sub, color }) {
 
 export default function Journal({ authUser, user, profileId }) {
   const {
-    checkins, todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
+    checkins, todaysCheckin, last7, showedUpStreak, protocolDays, avgEnergy7,
     loading, loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
   const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
@@ -91,16 +84,9 @@ export default function Journal({ authUser, user, profileId }) {
   const [energy, setEnergy] = useState(0);
   const [mood, setMood] = useState(0);
   const [symptoms, setSymptoms] = useState([]);
-  const [celeryOz, setCeleryOz] = useState(0);
-  const [morningProtocol, setMorningProtocol] = useState(false);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  // Die-off checker
-  const [showDieOff, setShowDieOff] = useState(false);
-  const [dieOffResult, setDieOffResult] = useState("");
-  const [dieOffLoading, setDieOffLoading] = useState(false);
 
   // Weekly reflection
   const [reflection, setReflection] = useState("");
@@ -119,8 +105,6 @@ export default function Journal({ authUser, user, profileId }) {
       setEnergy(todaysCheckin.energy || 0);
       setMood(todaysCheckin.mood || 0);
       setSymptoms(todaysCheckin.symptoms || []);
-      setCeleryOz(todaysCheckin.celery_oz || 0);
-      setMorningProtocol(todaysCheckin.morning_protocol || false);
       setNote(todaysCheckin.notes || "");
       setSaved(true);
     }
@@ -136,59 +120,11 @@ export default function Journal({ authUser, user, profileId }) {
       energy,
       mood,
       symptoms,
-      celery_oz: celeryOz,
-      morning_protocol: morningProtocol,
       notes: note,
     });
     setSaving(false);
     setSaved(true);
 
-    // Prompt die-off checker if low energy or concerning symptoms
-    const lowEnergy = energy <= 3;
-    const hasHardSymptoms = symptoms.some((s) =>
-      ["Fatigue", "Nausea", "Headache", "Dizziness", "Skin flare"].includes(s)
-    );
-    if (lowEnergy || (protocolDays >= 3 && hasHardSymptoms)) {
-      setShowDieOff(true);
-    }
-  };
-
-  const checkDieOff = async () => {
-    setDieOffLoading(true);
-    const recentSymptoms = checkins
-      .slice(0, 7)
-      .map((c) => `${c.check_date}: energy ${c.energy}/10, symptoms: ${(c.symptoms || []).join(", ") || "none"}`)
-      .join("\n");
-
-    const result = await callClaude({
-      tier: 'quick',
-      maxTokens: 600,
-      messages: [{
-        role: "user",
-        content: `You are a compassionate Medical Medium healing companion helping someone understand what their body is going through today.
-
-Person: ${user?.name || "friend"}
-Their health conditions: ${(user?.symptoms || []).join(", ") || "not specified"}
-Days on healing protocol: ${protocolDays}
-Today's energy: ${energy}/10
-Today's mood: ${mood}/5
-Today's symptoms: ${symptoms.join(", ") || "none listed"}
-Celery juice today: ${celeryOz}oz
-Recent 7-day history:
-${recentSymptoms || "Just starting — early days"}
-
-Based on Anthony William's Medical Medium teachings, answer these four things clearly and warmly:
-
-1. **Healing reaction or something else?** — Is this likely a die-off / detox reaction given their specific conditions and protocol stage? Give your honest read.
-2. **What AW teaches about this** — Be specific to their conditions if possible. EBV die-off feels different from heavy metal detox feels different from adrenal reactions.
-3. **Right now support** — 3–4 specific, actionable things they can do TODAY to support their body. Name exact foods, supplements, and rest suggestions.
-4. **When to see a doctor** — Any red flags in what they've described? Be clear about what would change your advice.
-
-Keep this warm, personal, and focused. Address ${user?.name || "them"} directly. This person is unwell and needs clarity and comfort.`,
-      }],
-    });
-    setDieOffResult(result);
-    setDieOffLoading(false);
   };
 
   const loadWeeklyReflection = async () => {
@@ -198,32 +134,29 @@ Keep this warm, personal, and focused. Address ${user?.name || "them"} directly.
     const recent = checkins.slice(0, 7);
     const avgE = recent.filter(c => c.energy).reduce((a, c) => a + c.energy, 0) / (recent.filter(c => c.energy).length || 1);
     const allSymptoms = [...new Set(recent.flatMap(c => c.symptoms || []))];
-    const celeryDays = recent.filter(c => c.celery_oz > 0).length;
+    const rhythmDays = recent.filter(c => (c.rhythm_completed || 0) > 0).length;
 
     const result = await callClaude({
       tier: 'standard',
       maxTokens: 550,
       messages: [{
         role: "user",
-        content: `You are a warm Medical Medium healing companion writing a personalised weekly healing reflection for someone you care about deeply.
+        content: `You are a warm companion writing a short weekly reflection on someone's own self-logged week.
 
 Person: ${user?.name || "friend"}
-Their health conditions: ${(user?.symptoms || []).join(", ") || "not specified"}
-Total protocol days: ${protocolDays}
+Total days tracked: ${protocolDays}
 This week — average energy: ${avgE.toFixed(1)}/10
-Celery juice days this week: ${celeryDays}/7
-Celery juice streak: ${celeryStreak} days
-Symptoms experienced this week: ${allSymptoms.join(", ") || "none logged"}
+Days they ticked off at least one item of their own rhythm: ${rhythmDays}/7
+Current showed-up streak: ${showedUpStreak} days
+Symptoms they logged this week: ${allSymptoms.join(", ") || "none logged"}
 
-Write a warm, personal weekly healing reflection (3 paragraphs, conversational tone, no headers):
+Write a warm, personal reflection (2 short paragraphs, conversational, no headers):
 
-Paragraph 1: Acknowledge specifically what they did this week — the actual numbers, what that means, how it feels at protocol day ${protocolDays}. Make them feel SEEN.
+Paragraph 1: Acknowledge what they actually did this week, using the numbers above. Make them feel seen for showing up, however much or little that was.
 
-Paragraph 2: Connect their week to Anthony William's teachings about their specific conditions. What is happening in their body at this stage? What does AW say about patience, trust, and the invisible work happening inside?
+Paragraph 2: One gentle, practical focus for next week about keeping their OWN routine going (for example, making one item easier to remember). End with genuine encouragement.
 
-Paragraph 3: One specific, practical focus for next week — something doable. Then end with genuine encouragement that feels personal to where they are, not generic. Healing takes courage and they're doing it.
-
-Write as if you know this person and genuinely care about their healing.`,
+Rules: describe only what was logged. Do not interpret symptoms, explain what is happening in their body, name or discuss any health condition, or suggest foods, supplements, treatments or medications. Do not attribute anything to Anthony William or any other source. If symptoms were logged, simply acknowledge that it sounds like a hard week and that their doctor is the right person for any concerns.`,
       }],
     });
     setReflection(result);
@@ -265,9 +198,9 @@ Write as if you know this person and genuinely care about their healing.`,
             color={C.sageDark}
           />
           <StatPill
-            value={celeryStreak > 0 ? `${celeryStreak}🥬` : "—"}
-            label="Celery streak"
-            sub={celeryStreak > 0 ? "days in a row" : "start today!"}
+            value={showedUpStreak > 0 ? `${showedUpStreak}🌿` : "—"}
+            label="Showed-up streak"
+            sub={showedUpStreak > 0 ? "days in a row" : "tick one thing today"}
             color="#16a34a"
           />
           <StatPill
@@ -345,64 +278,6 @@ Write as if you know this person and genuinely care about their healing.`,
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Celery juice */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
-            🥬 Celery juice today
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {CELERY.map((c) => (
-              <button
-                key={c.val}
-                onClick={() => setCeleryOz(c.val)}
-                style={{
-                  flex: 1,
-                  padding: "8px 4px",
-                  borderRadius: 10,
-                  border: `2px solid ${celeryOz === c.val ? "#16a34a" : C.border}`,
-                  background: celeryOz === c.val ? "#dcfce7" : "transparent",
-                  cursor: "pointer",
-                  fontSize: 11,
-                  fontFamily: "Georgia,serif",
-                  color: celeryOz === c.val ? "#15803d" : C.mid,
-                  fontWeight: celeryOz === c.val ? 700 : 400,
-                }}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Morning protocol */}
-        <div style={{ marginBottom: 14 }}>
-          <button
-            onClick={() => setMorningProtocol((v) => !v)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: morningProtocol ? "#dcfce7" : C.mist,
-              border: `1.5px solid ${morningProtocol ? "#16a34a" : C.border}`,
-              borderRadius: 12,
-              padding: "10px 14px",
-              cursor: "pointer",
-              width: "100%",
-              textAlign: "left",
-            }}
-          >
-            <span style={{ fontSize: 18 }}>{morningProtocol ? "✅" : "⬜"}</span>
-            <div>
-              <div style={{ fontSize: 13, fontFamily: "Georgia,serif", color: C.charcoal }}>
-                Morning protocol done
-              </div>
-              <div style={{ fontSize: 11, color: C.muted }}>
-                Lemon water → celery juice → HMDS
-              </div>
-            </div>
-          </button>
         </div>
 
         {/* Symptoms */}
@@ -484,28 +359,6 @@ Write as if you know this person and genuinely care about their healing.`,
         </Btn>
       </Card>
 
-      {/* Die-off checker */}
-      {showDieOff && (
-        <Card style={{ background: "#fffbeb", border: `1px solid #fbbf24` }}>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#92400e", marginBottom: 8 }}>
-            🌡 Is this a healing reaction?
-          </div>
-          <div style={{ fontSize: 12.5, color: "#78350f", lineHeight: 1.6, marginBottom: 12 }}>
-            Your energy or symptoms suggest you might be in a detox reaction. Anthony William teaches that healing crises are common — but let's check what's happening for you specifically.
-          </div>
-          {!dieOffResult && (
-            <Btn color="#d97706" full onClick={checkDieOff} disabled={dieOffLoading}>
-              {dieOffLoading ? "🌿 Checking…" : "Check for die-off / healing reaction"}
-            </Btn>
-          )}
-          {dieOffResult && (
-            <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
-              {dieOffResult}
-            </div>
-          )}
-        </Card>
-      )}
-
       {/* 7-day trends */}
       {protocolDays >= 2 && (
         <Card>
@@ -516,11 +369,11 @@ Write as if you know this person and genuinely care about their healing.`,
             <Bars data={last7} valueKey="energy" color={C.sage} label="Energy (out of 10)" max={10} />
             <Bars data={last7} valueKey="mood" color={C.plum} label="Mood (out of 5)" max={5} />
             <Bars
-              data={last7.map(d => ({ ...d, celery: d.celery > 0 ? 1 : 0 }))}
-              valueKey="celery"
+              data={last7.map(d => ({ ...d, rhythm: d.rhythm_total ? Math.round((d.rhythm_completed / d.rhythm_total) * 100) : 0 }))}
+              valueKey="rhythm"
               color="#16a34a"
-              label="Celery juice days"
-              max={1}
+              label="Own rhythm done (%)"
+              max={100}
             />
           </div>
         </Card>
@@ -577,7 +430,7 @@ Write as if you know this person and genuinely care about their healing.`,
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
               {checkins.slice(0, 14).map((c) => {
                 const moodEmoji = MOODS.find((m) => m.val === c.mood)?.emoji ?? "—";
-                const celeryLabel = c.celery_oz > 0 ? `${c.celery_oz}oz 🥬` : "no celery";
+                const rhythmLabel = c.rhythm_total ? `🌿 ${c.rhythm_completed || 0}/${c.rhythm_total}` : "";
                 return (
                   <div
                     key={c.id}
@@ -613,9 +466,11 @@ Write as if you know this person and genuinely care about their healing.`,
                       <div style={{ fontSize: 11, color: C.sageDark, fontWeight: 600 }}>
                         ⚡ {c.energy ?? "—"}/10
                       </div>
-                      <div style={{ fontSize: 10, color: c.celery_oz > 0 ? "#16a34a" : C.muted }}>
-                        {celeryLabel}
-                      </div>
+                      {rhythmLabel && (
+                        <div style={{ fontSize: 10, color: c.rhythm_completed > 0 ? "#16a34a" : C.muted }}>
+                          {rhythmLabel}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

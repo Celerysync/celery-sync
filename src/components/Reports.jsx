@@ -48,7 +48,6 @@ function groupByMonth(summaries) {
         avgMood: mVals.length
           ? (mVals.reduce((a, b) => a + b, 0) / mVals.length).toFixed(1)
           : null,
-        celeryDays: weeks.reduce((s, w) => s + (w.celery_days || 0), 0),
         protocolDays: weeks.reduce((s, w) => s + (w.protocol_days || 0), 0),
         journalEntries: weeks.reduce((s, w) => s + (w.journal_entries || 0), 0),
       };
@@ -72,7 +71,7 @@ function DailyTable({ checkins }) {
       </div>
     );
   }
-  const headers = ["Date", "Energy", "Mood", "🥬 oz", "Protocol", "Sleep", "Quality"];
+  const headers = ["Date", "Energy", "Mood", "Rhythm", "Sleep", "Quality"];
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -104,11 +103,8 @@ function DailyTable({ checkins }) {
               <td style={{ padding: "9px 6px", color: c.mood ? C.gold : C.muted }}>
                 {c.mood ? `${c.mood}/5` : "—"}
               </td>
-              <td style={{ padding: "9px 6px", color: c.celery_oz ? C.sage : C.muted }}>
-                {c.celery_oz != null ? c.celery_oz : "—"}
-              </td>
-              <td style={{ padding: "9px 6px", color: C.charcoal }}>
-                {c.protocol_done ? "✓" : "—"}
+              <td style={{ padding: "9px 6px", color: c.rhythm_completed ? C.sage : C.muted }}>
+                {c.rhythm_total ? `${c.rhythm_completed || 0}/${c.rhythm_total}` : "—"}
               </td>
               <td style={{ padding: "9px 6px", color: C.mid }}>
                 {c.sleep_hours != null ? `${c.sleep_hours}h` : "—"}
@@ -146,8 +142,7 @@ function MonthCard({ month }) {
         {month.avgMood && (
           <StatPill label="Avg Mood" value={`${month.avgMood}/5`} bg="#fffbeb" color={C.gold} />
         )}
-        <StatPill label="Celery days" value={`${month.celeryDays}`} bg="#f0fdf4" color={C.sage} />
-        <StatPill label="Protocol days" value={`${month.protocolDays}`} bg={C.sageLight} color={C.sageDark} />
+        <StatPill label="Days tracked" value={`${month.protocolDays}`} bg={C.sageLight} color={C.sageDark} />
         {month.journalEntries > 0 && (
           <StatPill label="Journal entries" value={`${month.journalEntries}`} bg="#f5f3ff" color="#7c3aed" />
         )}
@@ -347,9 +342,10 @@ export default function Reports({ authUser, profileId, user }) {
 
           {!loadingCheckins && checkins.length > 0 && (() => {
             const last7 = checkins.slice(0, 7).reverse().map((c) => ({
-              day: new Date(c.date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short" }),
+              day: new Date(c.check_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short" }),
               energy: c.energy || 0,
-              celery: c.celery_oz || 0,
+              rhythm_completed: c.rhythm_completed || 0,
+              rhythm_total: c.rhythm_total || 0,
               sleep_hours: c.sleep_hours || 0,
               sleep_quality: c.sleep_quality || 0,
               hrv: c.hrv || 0,
@@ -358,12 +354,11 @@ export default function Reports({ authUser, profileId, user }) {
             const avgEnergy7 = energyVals.length
               ? Math.round((energyVals.reduce((s, d) => s + d.energy, 0) / energyVals.length) * 10) / 10
               : null;
-            let celeryStreak = 0;
-            for (const c of checkins) { if (c.celery_oz > 0) celeryStreak++; else break; }
-            const protocolDays = checkins.filter((c) => c.protocol_done).length;
+            let streak = 0;
+            for (const c of checkins) { if ((c.rhythm_completed || 0) > 0) streak++; else break; }
             return (
               <Suspense fallback={null}>
-                <HealingTrends last7={last7} celeryStreak={celeryStreak} protocolDays={protocolDays} avgEnergy7={avgEnergy7} />
+                <HealingTrends last7={last7} streak={streak} protocolDays={checkins.length} avgEnergy7={avgEnergy7} />
               </Suspense>
             );
           })()}

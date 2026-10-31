@@ -58,7 +58,6 @@ export default function CaregiverDashboard({ patient }) {
   };
 
   const h = new Date().getHours();
-  const isSnackHour = h >= 10 && h <= 17;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -153,29 +152,13 @@ export default function CaregiverDashboard({ patient }) {
         </Card>
       )}
 
-      {/* Adrenal snack reminder for carer */}
-      {isSnackHour && (
-        <div style={{
-          background: C.goldLight, border: `1.5px solid ${C.gold}50`,
-          borderRadius: 16, padding: "14px 16px",
-        }}>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
-            ⏰ Snack window
-          </div>
-          <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
-            Anthony William encourages small, regular snacks through the day — a gentle reminder to
-            have something from their own plan ready. The combinations he suggests are in his books.
-          </div>
-        </div>
-      )}
-
       {/* Carer well-being */}
       <Card style={{ background: C.sageLight, border: `1px solid ${C.sage}40` }}>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.sageDark, marginBottom: 6 }}>
           💚 You matter too
         </div>
         <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.7 }}>
-          Caregiving is exhausting, and your wellbeing directly affects your loved one's healing environment. Drink water, eat your own adrenal snacks, and rest when they rest. You are doing sacred work.
+          Caregiving is exhausting, and your wellbeing matters too. Eat, drink water, and rest when they rest. You are doing sacred work.
         </div>
       </Card>
 

@@ -214,7 +214,7 @@ export default function App() {
     setNavQuery(query || null);
     setTab(resolved);
   };
-  const { activeReminder, dismiss: dismissReminder, snooze: snoozeReminder } = useReminders();
+  const { activeReminder, dismiss: dismissReminder } = useReminders();
 
   // Load profiles once authenticated
   useEffect(() => {
@@ -464,7 +464,7 @@ export default function App() {
       </div>
 
       {/* Reminder banners */}
-      <ReminderBanner reminder={activeReminder} onDismiss={dismissReminder} onSnooze={snoozeReminder} />
+      <ReminderBanner reminder={activeReminder} onDismiss={dismissReminder} />
 
       {/* Page content */}
       <div style={{ padding: "14px 14px calc(110px + env(safe-area-inset-bottom, 0px))", maxWidth: 680, margin: "0 auto" }}>

@@ -115,12 +115,6 @@ export default function ReminderSettings({ authUser }) {
         label="Morning check-in banner"
         desc="A gentle nudge in the app each morning to start your rhythm"
       />
-      <Toggle
-        on={settings.adrenalSnack}
-        onChange={(v) => updateSetting("adrenalSnack", v)}
-        label="Snack break banner"
-        desc="An in-app prompt every 1.5 hours through the day, with a simple pairing idea"
-      />
 
       {/* Push notifications */}
       <div style={{ paddingTop: 14, marginTop: 2 }}>

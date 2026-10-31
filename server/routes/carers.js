@@ -122,7 +122,7 @@ router.get('/my-patients', async (req, res) => {
   const enriched = await Promise.all(rels.map(async ({ profile_id }) => {
     const [{ data: profile }, { data: checkins }, { data: milestones }] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, name, avatar_emoji, symptoms, goal, created_at').eq('id', profile_id).single(),
-      supabaseAdmin.from('daily_checkins').select('check_date, energy, mood, celery_oz, morning_protocol').eq('profile_id', profile_id).gte('check_date', sevenDaysAgoStr).order('check_date', { ascending: false }),
+      supabaseAdmin.from('daily_checkins').select('check_date, energy, mood, rhythm_completed, rhythm_total').eq('profile_id', profile_id).gte('check_date', sevenDaysAgoStr).order('check_date', { ascending: false }),
       supabaseAdmin.from('healing_milestones').select('insight, category, session_date').eq('profile_id', profile_id).order('created_at', { ascending: false }).limit(5),
     ])
     return { ...profile, checkins: checkins || [], milestones: milestones || [] }

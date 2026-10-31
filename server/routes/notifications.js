@@ -38,7 +38,7 @@ router.post("/subscribe", async (req, res) => {
   res.json({ ok: true });
 });
 
-const DEFAULT_REMINDER_PREFS = { morningProtocol: true, adrenalSnack: true };
+const DEFAULT_REMINDER_PREFS = { morningProtocol: true };
 
 // Read current reminder toggle prefs (in-app banner categories)
 router.get("/reminder-preferences", async (req, res) => {

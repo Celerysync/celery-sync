@@ -46,7 +46,8 @@ function PatientCard({ patient }) {
 
   const checkins = patient.checkins || [];
   const milestones = patient.milestones || [];
-  const celeryDays = checkins.filter(c => c.celery_oz > 0).length;
+  // Days they ticked off at least one item of their own rhythm.
+  const rhythmDays = checkins.filter(c => (c.rhythm_completed || 0) > 0).length;
   const avgEnergy = checkins.length
     ? Math.round((checkins.reduce((s, c) => s + (c.energy || 0), 0) / checkins.filter(c => c.energy).length) * 10) / 10
     : null;
@@ -119,10 +120,10 @@ function PatientCard({ patient }) {
         borderBottom: expanded ? `1px solid ${C.border}` : "none",
       }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: celeryDays >= 5 ? C.sage : C.gold, fontFamily: "Georgia,serif" }}>
-            {celeryDays}/7
+          <div style={{ fontSize: 20, fontWeight: 700, color: rhythmDays >= 5 ? C.sage : C.gold, fontFamily: "Georgia,serif" }}>
+            {rhythmDays}/7
           </div>
-          <div style={{ fontSize: 10, color: C.muted }}>celery days</div>
+          <div style={{ fontSize: 10, color: C.muted }}>rhythm days</div>
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: avgEnergy >= 7 ? C.sage : avgEnergy >= 4 ? C.gold : C.terracotta, fontFamily: "Georgia,serif" }}>
@@ -169,8 +170,11 @@ function PatientCard({ patient }) {
                     {new Date(c.check_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    {c.celery_oz > 0 && <span title="Celery juice" style={{ fontSize: 13 }}>🥬</span>}
-                    {c.morning_protocol && <span title="Morning protocol" style={{ fontSize: 13 }}>✅</span>}
+                    {c.rhythm_total > 0 && (
+                      <span title="Own rhythm items done" style={{ fontSize: 11, color: C.sageDark }}>
+                        🌿 {c.rhythm_completed || 0}/{c.rhythm_total}
+                      </span>
+                    )}
                     {c.energy && (
                       <span style={{
                         fontSize: 11, fontWeight: 700, padding: "2px 8px",

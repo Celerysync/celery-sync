@@ -131,7 +131,7 @@ export async function generateWeeklyDigest() {
 
   const [profilesRes, checkinsRes, eventsRes, subsRes] = await Promise.all([
     supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
-    supabaseAdmin.from('daily_checkins').select('energy, celery_oz, symptoms').gte('check_date', day7.split('T')[0]),
+    supabaseAdmin.from('daily_checkins').select('energy, rhythm_completed, symptoms').gte('check_date', day7.split('T')[0]),
     supabaseAdmin.from('analytics_events').select('event_type').gte('created_at', day7),
     supabaseAdmin.from('subscriptions').select('plan, status').eq('status', 'active'),
   ])
@@ -140,14 +140,14 @@ export async function generateWeeklyDigest() {
   const avgEnergy = checkins.length
     ? (checkins.reduce((s, c) => s + (c.energy || 0), 0) / checkins.length).toFixed(1)
     : 0
-  const celeryCt = checkins.filter(c => c.celery_oz > 0).length
+  const rhythmDaysCt = checkins.filter(c => (c.rhythm_completed || 0) > 0).length
   const eventCounts = {}
   for (const e of (eventsRes.data || [])) {
     eventCounts[e.event_type] = (eventCounts[e.event_type] || 0) + 1
   }
   const totalSubs = (subsRes.data || []).length
 
-  const summary = `CelerySync weekly data: ${profilesRes.count} total users, ${totalSubs} active subscribers, ${checkins.length} check-ins this week, avg energy ${avgEnergy}/10, ${celeryCt} celery juice days logged. Top events: ${Object.entries(eventCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`${k}(${v})`).join(', ')}.`
+  const summary = `CelerySync weekly data: ${profilesRes.count} total users, ${totalSubs} active subscribers, ${checkins.length} check-ins this week, avg energy ${avgEnergy}/10, ${rhythmDaysCt} days where people ticked off their own rhythm. Top events: ${Object.entries(eventCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`${k}(${v})`).join(', ')}.`
 
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -166,7 +166,7 @@ export async function generateWeeklyDigest() {
     event_type: 'weekly_digest',
     properties: {
       digest,
-      stats: { totalUsers: profilesRes.count, totalSubs, checkinsThisWeek: checkins.length, avgEnergy, celeryCt },
+      stats: { totalUsers: profilesRes.count, totalSubs, checkinsThisWeek: checkins.length, avgEnergy, rhythmDaysCt },
       generatedAt: new Date().toISOString(),
     },
   })

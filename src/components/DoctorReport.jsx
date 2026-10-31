@@ -112,7 +112,7 @@ export default function DoctorReport({ profileId }) {
         </div>
         {[
           "Energy levels, mood, and sleep trends",
-          "Celery juice and morning protocol consistency",
+          "How consistently they followed their own daily routine",
           `Supplement notes from the last ${months} months`,
           "Symptom observations and patterns",
           "Week-by-week energy chart",

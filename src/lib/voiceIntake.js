@@ -47,8 +47,6 @@ EXTRACT these fields if mentioned — leave them null/empty if not mentioned:
 - energy: integer 2/4/6/8/10 (map from natural language: exhausted→2, struggling→4, okay→6, good→8, great→10)
 - mood: integer 1-5 (1=terrible, 2=low, 3=okay, 4=good, 5=great)
 - symptoms: array of strings — match to this exact list where possible: ${SYMPTOM_LIST.join(", ")}. Include unmatched symptoms as free text.
-- celery_oz: integer — 0 (skipped), 8 (one glass/small), 16 (standard/500ml), 32 (large/1 litre+). null if not mentioned.
-- morning_protocol: boolean — true if they mention doing their morning routine/lemon water/protocol. null if not mentioned.
 - notes: string — supplements taken, meals/snacks, cycle notes, free text. Keep it brief. null if nothing extra.
 - restock: object — ONLY when the user reports adding to their supplement supply (e.g.
   "I've got two new bottles of zinc, 60 capsules each", "just bought more B12, 100 tablets").
@@ -83,8 +81,6 @@ OUTPUT FORMAT (strict JSON, no markdown):
     "energy": number|null,
     "mood": number|null,
     "symptoms": string[],
-    "celery_oz": number|null,
-    "morning_protocol": boolean|null,
     "notes": string|null,
     "restock": { "name": string, "unitsAdded": number }|null,
     "scheduleItems": [{ "name": string, "category": string, "fixedTime": string|null, "note": string|null, "frequency": string }]
@@ -157,17 +153,6 @@ export function summariseParsed(fields) {
   }
   if (fields.symptoms?.length) {
     items.push({ label: "Noted", value: fields.symptoms.join(", ") });
-  }
-  if (fields.celery_oz != null) {
-    const metric = localStorage.getItem("cs_units") !== "imperial";
-    const label = fields.celery_oz === 0 ? "Skipped"
-      : fields.celery_oz === 8  ? (metric ? "240 ml" : "8 oz")
-      : fields.celery_oz === 16 ? (metric ? "500 ml" : "16 oz")
-      : (metric ? "1 litre+" : "32 oz+");
-    items.push({ label: "Celery juice", value: label });
-  }
-  if (fields.morning_protocol) {
-    items.push({ label: "Morning routine", value: "done ✓" });
   }
   if (fields.notes) {
     items.push({ label: "Notes", value: fields.notes });

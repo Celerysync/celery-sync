@@ -43,15 +43,15 @@ const STREAK_MILESTONES = [
   { days: 28, emoji: "🏆", title: "One full month!", msg: "Day after day for a whole month, you kept your rhythm. That kind of consistency is something to be genuinely proud of.", color: C.gold },
 ];
 
-function StreakMilestone({ celeryStreak }) {
+function StreakMilestone({ streak }) {
   const milestone = [...STREAK_MILESTONES].reverse().find(
-    (m) => celeryStreak >= m.days && celeryStreak % m.days < 3
+    (m) => streak >= m.days && streak % m.days < 3
   );
   const [shareCopied, setShareCopied] = useState(false);
 
   if (!milestone) return null;
 
-  const shareText = `🥬 Day ${celeryStreak} of my daily celery juice rhythm!\n\nI follow the Medical Medium lifestyle and keep my rhythm on track with CelerySync.\n\n🌿 medicalmedium.com\n\n#celeryjuice #medicalmedium #celerysync`;
+  const shareText = `🌿 Day ${streak} of showing up for my daily rhythm!\n\nI keep my routine on track with CelerySync.\n\n#celerysync`;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -78,7 +78,7 @@ function StreakMilestone({ celeryStreak }) {
         {milestone.msg}
       </div>
       <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
-        🥬 {celeryStreak}-day celery streak
+        🌿 {streak}-day showed-up streak
       </div>
       <button
         onClick={handleShare}
@@ -172,14 +172,12 @@ export default function Home({ user, authUser, profileId }) {
     syncError,
   } = useRhythm(authUser, profileId);
 
-  const [lastSnack, setLastSnack] = useLocalStorage("cs_lastSnack", null);
-  const [snackCount, setSnackCount] = useLocalStorage("cs_snackCount_" + TODAY, 0);
   const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
-  const [now, setNow] = useState(Date.now());
+  const [, setNow] = useState(Date.now()); // re-render each minute so the time-of-day card stays current
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   const {
-    todaysCheckin, last7, celeryStreak, protocolDays, avgEnergy7,
+    todaysCheckin, last7, showedUpStreak, protocolDays, avgEnergy7,
     loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
 
@@ -202,14 +200,14 @@ export default function Home({ user, authUser, profileId }) {
   // list renders (spec §1 single source of truth) — no private checklist copy.
   const rhythmDoneCount = sequence.filter((i) => i.completedAt).length;
 
-  // Healing score (0–100): rhythm 60pts + check-in 25pts + snacks 15pts
-  const protocolScore = sequence.length ? Math.round((rhythmDoneCount / sequence.length) * 60) : 0;
+  // Day score (0–100): the person's own rhythm 75pts + check-in 25pts.
+  // (A 15pt share used to come from an app-supplied adrenal-snack tracker.)
+  const protocolScore = sequence.length ? Math.round((rhythmDoneCount / sequence.length) * 75) : 0;
   const checkinScore = todaysCheckin ? 25 : 0;
-  const snackScore = Math.min(snackCount, 2) * 7;
-  const healingScore = protocolScore + checkinScore + snackScore;
+  const healingScore = protocolScore + checkinScore;
 
-  // Streak protection — warn if evening and check-in not done
-  const streakAtRisk = h >= 19 && celeryStreak > 2 && (todaysCheckin?.celery_oz ?? 0) === 0;
+  // Streak protection — evening, a streak worth keeping, nothing ticked yet today
+  const streakAtRisk = h >= 19 && showedUpStreak > 2 && sequence.length > 0 && rhythmDoneCount === 0;
 
   // Spoken plan comes ONLY from the user's own item titles (compliance:
   // the app never supplies protocol steps or quantities of its own).
@@ -221,22 +219,6 @@ export default function Home({ user, authUser, profileId }) {
     : `${greeting}${user?.name ? ", " + user.name : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;
 
   const nowWindow = getNowWindow();
-
-  const minutesSinceSnack = lastSnack ? (now - new Date(lastSnack).getTime()) / 60_000 : null;
-  const isAwakeHours = h >= 7 && h <= 20;
-  const snackOverdue = isAwakeHours && (minutesSinceSnack === null || minutesSinceSnack >= 120);
-  const snackSoonDue = isAwakeHours && minutesSinceSnack !== null && minutesSinceSnack >= 90 && minutesSinceSnack < 120;
-
-  const markSnack = () => {
-    setLastSnack(new Date().toISOString());
-    setSnackCount((n) => n + 1);
-  };
-
-  const formatSnackAgo = () => {
-    if (minutesSinceSnack === null) return null;
-    if (minutesSinceSnack < 60) return `${Math.round(minutesSinceSnack)} min ago`;
-    return `${(minutesSinceSnack / 60).toFixed(1).replace(".0", "")} hr ago`;
-  };
 
   const handleSaveCheckin = async (data) => {
     setSavingCheckin(true);
@@ -264,9 +246,9 @@ export default function Home({ user, authUser, profileId }) {
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your healing journey continues</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-          {celeryStreak > 0 && (
+          {showedUpStreak > 0 && (
             <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
-              🥬 {celeryStreak}-day streak
+              🌿 {showedUpStreak}-day streak
             </div>
           )}
           {healingScore > 0 && (
@@ -365,8 +347,8 @@ export default function Home({ user, authUser, profileId }) {
       {/* Weekly healing report — shows Sundays */}
       <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
 
-      {/* Celery streak milestone */}
-      <StreakMilestone celeryStreak={celeryStreak} />
+      {/* Showed-up streak milestone */}
+      <StreakMilestone streak={showedUpStreak} />
 
       {/* 7-day habit grid */}
       {last7 && last7.length > 0 && (
@@ -384,11 +366,13 @@ export default function Home({ user, authUser, profileId }) {
               const dateStr = d.toISOString().split("T")[0];
               const isToday = dateStr === TODAY;
               const entry = last7.find(c => c.date === dateStr);
-              const hasCelery = entry?.celery_juice;
-              const hasProtocol = entry?.protocol_done || (isToday && sequence.length > 0 && rhythmDoneCount === sequence.length);
-              const hasCheckin = !!entry;
-              const score = (hasCelery ? 2 : 0) + (hasProtocol ? 2 : 0) + (hasCheckin ? 1 : 0);
-              const color = score >= 4 ? C.sage : score >= 2 ? C.gold : score >= 1 ? C.muted : C.border;
+              const done = isToday ? rhythmDoneCount : (entry?.rhythm_completed || 0);
+              const total = isToday ? sequence.length : (entry?.rhythm_total || 0);
+              const hasCheckin = (entry?.energy || 0) > 0 || (isToday && !!todaysCheckin);
+              const color = total > 0 && done >= total ? C.sage
+                : done > 0 ? C.gold
+                : hasCheckin ? C.muted
+                : C.border;
               return (
                 <div key={dateStr} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>
@@ -426,10 +410,10 @@ export default function Home({ user, authUser, profileId }) {
           <div style={{ fontSize: 26, flexShrink: 0 }}>⚠️</div>
           <div>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#92400E" }}>
-              Don't break your {celeryStreak}-day streak!
+              Keep your {showedUpStreak}-day streak going
             </div>
             <div style={{ fontSize: 12, color: "#B45309", marginTop: 2, lineHeight: 1.4 }}>
-              Log your celery juice in the daily check-in before midnight to keep it going.
+              Tick off any one thing from your rhythm before midnight — one is enough.
             </div>
           </div>
         </div>
@@ -449,58 +433,6 @@ export default function Home({ user, authUser, profileId }) {
           saving={savingCheckin}
           authUser={authUser}
         />
-      )}
-
-      {/* Adrenal snack reminder */}
-      {isAwakeHours && (
-        <div style={{
-          background: snackOverdue ? (minutesSinceSnack === null ? C.goldLight : "#FEF3C7") : C.sageLight,
-          border: `2px solid ${snackOverdue ? C.gold : C.sage}60`,
-          borderRadius: 16,
-          padding: "14px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}>
-          <div style={{ fontSize: 26, flexShrink: 0 }}>
-            {snackOverdue ? "⏰" : "✅"}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-              {snackOverdue
-                ? minutesSinceSnack === null
-                  ? "Adrenal snack reminder"
-                  : "Time for an adrenal snack!"
-                : snackSoonDue
-                ? "Adrenal snack coming up soon"
-                : "Adrenals supported ✓"}
-            </div>
-            <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
-              {minutesSinceSnack === null
-                ? "Tap when you've had your first adrenal snack today"
-                : snackOverdue
-                ? `Last snack ${formatSnackAgo()} — Anthony William recommends every 2 hours`
-                : `Last snack ${formatSnackAgo()} · ${snackCount} today`}
-            </div>
-          </div>
-          <button
-            onClick={markSnack}
-            style={{
-              background: snackOverdue ? C.gold : C.sage,
-              color: C.white,
-              border: "none",
-              borderRadius: 20,
-              padding: "7px 12px",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "Georgia,serif",
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            Had it ✓
-          </button>
-        </div>
       )}
 
       {/* Water tracker */}
@@ -570,7 +502,7 @@ export default function Home({ user, authUser, profileId }) {
       {authUser && (
         <HealingTrends
           last7={last7}
-          celeryStreak={celeryStreak}
+          streak={showedUpStreak}
           protocolDays={protocolDays}
           avgEnergy7={avgEnergy7}
         />

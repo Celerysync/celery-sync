@@ -117,7 +117,7 @@ const GREETINGS = {
 };
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
-function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext, activeProtocol }) {
+function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext, activeProtocol }) {
   const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
 
   const milestonesSection = milestones?.length > 0
@@ -180,12 +180,12 @@ If you respond in English or produce unnatural translated-sounding text, you hav
   const unitsSection = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MEASUREMENT UNITS — ALWAYS USE THESE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${units === 'metric' ? `This user uses METRIC. Always convert Anthony William's imperial amounts:
-• 16 oz celery juice → "500ml" or "half a litre"
+${units === 'metric' ? `This user uses METRIC. When an amount comes up (usually from their own rhythm items), say it in metric:
+• 16 oz → "500ml" or "half a litre"
 • 32 oz → "1 litre" or "about a litre"
 • 1 cup → "240ml"
-Speak naturally: "half a litre of celery juice" not "473 millilitres". Round to sensible metric amounts.
-Supplement dosages: use mg/mcg as published (these are already metric).` : `This user uses IMPERIAL. Use Anthony William's original oz/cup/tablespoon measurements as published.`}`;
+Speak naturally: "half a litre" not "473 millilitres". Round to sensible metric amounts.` : `This user uses IMPERIAL. Say amounts in oz/cups.`}
+Never supply amounts or doses of your own — only repeat ones the user has entered.`;
 
   // Build the richest possible today's picture for the AI
   const checkinSection = todaysCheckin ? (() => {
@@ -194,8 +194,6 @@ Supplement dosages: use mg/mcg as published (these are already metric).` : `This
     const lines = [
       `• Energy: ${todaysCheckin.energy ?? "not logged"}/10`,
       todaysCheckin.mental_clarity ? `• Mental clarity: ${clarityLabels[todaysCheckin.mental_clarity]} (${todaysCheckin.mental_clarity}/5)` : null,
-      `• Celery juice: ${todaysCheckin.celery_oz ? `${todaysCheckin.celery_oz}oz done` : "not done yet"}`,
-      todaysCheckin.morning_protocol ? "• Morning protocol: completed ✓" : null,
       todaysCheckin.emotional_state?.length ? `• Emotional state: ${todaysCheckin.emotional_state.join(", ")}` : null,
       todaysCheckin.healing_reaction ? `• HEALING REACTION flagged${todaysCheckin.healing_reaction_notes ? `: "${todaysCheckin.healing_reaction_notes}"` : " — they believe they are detoxing/die-off today"}` : null,
       todaysCheckin.win_today ? `• Today's win: "${todaysCheckin.win_today}"` : null,
@@ -245,7 +243,7 @@ THIS USER'S PROFILE:
 Name: ${user?.name || "friend"}
 Symptoms: ${user?.symptoms?.join(", ") || "general wellness"}
 Goal: ${user?.goal || "wellness and clarity"}
-Celery juice streak: ${celeryStreak > 0 ? `${celeryStreak} days in a row` : "not yet started today"}
+Showed-up streak (days in a row they ticked off at least one item of their own rhythm): ${showedUpStreak > 0 ? `${showedUpStreak}` : "none yet"}
 ${checkinSection}
 ${historySection}
 ${unitsSection}
@@ -283,7 +281,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   const [lang, setLang] = useLocalStorage("cs_lang", "en");
   const { healingProfile, priorMessages, milestones, memoryLoading, loadMemory, saveExchange, clearMemory } =
     useHealingMemory(authUser, profileId);
-  const { todaysCheckin, celeryStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
+  const { todaysCheckin, showedUpStreak, loadCheckins } = useDailyCheckins(authUser, profileId);
   const { activeProtocol, loadActiveProtocol } = useActiveProtocol(authUser, profileId);
   const endRef = useRef(null);
   const systemRef = useRef({ staticSystem: STATIC_SYSTEM, dynamicSystem: '' });
@@ -311,7 +309,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     if (memoryLoading) return;
     systemRef.current = {
       staticSystem: STATIC_SYSTEM,
-      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext, activeProtocol }),
+      dynamicSystem: buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext, activeProtocol }),
     };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
@@ -319,7 +317,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : null;
 
     // Evolving greeting based on user's current state
-    const streakNote = celeryStreak >= 7 ? ` Your ${celeryStreak}-day celery streak is extraordinary.` : celeryStreak >= 3 ? ` ${celeryStreak} days of celery juice in a row — keep going!` : "";
+    const streakNote = showedUpStreak >= 7 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — that's extraordinary.` : showedUpStreak >= 3 ? ` ${showedUpStreak} days in a row of showing up for your rhythm — keep going!` : "";
     const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
 
     const day1Greeting = (!caregiverMode && !translatedGreeting && activeProtocol?.day === 1)
@@ -482,7 +480,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             systemRef.current = {
               staticSystem: STATIC_SYSTEM,
               dynamicSystem: buildDynamicSystem({
-                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, celeryStreak, pageContext,
+                user, healingProfile, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, pageContext,
                 priorMessages: [...priorMessages, userMsg, { role: "assistant", content: clean }],
               }),
             };

@@ -149,7 +149,7 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
   const [checkinsRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
       .from('daily_checkins')
-      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, mental_clarity, emotional_state, healing_reaction, healing_reaction_notes, win_today, water_oz, pain_level, rhythm_completed, rhythm_total, active_protocol_day, notes')
+      .select('check_date, energy, mood, symptoms, mental_clarity, emotional_state, healing_reaction, healing_reaction_notes, win_today, water_oz, pain_level, rhythm_completed, rhythm_total, active_protocol_day, notes')
       .eq('profile_id', profileId)
       .gte('check_date', weekStartStr)
       .lte('check_date', weekEndStr),
@@ -169,8 +169,13 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
   const checkins = checkinsRes.data || []
   const milestones = milestonesRes.data || []
 
-  const celeryDays = checkins.filter(c => (c.celery_oz || 0) > 0).length
-  const protocolDays = checkins.filter(c => c.protocol_done).length
+  // protocol_days = days they ticked off at least one item of their OWN rhythm
+  // (rhythm_completed is synced from the activity_events-backed state). It
+  // used to count an app-supplied "morning protocol" checkbox, and celery_days
+  // counted celery_oz — both protocol steps the app supplied itself. The
+  // celery_days column is left in weekly_summaries for old rows but no longer
+  // written or shown.
+  const protocolDays = checkins.filter(c => (c.rhythm_completed || 0) > 0).length
   const energies = checkins.map(c => c.energy).filter(Boolean)
   const moods = checkins.map(c => c.mood).filter(Boolean)
   const avgEnergy = energies.length
@@ -220,14 +225,13 @@ async function generateWeeklySummaryForProfile(profileId, userId) {
     max_tokens: 300,
     messages: [{
       role: 'user',
-      content: `Write a warm, personalised 3-4 sentence weekly healing observation for a Medical Medium follower.
-Be specific about their data. Notice patterns. Be encouraging but honest.
-Start with their biggest win or positive trend. End with one gentle focus for next week.
-If they had healing reactions, acknowledge them as part of the process.
+      content: `Write a warm, personalised 3-4 sentence weekly observation about this person's own self-logged week.
+Be specific about their data. Be encouraging but honest.
+Start with their biggest win or positive trend. End with one gentle focus for next week about keeping their own routine going.
+Describe only what was logged. Do not interpret symptoms or reactions, explain what is happening in their body, name any health condition, or suggest foods, supplements or treatments. If they logged hard days or reactions, simply acknowledge it was a hard week and that their doctor is the right person for any concerns.
 
 This week's data:
-- Celery juice: ${celeryDays}/7 days
-- Morning protocol: ${protocolDays}/7 days
+- Days they ticked off at least one item of their own rhythm: ${protocolDays}/7
 - Average energy: ${avgEnergy ?? 'not logged'}/10
 - Average mood: ${avgMood ?? 'not logged'}/5
 - Mental clarity average: ${avgMentalClarity ? `${avgMentalClarity}/5` : 'not logged'}
@@ -256,7 +260,6 @@ Write the observation now:`,
     profile_id: profileId,
     week_start: weekStartStr,
     week_end: weekEndStr,
-    celery_days: celeryDays,
     protocol_days: protocolDays,
     avg_energy: avgEnergy,
     avg_mood: avgMood,
@@ -460,7 +463,7 @@ router.get('/progress/:profileId/pdf', async (req, res) => {
     const [checkinsRes, profileRes, cycleRes] = await Promise.all([
       supabaseAdmin
         .from('daily_checkins')
-        .select('check_date, energy, mood, symptoms, celery_oz, rhythm_completed, rhythm_total')
+        .select('check_date, energy, mood, symptoms, rhythm_completed, rhythm_total')
         .eq('profile_id', profileId)
         .gte('check_date', cutoffStr)
         .order('check_date', { ascending: true }),
@@ -519,9 +522,9 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('This Week', 50, 130)
 
     const metrics = [
-      { label: 'Celery Juice', value: `${summary.celery_days}/7 days`, max: 7, current: summary.celery_days, emoji: '🥬' },
+      { label: 'Rhythm Done', value: `${summary.rhythm_completion_pct ?? '—'}%`, max: 100, current: summary.rhythm_completion_pct, emoji: '🌿' },
       { label: 'Avg Energy', value: `${summary.avg_energy ?? '—'}/10`, max: 10, current: summary.avg_energy, emoji: '⚡' },
-      { label: 'Morning Protocol', value: `${summary.protocol_days}/7 days`, max: 7, current: summary.protocol_days, emoji: '☀️' },
+      { label: 'Rhythm Days', value: `${summary.protocol_days}/7 days`, max: 7, current: summary.protocol_days, emoji: '☀️' },
       { label: 'Avg Mood', value: `${summary.avg_mood ?? '—'}/5`, max: 5, current: summary.avg_mood, emoji: '😊' },
     ]
 
@@ -622,7 +625,6 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
     const weeks = summaries.length
     const avgEnergy = weeks ? (summaries.reduce((s, w) => s + (w.avg_energy || 0), 0) / weeks).toFixed(1) : null
     const avgMood = weeks ? (summaries.reduce((s, w) => s + (w.avg_mood || 0), 0) / weeks).toFixed(1) : null
-    const totalCelery = summaries.reduce((s, w) => s + (w.celery_days || 0), 0)
     const totalProtocol = summaries.reduce((s, w) => s + (w.protocol_days || 0), 0)
     const totalDays = weeks * 7
 
@@ -634,8 +636,7 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
     const metricRows = [
       ['Energy level (1–10 scale)', avgEnergy ? `${avgEnergy}/10 average over period` : 'Not logged'],
       ['Mood (1–5 scale)', avgMood ? `${avgMood}/5 average over period` : 'Not logged'],
-      ['Celery juice days', `${totalCelery} of ${totalDays} days (${Math.round(totalCelery / totalDays * 100)}%)`],
-      ['Morning protocol days', `${totalProtocol} of ${totalDays} days (${Math.round(totalProtocol / totalDays * 100)}%)`],
+      ['Days own routine followed', `${totalProtocol} of ${totalDays} days (${Math.round(totalProtocol / totalDays * 100)}%)`],
       ['Weekly data points', `${weeks} weeks of daily tracking`],
     ]
 
@@ -1038,7 +1039,7 @@ async function generateAnniversaryLetterForProfile(profile, yearNumber) {
       .order('session_date', { ascending: true }),
     supabaseAdmin
       .from('weekly_summaries')
-      .select('week_start, celery_days, avg_energy, protocol_days')
+      .select('week_start, avg_energy, protocol_days')
       .eq('profile_id', profile.id)
       .order('week_start', { ascending: false })
       .limit(52),
@@ -1054,7 +1055,7 @@ async function generateAnniversaryLetterForProfile(profile, yearNumber) {
   const healingSummary = healingProfileRes.data?.healing_summary || ''
 
   // Build stats
-  const totalCeleryDays = summaries.reduce((s, w) => s + (w.celery_days || 0), 0)
+  const totalRhythmDays = summaries.reduce((s, w) => s + (w.protocol_days || 0), 0)
   const energyScores = summaries.map(w => w.avg_energy).filter(Boolean)
   const firstEnergy = energyScores.length ? energyScores[energyScores.length - 1] : null
   const recentEnergy = energyScores.length ? energyScores[0] : null
@@ -1071,7 +1072,7 @@ This is NOT a generic letter. It must feel like it was written specifically for 
 
 Their healing data:
 - Years on journey: ${yearNumber}
-- Total celery juice days logged: ${totalCeleryDays}
+- Days they showed up for their own routine: ${totalRhythmDays}
 - Energy when they started: ${firstEnergy ? firstEnergy + '/10' : 'not recorded'}
 - Energy recently: ${recentEnergy ? recentEnergy + '/10' : 'not recorded'}
 - Healing summary: ${healingSummary.slice(0, 400) || 'Dedicated healer on the Medical Medium path'}
@@ -1166,7 +1167,7 @@ async function sendWeeklySummaryEmail(userId, summary) {
 
     const name = email.split('@')[0]
     const weekRange = `${fmtDate(summary.week_start)} — ${fmtDate(summary.week_end)}`
-    const celeryPct = Math.round((summary.celery_days / 7) * 100)
+    const rhythmPct = summary.rhythm_completion_pct ?? 0
     const protocolPct = Math.round((summary.protocol_days / 7) * 100)
 
     const barHtml = (pct, color) => `
@@ -1195,9 +1196,9 @@ async function sendWeeklySummaryEmail(userId, summary) {
       <tr>
         <td style="padding:8px 8px 8px 0;width:50%;vertical-align:top;">
           <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
-            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">🥬 Celery Juice</div>
-            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.celery_days}/7 days</div>
-            ${barHtml(celeryPct, '#3D6B44')}
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">🌿 Rhythm done</div>
+            <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.rhythm_completion_pct != null ? summary.rhythm_completion_pct + '%' : '—'}</div>
+            ${barHtml(rhythmPct, '#3D6B44')}
           </div>
         </td>
         <td style="padding:8px 0 8px 8px;width:50%;vertical-align:top;">
@@ -1211,7 +1212,7 @@ async function sendWeeklySummaryEmail(userId, summary) {
       <tr>
         <td style="padding:8px 8px 0 0;width:50%;vertical-align:top;">
           <div style="background:#f7f9f4;border-radius:12px;padding:14px;">
-            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">☀️ Protocol</div>
+            <div style="font-size:11px;color:#6b7c6b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">☀️ Rhythm days</div>
             <div style="font-size:20px;font-weight:700;color:#3D6B44;margin-top:4px;">${summary.protocol_days}/7 days</div>
             ${barHtml(protocolPct, '#5a9a6a')}
           </div>
@@ -1379,7 +1380,7 @@ router.get('/checkins/:profileId', async (req, res) => {
     cutoff.setDate(cutoff.getDate() - days)
     const { data, error } = await supabaseAdmin
       .from('daily_checkins')
-      .select('check_date, energy, mood, celery_oz, protocol_done, symptoms, sleep_hours, sleep_quality, hrv, notes')
+      .select('check_date, energy, mood, rhythm_completed, rhythm_total, symptoms, sleep_hours, sleep_quality, hrv, notes')
       .eq('profile_id', profileId)
       .gte('check_date', cutoff.toISOString().split('T')[0])
       .order('check_date', { ascending: false })

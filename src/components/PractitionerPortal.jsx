@@ -111,8 +111,6 @@ function SessionModal({ client, session, onSave, onClose }) {
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(session?.session_date || today);
   const [energy, setEnergy] = useState(session?.energy || null);
-  const [celery, setCelery] = useState(session?.celery_oz ?? null);
-  const [morning, setMorning] = useState(session?.morning_protocol || false);
   const [symptoms, setSymptoms] = useState(session?.symptoms || []);
   const [clientNotes, setClientNotes] = useState(session?.client_notes || "");
   const [practNotes, setPractNotes] = useState(session?.practitioner_notes || "");
@@ -123,7 +121,7 @@ function SessionModal({ client, session, onSave, onClose }) {
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave({ session_date: date, energy, celery_oz: celery, morning_protocol: morning, symptoms, client_notes: clientNotes, practitioner_notes: practNotes, protocol_changes: protoChanges });
+    await onSave({ session_date: date, energy, symptoms, client_notes: clientNotes, practitioner_notes: practNotes, protocol_changes: protoChanges });
     setSaving(false);
     onClose();
   };
@@ -148,24 +146,6 @@ function SessionModal({ client, session, onSave, onClose }) {
               fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
             }}>{v}</button>
           ))}
-        </div>
-
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Celery juice oz</div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-          {[0,8,16,32].map(v => (
-            <button key={v} onClick={() => setCelery(celery === v ? null : v)} style={{
-              flex: 1, padding: "8px 4px", borderRadius: 10, border: "none", cursor: "pointer",
-              background: celery === v ? C.sage : C.mist, color: celery === v ? C.white : C.charcoal,
-              fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
-            }}>{v === 0 ? "None" : `${v}oz`}</button>
-          ))}
-        </div>
-
-        <div onClick={() => setMorning(v => !v)} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, cursor: "pointer" }}>
-          <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, background: morning ? C.sage : "transparent", border: `2px solid ${morning ? C.sage : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.white, fontSize: 13, fontWeight: 700 }}>
-            {morning ? "✓" : ""}
-          </div>
-          <div style={{ fontSize: 13, color: C.charcoal }}>Morning protocol completed</div>
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Symptoms reported</div>
@@ -360,7 +340,6 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   {s.energy && <div style={{ fontSize: 11, background: C.sageLight, color: C.sageDark, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>⚡ {s.energy}/10</div>}
-                  {s.celery_oz > 0 && <div style={{ fontSize: 11, background: "#f0fdf4", color: C.leaf, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>🥬 {s.celery_oz}oz</div>}
                 </div>
               </div>
               {s.client_notes && <div style={{ fontSize: 12, color: C.mid, marginBottom: 4, lineHeight: 1.5 }}>Client: {s.client_notes.slice(0, 120)}{s.client_notes.length > 120 ? "…" : ""}</div>}

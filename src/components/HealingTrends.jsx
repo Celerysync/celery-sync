@@ -76,7 +76,7 @@ function ChartRow({ label, dot, points, min, max, days }) {
 
 const INSIGHT_KEY = "cs_weekly_insight_";
 
-export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEnergy7 }) {
+export default function HealingTrends({ last7, streak, protocolDays, avgEnergy7 }) {
   const [insight, setInsight] = useState(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [insightError, setInsightError] = useState(false);
@@ -93,7 +93,7 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
     setLoadingInsight(true);
     setInsightError(false);
     const summary = last7.map((d) =>
-      `${d.day}: energy=${d.energy || "?"}/10, celery=${d.celery}oz, sleep=${d.sleep_hours || "?"}h (quality ${d.sleep_quality || "?"}/5), HRV=${d.hrv || "?"}`
+      `${d.day}: energy=${d.energy || "?"}/10, rhythm=${d.rhythm_completed || 0}/${d.rhythm_total || 0} done, sleep=${d.sleep_hours || "?"}h (quality ${d.sleep_quality || "?"}/5), HRV=${d.hrv || "?"}`
     ).join(" | ");
 
     callClaude({
@@ -102,7 +102,7 @@ export default function HealingTrends({ last7, celeryStreak, protocolDays, avgEn
       messages: [{
         role: "user",
         content: `Based on this person's 7-day self-logged data: ${summary}.
-Write 2-3 sentences describing what the data shows — trends in energy, celery juice intake, and sleep. Describe only what was logged; do not add medical interpretations, causes, or health advice. Warm and factual. Under 70 words. No headers.`,
+Write 2-3 sentences describing what the data shows — trends in energy, how much of their own daily rhythm they completed, and sleep. Describe only what was logged; do not add medical interpretations, causes, or health advice. Warm and factual. Under 70 words. No headers.`,
       }],
     }).then((text) => {
       localStorage.setItem(key, text);
@@ -111,12 +111,11 @@ Write 2-3 sentences describing what the data shows — trends in energy, celery 
   }, [daysWithData]);
 
   const energyVals = last7.map((d) => d.energy || 0);
-  const celeryVals = last7.map((d) => d.celery || 0);
+  // Share of the person's OWN rhythm completed each day (0–100).
+  const rhythmVals = last7.map((d) => (d.rhythm_total ? Math.round((d.rhythm_completed / d.rhythm_total) * 100) : 0));
   const sleepQualVals = last7.map((d) => d.sleep_quality || 0);
   const sleepHrVals = last7.map((d) => d.sleep_hours || 0);
   const hrvVals = last7.map((d) => d.hrv || 0);
-
-  const maxCelery = Math.max(...celeryVals, 16);
 
   const hasSleep = sleepQualVals.some((v) => v > 0) || sleepHrVals.some((v) => v > 0);
   const hasHrv = hrvVals.some((v) => v > 0);
@@ -156,8 +155,8 @@ Write 2-3 sentences describing what the data shows — trends in energy, celery 
               </div>
             )}
             <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: "#f0fdf4", borderRadius: 12 }}>
-              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{celeryStreak}</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🥬 streak</div>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{streak}</div>
+              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🌿 day streak</div>
             </div>
             {avgSleep && (
               <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: C.plumLight, borderRadius: 12 }}>
@@ -174,7 +173,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, celery 
           </div>
 
           <ChartRow label="Energy (1–10)" dot={C.leaf} points={energyVals} min={0} max={10} days={last7} />
-          <ChartRow label="🥬 Celery Juice (oz)" dot={C.sage} points={celeryVals} min={0} max={maxCelery} days={last7} />
+          <ChartRow label="🌿 Rhythm done (%)" dot={C.sage} points={rhythmVals} min={0} max={100} days={last7} />
           <ChartRow label="💤 Sleep quality (1–5)" dot={C.plum} points={sleepQualVals} min={0} max={5} days={last7} />
           <ChartRow label="🌙 Sleep hours" dot="#7c6fcd" points={sleepHrVals} min={0} max={12} days={last7} />
           <ChartRow label="💓 HRV (ms)" dot="#e05252" points={hrvVals} min={Math.max(0, (avgHrv || 40) - 30)} max={(avgHrv || 40) + 30} days={last7} />

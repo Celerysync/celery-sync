@@ -166,8 +166,10 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         energy: args.energy ?? existing?.energy,
         mood: args.mood ?? existing?.mood,
         symptoms,
-        celery_oz: args.celery_oz ?? existing?.celery_oz,
-        morning_protocol: args.morning_protocol ?? existing?.morning_protocol,
+        // celery_oz / morning_protocol are deliberately not written: they were
+        // app-supplied protocol fields. A Hume config that still declares them
+        // is ignored here; "I had my juice" should go through mark_activity
+        // against the user's own rhythm item instead.
         notes,
       };
       const { error } = await supabase

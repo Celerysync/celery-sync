@@ -126,7 +126,7 @@ export async function buildContextForProfile(profileId) {
   const [checkinsRes, profileRowRes, healingProfileRes, protocolRes] = await Promise.all([
     supabaseAdmin
       .from('daily_checkins')
-      .select('check_date, energy, celery_oz')
+      .select('check_date, energy, rhythm_completed')
       .eq('profile_id', profileId)
       .order('check_date', { ascending: false })
       .limit(14),
@@ -144,9 +144,12 @@ export async function buildContextForProfile(profileId) {
   ])
 
   const checkins = checkinsRes.data || []
+  // Showed-up streak: consecutive days with at least one item of their OWN
+  // rhythm ticked off (spec §5). It used to count celery_oz > 0, which read
+  // zero forever for anyone whose routine has no celery juice.
   let streakDays = 0
   for (const c of checkins) {
-    if ((c.celery_oz || 0) > 0) streakDays++
+    if ((c.rhythm_completed || 0) > 0) streakDays++
     else break
   }
 
