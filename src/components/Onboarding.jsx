@@ -8,6 +8,9 @@ import { parseVoiceTranscript } from "../lib/voiceIntake.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { srSupported } from "../hooks/useVoice.js";
 
+// The single box on the low-energy path.
+const QUICK_SLOT = { key: "other", emoji: "🌿", label: "One thing each day", placeholder: "e.g. \"My juice at 7\" or \"Rest after lunch\"" };
+
 const SLOTS = [
   { key: "morning", emoji: "🌅", label: "Morning drink(s)", placeholder: "e.g. \"Warm water when I wake, then my juice at 7\"" },
   { key: "supplement", emoji: "💊", label: "Supplements", placeholder: "e.g. \"B12 and zinc at 9am with breakfast\"" },
@@ -112,14 +115,19 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   const [slotSaving, setSlotSaving] = useState({});
   const [slotSaved, setSlotSaved] = useState({});
   const [savingAll, setSavingAll] = useState(false);
+  // Low-energy path: one thing to remember, reminders, done. People who are
+  // very unwell shouldn't need four text boxes and a symptom list to begin —
+  // the companion can help them add the rest later, by talking.
+  const [quick, setQuick] = useState(false);
 
   const { addItem } = useRhythm(authUser, profile?.id);
   const { supported: pushSupported, subscribe, subscribed } = useWebPush(authUser);
   const { shouldOfferInstall, isIOS } = useInstallPrompt();
   const [notifChoice, setNotifChoice] = useState(null); // 'yes' | 'no' | null
 
-  const handleCreateProfile = async () => {
+  const handleCreateProfile = async (quickPath = false) => {
     if (!name.trim() || creating) return;
+    setQuick(quickPath);
     setCreating(true);
     if (profile?.id) {
       // Rename the placeholder rather than creating a second profile.
@@ -166,10 +174,11 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
 
   const continueFromSlots = async () => {
     setSavingAll(true);
-    await Promise.all(SLOTS.map((slot) => saveSlot(slot, slotText[slot.key] || "")));
+    await Promise.all((quick ? [QUICK_SLOT] : SLOTS).map((slot) => saveSlot(slot, slotText[slot.key] || "")));
     setSavingAll(false);
-    setStep(2);
+    setStep(quick ? 3 : 2); // the low-energy path skips the symptom list
   };
+  const skipFromSlots = () => setStep(quick ? 3 : 2);
 
   const finish = async () => {
     if (profile?.id) {
@@ -200,7 +209,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreateProfile()}
+            onKeyDown={(e) => e.key === "Enter" && handleCreateProfile(false)}
             placeholder="Your first name"
             autoFocus
             style={{
@@ -209,8 +218,15 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
               fontSize: 16, outline: "none", background: C.mist, boxSizing: "border-box",
             }}
           />
-          <button style={primaryBtn} onClick={handleCreateProfile} disabled={!name.trim() || creating}>
-            {creating ? "Just a moment…" : "Continue →"}
+          <button style={primaryBtn} onClick={() => handleCreateProfile(false)} disabled={!name.trim() || creating}>
+            {creating ? "Just a moment…" : "Set up my day (about 3 minutes) →"}
+          </button>
+          <button
+            style={{ ...skipBtn, fontSize: 14, color: C.sageDark, fontWeight: 700 }}
+            onClick={() => handleCreateProfile(true)}
+            disabled={!name.trim() || creating}
+          >
+            I'm low on energy — keep it short
           </button>
         </div>
       </Shell>
@@ -223,12 +239,14 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
       <Shell step={1} total={5}>
         <div style={cardStyle}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.charcoal, marginBottom: 6 }}>
-            Your protocol, your words
+            {quick ? "Just one thing" : "Your protocol, your words"}
           </div>
-          <div style={{ fontSize: 13, color: C.mid, marginBottom: 18, lineHeight: 1.6 }}>
-            Tell me what you actually do — nothing pre-filled, nothing suggested. Type it, or tap the mic and just talk me through it.
+          <div style={{ fontSize: 14, color: C.mid, marginBottom: 18, lineHeight: 1.6 }}>
+            {quick
+              ? "What's one thing you'd like help remembering each day? Type it, or tap the mic and say it. You can add more later — or just tell me."
+              : "Tell me what you actually do — nothing pre-filled, nothing suggested. Type it, or tap the mic and just talk me through it."}
           </div>
-          {SLOTS.map((slot) => (
+          {(quick ? [QUICK_SLOT] : SLOTS).map((slot) => (
             <SlotInput
               key={slot.key}
               slot={slot}
@@ -242,7 +260,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <button style={primaryBtn} onClick={continueFromSlots} disabled={savingAll}>
             {savingAll ? "Saving your rhythm…" : "Continue →"}
           </button>
-          <button style={skipBtn} onClick={() => setStep(2)}>Skip for now</button>
+          <button style={skipBtn} onClick={skipFromSlots}>Skip for now</button>
         </div>
       </Shell>
     );
@@ -341,6 +359,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           </div>
 
           <button style={primaryBtn} onClick={() => { addCustomSymptom(); setStep(3); }}>Continue →</button>
+          <button style={skipBtn} onClick={() => setStep(3)}>Skip for now</button>
         </div>
       </Shell>
     );
@@ -403,7 +422,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
         <div style={{ fontSize: 13, color: C.mid, textAlign: "center", lineHeight: 1.6, marginBottom: 4 }}>
           {first
             ? `${first.name}${first.fixedTime ? ` at ${first.fixedTime}` : ""} is on your rhythm — I'll remind you.`
-            : "Your day is ready — add to it anytime from Track or by just talking to me."}
+            : "Your day is ready — add to it anytime from Today, or by just talking to me."}
         </div>
         {/* Three concrete things to actually do. Ending on "you're all set"
             alone left people on the Today screen with no idea what to touch,
@@ -452,7 +471,7 @@ function SlotInput({ slot, text, onTextChange, onSubmit, saving, savedLabel }) {
 
   return (
     <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 6 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 6 }}>
         {slot.emoji} {slot.label}
       </div>
       <div style={{ display: "flex", gap: 6 }}>
@@ -464,7 +483,7 @@ function SlotInput({ slot, text, onTextChange, onSubmit, saving, savedLabel }) {
           style={{
             flex: 1, padding: "9px 12px", borderRadius: 10,
             border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif",
-            fontSize: 12.5, outline: "none", background: C.mist,
+            fontSize: 16, outline: "none", background: C.mist,
           }}
         />
         {srSupported && (
