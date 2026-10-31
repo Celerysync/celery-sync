@@ -91,7 +91,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
         🎙 Companion voice
       </div>
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5, marginBottom: 12 }}>
-        Choose the voice for your morning greeting, gentle reminders, and evening wrap-up.
+        Choose the voice you'll hear when you talk with your companion, and for your morning greeting, reminders and evening wrap-up. Tap ▶ to hear it first.
       </div>
 
       {/* Voice picker */}
@@ -105,14 +105,20 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
             fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif",
           }}
         >
-          <option value="">Default voice</option>
-          {humeVoices.length > 0 && (
-            <optgroup label="CelerySync voices">
-              {humeVoices.map((v) => (
-                <option key={v.id} value={`hume:${v.provider}:${v.id}`}>{v.name}</option>
+          <option value="">Default (Australian male)</option>
+          {[
+            ["Recommended", humeVoices.filter((v) => v.recommended)],
+            ["Women's voices", humeVoices.filter((v) => !v.recommended && v.gender === "Female")],
+            ["Men's voices", humeVoices.filter((v) => !v.recommended && v.gender !== "Female")],
+          ].filter(([, list]) => list.length > 0).map(([label, list]) => (
+            <optgroup key={label} label={label}>
+              {list.map((v) => (
+                <option key={v.id} value={`hume:${v.provider}:${v.id}`}>
+                  {v.name}{v.accent ? ` · ${v.accent}` : ""}
+                </option>
               ))}
             </optgroup>
-          )}
+          ))}
         </select>
         <button
           onClick={() => (speaking ? stopSpeaking() : speak(PREVIEW_LINE))}

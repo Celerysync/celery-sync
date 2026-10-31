@@ -239,25 +239,34 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     // Honor the user's chosen companion name (user_voice_prefs, spec §2.5) —
     // read fresh at connect time so a rename applies to the very next session.
     let nameLine = null;
+    let chosenVoiceId = null;
     if (userId) {
       const { data: voicePrefs } = await supabase
         .from("user_voice_prefs")
-        .select("companion_name")
+        .select("companion_name, voice_id")
         .eq("user_id", userId)
         .maybeSingle();
       if (voicePrefs?.companion_name) {
         nameLine = `The user has named you ${voicePrefs.companion_name} — refer to yourself by that name.`;
       }
+      // Settings → Companion voice stores 'hume:<PROVIDER>:<id>'. Until now it
+      // only reached the TTS greetings/nudges; live conversations always used
+      // the config's voice, so people were greeted in one voice and answered
+      // in another. EVI's session voiceId takes just the id.
+      const parts = (voicePrefs?.voice_id || "").split(":");
+      if (parts[0] === "hume" && parts[2]) chosenVoiceId = parts.slice(2).join(":");
     }
     const contextText = [nameLine, memory.healingProfile?.healing_summary, TAB_CONTEXT[tab], APP_DELETE_HOWTO, extraContext]
       .filter(Boolean)
       .join("\n\n");
+    const sessionSettings = {
+      ...(contextText ? { context: { text: contextText, type: "persistent" } } : {}),
+      ...(chosenVoiceId ? { voiceId: chosenVoiceId } : {}),
+    };
     await voice.connect({
       auth: { type: "accessToken", value: accessToken },
       configId,
-      sessionSettings: contextText
-        ? { context: { text: contextText, type: "persistent" } }
-        : undefined,
+      sessionSettings: Object.keys(sessionSettings).length ? sessionSettings : undefined,
     });
   }, [enabled, voice, memory.healingProfile, tab, loadMeter, userId]);
 

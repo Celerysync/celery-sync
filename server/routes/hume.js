@@ -111,19 +111,51 @@ router.post('/tts', async (req, res) => {
   }
 })
 
-// Curated companion voices (spec §3.4: 4–6 CelerySync voices, not the whole
-// Hume library). Custom voices saved in our Hume account are the curated set;
-// until those exist, HUME_CURATED_VOICE_NAMES (comma-separated) or simply the
-// first few library voices keep the picker working.
+// Companion voices. Alli's call (2026-10-31): offer the whole Hume library
+// rather than a curated 4–6 — minus what can't work or doesn't fit:
+// - Non-English voices: the EVI config is EVI 3, which is English-only, so a
+//   Japanese or Spanish voice would just speak English with a foreign accent.
+//   Revisit if the config moves to EVI 4-mini (11 languages, voices per language).
+// - Comedy/character voices (vampires, pirates, announcers…) — this is a
+//   companion for people who may be unwell or grieving.
+// Custom voices designed in our Hume account are always included, first.
 const VOICES_CACHE_MS = 60 * 60 * 1000
 let _voicesCache = { at: 0, voices: null }
 
-async function listVoices(client, provider, max = 40) {
+const EXCLUDED_VOICES = new Set([
+  'Big Dicky', 'California Frat Bro', 'Charismatic Politician Man', 'Colorful Fashion Influencer',
+  'Comical Vampire', 'Dramatic Movie Trailer Narrator', 'Dungeon Master', 'Fastidious Robo-Butler',
+  'French Chef', 'Friendly Troll', 'Ghost With Unfinished Business', 'Grizzled New Yorker',
+  'Groovy Guy', 'Highly Reactive Guy', 'Live Comedian', 'Medieval Peasant Man',
+  'Medieval Peasant Woman', 'Medieval Town Crier', 'Mysterious Woman', 'Nasal Podcast Host',
+  'New York Comedian Guy', 'Old-Timey English Priest', 'Opinionated Guy', 'Pirate Captain',
+  'Sad Old British Man', 'Sitcom Girl', 'Sitcom Guy', 'TikTok Fashion Influencer', 'Tough Guy',
+  'Unserious Movie Trailer Narrator', 'Unserious TV Host', 'Unserious Vampire', 'Wise Wizard',
+  'Wrestling Announcer', 'Booming American Narrator', 'Booming British Narrator',
+  'Awe Inspired Guy', 'Literature Professor', 'Turtle Guru',
+])
+
+// Calm, warm, conversational — shown first in the picker. Names must match
+// Hume's library exactly; any that disappear from the library just drop out.
+const RECOMMENDED_VOICES = new Set([
+  'Male Australian Naturalist', 'Friendly Kiwi Girl', 'Friendly Kiwi Guy',
+  'Female Meditation Guide', 'Serene Assistant', 'Warm Female Assistant Voice',
+  'Warm American Female', 'Caring Mother', 'Warm Welsh Lady', 'English Casual Conversationalist',
+  'Comforting Male Conversationalist', 'Soft Male Conversationalist', 'Conversational English Guy',
+])
+
+async function listVoices(client, provider, max = 200) {
   const out = []
   try {
-    const page = await client.tts.voices.list({ provider, pageSize: Math.min(max, 100) })
+    const page = await client.tts.voices.list({ provider, pageSize: 100 })
     for await (const v of page) {
-      out.push({ id: v.id, name: v.name, provider })
+      const tags = v.tags || {}
+      out.push({
+        id: v.id, name: v.name, provider,
+        gender: tags.GENDER?.[0] || null,
+        accent: tags.ACCENT?.[0] || null,
+        language: tags.LANGUAGE?.[0] || null,
+      })
       if (out.length >= max) break
     }
   } catch (err) {
@@ -139,18 +171,16 @@ router.get('/voices', async (_req, res) => {
   const client = humeClient()
   if (!client) return res.status(503).json({ error: 'Hume TTS not configured — set HUME_API_KEY' })
 
-  const custom = await listVoices(client, 'CUSTOM_VOICE')
-  let voices
-  if (custom.length > 0) {
-    voices = custom.slice(0, 6)
-  } else {
-    const library = await listVoices(client, 'HUME_AI')
-    const curatedNames = (process.env.HUME_CURATED_VOICE_NAMES || '')
-      .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-    voices = curatedNames.length
-      ? library.filter((v) => curatedNames.includes(v.name.toLowerCase()))
-      : library.slice(0, 6)
-  }
+  const [custom, library] = await Promise.all([
+    listVoices(client, 'CUSTOM_VOICE'),
+    listVoices(client, 'HUME_AI'),
+  ])
+  const usableLibrary = library
+    // Untagged voices (a handful, with non-English names) are left out rather than guessed at.
+    .filter((v) => v.language === 'English' && !EXCLUDED_VOICES.has(v.name))
+    .map((v) => ({ ...v, recommended: RECOMMENDED_VOICES.has(v.name) }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const voices = [...custom.map((v) => ({ ...v, recommended: true, custom: true })), ...usableLibrary]
 
   if (voices.length > 0) _voicesCache = { at: Date.now(), voices }
   res.json({ voices })
