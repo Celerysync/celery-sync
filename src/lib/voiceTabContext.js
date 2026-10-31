@@ -22,7 +22,7 @@ export const SECTIONS = {
   home: {
     rhythm: "their daily rhythm list",
     checkin: "today's check-in",
-    supplements: "today's supplements (with manage & shop)",
+    supplements: "today's supplements (manage & restock links)",
   },
   companion: {
     talk: "the conversation with you",

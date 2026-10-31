@@ -553,7 +553,7 @@ export default function Home({ user, authUser, profileId, onNavigate }) {
               cursor: "pointer", padding: "2px 6px",
             }}
           >
-            Manage & shop supplements →
+            Manage & restock supplements →
           </button>
         </div>
       )}

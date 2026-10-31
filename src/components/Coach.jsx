@@ -64,7 +64,7 @@ THE APP HAS FOUR TABS — Today (home), Companion, Progress, Settings. Places:
 • [[GO:companion:feelings|how they feel]] → "How I feel", pre-filled (e.g. [[GO:companion:feelings|headache and tired]])
 • [[GO:home:rhythm]] → their daily rhythm on Today
 • [[GO:home:checkin]] → today's check-in
-• [[GO:home:supplements]] → today's supplements (manage & shop)
+• [[GO:home:supplements]] → today's supplements (manage & restock links)
 • [[GO:progress]] / [[GO:progress:history]] / [[GO:progress:reports]] → streaks & trends / check-in history / summaries & GP report
 • [[GO:settings:sources]] → official Anthony William books, website, podcast and recipes
 • [[GO:settings:voice]] / [[GO:settings:reminders]] → companion voice / reminders
