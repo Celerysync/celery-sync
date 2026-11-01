@@ -381,6 +381,30 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     async remove_rhythm_item(args) {
       if (!profileId) throw new Error("No active profile");
       const rows = await activeRhythmRows(profileId);
+      // Exact copies (same name) can't be told apart by voice, which used to
+      // dead-end in "ambiguous". Treat them as duplicates: remove the extra
+      // copies and keep one — the one with a reminder time, if any. Asking
+      // again once only one is left removes that one.
+      const q = String(args?.item_name || "").trim().toLowerCase();
+      const loose = rows.filter((r) => { const n = r.name.toLowerCase(); return n === q || n.includes(q) || q.includes(n); });
+      const sameName = loose.length > 1 && loose.every((r) => r.name.trim().toLowerCase() === loose[0].name.trim().toLowerCase());
+      if (sameName) {
+        const keep = loose.find((r) => r.fixed_time || r.schedule) || loose[0];
+        const extras = loose.filter((r) => r.id !== keep.id);
+        const keepTime = keep.fixed_time ? ` (keeping the one with a reminder at ${keep.fixed_time.slice(0, 5)})` : "";
+        if (args?.confirmed !== true) {
+          return needsYes(`You have ${loose.length} copies of ${keep.name}. Remove the ${extras.length} extra ${extras.length === 1 ? "copy" : "copies"} and keep one${keepTime} — yes?`);
+        }
+        const { error } = await supabase.from("rhythm_items")
+          .update({ archived_at: new Date().toISOString(), changed_via: "voice" })
+          .in("id", extras.map((r) => r.id));
+        if (error) throw new Error(error.message);
+        rhythmChanged();
+        return {
+          saved: true, removed_extra_copies: extras.length, kept: keep.name,
+          message: `Removed ${extras.length} extra ${extras.length === 1 ? "copy" : "copies"} of "${keep.name}" — one is left${keepTime}. If they want that one gone too, call remove_rhythm_item again.`,
+        };
+      }
       const found = matchByName(rows, args?.item_name);
       if (found.error) return found;
       const item = found.match;
