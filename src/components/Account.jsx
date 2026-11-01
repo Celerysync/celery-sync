@@ -44,7 +44,7 @@ const PRACTITIONER_PLAN_OFFERED = false;
 // Privacy Policy promises people can delete their own account here. The
 // server cancels any subscription, then deletes the login and (by cascade)
 // every profile, rhythm, check-in and conversation.
-function DeleteAccount({ onDeleted }) {
+function DeleteAccount() {
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,7 +61,10 @@ function DeleteAccount({ onDeleted }) {
       });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(out.error || "Something went wrong.");
-      onDeleted?.();
+      // The login no longer exists on the server, so only clear it here —
+      // a normal sign-out would ask the server and get a 403 back.
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      window.location.assign("/");
     } catch (e) {
       setError(e.message);
       setBusy(false);
@@ -837,7 +840,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </Btn>
       </Card>
 
-      <DeleteAccount onDeleted={onSignOut} />
+      <DeleteAccount />
 
       <div style={{
         background: C.mist,

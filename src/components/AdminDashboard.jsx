@@ -169,7 +169,7 @@ export default function AdminDashboard({ authUser }) {
       {data.topCircles?.length > 0 && (
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 12 }}>
-            💚 Healing Circles (30d joins)
+            💚 Circles (30d joins)
           </div>
           {data.topCircles.map(([id, count]) => (
             <BarRow key={id} label={CIRCLE_LABELS[id] || id} value={count} max={maxCircleCount} color={C.plum} />

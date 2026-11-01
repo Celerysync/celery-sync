@@ -494,7 +494,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-              🗓 Your healing week
+              🗓 Your week
             </div>
             <div style={{ fontSize: 11, color: C.muted }}>last 7 days</div>
           </div>

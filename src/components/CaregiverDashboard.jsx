@@ -187,8 +187,8 @@ export default function CaregiverDashboard({ patient }) {
           </div>
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
-          Anthony William writes about what he calls healing reactions — his books explain what he
-          means by that. For anything that concerns you, always check with their doctor first.
+          If they're feeling worse than usual, don't assume it's part of their routine —
+          for anything that concerns you, always check with their doctor first.
         </div>
       </Card>
 

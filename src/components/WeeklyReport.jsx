@@ -201,7 +201,7 @@ export default function WeeklyReport({ authUser, profileId, user }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `healing-summary-${summary.week_start}.pdf`;
+    a.download = `weekly-summary-${summary.week_start}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };

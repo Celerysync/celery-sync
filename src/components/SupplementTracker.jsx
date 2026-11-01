@@ -347,7 +347,7 @@ export default function SupplementTracker({ profileId }) {
               fontFamily: "Georgia,serif", fontWeight: 700,
               textAlign: "center",
             }}>
-              ✨ Full protocol complete today — incredible healing work!
+              ✨ Every supplement ticked off today — lovely consistency!
             </div>
           )}
         </div>

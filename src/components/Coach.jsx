@@ -592,7 +592,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Header */}
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
-          🎙 Your Healing Guide
+          🎙 Your CelerySync helper
         </h2>
         <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
           Your CelerySync helper · Paraphrased & attributed teachings · Remembers your journey
@@ -616,7 +616,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700, color: C.sageDark }}>
-              🧠 I remember your healing journey
+              🧠 I remember your journey
             </div>
             <div style={{ fontSize: 11, color: C.muted }}>{showMemory ? "hide ▲" : "show ▼"}</div>
           </div>
@@ -816,7 +816,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       >
         {memoryLoading ? (
           <div style={{ textAlign: "center", color: C.muted, fontSize: 13, marginTop: 40 }}>
-            🧠 Loading your healing memory…
+            🧠 Loading your memory…
           </div>
         ) : (
           messages.map((m, i) => (

@@ -197,7 +197,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
             Welcome to CelerySync
           </div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>
-            I help you actually do your healing day — reminders, tracking, and a companion who knows you.
+            I help you actually do your day — reminders, tracking, and a companion who knows you.
           </div>
         </div>
         <div style={cardStyle}>
