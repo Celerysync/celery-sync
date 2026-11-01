@@ -224,12 +224,17 @@ export default function App() {
 
   // Every way of moving around — taps, the voice companion, the text
   // companion's links — lands here, so they all behave the same.
+  const [navSeq, setNavSeq] = useState(0);
   const handleNavigate = (destination, query, section) => {
     const dest = destination === "admin" ? { tab: "admin", section: null } : resolveDestination(destination, section);
     if (!dest) return;
     setNavQuery(query || null);
     setNavSection(dest.section);
     setTab(dest.tab);
+    // Counts every navigation, so going to the same place twice still
+    // scrolls, and Today closes any panel (rhythm editor, supplements)
+    // that would otherwise hide where the user was taken.
+    setNavSeq((n) => n + 1);
   };
 
   // Bring a requested section into view once its tab has rendered (tabs are
@@ -245,7 +250,7 @@ export default function App() {
       }
     }, 100);
     return () => clearInterval(t);
-  }, [tab, navSection]);
+  }, [tab, navSection, navSeq]);
   const { activeReminder, dismiss: dismissReminder } = useReminders();
 
   // Load profiles once authenticated
@@ -347,7 +352,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} />;
 
       case "companion":
         // Rhythm plan = engine without the companion — this tab becomes the
@@ -421,7 +426,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} />;
     }
   };
 

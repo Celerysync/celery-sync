@@ -202,12 +202,20 @@ function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismis
   );
 }
 
-export default function Home({ user, authUser, profileId, onNavigate }) {
+export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0 }) {
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
   const [showSupplements, setShowSupplements] = useState(false);
+  // Being taken somewhere (by the companion or a link) closes panels that
+  // would cover it — e.g. "go to my mood" while the rhythm editor is open.
+  const [seenNavSeq, setSeenNavSeq] = useState(navSeq);
+  if (seenNavSeq !== navSeq) {
+    setSeenNavSeq(navSeq);
+    setShowRhythmBuilder(false);
+    setShowSupplements(false);
+  }
   const [welcomeBackDismissed, setWelcomeBackDismissed] = useLocalStorage("cs_welcomeBackDismissed", null);
 
   // "You're not alone": an anonymous count of people who showed up for their

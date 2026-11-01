@@ -67,6 +67,10 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   const [meterSecondsRemaining, setMeterSecondsRemaining] = useState(null);
   const [capReached, setCapReached] = useState(false);
   const lastActivityRef = useRef(0);
+  // Set when the user finishes speaking, cleared when the companion answers.
+  // A long reply (or a tool call) used to count as silence: a user who spoke
+  // for a while and then waited ~20s for the answer was hung up on mid-turn.
+  const awaitingReplySinceRef = useRef(0);
   const playingRef = useRef(false);
   const disconnectRef = useRef(() => {});
   const sessionIdRef = useRef(null);
@@ -154,7 +158,13 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   useEffect(() => {
     if (voice.readyState !== "open") return;
     const id = setInterval(() => {
-      if (!playingRef.current) {
+      // The companion owes the user a reply — that's not silence (capped, so
+      // a genuinely stuck turn still closes eventually).
+      const awaiting = awaitingReplySinceRef.current && Date.now() - awaitingReplySinceRef.current < 90_000;
+      if (playingRef.current || awaiting) {
+        lastActivityRef.current = Date.now();
+        setSilenceWarning(false);
+      } else {
         const idle = Date.now() - lastActivityRef.current;
         if (idle >= SILENCE_CLOSE_MS) {
           setTimedOut(true);
@@ -351,7 +361,10 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     // "where do I…?" and take the user anywhere with switch_tab(tab, section),
     // whichever screen they started talking on.
     const appMap = `The app has four tabs. Places you can take the user with switch_tab:\n${destinationsForPrompt()}`;
-    const contextText = [nameLine, historyLine, returningLine, rhythmLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
+    // Hume's own clock is UTC — without this the companion told Australian
+    // users "it's the middle of the night" at 10am.
+    const localTimeLine = `The user's local date and time right now: ${new Date().toLocaleString("en-AU", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" })}. Use this for anything about time of day — ignore any other clock.`;
+    const contextText = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {
@@ -384,12 +397,14 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     const um = voice.lastUserMessage;
     if (um && !um.interim) {
       lastUserTurnRef.current = { text: um.message?.content || "", at: Date.now() };
+      awaitingReplySinceRef.current = Date.now();
     }
   }, [voice.lastUserMessage]);
 
   useEffect(() => {
     const am = voice.lastVoiceMessage;
     if (!am) return;
+    awaitingReplySinceRef.current = 0;
     const assistantText = am.message?.content || "";
     const turn = lastUserTurnRef.current;
     const userText = turn?.text || "";
