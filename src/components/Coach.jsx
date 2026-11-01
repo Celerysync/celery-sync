@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
-import { useHealingMemory } from "../hooks/useHealingMemory.js";
+import { useHealingMemory, CONVERSATION_SAVED_EVENT } from "../hooks/useHealingMemory.js";
 import { streamClaude, callClaude } from "../lib/api.js";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
@@ -315,6 +315,22 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
   // Keep voiceModeRef in sync with handsFree preference
   useEffect(() => { voiceModeRef.current = handsFree; }, [handsFree]);
 
+  // Anything said in a voice call while this chat is open appears here as it
+  // happens (marked as spoken) and becomes part of what the text chat knows
+  // — one conversation across talking and typing.
+  useEffect(() => {
+    const onSaved = (e) => {
+      const { userMsg, assistantMsg, via } = e.detail || {};
+      if (via !== "voice" || !userMsg) return;
+      setMessages((m) => [...m,
+        { role: "user", content: userMsg, via: "voice" },
+        { role: "assistant", content: assistantMsg, via: "voice" },
+      ]);
+    };
+    window.addEventListener(CONVERSATION_SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(CONVERSATION_SAVED_EVENT, onSaved);
+  }, []);
+
   // Reload memory and restart conversation when profile switches
   useEffect(() => {
     if (!profileId) return;
@@ -425,7 +441,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         const reply = await streamClaude({
           staticSystem: systemRef.current.staticSystem,
           dynamicSystem: systemRef.current.dynamicSystem,
-          messages: newMsgs.slice(-8),
+          messages: newMsgs.slice(-8).map(({ role, content }) => ({ role, content })),
           maxTokens: voiceModeRef.current ? 350 : 700,
           signal: chatAbortRef.current.signal,
           onDelta: (delta, full) => {
@@ -825,6 +841,9 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     transition: "border 0.15s",
                   }}
                 >
+                  {m.via === "voice" && (
+                    <div style={{ fontSize: 10.5, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
+                  )}
                   {m.content}
                 </div>
               </div>

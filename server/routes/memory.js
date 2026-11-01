@@ -402,43 +402,49 @@ router.get('/letters/:profileId/:letterId/pdf', async (req, res) => {
 })
 
 // ── Doctor report PDF download ──
+// Shared by the download route and the email route, so the report someone
+// emails is exactly the one they'd download.
+async function makeDoctorReport(profileId, months = 3, extended = false) {
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - Number(months))
+  const cutoffStr = cutoff.toISOString().split('T')[0]
+
+  const [summariesRes, milestonesRes, profileRes] = await Promise.all([
+    supabaseAdmin
+      .from('weekly_summaries')
+      .select('*')
+      .eq('profile_id', profileId)
+      .gte('week_start', cutoffStr)
+      .order('week_start', { ascending: true }),
+    supabaseAdmin
+      .from('healing_milestones')
+      .select('insight, category, session_date')
+      .eq('profile_id', profileId)
+      .gte('session_date', cutoffStr)
+      .order('session_date', { ascending: true }),
+    supabaseAdmin
+      .from('healing_profiles')
+      .select('healing_summary')
+      .eq('profile_id', profileId)
+      .maybeSingle(),
+  ])
+
+  const pdfBuffer = await buildDoctorPDF({
+    summaries: summariesRes.data || [],
+    milestones: milestonesRes.data || [],
+    healingSummary: profileRes.data?.healing_summary || '',
+    profileId,
+    months: Number(months),
+    isExtended: !!extended,
+  })
+  return pdfBuffer
+}
+
 router.get('/doctor/:profileId/pdf', async (req, res) => {
   const { profileId } = req.params
   const { months = 3, extended = 'false' } = req.query
   try {
-    const cutoff = new Date()
-    cutoff.setMonth(cutoff.getMonth() - Number(months))
-    const cutoffStr = cutoff.toISOString().split('T')[0]
-
-    const [summariesRes, milestonesRes, profileRes] = await Promise.all([
-      supabaseAdmin
-        .from('weekly_summaries')
-        .select('*')
-        .eq('profile_id', profileId)
-        .gte('week_start', cutoffStr)
-        .order('week_start', { ascending: true }),
-      supabaseAdmin
-        .from('healing_milestones')
-        .select('insight, category, session_date')
-        .eq('profile_id', profileId)
-        .gte('session_date', cutoffStr)
-        .order('session_date', { ascending: true }),
-      supabaseAdmin
-        .from('healing_profiles')
-        .select('healing_summary')
-        .eq('profile_id', profileId)
-        .maybeSingle(),
-    ])
-
-    const pdfBuffer = await buildDoctorPDF({
-      summaries: summariesRes.data || [],
-      milestones: milestonesRes.data || [],
-      healingSummary: profileRes.data?.healing_summary || '',
-      profileId,
-      months: Number(months),
-      isExtended: extended === 'true',
-    })
-
+    const pdfBuffer = await makeDoctorReport(profileId, months, extended === 'true')
     const dateStr = new Date().toISOString().split('T')[0]
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="health-report-${dateStr}.pdf"`)
@@ -448,42 +454,96 @@ router.get('/doctor/:profileId/pdf', async (req, res) => {
   }
 })
 
+// ── Email a report (voice: "send my report to my doctor") ──
+// Unlike the older routes, this one checks the signed-in user properly: it
+// sends email, so it must never be callable for someone else's profile.
+// A few sends per user per day is plenty for real use and stops it being
+// used as a spam relay.
+const reportEmailsToday = new Map() // `${userId}:${date}` -> count
+router.post('/report/email', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+    const { data: auth } = token ? await supabaseAdmin.auth.getUser(token) : { data: null }
+    const user = auth?.user
+    if (!user) return res.status(401).json({ error: 'Please sign in again.' })
+
+    const { profileId, kind = 'doctor', to, months = 3, range = 'weekly' } = req.body || {}
+    const email = String(to || '').trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.status(400).json({ error: 'That email address doesn\'t look right.' })
+
+    const { data: profile } = await supabaseAdmin.from('profiles').select('id, name, user_id').eq('id', profileId).maybeSingle()
+    if (!profile || profile.user_id !== user.id) return res.status(403).json({ error: 'Not your profile.' })
+
+    const key = `${user.id}:${new Date().toISOString().slice(0, 10)}`
+    const sent = reportEmailsToday.get(key) || 0
+    if (sent >= 5) return res.status(429).json({ error: 'That\'s the most reports that can be emailed today — try again tomorrow.' })
+
+    if (!process.env.RESEND_API_KEY) return res.status(503).json({ error: 'Email isn\'t set up.' })
+    const isDoctor = kind !== 'progress'
+    const pdf = isDoctor ? await makeDoctorReport(profileId, Math.min(Math.max(Number(months) || 3, 1), 12)) : await makeProgressReport(profileId, range === 'monthly' ? 'monthly' : 'weekly')
+    const dateStr = new Date().toISOString().split('T')[0]
+    const filename = `${isDoctor ? 'health-report' : 'wellness-log'}-${dateStr}.pdf`
+    const who = profile.name && profile.name !== 'Me' ? profile.name : 'Your patient'
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { error } = await resend.emails.send({
+      from: 'CelerySync <healing@celerysync.com>',
+      to: email,
+      replyTo: user.email || undefined,
+      subject: `${who}'s ${isDoctor ? 'health summary' : 'wellness log'} (CelerySync)`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;line-height:1.7;color:#1E2A1E">
+        <p>${who} asked for this ${isDoctor ? 'health summary' : 'wellness log'} to be sent to you. It's attached as a PDF.</p>
+        <p style="color:#5A6B5A;font-size:13px">All data is self-reported by the user in the CelerySync wellness app. It is not a medical record and does not constitute medical advice.${user.email ? ' Replying to this email reaches them directly.' : ''}</p>
+      </div>`,
+      attachments: [{ filename, content: pdf }],
+    })
+    if (error) return res.status(502).json({ error: error.message || 'Email failed to send.' })
+    reportEmailsToday.set(key, sent + 1)
+    res.json({ sent: true, to: email, filename })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── Progress / wellness log PDF — descriptive only, no interpretation ──
+async function makeProgressReport(profileId, range = 'weekly') {
+  const days = range === 'monthly' ? 180 : 28
+  const bucket = range === 'monthly' ? 'week' : 'day'
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - days)
+  const cutoffStr = cutoff.toISOString().split('T')[0]
+
+  const [checkinsRes, profileRes, cycleRes] = await Promise.all([
+    supabaseAdmin
+      .from('daily_checkins')
+      .select('check_date, energy, mood, symptoms, rhythm_completed, rhythm_total')
+      .eq('profile_id', profileId)
+      .gte('check_date', cutoffStr)
+      .order('check_date', { ascending: true }),
+    supabaseAdmin.from('profiles').select('name').eq('id', profileId).maybeSingle(),
+    supabaseAdmin.from('cycle_logs').select('period_start_date').eq('profile_id', profileId).order('period_start_date', { ascending: true }),
+  ])
+
+  const checkins = checkinsRes.data || []
+  const stats = computeProgressStats(checkins, { bucket })
+  const cycleOverlay = computeCycleOverlay(checkins, (cycleRes.data || []).map(r => r.period_start_date))
+
+  const pdfBuffer = await buildProgressReportPDF({
+    profileName: profileRes.data?.name || 'Friend',
+    range,
+    periodStart: checkins[0]?.check_date,
+    periodEnd: checkins[checkins.length - 1]?.check_date,
+    stats,
+    cycleOverlay,
+  })
+  return pdfBuffer
+}
+
 router.get('/progress/:profileId/pdf', async (req, res) => {
   const { profileId } = req.params
   const { range = 'weekly' } = req.query
-  const days = range === 'monthly' ? 180 : 28
-  const bucket = range === 'monthly' ? 'week' : 'day'
-
   try {
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - days)
-    const cutoffStr = cutoff.toISOString().split('T')[0]
-
-    const [checkinsRes, profileRes, cycleRes] = await Promise.all([
-      supabaseAdmin
-        .from('daily_checkins')
-        .select('check_date, energy, mood, symptoms, rhythm_completed, rhythm_total')
-        .eq('profile_id', profileId)
-        .gte('check_date', cutoffStr)
-        .order('check_date', { ascending: true }),
-      supabaseAdmin.from('profiles').select('name').eq('id', profileId).maybeSingle(),
-      supabaseAdmin.from('cycle_logs').select('period_start_date').eq('profile_id', profileId).order('period_start_date', { ascending: true }),
-    ])
-
-    const checkins = checkinsRes.data || []
-    const stats = computeProgressStats(checkins, { bucket })
-    const cycleOverlay = computeCycleOverlay(checkins, (cycleRes.data || []).map(r => r.period_start_date))
-
-    const pdfBuffer = await buildProgressReportPDF({
-      profileName: profileRes.data?.name || 'Friend',
-      range,
-      periodStart: checkins[0]?.check_date,
-      periodEnd: checkins[checkins.length - 1]?.check_date,
-      stats,
-      cycleOverlay,
-    })
-
+    const pdfBuffer = await makeProgressReport(profileId, range)
     const dateStr = new Date().toISOString().split('T')[0]
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="wellness-log-${dateStr}.pdf"`)

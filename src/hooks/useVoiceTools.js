@@ -4,6 +4,9 @@ import { TODAY, filterTodaysItems, rhythmRowToItem, rhythmItemToRow, RHYTHM_CHAN
 import { buildProgramItem, programDescription, isProgramRow, savedRowToProgram } from "../lib/savedRhythms.js";
 import { setLocalStorageValue } from "./useLocalStorage.js";
 import { SUPPLEMENTS_CHANGED_EVENT } from "./useUserSupplements.js";
+import { CHECKIN_CHANGED_EVENT } from "./useDailyCheckins.js";
+import { VOICE_PREFS_CHANGED_EVENT } from "./useVoicePrefs.js";
+import { EMOTIONAL_STATES as CHECKIN_FEELINGS } from "../lib/checkinOptions.js";
 import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 
 const todayStr = TODAY;
@@ -198,15 +201,36 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const symptoms = args.symptoms?.length
         ? [...new Set([...(existing?.symptoms || []), ...args.symptoms])]
         : existing?.symptoms;
-      const notes = args.notes
-        ? (existing?.notes ? `${existing.notes}\n${args.notes}` : args.notes)
+      // daily_checkins.mood is a NUMBER column; the words people actually say
+      // ("determined but tired") go to the feeling buttons where they match
+      // and, in their own words, into the notes. Writing the words into mood
+      // made every spoken check-in fail.
+      const moodWords = typeof args.mood === "string" && !/^\d+$/.test(args.mood.trim()) ? args.mood.trim() : "";
+      const newNotes = [moodWords ? `Feeling: ${moodWords}` : null, args.notes || null].filter(Boolean).join("\n");
+      const notes = newNotes
+        ? (existing?.notes ? `${existing.notes}\n${newNotes}` : newNotes)
         : existing?.notes;
+      // Written in the same shape the Today check-in screen uses, so what the
+      // user SAYS shows up exactly as if they'd tapped it: energy on the
+      // screen's 2/4/6/8/10 scale, feelings as the screen's own words.
+      const energy = Number.isFinite(Number(args.energy))
+        ? Math.min(10, Math.max(2, Math.round(Number(args.energy) / 2) * 2))
+        : existing?.energy;
+      const said = [...(args.feelings || []), ...String(args.mood || "").split(/[\s,/]+/)].map((w) => w.trim().toLowerCase());
+      const feelings = CHECKIN_FEELINGS.filter((f) => said.includes(f.toLowerCase()));
+      const emotional_state = feelings.length ? [...new Set([...(existing?.emotional_state || []), ...feelings])] : existing?.emotional_state;
+      const clarity = Number(args.clarity);
 
       const row = {
+        // Row-level security only accepts the user's own rows — without this
+        // every spoken check-in was rejected.
+        user_id: userId,
         profile_id: profileId,
         check_date: todayStr(),
-        energy: args.energy ?? existing?.energy,
-        mood: args.mood ?? existing?.mood,
+        energy,
+        mood: /^\d+$/.test(String(args.mood ?? "").trim()) ? Number(args.mood) : existing?.mood,
+        emotional_state,
+        mental_clarity: clarity >= 1 && clarity <= 5 ? Math.round(clarity) : existing?.mental_clarity,
         symptoms,
         // celery_oz / morning_protocol are deliberately not written: they were
         // app-supplied protocol fields. A Hume config that still declares them
@@ -218,7 +242,8 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         .from("daily_checkins")
         .upsert(row, { onConflict: "profile_id,check_date" });
       if (error) throw new Error(error.message);
-      return { logged: true };
+      window.dispatchEvent(new Event(CHECKIN_CHANGED_EVENT));
+      return { saved: true, logged: { energy, feelings: emotional_state, symptoms }, message: "Today's check-in is saved and showing on their Today screen." };
     },
 
     async log_restock(args) {
@@ -569,6 +594,72 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       if (error) throw new Error(error.message);
       window.dispatchEvent(new Event(SUPPLEMENTS_CHANGED_EVENT));
       return { saved: true, removed: supp.name, message: `${supp.name} is removed from their supplements.` };
+    },
+
+    // Email a report the user chooses to someone they name (their GP, a
+    // carer). Health data leaving the app → always read the address back and
+    // get a yes first. The server checks the signed-in user owns the profile.
+    async share_report(args) {
+      if (!profileId) throw new Error("No active profile");
+      const kind = args?.kind === "progress" ? "progress" : "doctor";
+      const to = String(args?.email || "").trim().toLowerCase().replace(/\s+/g, "");
+      const known = (() => { try { return JSON.parse(localStorage.getItem("cs_report_recipients") || "[]"); } catch { return []; } })();
+      if (!to) {
+        return {
+          error: "email_required",
+          message: known.length
+            ? `Ask who to send it to. They've sent reports before to: ${known.join(", ")}.`
+            : "Ask for the email address, and spell it back to them letter by letter to be sure.",
+        };
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return { error: "invalid_email", message: `"${to}" isn't a complete email address. Ask them to say it again, slowly.` };
+      const what = kind === "doctor" ? `your health summary for the last ${Number(args?.months) || 3} months` : "your wellness log";
+      if (args?.confirmed !== true) {
+        return needsYes(`I'll email ${what} to ${to.split("").join(" ").replace(/ @ /, " at ").replace(/ \. /g, " dot ")} — is that right?`);
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/memory/report/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token || ""}` },
+        body: JSON.stringify({ profileId, kind, to, months: Number(args?.months) || 3 }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: "send_failed", message: out.error || "The email didn't send. Offer to try again, or show them the report on screen with switch_tab('progress:reports') so they can share it themselves." };
+      localStorage.setItem("cs_report_recipients", JSON.stringify([to, ...known.filter((k) => k !== to)].slice(0, 5)));
+      return { saved: true, sent_to: to, message: `Sent — ${what} is on its way to ${to} as a PDF. Replies go straight to the user's own email.` };
+    },
+
+    // Invite someone to be their carer (they get an email with a link).
+    async invite_carer(args) {
+      if (!profileId || !userId) throw new Error("No active profile");
+      const email = String(args?.email || "").trim().toLowerCase().replace(/\s+/g, "");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { error: "invalid_email", message: "Ask for the carer's email address and spell it back to be sure." };
+      if (args?.confirmed !== true) {
+        return needsYes(`I'll invite ${email.split("").join(" ").replace(/ @ /, " at ").replace(/ \. /g, " dot ")} to be your carer — they'll be able to see your progress. Is that right?`);
+      }
+      const res = await fetch("/api/carers/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, profileId, carerEmail: email }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: "invite_failed", message: out.error || "The invite didn't go through. Offer to try again, or take them to Settings → Carers." };
+      return { saved: true, invited: email, message: `Invite sent to ${email}. Once they accept, they'll see the user's progress. Manage it any time in Settings → Carers.` };
+    },
+
+    // Companion name and the morning / evening check-in prompts.
+    async update_preferences(args) {
+      if (!userId) throw new Error("Not signed in");
+      const patch = {};
+      const said = [];
+      if (typeof args?.companion_name === "string" && args.companion_name.trim()) { patch.companion_name = args.companion_name.trim().slice(0, 30); said.push(`your name is now ${patch.companion_name} (from the next conversation)`); }
+      if (typeof args?.morning_checkin === "boolean") { patch.morning_nudge = args.morning_checkin; said.push(`morning check-in ${args.morning_checkin ? "on" : "off"}`); }
+      if (typeof args?.evening_reflection === "boolean") { patch.evening_nudge = args.evening_reflection; said.push(`evening reflection ${args.evening_reflection ? "on" : "off"}`); }
+      if (!said.length) return { error: "nothing_to_change", message: "Ask what they'd like to change." };
+      const { error } = await supabase.from("user_voice_prefs").upsert({ user_id: userId, ...patch, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (error) throw new Error(error.message);
+      window.dispatchEvent(new Event(VOICE_PREFS_CHANGED_EVENT));
+      return { saved: true, changes: said, message: `Done: ${said.join("; ")}.` };
     },
   }), [userId, profileId, onSwitchTab]);
 }

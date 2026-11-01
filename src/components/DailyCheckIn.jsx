@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EMOTIONAL_STATES } from "../lib/checkinOptions.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useAnalytics } from "../hooks/useAnalytics.js";
@@ -20,11 +21,6 @@ const CLARITY_OPTS = [
   { val: 5, emoji: "💡", label: "Clear" },
 ];
 
-const EMOTIONAL_STATES = [
-  "Hopeful", "Grateful", "Calm", "Determined",
-  "Anxious", "Overwhelmed", "Discouraged", "Tearful",
-  "Frustrated", "Numb", "Lonely", "Irritable",
-];
 
 const WATER_OPTS = [
   { val: 16,  label: "500ml" },

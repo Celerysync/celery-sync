@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
 
 function todayStr() {
@@ -77,15 +78,20 @@ export function useUserSupplements(profileId) {
       .insert({ profile_id: profileId, name: name.trim(), dose_label: doseLabel?.trim() || null, timing })
       .select("id, name, dose_label, timing")
       .single();
-    if (data) setSupplements((prev) => [...prev, data]);
+    if (data) {
+      setSupplements((prev) => [...prev, data]);
+      announceActivity(`added ${data.name} to their supplements`);
+    }
     return data;
   }, [profileId]);
 
   const removeSupplement = useCallback(async (id) => {
     if (!profileId) return;
     await supabase.from("user_supplements").delete().eq("id", id);
+    const gone = supplements.find((s) => s.id === id);
+    if (gone) announceActivity(`removed ${gone.name} from their supplements`);
     setSupplements((prev) => prev.filter((s) => s.id !== id));
-  }, [profileId]);
+  }, [profileId, supplements]);
 
   // Doses/day for a given name = how many schedule rows share it (e.g. zinc at
   // morning + midday = 2/day). This is what "the app already knows from the

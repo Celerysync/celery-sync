@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
@@ -71,6 +72,7 @@ export default function SupplementTracker({ profileId }) {
 
   const toggle = (supp) => {
     const dbKey = `${supp.label}__${supp.timing}`;
+    announceActivity(checked[dbKey] ? `marked ${supp.label} as not taken` : `marked ${supp.label} as taken`);
     setChecked((prev) => {
       const next = { ...prev, [dbKey]: !prev[dbKey] };
       localStorage.setItem(key, JSON.stringify(next));

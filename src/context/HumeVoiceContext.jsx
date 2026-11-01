@@ -5,6 +5,7 @@ import { useVoiceTools } from "../hooks/useVoiceTools.js";
 import { TAB_CONTEXT, VOICE_ACTION_RULES, destinationsForPrompt } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
 import { setCompanionVoiceLive } from "../hooks/useVoice.js";
+import { APP_ACTIVITY_EVENT } from "../lib/appActivity.js";
 
 // Spec §3.2 session containment: warn after this much silence, close a beat
 // later. Client-side enforcement backs up the EVI config's own timeout.
@@ -79,6 +80,8 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   // reports "connecting". Without this, a second tap in that gap opened a
   // second live chat: two voices, and the first one never got the mic.
   const preparingRef = useRef(false);
+  const baseContextRef = useRef("");
+  const tapLogRef = useRef([]);
   const [preparing, setPreparing] = useState(false);
 
   // Shared by the gauge display AND the pre-connect cap check (spec §2.4) —
@@ -354,6 +357,23 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         : "The user's daily rhythm is currently EMPTY — they have no items yet.";
       rhythmLine += " If your memory notes mention anything not in this list, they have removed it — never say it's in their rhythm or suggest it as if it still is.";
     }
+    // The last few things said in EITHER the text chat or a voice call, so a
+    // call picks up where typing left off (and vice versa) instead of only
+    // learning about it from the overnight notes.
+    let recentLine = null;
+    if (profileId) {
+      const { data: recent } = await supabase
+        .from("conversations")
+        .select("role, content, created_at")
+        .eq("profile_id", profileId)
+        .gte("created_at", new Date(Date.now() - 48 * 3_600_000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (recent?.length) {
+        recentLine = "Your most recent conversation with the user (typed in the text chat or spoken — it's all you), oldest first. Carry on naturally from it; don't repeat it back:\n" +
+          [...recent].reverse().map((m) => `${m.role === "user" ? "User" : "You"}: ${m.content.slice(0, 240)}`).join("\n");
+      }
+    }
     const memoryLine = memory.healingProfile?.healing_summary
       ? `Background notes from past conversations (may be out of date — the rhythm list above wins):\n${memory.healingProfile.healing_summary}`
       : null;
@@ -364,7 +384,12 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     // Hume's own clock is UTC — without this the companion told Australian
     // users "it's the middle of the night" at 10am.
     const localTimeLine = `The user's local date and time right now: ${new Date().toLocaleString("en-AU", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" })}. Use this for anything about time of day — ignore any other clock.`;
-    const contextText = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
+    // Kept so the live session can be refreshed (page changes, taps) by
+    // resending this plus what's changed — see pushLiveContext.
+    baseContextRef.current = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, appMap, extraContext]
+      .filter(Boolean).join("\n\n");
+    tapLogRef.current = [];
+    const contextText = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {
@@ -378,41 +403,55 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     });
   }
 
-  // Ambient tab-change context — pushed into the live session instead of
-  // reconnecting, so the assistant knows where the user is without dropping
-  // the conversation (this is the "carries over between tabs" fix).
-  const prevTabRef = useRef(tab);
+  // Live context: the connect-time context, plus where the user is NOW and
+  // what they've done by tapping during this call. Resent as persistent
+  // context (it replaces the previous one) so the companion keeps knowing it,
+  // not just for its next sentence — and the call is never reconnected.
+  const tabRef = useRef(tab);
+  const pushLiveContext = useCallback(() => {
+    if (!baseContextRef.current) return;
+    const taps = tapLogRef.current;
+    const text = [
+      baseContextRef.current,
+      `Right now: ${TAB_CONTEXT[tabRef.current] || ""}`,
+      taps.length
+        ? `What the user has done on screen by tapping during this call (oldest first) — it really happened, so never contradict it; mention it only if it's natural:\n${taps.map((t) => `- ${t}`).join("\n")}`
+        : null,
+    ].filter(Boolean).join("\n\n");
+    voice.sendSessionSettings?.({ context: { text, type: "persistent" } });
+  }, [voice]);
+
   useEffect(() => {
-    if (voice.readyState !== "open") { prevTabRef.current = tab; return; }
-    if (prevTabRef.current === tab) return;
-    prevTabRef.current = tab;
-    const line = TAB_CONTEXT[tab];
-    if (line) voice.sendSessionSettings?.({ context: { text: line, type: "temporary" } });
+    if (tabRef.current === tab) return;
+    tabRef.current = tab;
+    if (voice.readyState === "open") pushLiveContext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, voice.readyState]);
 
+  useEffect(() => {
+    const onActivity = (e) => {
+      if (voice.readyState !== "open" || !e.detail?.text) return;
+      const at = new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+      tapLogRef.current = [...tapLogRef.current, `${at}: ${e.detail.text}`].slice(-12);
+      pushLiveContext();
+    };
+    window.addEventListener(APP_ACTIVITY_EVENT, onActivity);
+    return () => window.removeEventListener(APP_ACTIVITY_EVENT, onActivity);
+  }, [voice.readyState, pushLiveContext]);
+
   // Persist every completed exchange (all surfaces, not just Companion) and
   // log it to voice_turns — the analytics/tracking that didn't exist before.
-  useEffect(() => {
-    const um = voice.lastUserMessage;
-    if (um && !um.interim) {
-      lastUserTurnRef.current = { text: um.message?.content || "", at: Date.now() };
-      awaitingReplySinceRef.current = Date.now();
-    }
-  }, [voice.lastUserMessage]);
-
-  useEffect(() => {
-    const am = voice.lastVoiceMessage;
-    if (!am) return;
-    awaitingReplySinceRef.current = 0;
-    const assistantText = am.message?.content || "";
+  // A reply arrives as several assistant messages (a sentence, a tool call,
+  // more sentences). This used to save only the FIRST one per user turn, so
+  // memory kept "Of course!" and lost the rest. Now the whole turn is
+  // collected and saved once — when the user speaks again or the call ends.
+  const flushTurn = useCallback(() => {
     const turn = lastUserTurnRef.current;
-    const userText = turn?.text || "";
-    const latencyMs = turn ? Date.now() - turn.at : null;
     lastUserTurnRef.current = null;
-
-    if (authUser?.id && profileId && userText) {
-      memory.saveExchange(userText, assistantText);
+    if (!turn?.parts?.length) return;
+    const assistantText = turn.parts.join(" ");
+    if (authUser?.id && profileId && turn.text) {
+      memory.saveExchange(turn.text, assistantText, "voice");
     }
     if (authUser?.id) {
       fetch("/api/hume/log", {
@@ -425,14 +464,43 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
           userId: authUser.id,
           profileId,
           surface: tab,
-          userTranscript: userText || null,
+          userTranscript: turn.text || null,
           assistantTranscript: assistantText,
-          latencyMs,
+          latencyMs: turn.firstReplyMs ?? null,
         }),
       }).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.id, profileId, tab, memory.saveExchange]);
+
+  useEffect(() => {
+    const um = voice.lastUserMessage;
+    if (um && !um.interim) {
+      flushTurn();
+      lastUserTurnRef.current = { text: um.message?.content || "", at: Date.now(), parts: [] };
+      awaitingReplySinceRef.current = Date.now();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.lastUserMessage]);
+
+  useEffect(() => {
+    const am = voice.lastVoiceMessage;
+    if (!am) return;
+    awaitingReplySinceRef.current = 0;
+    const text = am.message?.content || "";
+    if (!text) return;
+    // The opening greeting has no user turn — keep it with an empty one.
+    if (!lastUserTurnRef.current) lastUserTurnRef.current = { text: "", at: Date.now(), parts: [] };
+    const turn = lastUserTurnRef.current;
+    if (turn.firstReplyMs == null && turn.text) turn.firstReplyMs = Date.now() - turn.at;
+    turn.parts.push(text);
   }, [voice.lastVoiceMessage]);
+
+  // Call over — save the last turn.
+  useEffect(() => {
+    if (voice.readyState !== "open") flushTurn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.readyState]);
 
   const value = {
     enabled,

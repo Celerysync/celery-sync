@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 
 function todayStr() {
@@ -24,6 +24,10 @@ export function countShowedUpStreak(checkins, today) {
   return streak;
 }
 
+// Fired when today's check-in is saved outside this hook (the voice
+// companion's log_checkin), so Today shows it straight away.
+export const CHECKIN_CHANGED_EVENT = "cs:checkin-changed";
+
 export function useDailyCheckins(authUser, profileId) {
   const [checkins, setCheckins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +46,12 @@ export function useDailyCheckins(authUser, profileId) {
       console.warn("Load checkins:", e.message);
     }
     setLoading(false);
-  }, [authUser?.id]);
+  }, [authUser?.id, profileId]);
+
+  useEffect(() => {
+    window.addEventListener(CHECKIN_CHANGED_EVENT, loadCheckins);
+    return () => window.removeEventListener(CHECKIN_CHANGED_EVENT, loadCheckins);
+  }, [loadCheckins]);
 
   const saveCheckin = useCallback(async (data) => {
     if (!authUser?.id || !profileId) return;

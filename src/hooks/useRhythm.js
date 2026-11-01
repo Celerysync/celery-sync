@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
+import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
 import {
   TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
@@ -248,6 +249,7 @@ export function useRhythm(authUser, profileId) {
       setSyncError("Couldn't save — check your connection and try again.");
       return;
     }
+    announceActivity(`ticked off "${item?.name ?? "an item"}"`);
 
     setCompletions((latest) => {
       // Counted per occurrence, so an item due twice a day counts twice —
@@ -299,6 +301,7 @@ export function useRhythm(authUser, profileId) {
       setSyncError("Couldn't save — check your connection and try again.");
       return;
     }
+    announceActivity(`un-ticked "${item?.name ?? "an item"}" (marked it not done)`);
 
     setCompletions((latest) => {
       // Counted per occurrence, so an item due twice a day counts twice —
@@ -322,6 +325,7 @@ export function useRhythm(authUser, profileId) {
     if (error || !data) return null;
     const newItem = rowToItem(data);
     setBaseItems((prev) => [...prev, newItem]);
+    announceActivity(`added "${newItem.name}" to their rhythm`);
     return newItem;
   }, [baseItems, profileId]);
 
@@ -329,20 +333,25 @@ export function useRhythm(authUser, profileId) {
     setBaseItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
     if (profileId) {
       const current = baseItems.find((i) => i.id === id);
-      if (current) supabase.from("rhythm_items").update(itemToRow({ ...current, ...patch }, profileId)).eq("id", id).then(() => {});
+      if (current) {
+        supabase.from("rhythm_items").update(itemToRow({ ...current, ...patch }, profileId)).eq("id", id).then(() => {});
+        announceActivity(`changed "${current.name}" in their rhythm`);
+      }
     }
   }, [profileId, baseItems]);
 
   // Removing hides the item (archived_at) rather than deleting it, so the
   // change diary and reports keep it, and it can be restored.
   const removeItem = useCallback((id) => {
+    const gone = baseItems.find((i) => i.id === id);
+    if (gone) announceActivity(`removed "${gone.name}" from their rhythm`);
     setBaseItems((prev) => prev.filter((i) => i.id !== id));
     if (profileId) {
       supabase.from("rhythm_items")
         .update({ archived_at: new Date().toISOString(), changed_via: "tap" })
         .eq("id", id).then(() => {});
     }
-  }, [profileId]);
+  }, [profileId, baseItems]);
 
   const reorderItems = useCallback((fromIndex, toIndex) => {
     setBaseItems((prev) => {
@@ -373,6 +382,7 @@ export function useRhythm(authUser, profileId) {
     const rows = ordered.map((item) => itemToRow(item, profileId));
     const { data } = await supabase.from("rhythm_items").insert(rows).select("*");
     setBaseItems((data || []).map(rowToItem));
+    announceActivity(`replaced their whole rhythm with a saved template: ${(data || []).map((r) => r.name).join(", ")}`);
   }, [profileId]);
 
   // Takes a full program object (the user's own, from their saved programs):
@@ -395,6 +405,7 @@ export function useRhythm(authUser, profileId) {
       dbId = data?.id ?? null;
     }
 
+    announceActivity(`started the program "${program.name}" (${program.totalDays} days)`);
     setActiveProgram({
       id: program.id,
       name: program.name,
@@ -412,6 +423,7 @@ export function useRhythm(authUser, profileId) {
         .eq("id", activeProgram.dbId)
         .then(() => {});
     }
+    if (activeProgram) announceActivity(`ended the program "${activeProgram.name}" early`);
     setActiveProgram(null);
   }, [authUser?.id, activeProgram, setActiveProgram]);
 

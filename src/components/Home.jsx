@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
@@ -304,6 +305,13 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     setSavingCheckin(true);
     await saveCheckin(data);
     setSavingCheckin(false);
+    const said = [
+      data?.energy ? `energy ${data.energy}/5` : null,
+      data?.emotional_state ? `feeling ${data.emotional_state}` : null,
+      data?.mental_clarity ? `clarity ${data.mental_clarity}/5` : null,
+      data?.symptoms?.length ? `symptoms: ${data.symptoms.join(", ")}` : null,
+    ].filter(Boolean).join(", ");
+    announceActivity(`saved today's check-in${said ? ` (${said})` : ""}`);
   };
 
   // Voice intake callback — merges parsed fields into today's check-in
@@ -572,6 +580,10 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
       )}
       {authUser && (
         <DailyCheckIn
+          // The card copies today's check-in into its form once, when it
+          // mounts — so one saved by voice (or on another device) stayed
+          // invisible. Remount whenever the saved check-in changes.
+          key={todaysCheckin ? `${todaysCheckin.id}:${todaysCheckin.energy}:${(todaysCheckin.emotional_state || []).join(",")}:${todaysCheckin.mental_clarity}:${(todaysCheckin.symptoms || []).length}:${(todaysCheckin.notes || "").length}` : "none"}
           profileId={profileId}
           cycleEnabled={!!user?.cycle_tracking_enabled}
           todaysCheckin={todaysCheckin}

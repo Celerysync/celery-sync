@@ -2,6 +2,11 @@ import { useState, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { callClaude } from "../lib/api.js";
 
+// Fired on window after every saved exchange, typed or spoken, so the other
+// surface (text chat ↔ voice call) can pick it up straight away — one
+// conversation, not two. detail: { userMsg, assistantMsg, via }
+export const CONVERSATION_SAVED_EVENT = "cs:conversation-saved";
+
 export function useHealingMemory(authUser, profileId) {
   const [healingProfile, setHealingProfile] = useState(null);
   const [priorMessages, setPriorMessages] = useState([]);
@@ -44,7 +49,7 @@ export function useHealingMemory(authUser, profileId) {
   }, [authUser?.id, profileId]);
 
   const saveExchange = useCallback(
-    async (userMsg, assistantMsg) => {
+    async (userMsg, assistantMsg, via = "text") => {
       if (!authUser?.id || !profileId) return;
       try {
         await supabase.from("conversations").insert([
@@ -52,6 +57,7 @@ export function useHealingMemory(authUser, profileId) {
           { user_id: authUser.id, profile_id: profileId, role: "assistant", content: assistantMsg },
         ]);
         exchangeCountRef.current += 1;
+        window.dispatchEvent(new CustomEvent(CONVERSATION_SAVED_EVENT, { detail: { userMsg, assistantMsg, via } }));
 
         // Extract milestones from every exchange (fire-and-forget)
         extractMilestones(userMsg, assistantMsg);

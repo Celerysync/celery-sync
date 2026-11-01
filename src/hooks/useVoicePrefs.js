@@ -4,6 +4,8 @@ import { supabase } from "../lib/supabase.js";
 // user_voice_prefs (spec §2.5) — one row per auth user (not per profile):
 // the companion's voice, its optional name, and the morning/evening TTS
 // nudge toggles. RLS restricts every row to its owner.
+export const VOICE_PREFS_CHANGED_EVENT = "cs:voice-prefs-changed";
+
 export const DEFAULT_PREFS = {
   voice_id: null,        // 'hume:<PROVIDER>:<id>' (see voiceService.js)
   companion_name: null,
@@ -19,7 +21,7 @@ export function useVoicePrefs(authUser) {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    supabase
+    const load = () => supabase
       .from("user_voice_prefs")
       .select("voice_id, companion_name, morning_nudge, evening_nudge")
       .eq("user_id", userId)
@@ -29,7 +31,11 @@ export function useVoicePrefs(authUser) {
         if (data) setPrefs({ ...DEFAULT_PREFS, ...data });
         setLoaded(true);
       });
-    return () => { cancelled = true; };
+    load();
+    // The voice companion can change these ("call yourself Willow", "stop
+    // the morning check-in") — reload so Settings shows it straight away.
+    window.addEventListener(VOICE_PREFS_CHANGED_EVENT, load);
+    return () => { cancelled = true; window.removeEventListener(VOICE_PREFS_CHANGED_EVENT, load); };
   }, [userId]);
 
   // Optimistic: the UI updates immediately; a failed write rolls back so the
