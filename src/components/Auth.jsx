@@ -10,6 +10,7 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [agreed, setAgreed] = useState(false)
 
   const submit = async () => {
     if (!email.trim()) return setMsg({ ok: false, text: 'Please enter your email address.' })
@@ -19,7 +20,13 @@ export default function Auth() {
     try {
       if (mode === 'signup') {
         if (password.length < 6) throw new Error('Password must be at least 6 characters.')
-        const { error } = await supabase.auth.signUp({ email: email.trim(), password })
+        if (!agreed) throw new Error('Please confirm you\'re 18 or over and agree to the Terms and Privacy Policy.')
+        // Kept on the account as the record of what they agreed to, and when.
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { data: { age_confirmed_18: true, agreed_terms_version: '2026-11-01', agreed_terms_at: new Date().toISOString() } },
+        })
         if (error) throw error
         setMsg({ ok: true, text: 'Account created! Check your email to confirm it, then sign in.' })
       } else if (mode === 'login') {
@@ -145,6 +152,21 @@ export default function Auth() {
                 style={inputStyle}
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               />
+            )}
+            {mode === 'signup' && (
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, color: C.mid, lineHeight: 1.5, cursor: 'pointer', marginTop: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={e => setAgreed(e.target.checked)}
+                  style={{ width: 20, height: 20, marginTop: 1, flexShrink: 0, accentColor: C.sageDark }}
+                />
+                <span>
+                  I'm 18 or over, and I agree to the{' '}
+                  <a href="/terms.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Terms of Use</a> and{' '}
+                  <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Privacy Policy</a>.
+                </span>
+              </label>
             )}
           </div>
 

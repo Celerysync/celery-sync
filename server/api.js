@@ -9,6 +9,7 @@ import memoryRoutes from './routes/memory.js'
 import carerRoutes from './routes/carers.js'
 import encouragementRoutes from './routes/encouragement.js'
 import communityRoutes from './routes/community.js'
+import accountRoutes from './routes/account.js'
 import { signedInOwner, except, guardPathIds } from './auth.js'
 
 // Every /api route, with who may call it. Kept apart from index.js (which
@@ -24,7 +25,7 @@ export function mountApi(app, { aiLimit, generalLimit }) {
   app.use(express.json({ limit: '50mb' }))
 
   const auth = signedInOwner()
-  for (const r of [claudeRoutes, humeRoutes, stripeRoutes, notificationRoutes, wearableRoutes, analyticsRoutes, memoryRoutes, carerRoutes, encouragementRoutes]) guardPathIds(r)
+  for (const r of [accountRoutes, claudeRoutes, humeRoutes, stripeRoutes, notificationRoutes, wearableRoutes, analyticsRoutes, memoryRoutes, carerRoutes, encouragementRoutes]) guardPathIds(r)
   app.use('/api/claude', aiLimit, auth, claudeRoutes)
   app.use('/api/hume', generalLimit, auth, humeRoutes)
   app.use('/api/stripe', generalLimit, except(['/webhook'], auth), stripeRoutes)
@@ -37,6 +38,7 @@ export function mountApi(app, { aiLimit, generalLimit }) {
   app.use('/api/memory', generalLimit, auth, memoryRoutes)
   app.use('/api/carers', generalLimit, auth, carerRoutes)
   app.use('/api/encouragement', generalLimit, auth, encouragementRoutes)
+  app.use('/api/account', generalLimit, auth, accountRoutes)
   app.use('/api/community', generalLimit, communityRoutes)
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))

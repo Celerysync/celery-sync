@@ -41,6 +41,76 @@ const COMPANION_FEATURES = [
 
 const PRACTITIONER_PLAN_OFFERED = false;
 
+// Privacy Policy promises people can delete their own account here. The
+// server cancels any subscription, then deletes the login and (by cascade)
+// every profile, rhythm, check-in and conversation.
+function DeleteAccount({ onDeleted }) {
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const remove = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE" }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "Something went wrong.");
+      onDeleted?.();
+    } catch (e) {
+      setError(e.message);
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <button
+          onClick={() => setOpen(true)}
+          style={{ background: "none", border: "none", fontSize: 12, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
+        >
+          Delete my account
+        </button>
+      </div>
+    );
+  }
+  return (
+    <Card style={{ border: `1.5px solid ${C.terracotta}` }}>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
+        Delete your account?
+      </div>
+      <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+        This permanently deletes your account and everything in it — your profiles, rhythm, check-ins,
+        history and conversations — and cancels any subscription straight away. It can't be undone.
+      </div>
+      <input
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        placeholder="Type DELETE to confirm"
+        autoCapitalize="characters"
+        style={{
+          width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10,
+          border: `1.5px solid ${C.border}`, fontSize: 16, fontFamily: "Georgia,serif", marginBottom: 10,
+          background: C.surface, color: C.charcoal,
+        }}
+      />
+      {error && <div style={{ fontSize: 13, color: C.terracotta, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <Btn full onClick={() => { setOpen(false); setTyped(""); }} color={C.muted} disabled={busy}>Keep my account</Btn>
+        <Btn full onClick={remove} color={C.terracotta} disabled={busy || typed.trim().toUpperCase() !== "DELETE"}>
+          {busy ? "Deleting…" : "Delete forever"}
+        </Btn>
+      </div>
+    </Card>
+  );
+}
+
 export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId }) {
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
@@ -755,6 +825,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </Btn>
       </Card>
 
+      <DeleteAccount onDeleted={onSignOut} />
+
       <div style={{
         background: C.mist,
         border: `1px solid ${C.border}`,
@@ -766,6 +838,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </div>
         <div style={{ fontSize: 11, color: C.mid, lineHeight: 1.75 }}>
           CelerySync is an independent app created by a Medical Medium community member. It is not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc. All content is for educational and personal reference only — not a substitute for medical advice.
+          <div style={{ marginTop: 8 }}>
+            <a href="/terms.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Terms of Use</a>{" · "}
+            <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Privacy Policy</a>
+          </div>
         </div>
       </div>
     </div>

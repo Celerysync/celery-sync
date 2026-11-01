@@ -10,6 +10,7 @@ import { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHeali
 import { runEncouragementTick } from './routes/encouragement.js'
 import { sendRhythmReminders } from './routes/rhythm.js'
 import { checkRestockAlerts } from './routes/supplements.js'
+import { purgeOldVoiceTurns } from './routes/hume.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -115,5 +116,14 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   });
   console.log('🧠 Nightly healing profile refresh scheduler active')
 }
+
+// Privacy: voice transcript log older than 90 days is deleted nightly (3am UTC).
+// Outside the push-notification block on purpose — it must run regardless.
+cron.schedule('0 3 * * *', async () => {
+  try {
+    const n = await purgeOldVoiceTurns()
+    console.log(`🧹 Deleted ${n} voice log entries older than 90 days`)
+  } catch (err) { console.warn('Voice log purge error:', err.message) }
+})
 
 app.listen(PORT, () => console.log(`🌿 CelerySync API running on :${PORT}`))

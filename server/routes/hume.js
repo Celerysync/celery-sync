@@ -403,3 +403,16 @@ router.post('/log', async (req, res) => {
 })
 
 export default router
+
+// Privacy Policy: the voice_turns log (kept to check the companion is working
+// properly) is deleted after 90 days. Runs nightly from server/index.js.
+// Conversation memory the user sees and controls lives in `conversations`,
+// which is untouched here.
+export const VOICE_TURNS_RETENTION_DAYS = 90
+export async function purgeOldVoiceTurns() {
+  const cutoff = new Date(Date.now() - VOICE_TURNS_RETENTION_DAYS * 86_400_000).toISOString()
+  const { error, count } = await supabase.from('voice_turns').delete({ count: 'exact' }).lt('created_at', cutoff)
+  if (error) throw error
+  return count || 0
+}
+

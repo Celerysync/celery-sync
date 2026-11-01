@@ -627,6 +627,10 @@ export default function Landing({ onGetStarted, onSignIn }) {
           </div>
           <div style={{ fontSize: 11.5, color: C.mid, lineHeight: 1.75 }}>
             CelerySync is an <strong>independent</strong> companion app created by a Medical Medium community member. It is <strong>not affiliated with, endorsed by, or connected to</strong> Anthony William or Medical Medium LLC in any way. "Medical Medium" is a registered trademark of Anthony William, Inc. All health information in this app is for <strong>educational and personal reference only</strong> and is not a substitute for professional medical advice. Always work with your healthcare provider.
+            <div style={{ marginTop: 8 }}>
+              <a href="/terms.html" style={{ color: C.sageDark }}>Terms of Use</a>{" · "}
+              <a href="/privacy.html" style={{ color: C.sageDark }}>Privacy Policy</a>
+            </div>
           </div>
         </div>
       </div>
