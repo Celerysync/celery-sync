@@ -3,6 +3,20 @@ import C, { alpha } from "../lib/colors.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { micHelp } from "../lib/micPermission.js";
 
+// Voice can fail to connect for ordinary reasons — Hume allows only so many
+// conversations at the same moment on our plan, or the signal drops. Its own
+// wording ("A websocket connection could not be established…") reads like the
+// app is broken, so anything other than our own clear messages (minutes used
+// up) becomes one calm explanation with something to do next. Mic-permission
+// problems have their own step-by-step help above.
+const VOICE_BUSY_MESSAGE =
+  "🌿 I couldn't connect just now — lots of people may be talking with me at the moment, or the connection dropped. Try again in a minute, or type to me in the Companion tab.";
+function friendlyVoiceError(message) {
+  if (!message) return null;
+  if (/Voice minutes are used up/.test(message)) return message;
+  return VOICE_BUSY_MESSAGE;
+}
+
 function fmtElapsed(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -185,16 +199,16 @@ export default function VoiceOrb() {
             );
           })()}
 
-          {connectError && !micHelp(connectError) && (
-            <div style={{ fontSize: 13, color: C.terracotta, lineHeight: 1.6, padding: "4px 0 8px" }}>
-              {connectError}
-            </div>
-          )}
-          {error && !micHelp(error) && (
-            <div style={{ fontSize: 13, color: C.terracotta, lineHeight: 1.6, padding: "4px 0 8px" }}>
-              {error.message}
-            </div>
-          )}
+          {(() => {
+            const shown = friendlyVoiceError(connectError && !micHelp(connectError) ? connectError : null)
+              || friendlyVoiceError(error && !micHelp(error) ? error.message : null);
+            if (!shown) return null;
+            return (
+              <div style={{ background: C.cream, borderRadius: 10, padding: "10px 12px", margin: "4px 0 8px", fontSize: 13, color: C.charcoal, lineHeight: 1.6 }}>
+                {shown}
+              </div>
+            );
+          })()}
           {isConnecting && (
             <div style={{ color: C.sageDark, fontSize: 13, fontFamily: "Georgia,serif", textAlign: "center", padding: "8px 0" }}>
               🌿 Connecting…
