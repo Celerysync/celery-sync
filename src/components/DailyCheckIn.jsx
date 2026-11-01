@@ -154,7 +154,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: C.mid }}>
-            {todaysCheckin.healing_reaction && <div>🌀 Healing reaction noted</div>}
+            {todaysCheckin.healing_reaction && <div>🌀 Rough day noted</div>}
             {todaysCheckin.win_today && <div>✨ {todaysCheckin.win_today}</div>}
             {todaysCheckin.emotional_state?.length > 0 && (
               <div>💛 {todaysCheckin.emotional_state.slice(0, 3).join(", ")}</div>
@@ -174,7 +174,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
         📋 How are you today?
       </div>
       <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>
-        Quick daily check-in — tracks your healing over time and helps your companion understand you
+        Quick daily check-in — tracks how you're going over time and helps your companion understand you
       </div>
 
       {/* ── CORE: Energy ── */}
@@ -286,7 +286,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
             </div>
             <div>
               <div style={{ fontSize: 13, color: C.charcoal }}>
-                🌀 I think I'm having a healing / die-off reaction today
+                🌀 I'm having a rough day — feeling worse than usual
               </div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
                 Worsening symptoms can be a sign things are shifting — your companion tracks these for you
@@ -422,7 +422,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 {/* Bowel movements */}
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>
-                    🌿 Bowel movements today <span style={{ fontWeight: 400 }}>(AW considers this a key healing indicator)</span>
+                    🌿 Bowel movements today
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {[0, 1, 2, 3, 4].map((n) => (

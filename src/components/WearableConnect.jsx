@@ -293,7 +293,7 @@ export default function WearableConnect({ authUser }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setSuccess(`Synced ${data.days} days of Oura data — your healing trends are updated!`);
+      setSuccess(`Synced ${data.days} days of Oura data — your trends are updated!`);
       await loadStatus();
     } catch (err) {
       setError(err.message);
@@ -469,7 +469,7 @@ export default function WearableConnect({ authUser }) {
                       wearable={w}
                       authUser={authUser}
                       onSaved={() => {
-                        setManualSuccess(`${w.name} data saved! Your healing trends will update.`);
+                        setManualSuccess(`${w.name} data saved! Your trends will update.`);
                         setExpanded(null);
                         setTimeout(() => setManualSuccess(null), 5000);
                       }}
@@ -483,7 +483,7 @@ export default function WearableConnect({ authUser }) {
       </div>
 
       <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 11, color: C.mid, lineHeight: 1.6 }}>
-        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up alongside your own logged trends in Healing Trends.
+        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up alongside your own logged trends in your trends.
       </div>
     </Card>
   );

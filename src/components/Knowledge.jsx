@@ -22,7 +22,7 @@ const AW_LINKS = [
   { label: "medicalmedium.com", emoji: "🌐", url: "https://www.medicalmedium.com", desc: "Official website — free protocols, recipes, and articles" },
   { label: "YouTube", emoji: "▶️", url: "https://www.youtube.com/channel/UCUORv_qpgmg8N5plVqlYjXg", desc: "Thousands of hours of free teachings" },
   { label: "Podcast", emoji: "🎙", url: "https://medicalmedium.com/medical-medium-podcast", desc: "Medical Medium Podcast — free episodes" },
-  { label: "Instagram", emoji: "📸", url: "https://www.instagram.com/medicalmedium", desc: "Daily tips and healing information" },
+  { label: "Instagram", emoji: "📸", url: "https://www.instagram.com/medicalmedium", desc: "Daily posts from Anthony William" },
 ];
 
 function isValidYouTubeUrl(url) {
@@ -70,7 +70,7 @@ export default function Knowledge({ authUser }) {
       </div>
 
       <div style={{ padding: "10px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${alpha(C.sage, "40")}`, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
-        <strong>Independent app notice:</strong> CelerySync paraphrases and attributes Anthony William's publicly shared teachings. For complete protocols, exact wording, and full healing plans, always refer to his official books and content below.
+        <strong>Independent app notice:</strong> CelerySync paraphrases and attributes Anthony William's publicly shared teachings. For complete protocols, exact wording, and full plans, always refer to his official books and content below.
       </div>
 
       {/* Official links */}
@@ -115,7 +115,7 @@ export default function Knowledge({ authUser }) {
           Anthony William's Books
         </div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
-          For full protocols, exact supplement amounts, and complete healing plans — the books are the authoritative source.
+          For full protocols, exact supplement amounts, and complete plans — the books are the authoritative source.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
           {AW_BOOKS.map((b) => (

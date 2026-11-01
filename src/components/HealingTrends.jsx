@@ -142,7 +142,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
 
       {daysWithData === 0 ? (
         <div style={{ fontSize: 13, color: C.muted, textAlign: "center", padding: "12px 0" }}>
-          Complete your first check-in above to start tracking your healing journey
+          Complete your first check-in above to start seeing your trends
         </div>
       ) : (
         <>

@@ -237,7 +237,7 @@ This week's data:
 - Mental clarity average: ${avgMentalClarity ? `${avgMentalClarity}/5` : 'not logged'}
 - Pain level average: ${avgPainLevel ? `${avgPainLevel}/5` : 'not logged'}
 - Water intake average: ${avgWaterOz ? `${avgWaterOz}oz/day` : 'not logged'}
-- Healing reaction days: ${healingReactionDays}
+- Rough days flagged (feeling worse than usual): ${healingReactionDays}
 - Daily rhythm completion: ${rhythmCompletionPct != null ? `${rhythmCompletionPct}%` : 'not tracked'}
 ${activeProtocolDay ? `- Protocol day reached: day ${activeProtocolDay}` : ''}
 ${wins.length ? `- Wins they logged: ${wins.map(w => `"${w}"`).join(', ')}` : ''}
@@ -246,7 +246,7 @@ ${wins.length ? `- Wins they logged: ${wins.map(w => `"${w}"`).join(', ')}` : ''
 Key moments this week:
 ${milestonesText}
 
-Healing background: ${healingSummary.slice(0, 300) || 'New subscriber'}
+Background from their conversations: ${healingSummary.slice(0, 300) || 'New subscriber'}
 
 Write the observation now:`,
     }],
@@ -345,7 +345,7 @@ router.get('/weekly/:profileId/pdf', async (req, res) => {
     const pdfBuffer = await buildWeeklyPDF(summary, false)
 
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="healing-summary-${summary.week_start}.pdf"`)
+    res.setHeader('Content-Disposition', `attachment; filename="weekly-summary-${summary.week_start}.pdf"`)
     res.send(pdfBuffer)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -394,7 +394,7 @@ router.get('/letters/:profileId/:letterId/pdf', async (req, res) => {
 
     const pdf = await buildAnnualLetterPDF(letter, profile?.name || 'Friend', milestones || [])
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="healing-letter-year-${letter.year_number}.pdf"`)
+    res.setHeader('Content-Disposition', `attachment; filename="anniversary-letter-year-${letter.year_number}.pdf"`)
     res.send(pdf)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -556,7 +556,7 @@ router.get('/progress/:profileId/pdf', async (req, res) => {
 // ── Build weekly healing summary PDF ──
 async function buildWeeklyPDF(summary, forEmail = false) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'CelerySync Weekly Healing Summary' } })
+    const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'CelerySync Weekly Summary' } })
     const chunks = []
     doc.on('data', c => chunks.push(c))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
@@ -572,7 +572,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     // ── Header ──
     doc.rect(0, 0, doc.page.width, 110).fill(GREEN)
     doc.fillColor('#fff').fontSize(28).font('Helvetica-Bold').text('🌿 CelerySync', 50, 28)
-    doc.fontSize(13).font('Helvetica').text('Weekly Healing Summary', 50, 60)
+    doc.fontSize(13).font('Helvetica').text('Weekly Summary', 50, 60)
     doc.fontSize(11).fillColor('rgba(255,255,255,0.8)').text(
       `${fmtDate(summary.week_start)} — ${fmtDate(summary.week_end)}`,
       50, 80
@@ -610,7 +610,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     if (summary.ai_observations) {
       doc.rect(50, y, pageW, 8).fill(GREEN)
       y += 20
-      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text("Your Healing Companion's Observations", 50, y)
+      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text("Observations from your week", 50, y)
       y += 22
       doc.rect(50, y, pageW, 1).fill('#e0e8db')
       y += 12
@@ -637,7 +637,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill(GREEN)
     doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
       .text(
-        'CelerySync — Inspired by the teachings of Anthony William · Medical Medium  |  This is a personal health tracking record, not medical advice.',
+        'CelerySync — independent app, not affiliated with Anthony William or Medical Medium  |  This is a personal tracking record, not medical advice.',
         50, doc.page.height - 35, { width: pageW, align: 'center' }
       )
 
@@ -970,7 +970,7 @@ async function buildProgressReportPDF({ profileName, range, periodStart, periodE
 // ── Build annual healing letter PDF ──
 async function buildAnnualLetterPDF(letter, name, milestones) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 70, size: 'A4', info: { Title: `Year ${letter.year_number} Healing Letter` } })
+    const doc = new PDFDocument({ margin: 70, size: 'A4', info: { Title: `Year ${letter.year_number} Anniversary Letter` } })
     const chunks = []
     doc.on('data', c => chunks.push(c))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
@@ -985,7 +985,7 @@ async function buildAnnualLetterPDF(letter, name, milestones) {
     // ── Header ──
     doc.rect(0, 0, doc.page.width, 130).fill(GREEN)
     doc.fillColor('#fff').fontSize(13).font('Helvetica').text('CelerySync', 70, 32)
-    doc.fontSize(26).font('Helvetica-Bold').text(`Year ${letter.year_number} Healing Letter`, 70, 52)
+    doc.fontSize(26).font('Helvetica-Bold').text(`Year ${letter.year_number} Anniversary Letter`, 70, 52)
     doc.fontSize(12).font('Helvetica').fillColor('rgba(255,255,255,0.8)')
       .text(`For ${name}  ·  ${new Date(letter.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`, 70, 94)
 
@@ -1012,7 +1012,7 @@ async function buildAnnualLetterPDF(letter, name, milestones) {
       y += 10
       doc.rect(70, y, pageW, 3).fill(GOLD)
       y += 16
-      doc.fillColor(GOLD).fontSize(13).font('Helvetica-Bold').text('Your Healing Milestones', 70, y)
+      doc.fillColor(GOLD).fontSize(13).font('Helvetica-Bold').text('Your Milestones', 70, y)
       y += 20
 
       milestones.slice(0, 20).forEach(m => {
@@ -1028,12 +1028,12 @@ async function buildAnnualLetterPDF(letter, name, milestones) {
     y += 20
     doc.rect(70, y, pageW, 1).fill('#e0e8db')
     y += 20
-    doc.fillColor(GREEN).fontSize(12).font('Helvetica-Bold').text('Keep going. You are healing. 🌿', 70, y, { align: 'center', width: pageW })
+    doc.fillColor(GREEN).fontSize(12).font('Helvetica-Bold').text('Keep going. 🌿', 70, y, { align: 'center', width: pageW })
 
     // ── Footer ──
     doc.rect(0, doc.page.height - 45, doc.page.width, 45).fill(GREEN)
     doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
-      .text('CelerySync · Inspired by the teachings of Anthony William · Medical Medium', 70, doc.page.height - 30, { width: pageW, align: 'center' })
+      .text('CelerySync · independent app, not affiliated with Anthony William or Medical Medium', 70, doc.page.height - 30, { width: pageW, align: 'center' })
 
     doc.end()
   })
@@ -1126,28 +1126,32 @@ async function generateAnniversaryLetterForProfile(profile, yearNumber) {
     max_tokens: 800,
     messages: [{
       role: 'user',
-      content: `Write a deeply personal, warm, emotional annual healing letter for ${profile.name} on their ${yearNumber === 1 ? 'first' : yearNumber === 2 ? 'second' : yearNumber === 3 ? 'third' : yearNumber + 'th'} anniversary of their healing journey with CelerySync.
+      content: `Write a warm, personal anniversary letter for ${profile.name} on their ${yearNumber === 1 ? 'first' : yearNumber === 2 ? 'second' : yearNumber === 3 ? 'third' : yearNumber + 'th'} year with CelerySync.
 
 This is NOT a generic letter. It must feel like it was written specifically for them based on their actual journey.
 
-Their healing data:
+What they logged:
 - Years on journey: ${yearNumber}
 - Days they showed up for their own routine: ${totalRhythmDays}
 - Energy when they started: ${firstEnergy ? firstEnergy + '/10' : 'not recorded'}
 - Energy recently: ${recentEnergy ? recentEnergy + '/10' : 'not recorded'}
-- Healing summary: ${healingSummary.slice(0, 400) || 'Dedicated healer on the Medical Medium path'}
+- Notes from their conversations: ${healingSummary.slice(0, 400) || 'Someone who keeps showing up for their routine'}
 
 Key moments from their journey:
 ${milestonesText || 'Many conversations, much growth'}
 
 Write the letter in 4-5 paragraphs.
-- Open by acknowledging what they've been through and how far they've come — specifically.
-- Reflect on specific milestones and what they mean.
-- Acknowledge the hard moments (healing is not linear — don't pretend it's been easy).
-- Celebrate who they've become through this process.
-- Close with hope and belief in their continued healing.
+- Open by acknowledging their year — specifically, from what they logged.
+- Reflect on specific milestones: their consistency, the days they showed up, what they built.
+- Acknowledge the hard moments honestly — don't pretend it's been easy.
+- Close with warmth and encouragement to keep going with the routine they've chosen.
 
-Sign it: "With love and belief in your healing, Your CelerySync companion 🌿"
+STRICT RULES (this is a wellness app, not a health service):
+- Never say or imply they are healing, recovering, getting better from any condition, or that the routine, protocol or app is working on their health.
+- Never interpret their energy or other numbers medically — describe them only as what they logged.
+- Never name any condition or disease.
+
+Sign it: "With warmth, Your CelerySync companion 🌿"
 
 Write only the letter. No preamble.`,
     }],
@@ -1187,14 +1191,14 @@ async function sendAnniversaryEmail(userId, name, yearNumber, letterText) {
     await resend.emails.send({
       from: 'CelerySync <healing@celerysync.com>',
       to: email,
-      subject: `Happy ${ordinal} healing anniversary, ${name} 🌿`,
+      subject: `Happy ${ordinal} CelerySync anniversary, ${name} 🌿`,
       html: `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#f7f9f4;font-family:Georgia,serif;">
 <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
   <div style="background:linear-gradient(135deg,#3D6B44,#5a9a6a);padding:40px 32px;text-align:center;color:#fff;">
     <div style="font-size:48px;margin-bottom:12px;">🌿</div>
-    <h1 style="margin:0;font-size:24px;">Year ${yearNumber} of Your Healing Journey</h1>
+    <h1 style="margin:0;font-size:24px;">Year ${yearNumber} with CelerySync</h1>
     <p style="margin:10px 0 0;opacity:0.85;font-size:13px;">A letter just for you, ${name}</p>
   </div>
   <div style="padding:32px;color:#1e2a1e;line-height:1.85;font-size:14px;">
@@ -1204,7 +1208,7 @@ async function sendAnniversaryEmail(userId, name, yearNumber, letterText) {
     <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:13px 28px;font-family:Georgia,serif;font-weight:700;font-size:14px;text-decoration:none;">Open Your Healing Journey →</a>
   </div>
   <div style="padding:16px 32px;text-align:center;border-top:1px solid #e8f0e4;">
-    <p style="margin:0;font-size:11px;color:#aaa;">CelerySync · Inspired by Anthony William · Medical Medium</p>
+    <p style="margin:0;font-size:11px;color:#aaa;">CelerySync · independent app, not affiliated with Anthony William or Medical Medium</p>
   </div>
 </div>
 </body>
@@ -1244,7 +1248,7 @@ async function sendWeeklySummaryEmail(userId, summary) {
   <!-- Header -->
   <div style="background:linear-gradient(135deg,#3D6B44,#5a9a6a);padding:32px 28px;text-align:center;color:#fff;">
     <div style="font-size:40px;margin-bottom:8px;">🌿</div>
-    <h1 style="margin:0;font-size:22px;font-weight:700;">Your Weekly Healing Summary</h1>
+    <h1 style="margin:0;font-size:22px;font-weight:700;">Your Weekly Summary</h1>
     <p style="margin:8px 0 0;opacity:0.85;font-size:13px;">${weekRange}</p>
   </div>
 
@@ -1290,7 +1294,7 @@ async function sendWeeklySummaryEmail(userId, summary) {
   <!-- AI Observations -->
   ${summary.ai_observations ? `
   <div style="margin:0 28px;background:#f0f7f0;border-radius:14px;padding:20px;border-left:4px solid #3D6B44;">
-    <div style="font-size:12px;color:#3D6B44;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Your healing companion's observations</div>
+    <div style="font-size:12px;color:#3D6B44;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Observations from your week</div>
     <p style="margin:0;font-size:13.5px;color:#1e2a1e;line-height:1.8;">${summary.ai_observations}</p>
   </div>` : ''}
 
@@ -1308,13 +1312,13 @@ async function sendWeeklySummaryEmail(userId, summary) {
   <!-- CTA -->
   <div style="padding:24px 28px;text-align:center;">
     <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:14px 32px;font-family:Georgia,serif;font-weight:700;font-size:15px;text-decoration:none;">Open CelerySync →</a>
-    <p style="margin:16px 0 0;font-size:12px;color:#6b7c6b;">Your healing matters. Keep going. 🌿</p>
+    <p style="margin:16px 0 0;font-size:12px;color:#6b7c6b;">Keep going. 🌿</p>
   </div>
 
   <!-- Footer -->
   <div style="background:#f7f9f4;padding:16px 28px;text-align:center;border-top:1px solid #e8f0e4;">
     <p style="margin:0;font-size:11px;color:#aaa;line-height:1.6;">
-      CelerySync · Inspired by the teachings of Anthony William<br>
+      CelerySync · independent app, not affiliated with Anthony William or Medical Medium<br>
       This is a personal health tracking record, not medical advice.
     </p>
   </div>
@@ -1326,7 +1330,7 @@ async function sendWeeklySummaryEmail(userId, summary) {
     await resend.emails.send({
       from: 'CelerySync <healing@celerysync.com>',
       to: email,
-      subject: `Your healing week — ${weekRange} 🌿`,
+      subject: `Your week — ${weekRange} 🌿`,
       html,
     })
 

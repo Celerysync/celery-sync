@@ -82,7 +82,7 @@ export default function DoctorReport({ profileId }) {
             </div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
               {extended
-                ? "Includes healing protocol context — suitable for naturopaths and integrative practitioners"
+                ? "Includes details of your own routine — for naturopaths and integrative practitioners"
                 : "Objective data and clinical language only — suitable for any GP or specialist"}
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function DoctorReport({ profileId }) {
           `Supplement notes from the last ${months} months`,
           "Symptom observations and patterns",
           "Week-by-week energy chart",
-          ...(extended ? ["Healing protocol context (for integrative practitioners)"] : []),
+          ...(extended ? ["Your routine details (for integrative practitioners)"] : []),
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5, alignItems: "flex-start" }}>
             <span style={{ color: C.sage, fontWeight: 700, flexShrink: 0 }}>✓</span>

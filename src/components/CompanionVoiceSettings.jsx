@@ -79,7 +79,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           🎙 Companion voice
         </div>
         <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-          The voice companion is part of the Healer plan — the Companion tab has
+          The voice companion is part of the Rhythm + Voice plan — the Companion tab has
           the details if you'd like it back.
         </div>
       </Card>

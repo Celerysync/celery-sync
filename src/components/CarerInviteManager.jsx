@@ -76,7 +76,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
         💜 Carers
       </div>
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-        Invite a friend or family member to see your healing progress. They'll get a read-only view of your energy, check-ins, and milestones — so they can support you better.
+        Invite a friend or family member to see your progress. They'll get a read-only view of your energy, check-ins, and milestones — so they can support you better.
       </div>
 
       {/* Existing carers */}

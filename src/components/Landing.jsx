@@ -193,7 +193,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           marginBottom: 28,
         }}>
           <span style={{ fontSize: 11, opacity: 0.95, letterSpacing: 0.3 }}>
-            🌿 Independent app · Inspired by Anthony William's teachings · Not affiliated with or endorsed by Medical Medium LLC
+            🌿 Independent app · Not affiliated with or endorsed by Anthony William or Medical Medium LLC
           </span>
         </div>
 
@@ -227,7 +227,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           Does this sound familiar?
         </h2>
         <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 24, lineHeight: 1.6 }}>
-          You believe in Anthony William's work. You've invested in the books, the supplements, the protocols. But healing consistently — every single day — is harder than it looks.
+          You believe in Anthony William's work. You've invested in the books, the supplements, the protocols. But staying consistent — every single day — is harder than it looks.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -276,7 +276,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           fontSize: 22, color: C.charcoal,
           marginBottom: 6, textAlign: "center",
         }}>
-          Imagine your healing life with real support
+          Imagine your routine with real support
         </h2>
         <p style={{ fontSize: 13, color: C.muted, textAlign: "center", marginBottom: 24, lineHeight: 1.6 }}>
           Not more information. The support to actually use what you already know.
@@ -577,7 +577,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
             from $7.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
-            Rhythm $7.97 — the full routine engine · Healer $24.97 — adds the voice & chat companion
+            Rhythm $7.97 — the full routine engine · Rhythm + Voice $24.97 — adds the voice & chat helper
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
             Powered by the world's most advanced AI · Adult household profiles included (18+)

@@ -89,8 +89,8 @@ HOW TO RESPOND:
 • Many users are very unwell — keep responses clear and actionable, not overwhelming
 • MENTAL HEALTH: When someone shares emotional or mental-health struggles, validate their suffering as real, respond with warmth, and strongly encourage professional support (their doctor, a counsellor, or a crisis line if acute). NEVER explain mental-health conditions in terms of causes (viral, toxin, or otherwise), and never suggest any food, supplement, or protocol for a mental-health condition — that is a claim about a serious condition. You may point to Anthony William's official books and content generally as something they can explore themselves.
 
-HEALING REACTIONS:
-If a user reports worsening symptoms, Anthony William describes a "healing reaction" (die-off / detox). Acknowledge gently, encourage rest and hydration, and always flag the signs that need a doctor: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk. Never downplay genuine red-flag symptoms.
+FEELING WORSE:
+If a user reports feeling worse, acknowledge it warmly and encourage rest and hydration. Never tell them it's a "healing reaction", die-off or detox, and never describe worsening symptoms as a good sign — if they use those words themselves, acknowledge their feelings without confirming it. Always mention the signs that need a doctor promptly: fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk — and suggest talking to their doctor if it continues. Never downplay genuine red-flag symptoms.
 
 PROTOCOL DETAILS:
 For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.
@@ -199,7 +199,7 @@ Never supply amounts or doses of your own — only repeat ones the user has ente
       `• Energy: ${todaysCheckin.energy ?? "not logged"}/10`,
       todaysCheckin.mental_clarity ? `• Mental clarity: ${clarityLabels[todaysCheckin.mental_clarity]} (${todaysCheckin.mental_clarity}/5)` : null,
       todaysCheckin.emotional_state?.length ? `• Emotional state: ${todaysCheckin.emotional_state.join(", ")}` : null,
-      todaysCheckin.healing_reaction ? `• HEALING REACTION flagged${todaysCheckin.healing_reaction_notes ? `: "${todaysCheckin.healing_reaction_notes}"` : " — they believe they are detoxing/die-off today"}` : null,
+      todaysCheckin.healing_reaction ? `• ROUGH DAY flagged — they're feeling worse than usual${todaysCheckin.healing_reaction_notes ? `: "${todaysCheckin.healing_reaction_notes}"` : ""}` : null,
       todaysCheckin.win_today ? `• Today's win: "${todaysCheckin.win_today}"` : null,
       todaysCheckin.symptoms?.length ? `• Symptoms today: ${todaysCheckin.symptoms.join(", ")}` : null,
       todaysCheckin.sleep_hours ? `• Sleep: ${todaysCheckin.sleep_hours}h${todaysCheckin.sleep_quality ? ` (quality ${todaysCheckin.sleep_quality}/5)` : ""}` : null,
@@ -215,7 +215,7 @@ Never supply amounts or doses of your own — only repeat ones the user has ente
     return `
 TODAY'S CHECK-IN — USE THIS TO PERSONALISE EVERY RESPONSE:
 ${lines.join("\n")}
-${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged what they believe is a healing reaction. Respond with extra warmth and acknowledge how they're feeling — but do NOT confirm or deny that it is one, and never characterise worsening symptoms as a positive sign. Encourage rest and hydration, remind them of the signs that need a doctor promptly, and suggest mentioning it to their doctor if it continues." : ""}
+${todaysCheckin.healing_reaction ? "\nIMPORTANT: They have flagged a rough day (feeling worse than usual). Respond with extra warmth and acknowledge how they're feeling — but do NOT confirm or deny that it is one, and never characterise worsening symptoms as a positive sign. Encourage rest and hydration, remind them of the signs that need a doctor promptly, and suggest mentioning it to their doctor if it continues." : ""}
 ${todaysCheckin.mental_clarity <= 2 ? "\nIMPORTANT: Severe brain fog today. Keep your response SHORT, clear, and actionable. No long lists. One thing at a time." : ""}
 ${(todaysCheckin.emotional_state || []).some(e => ["Discouraged","Tearful","Overwhelmed","Numb","Lonely"].includes(e)) ? "\nIMPORTANT: They are struggling emotionally today. Lead with warmth and acknowledgment before anything practical." : ""}`;
   })() : "No check-in logged yet today.";
@@ -387,10 +387,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : hasHistory
       ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿${streakNote}${energyNote} ${
           healingProfile?.healing_summary
-            ? "I've been keeping your healing notes safe and I'm ready to pick up where we left off."
+            ? "I've been keeping your notes safe and I'm ready to pick up where we left off."
             : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
         } What's on your mind today?`
-      : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — a warm guide for Anthony William's Medical Medium protocols. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
+      : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
     if (justOnboardedGreeting) onConsumedJustOnboarded?.();
@@ -591,7 +591,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           🎙 Your Healing Guide
         </h2>
         <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-          Warm MM companion · Paraphrased & attributed teachings · Remembers your journey
+          Your CelerySync helper · Paraphrased & attributed teachings · Remembers your journey
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
           Not medical advice — always work with your doctor or licensed practitioner
@@ -623,7 +623,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm("Clear your healing memory? This cannot be undone.")) clearMemory();
+                    if (confirm("Clear your saved conversation memory? This cannot be undone.")) clearMemory();
                   }}
                   style={{
                     background: "none",
@@ -780,7 +780,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             ))}
           </div>
           <div style={{ fontSize: 12, color: "#6B7280", marginTop: 10, lineHeight: 1.5 }}>
-            Healing sometimes means asking for human help first. There is no shame in that.
+            Sometimes the strongest thing is asking for human help. There is no shame in that.
           </div>
           <button
             onClick={() => setCrisisDetected(false)}

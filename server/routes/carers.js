@@ -58,10 +58,10 @@ router.post('/invite', async (req, res) => {
             <h2 style="color:#1E2A1E;margin:0 0 16px;font-size:22px;">You've been invited as a carer</h2>
             <p style="color:#5A6B5A;line-height:1.7;font-size:15px;">
               Someone who loves you has added you as a carer on CelerySync —
-              an app inspired by Anthony William's Medical Medium teachings.
+              an independent app that helps people keep their daily routine on track.
             </p>
             <p style="color:#5A6B5A;line-height:1.7;font-size:15px;">
-              As <strong>${profile.name}'s</strong> carer, you'll see their healing progress,
+              As <strong>${profile.name}'s</strong> carer, you'll see their progress,
               energy trends, and recent milestones — so you can support them better.
             </p>
             <a href="${inviteLink}" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#3D6B44;color:#fff;text-decoration:none;border-radius:30px;font-size:16px;font-weight:700;">

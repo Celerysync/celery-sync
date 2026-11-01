@@ -95,7 +95,7 @@ export default function Auth() {
           <div style={{ fontSize: 52, marginBottom: 8 }}>🌿</div>
           <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 28 }}>CelerySync</div>
           <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
-            Your personal Medical Medium healing companion
+            Your daily routine, on track
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export default function Auth() {
           boxShadow: '0 20px 60px #00000030',
         }}>
           <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.charcoal, marginBottom: 20 }}>
-            {mode === 'login' ? 'Welcome back 🌿' : mode === 'signup' ? 'Begin your healing journey' : 'Reset your password'}
+            {mode === 'login' ? 'Welcome back 🌿' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
           </div>
 
           {msg && (

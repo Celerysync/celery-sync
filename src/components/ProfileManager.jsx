@@ -2,15 +2,13 @@ import { useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Btn, Card } from "./ui.jsx";
 import { AVATAR_OPTIONS } from "../hooks/useProfiles.js";
-import { CONDITIONS } from "../data/conditions.js";
+import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 
 const GOALS = [
-  "Support a specific condition",
-  "Heavy metal detox",
-  "Liver support",
-  "Thyroid support",
-  "More energy & clarity",
-  "Prevention & wellness",
+  "Stay consistent with my routine",
+  "Follow a cleanse or program",
+  "Keep track of my supplements",
+  "Build steady daily habits",
   "Supporting a family member (carer)",
 ];
 
@@ -82,7 +80,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Goal */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>Healing goal</div>
+        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>What you're working on</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {GOALS.map((g) => (
             <button
@@ -178,7 +176,11 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
         <input
           value={condSearch}
           onChange={(e) => setCondSearch(e.target.value)}
-          placeholder={`Search ${Object.keys(CONDITIONS).length} conditions…`}
+          onKeyDown={(e) => {
+            const t = condSearch.trim();
+            if (e.key === "Enter" && t) { if (!symptoms.includes(t)) toggleSymptom(t); setCondSearch(""); }
+          }}
+          placeholder="Add your own, in your words — press Enter"
           style={{
             width: "100%", boxSizing: "border-box",
             padding: "8px 14px", borderRadius: 30,
@@ -188,8 +190,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
           }}
         />
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 180, overflowY: "auto" }}>
-          {Object.keys(CONDITIONS)
-            .filter((s) => !condSearch || s.toLowerCase().includes(condSearch.toLowerCase()))
+          {[...EVERYDAY_SYMPTOMS, ...symptoms.filter((s) => !EVERYDAY_SYMPTOMS.includes(s))]
             .map((s) => (
               <button
                 key={s}
@@ -346,7 +347,7 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
           borderRadius: 12,
         }}>
           <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: "#dc2626", marginBottom: 10 }}>
-            Remove {confirmDelete.name}'s profile? This deletes their healing history and journal entries permanently.
+            Remove {confirmDelete.name}'s profile? This deletes their history and journal entries permanently.
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button

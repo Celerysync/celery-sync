@@ -93,7 +93,7 @@ export default function Supplements({ authUser, user, profileId }) {
           ))}
 
           <div style={{ background: C.mist, borderRadius: 12, padding: "12px 14px", fontSize: 11, color: C.mid, lineHeight: 1.7 }}>
-            Links use an affiliate code — commissions go to the Healing Access Fund. This isn't a recommendation of any product, and it isn't medical advice — always work with your doctor or pharmacist.
+            Links use an affiliate code — CelerySync may earn a small commission. This isn't a recommendation of any product, and it isn't medical advice — always work with your doctor or pharmacist.
           </div>
         </div>
       )}

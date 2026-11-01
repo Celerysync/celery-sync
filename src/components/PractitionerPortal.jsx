@@ -3,10 +3,9 @@ import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { usePractitioner } from "../hooks/usePractitioner.js";
 import { callClaude } from "../lib/api.js";
-import { CONDITIONS } from "../data/conditions.js";
+import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 
 const AVATARS = ["🌿","🌸","🌺","💫","🌙","☀️","🦋","🌻","🍃","💚","🌈","⭐","🫐","🍋","🫁","🧠"];
-const ALL_CONDITIONS = Object.keys(CONDITIONS);
 
 function timeAgo(ts) {
   if (!ts) return "never";
@@ -28,7 +27,7 @@ function ClientModal({ client, onSave, onClose }) {
   const [condSearch, setCondSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const filtered = ALL_CONDITIONS.filter(c =>
+  const filtered = EVERYDAY_SYMPTOMS.filter(c =>
     c.toLowerCase().includes(condSearch.toLowerCase()) && !conditions.includes(c)
   ).slice(0, 8);
 
@@ -66,11 +65,11 @@ function ClientModal({ client, onSave, onClose }) {
           style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 14, marginBottom: 10, outline: "none" }} />
         <input value={age} onChange={e => setAge(e.target.value)} placeholder="Age (optional)" type="number"
           style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 14, marginBottom: 10, outline: "none" }} />
-        <input value={goal} onChange={e => setGoal(e.target.value)} placeholder="Healing goal (e.g. reduce fatigue, heal thyroid)"
+        <input value={goal} onChange={e => setGoal(e.target.value)} placeholder="Their goal, in their own words"
           style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 14, marginBottom: 10, outline: "none" }} />
 
         {/* Conditions */}
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 6 }}>Conditions</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 6 }}>What they want support with</div>
         {conditions.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
             {conditions.map(c => (
@@ -83,7 +82,7 @@ function ClientModal({ client, onSave, onClose }) {
             ))}
           </div>
         )}
-        <input value={condSearch} onChange={e => setCondSearch(e.target.value)} placeholder="Search conditions to add…"
+        <input value={condSearch} onChange={e => setCondSearch(e.target.value)} onKeyDown={e => { const t = condSearch.trim(); if (e.key === "Enter" && t) { if (!conditions.includes(t)) toggleCond(t); setCondSearch(""); } }} placeholder="Add in their own words — press Enter"
           style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 13, marginBottom: 6, outline: "none" }} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
           {filtered.map(c => (
@@ -394,7 +393,7 @@ export default function PractitionerPortal({ authUser }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 22, color: C.charcoal }}>🏥 My Practice</h2>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Manage your Medical Medium clients</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Your client notes</div>
       </div>
 
       <Card style={{ background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`, border: "none" }}>
@@ -417,7 +416,7 @@ export default function PractitionerPortal({ authUser }) {
           <div style={{ fontSize: 36, marginBottom: 12 }}>🌿</div>
           <div style={{ fontFamily: "Georgia,serif", fontSize: 16, color: C.charcoal, marginBottom: 8 }}>Add your first client</div>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-            Add a client and generate their personalised Medical Medium protocol in seconds.
+            Add a client to keep session notes and prepare for sessions from what they share.
           </div>
         </Card>
       ) : (

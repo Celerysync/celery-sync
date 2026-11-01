@@ -134,10 +134,10 @@ export default function HealingLetters({ profileId }) {
   return (
     <Card>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
-        💌 Healing Anniversary Letters
+        💌 Anniversary Letters
       </div>
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-        Each year on your healing anniversary, your AI guide writes you a personal letter — reflecting on how far you've come, what it witnessed in your journey, and its hopes for the year ahead. These are yours to keep forever.
+        Each year on your CelerySync anniversary, your AI guide writes you a personal letter — reflecting on how far you've come, what it witnessed in your journey, and its hopes for the year ahead. These are yours to keep forever.
       </div>
 
       {loading && (
@@ -158,7 +158,7 @@ export default function HealingLetters({ profileId }) {
             Your first letter is being written
           </div>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            On each anniversary of when you joined CelerySync, your AI guide will write you a personal healing letter. Check back on your anniversary date — it will be here waiting.
+            On each anniversary of when you joined CelerySync, your AI guide will write you a personal anniversary letter. Check back on your anniversary date — it will be here waiting.
           </div>
         </div>
       )}

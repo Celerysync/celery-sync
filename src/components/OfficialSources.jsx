@@ -8,7 +8,7 @@ import Knowledge from "./Knowledge.jsx";
 // the Learn tab itself only ever held a placeholder article.
 const RECIPE_LINKS = [
   { label: "Recipes", emoji: "🍽", url: "https://www.medicalmedium.com/medical-medium-categories/recipes", desc: "Anthony William's official recipe collection" },
-  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/medical-medium-categories/juices", desc: "Official juice, smoothie, and healing water recipes" },
+  { label: "Juices & smoothies", emoji: "🥤", url: "https://www.medicalmedium.com/medical-medium-categories/juices", desc: "Official juice and smoothie recipes" },
 ];
 
 export default function OfficialSources() {

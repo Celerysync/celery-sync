@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 import C from "../lib/colors.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { useWebPush } from "../hooks/useWebPush.js";
@@ -23,17 +24,12 @@ const SLOTS = [
 // these", which the TGA wellness exclusion does not allow. Same wording as the
 // daily check-in so whatever is picked here shows up there. Anything else, the
 // person types in their own words.
-const EVERYDAY_SYMPTOMS = [
-  "Fatigue", "Brain fog", "Headache", "Bloating", "Joint pain", "Muscle aches",
-  "Anxiety", "Low mood", "Overwhelm", "Insomnia", "Nausea", "Skin issues",
-  "Heart palpitations", "Dizziness", "Hot flushes", "Constipation",
-];
 
 function Footer() {
   return (
     <div style={{ marginTop: 20 }}>
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
-        🌿 Independent app · Inspired by Anthony William's teachings · Not affiliated with Medical Medium LLC
+        🌿 Independent app · Not affiliated with Anthony William or Medical Medium LLC
       </div>
       <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 10, lineHeight: 1.8 }}>
         If you're in crisis, please reach out:{" "}

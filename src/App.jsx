@@ -28,7 +28,6 @@ const WelcomeVoice       = lazy(() => import("./components/WelcomeVoice.jsx"));
 const CompanionTab       = lazy(() => import("./components/CompanionTab.jsx"));
 const OfficialSources    = lazy(() => import("./components/OfficialSources.jsx"));
 const Reports            = lazy(() => import("./components/Reports.jsx"));
-const AW                 = lazy(() => import("./components/AW.jsx"));
 const CarerView          = lazy(() => import("./components/CarerView.jsx"));
 const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.jsx"));
 const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
@@ -56,7 +55,7 @@ const TABS = [
 
 const tabOf = (id) => (id === "admin" ? "admin" : resolveDestination(id)?.tab || "home");
 
-function LoadingScreen({ message = "Loading your healing journey…" }) {
+function LoadingScreen({ message = "Loading…" }) {
   return (
     <div style={{
       minHeight: "100dvh",
@@ -296,7 +295,7 @@ export default function App() {
 
   if (authLoading) return <LoadingScreen />;
   if (!authUser) return <Auth />;
-  if (profilesLoading) return <LoadingScreen message="Loading your healing profiles…" />;
+  if (profilesLoading) return <LoadingScreen message="Loading your profiles…" />;
 
   // No profiles yet, or an existing profile never finished onboarding
   // (e.g. closed the app mid-flow) — onboarding_completed_at is the one
@@ -414,7 +413,6 @@ export default function App() {
             <CarerView authUser={authUser} />
             {isPractitioner && <PractitionerPortal authUser={authUser} />}
             <div id="section-sources"><OfficialSources /></div>
-            <AW onNavigate={handleNavigate} />
           </div>
         );
 
@@ -463,7 +461,7 @@ export default function App() {
                 padding: "3px 10px", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
                 whiteSpace: "nowrap",
               }}>
-                {isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Healer"}
+                {isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Rhythm + Voice"}
               </div>
             )}
 

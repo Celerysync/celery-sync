@@ -35,10 +35,10 @@ export default function HealerUpsell({ onUpgrade }) {
       }}>
         <div style={{ fontSize: 40, marginBottom: 8 }}>🎙</div>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 21, fontWeight: 700 }}>
-          Your companion lives in the Healer plan
+          Voice is part of Rhythm + Voice
         </div>
         <div style={{ fontSize: 13, opacity: 0.88, marginTop: 6, lineHeight: 1.6 }}>
-          The Rhythm plan keeps your whole routine humming. Healer adds the voice
+          The Rhythm plan keeps your whole routine humming. Rhythm + Voice adds the voice
           and chat companion you met in your trial.
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function HealerUpsell({ onUpgrade }) {
           cursor: busy ? "default" : "pointer",
         }}
       >
-        {busy ? "🌿 One moment…" : "Upgrade to Healer — $24.97/month →"}
+        {busy ? "🌿 One moment…" : "Upgrade to Rhythm + Voice — $24.97/month →"}
       </button>
       <div style={{ textAlign: "center", fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
         Upgrades apply to your existing subscription straight away — no second
@@ -88,7 +88,7 @@ export function UpsellOrb({ onTap }) {
   return (
     <button
       onClick={onTap}
-      aria-label="Meet the voice companion (Healer plan)"
+      aria-label="Meet the voice companion (Rhythm + Voice plan)"
       style={{
         position: "fixed",
         bottom: "calc(80px + env(safe-area-inset-bottom, 0px))",

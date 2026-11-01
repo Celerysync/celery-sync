@@ -43,7 +43,7 @@ function printDoctorSummary({ user, result }) {
   <header>
     <div>
       <h1>🌿 CelerySync — Wellness Summary</h1>
-      <p style="font-size:12px;color:#6b7280;margin-top:4px;">Inspired by Anthony William's Medical Medium teachings</p>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px;">Independent app — not affiliated with Anthony William or Medical Medium</p>
     </div>
     <div style="font-size:12px;color:#555;text-align:right;line-height:1.6;">
       <strong>Date:</strong> ${now}<br>

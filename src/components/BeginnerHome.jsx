@@ -149,7 +149,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
       </div>
 
       <div style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, paddingBottom: 4 }}>
-        🌿 Independent app · Inspired by Anthony William's Medical Medium teachings<br />
+        🌿 Independent app · Not affiliated with Anthony William or Medical Medium<br />
         Not affiliated with or endorsed by Medical Medium LLC
       </div>
     </div>

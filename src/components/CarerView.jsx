@@ -256,7 +256,7 @@ export default function CarerView({ authUser }) {
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.6 }}>
           {patients.length > 0
-            ? "You can see their healing progress, energy trends, and recent milestones."
+            ? "You can see their progress, energy trends, and recent milestones."
             : "You haven't been invited as a carer for anyone yet."}
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function CarerView({ authUser }) {
             How carer access works
           </div>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, textAlign: "center" }}>
-            Ask your friend to open CelerySync, go to their <strong>Account tab</strong>, scroll to <strong>Carers</strong>, and enter your email. You'll get a link to accept — then their healing progress will appear here.
+            Ask your friend to open CelerySync, go to their <strong>Settings tab</strong>, scroll to <strong>Carers</strong>, and enter your email. You'll get a link to accept — then their progress will appear here.
           </div>
         </Card>
       ) : (

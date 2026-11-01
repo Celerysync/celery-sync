@@ -344,7 +344,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         <div style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, marginTop: 4 }}>
           {greeting}{user?.name ? ", " + user.name : ""} 🌿
         </div>
-        <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your healing journey continues</div>
+        <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your routine, one day at a time</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
           {showedUpStreak > 0 ? (
             <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>

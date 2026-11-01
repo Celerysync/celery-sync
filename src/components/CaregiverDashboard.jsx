@@ -74,7 +74,7 @@ export default function CaregiverDashboard({ patient }) {
           💜 Caring for {patient?.name || "your loved one"}
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>
-          Your support is part of their healing
+          Your support makes a real difference
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <button

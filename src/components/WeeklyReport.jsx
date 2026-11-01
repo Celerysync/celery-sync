@@ -108,7 +108,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
               borderLeft: `4px solid ${C.sage}`,
             }}>
               <div style={{ fontSize: 10, color: C.sageDark, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
-                Your healing companion's observations
+                Observations from your week
               </div>
               <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
                 {summary.ai_observations}

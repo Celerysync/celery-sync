@@ -39,6 +39,8 @@ const COMPANION_FEATURES = [
   { emoji: '💓', label: 'Wearable integration', desc: 'Connect Oura Ring to log sleep & HRV alongside your check-ins automatically' },
 ]
 
+const PRACTITIONER_PLAN_OFFERED = false;
+
 export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId }) {
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
@@ -160,7 +162,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               MOST LOVED
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4, marginBottom: 4 }}>
-              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>✨ Healer</div>
+              <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>✨ Rhythm + Voice</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
                 $24.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
               </div>
@@ -191,7 +193,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 cursor: loading ? 'default' : 'pointer',
               }}
             >
-              {loading ? '🌿 Please wait…' : 'Subscribe to Healer →'}
+              {loading ? '🌿 Please wait…' : 'Subscribe to Rhythm + Voice →'}
             </button>
           </Card>
 
@@ -238,7 +240,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </div>
             <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
               CelerySync paraphrases and attributes Anthony William's publicly shared teachings.
-              For complete protocols, exact wording, and full healing plans, we always point you
+              For complete protocols, exact wording, and full plans, we always point you
               directly to his official books, YouTube, and podcast — the Resources tab links straight there.
               This app is not affiliated with or endorsed by Anthony William or Medical Medium LLC.
             </div>
@@ -310,7 +312,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Keep Everything — Healer $24.97/month →'}
+                {loading ? '🌿 Please wait…' : 'Keep Everything — Rhythm + Voice $24.97/month →'}
               </button>
               <button
                 onClick={() => subscribe('rhythm')}
@@ -346,7 +348,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>{isPractitioner ? '🏥' : isRhythm ? '🌱' : '✨'}</div>
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20 }}>
-              {isPractitioner ? 'Practitioner Plan — Active' : isRhythm ? 'Rhythm Plan — Active' : 'Healer Plan — Active'}
+              {isPractitioner ? 'Practitioner Plan — Active' : isRhythm ? 'Rhythm Plan — Active' : 'Rhythm + Voice Plan — Active'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6, lineHeight: 1.5 }}>
               {cancelPending ? '⚠️ Cancelling at period end' : '🌿 Subscription active'}
@@ -435,12 +437,12 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 🎙 Add the companion
               </div>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
-                Upgrade to Healer for the voice and chat companion — talk your day through,
+                Upgrade to Rhythm + Voice for the voice and chat helper — talk your day through,
                 tick things off by voice, and hear your mornings and evenings spoken. Applies
                 to your current subscription straight away, prorated.
               </div>
               <Btn full onClick={() => changePlan('healer')} color={C.sage} disabled={loading}>
-                {loading ? '🌿 Please wait…' : 'Upgrade to Healer — $24.97/month →'}
+                {loading ? '🌿 Please wait…' : 'Upgrade to Rhythm + Voice — $24.97/month →'}
               </Btn>
             </Card>
           )}
@@ -461,8 +463,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </div>
           )}
 
-          {/* Practitioner upgrade */}
-          {!isPractitioner && (
+          {/* Practitioner upgrade — hidden for now (decided 2026-11-01): it's
+              thin for $99 and the riskiest surface legally. Planned to return
+              as a free practitioner referral setup instead. */}
+          {PRACTITIONER_PLAN_OFFERED && !isPractitioner && (
             <Card style={{ border: `1.5px solid ${alpha(C.gold, "50")}`, background: C.goldLight }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
                 🏥 Are you a practitioner?
@@ -495,7 +499,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               💜 Caregiver Mode
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
-              Switches the app to a carer's perspective — care prep dashboard, AI guidance addressed to you as the carer, and practical daily support for looking after a loved one doing Medical Medium healing.
+              Switches the app to a carer's perspective — care prep dashboard, AI guidance addressed to you as the carer, and practical daily support for looking after a loved one following their own routine.
             </div>
           </div>
           <button
