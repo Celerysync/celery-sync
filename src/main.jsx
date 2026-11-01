@@ -4,6 +4,10 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { IS_PROD } from './lib/env.js'
+import { installAuthFetch } from './lib/authFetch.js'
+
+// Before anything renders: every /api call carries the user's login.
+installAuthFetch()
 
 // Dev-mode stale-SW recovery lives in index.html's inline script (it must run
 // even when the module graph is broken, which this file by definition cannot).
