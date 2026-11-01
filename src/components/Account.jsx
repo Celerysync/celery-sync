@@ -369,16 +369,18 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </div>
           </div>
 
-          {trialDaysLeft <= 3 && (
+          {(
             <div style={{
-              background: C.goldLight, border: `1.5px solid ${alpha(C.gold, "50")}`,
+              background: trialDaysLeft <= 3 ? C.goldLight : C.surface,
+              border: `1.5px solid ${trialDaysLeft <= 3 ? alpha(C.gold, "50") : C.border}`,
               borderRadius: 16, padding: '14px 16px',
             }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
-                {trialDaysLeft === 0 ? 'Your trial ends today' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`}
+                {trialDaysLeft > 3 ? 'Choose your plan whenever you like' : trialDaysLeft === 0 ? 'Your trial ends today' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`}
               </div>
               <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
                 Keep everything you've been using — companion, rhythm, reports and all — or keep just the engine with the Rhythm plan.
+                {trialDaysLeft > 3 && " No rush — choosing a plan starts it (and billing) straight away, so you can also wait until your free days are up."}
               </div>
               <button
                 onClick={() => subscribe('healer')}
@@ -413,6 +415,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               Account
             </div>
             <div style={{ fontSize: 13, color: C.mid }}>{authUser.email}</div>
+            {error && <div style={{ marginTop: 10, fontSize: 13, color: C.terracotta, lineHeight: 1.5 }}>{error}</div>}
           </Card>
         </>
       ) : (
@@ -449,6 +452,14 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <Btn full onClick={openPortal} color={C.sage} disabled={loading}>
               {loading ? '🌿 Opening…' : 'Manage Billing & Subscription'}
             </Btn>
+            {error && (
+              <div style={{ marginTop: 10, background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "50")}`, borderRadius: 12, padding: 12, fontSize: 13, color: C.terracotta, lineHeight: 1.5 }}>
+                {error}
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+              Update your card, see invoices, or cancel — on Stripe's secure page.
+            </div>
           </Card>
 
           {/* Cancel / Resume subscription */}

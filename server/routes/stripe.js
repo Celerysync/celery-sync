@@ -370,20 +370,26 @@ router.post('/portal', async (req, res) => {
     .from('subscriptions')
     .select('stripe_customer_id')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
 
+  // No paid plan yet (free trial, or an account that never checked out)
   if (!sub?.stripe_customer_id) {
-    return res.status(404).json({ error: 'No subscription found' })
+    return res.status(404).json({ error: "There's no billing set up on this account yet — choose a plan above to start one." })
   }
 
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: CLIENT_URL,
+      // Back to the Plan section, not the top of the app
+      return_url: `${CLIENT_URL}/?tab=settings:plan`,
     })
     res.json({ url: session.url })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    // e.g. a customer left over from Stripe test mode that live Stripe has never seen
+    if (err?.code === 'resource_missing') {
+      return res.status(404).json({ error: "We couldn't find your billing account in Stripe. Please email allij@live.com.au and we'll sort it out." })
+    }
+    res.status(500).json({ error: "Billing couldn't be opened just now — please try again in a moment." })
   }
 })
 
