@@ -280,7 +280,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>🌱 Rhythm</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
-                $7.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
+                $9.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
               </div>
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
@@ -405,7 +405,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Just the engine — Rhythm $7.97/month →'}
+                {loading ? '🌿 Please wait…' : 'Just the engine — Rhythm $9.97/month →'}
               </button>
             </div>
           )}
@@ -539,7 +539,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ textAlign: 'center' }}>
               <button
                 onClick={() => {
-                  if (confirm('Switch to the Rhythm plan ($7.97/month)? You keep your whole routine, tracking and reports, but the voice and chat companion turns off straight away.')) changePlan('rhythm')
+                  if (confirm('Switch to the Rhythm plan ($9.97/month)? You keep your whole routine, tracking and reports, but the voice and chat companion turns off straight away.')) changePlan('rhythm')
                 }}
                 disabled={loading}
                 style={{
@@ -547,7 +547,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Georgia,serif',
                 }}
               >
-                Need to trim costs? Switch to Rhythm — $7.97/month (keeps the engine, pauses the companion)
+                Need to trim costs? Switch to Rhythm — $9.97/month (keeps the engine, pauses the companion)
               </button>
             </div>
           )}

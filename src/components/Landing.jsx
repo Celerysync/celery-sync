@@ -213,7 +213,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
         </button>
 
         <div style={{ fontSize: 12, opacity: 0.7 }}>
-          No credit card needed · Plans from $7.97/month after · Cancel anytime
+          No credit card needed · Plans from $9.97/month after · Cancel anytime
         </div>
       </div>
 
@@ -574,10 +574,10 @@ export default function Landing({ onGetStarted, onSignIn }) {
           </p>
 
           <div style={{ fontSize: 28, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>
-            from $7.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
+            from $9.97<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month AUD</span>
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
-            Rhythm $7.97 — the full routine engine · Rhythm + Voice $24.97 — adds the voice & chat helper
+            Rhythm $9.97 — the full routine engine · Rhythm + Voice $24.97 — adds the voice & chat helper
           </div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
             Powered by the world's most advanced AI · Adult household profiles included (18+)
@@ -597,7 +597,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           </button>
 
           <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.8 }}>
-            7 days free, no card needed · Then from $7.97/month via secure Stripe checkout{"\n"}
+            7 days free, no card needed · Then from $9.97/month via secure Stripe checkout{"\n"}
             Your data is private and never shared
           </div>
         </div>

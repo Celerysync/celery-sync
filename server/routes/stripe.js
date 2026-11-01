@@ -16,7 +16,7 @@ async function getOrCreateCustomer(userId, email) {
     .from('subscriptions')
     .select('stripe_customer_id')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
   if (existing?.stripe_customer_id) return existing.stripe_customer_id
   const customer = await stripe.customers.create({ email, metadata: { supabase_user_id: userId } })
   return customer.id
@@ -25,17 +25,47 @@ async function getOrCreateCustomer(userId, email) {
 // Monthly-only since 2026-07-19 (user decision: annual refund liability if
 // the app ever winds down). STRIPE_ANNUAL_PRICE_ID stays in the env unused
 // so annuals can come back with one line once the app has earned its keep.
-const PLAN_PRICES = () => ({
-  rhythm: process.env.STRIPE_RHYTHM_PRICE_ID,             // $7.97/mo engine-only
-  healer: process.env.STRIPE_PRICE_ID,                     // $24.97/mo full companion
-  practitioner: process.env.STRIPE_PRACTITIONER_PRICE_ID,  // $99/mo client portal
+//
+// Prices are found by their Stripe lookup key, so changing a price is done in
+// Stripe alone (create the new price with the same lookup key and
+// transfer_lookup_key) — no server env change, no redeploy. The env price ids
+// stay as a fallback if Stripe can't be reached.
+const LOOKUP_KEYS = {
+  rhythm: 'celerysync_rhythm_monthly',              // A$9.97/mo engine-only (was $7.97 until 2026-11-01)
+  healer: 'celerysync_rhythm_voice_monthly',        // A$24.97/mo Rhythm + Voice
+  practitioner: 'celerysync_practitioner_monthly',  // A$99/mo (offer hidden)
+  topup: 'celerysync_voice_topup',                  // A$6.99 one-off, 30 voice minutes
+}
+const ENV_PRICES = () => ({
+  rhythm: process.env.STRIPE_RHYTHM_PRICE_ID,
+  healer: process.env.STRIPE_PRICE_ID,
+  practitioner: process.env.STRIPE_PRACTITIONER_PRICE_ID,
+  topup: process.env.STRIPE_TOPUP_PRICE_ID,
 })
+let priceCache = { at: 0, ids: null }
+async function priceIds() {
+  if (priceCache.ids && Date.now() - priceCache.at < 10 * 60_000) return priceCache.ids
+  const ids = { ...ENV_PRICES() }
+  try {
+    const { data } = await stripe.prices.list({ lookup_keys: Object.values(LOOKUP_KEYS), active: true, limit: 10 })
+    for (const [plan, key] of Object.entries(LOOKUP_KEYS)) {
+      const hit = data.find((p) => p.lookup_key === key)
+      if (hit) ids[plan] = hit.id
+    }
+    priceCache = { at: Date.now(), ids }
+  } catch (err) {
+    console.warn('Stripe price lookup failed, using env price ids:', err.message)
+  }
+  return ids
+}
+const PLAN_PRICES = priceIds
 
 // Create Stripe Checkout session (rhythm or healer plan)
 router.post('/checkout', async (req, res) => {
   const { userId, email, plan = 'healer' } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
-  const priceId = PLAN_PRICES()[plan]
+  if (!['rhythm', 'healer'].includes(plan)) return res.status(400).json({ error: `Unknown plan: ${plan}` })
+  const priceId = (await PLAN_PRICES())[plan]
   if (!priceId) return res.status(400).json({ error: `Unknown or unconfigured plan: ${plan}` })
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
   try {
@@ -49,7 +79,7 @@ router.post('/checkout', async (req, res) => {
       // otherwise the two trials stack into 14 free days.
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${CLIENT_URL}?subscribed=true`,
-      cancel_url: `${CLIENT_URL}?tab=account`,
+      cancel_url: `${CLIENT_URL}?tab=settings:plan`,
       allow_promotion_codes: true,
     })
     await supabase.from('subscriptions').upsert({
@@ -68,7 +98,8 @@ router.post('/checkout', async (req, res) => {
 router.post('/change-plan', async (req, res) => {
   const { userId, plan } = req.body
   if (!userId || !plan) return res.status(400).json({ error: 'userId and plan required' })
-  const priceId = PLAN_PRICES()[plan]
+  if (!['rhythm', 'healer', 'practitioner'].includes(plan)) return res.status(400).json({ error: `Unknown plan: ${plan}` })
+  const priceId = (await PLAN_PRICES())[plan]
   if (!priceId) return res.status(400).json({ error: `Unknown or unconfigured plan: ${plan}` })
   try {
     const { data: sub } = await supabase
@@ -100,7 +131,8 @@ router.post('/change-plan', async (req, res) => {
 router.post('/checkout/practitioner', async (req, res) => {
   const { userId, email } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
-  if (!process.env.STRIPE_PRACTITIONER_PRICE_ID) return res.status(500).json({ error: 'Practitioner plan not configured' })
+  const practitionerPrice = (await PLAN_PRICES()).practitioner
+  if (!practitionerPrice) return res.status(500).json({ error: 'Practitioner plan not configured' })
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
   try {
     const customerId = await getOrCreateCustomer(userId, email)
@@ -109,9 +141,9 @@ router.post('/checkout/practitioner', async (req, res) => {
       mode: 'subscription',
       payment_method_types: ['card'],
       // No Stripe-side trial — same reasoning as the healer checkout above.
-      line_items: [{ price: process.env.STRIPE_PRACTITIONER_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: practitionerPrice, quantity: 1 }],
       success_url: `${CLIENT_URL}?subscribed=true&plan=practitioner`,
-      cancel_url: `${CLIENT_URL}?tab=account`,
+      cancel_url: `${CLIENT_URL}?tab=settings:plan`,
       allow_promotion_codes: true,
     })
     await supabase.from('subscriptions').upsert({
@@ -128,12 +160,13 @@ router.post('/checkout/practitioner', async (req, res) => {
 // button can say it upfront and can never disagree with checkout.
 let _topupInfoCache = { at: 0, info: null }
 router.get('/topup-info', async (_req, res) => {
-  if (!process.env.STRIPE_TOPUP_PRICE_ID) return res.json({ available: false })
+  const topupPrice = (await PLAN_PRICES()).topup
+  if (!topupPrice) return res.json({ available: false })
   if (_topupInfoCache.info && Date.now() - _topupInfoCache.at < 10 * 60 * 1000) {
     return res.json(_topupInfoCache.info)
   }
   try {
-    const price = await stripe.prices.retrieve(process.env.STRIPE_TOPUP_PRICE_ID)
+    const price = await stripe.prices.retrieve(topupPrice)
     const info = {
       available: price.active,
       minutes: parseInt(process.env.TOPUP_MINUTES, 10) || 30,
@@ -153,7 +186,8 @@ router.get('/topup-info', async (_req, res) => {
 router.post('/topup', async (req, res) => {
   const { userId, email } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
-  if (!process.env.STRIPE_TOPUP_PRICE_ID) return res.status(500).json({ error: 'Top-up not configured' })
+  const topupPrice = (await PLAN_PRICES()).topup
+  if (!topupPrice) return res.status(500).json({ error: 'Top-up not configured' })
   const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
   const topupSeconds = (parseInt(process.env.TOPUP_MINUTES, 10) || 30) * 60
   try {
@@ -162,7 +196,7 @@ router.post('/topup', async (req, res) => {
       customer: customerId,
       mode: 'payment',
       payment_method_types: ['card'],
-      line_items: [{ price: process.env.STRIPE_TOPUP_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: topupPrice, quantity: 1 }],
       metadata: { supabase_user_id: userId, topup_seconds: String(topupSeconds) },
       success_url: `${CLIENT_URL}?topup=success`,
       cancel_url: `${CLIENT_URL}?tab=settings`,
@@ -189,10 +223,17 @@ router.post('/webhook', async (req, res) => {
     return customer.deleted ? null : customer.metadata?.supabase_user_id
   }
 
-  const planForPrice = (priceId) =>
-    priceId === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner'
-    : priceId === process.env.STRIPE_RHYTHM_PRICE_ID ? 'rhythm'
-    : 'healer'
+  // Which plan was paid for: read from the price's own lookup key, so a new
+  // price (e.g. Rhythm at $9.97) can't be mistaken for Rhythm + Voice and
+  // hand out voice minutes. Env ids are the fallback for unlabelled prices.
+  const planForPrice = (price) => {
+    const byKey = Object.entries(LOOKUP_KEYS).find(([, key]) => key === price?.lookup_key)?.[0]
+    if (byKey && byKey !== 'topup') return byKey
+    const id = price?.id
+    return id === process.env.STRIPE_PRACTITIONER_PRICE_ID ? 'practitioner'
+      : id === process.env.STRIPE_RHYTHM_PRICE_ID ? 'rhythm'
+      : 'healer'
+  }
 
   try {
     switch (event.type) {
@@ -235,7 +276,7 @@ router.post('/webhook', async (req, res) => {
         const userId = await getUserId(session.customer)
         if (!userId) break
         const sub = await stripe.subscriptions.retrieve(session.subscription)
-        const plan = planForPrice(sub.items.data[0]?.price?.id)
+        const plan = planForPrice(sub.items.data[0]?.price)
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: session.customer,
@@ -253,7 +294,7 @@ router.post('/webhook', async (req, res) => {
         const sub = event.data.object
         const userId = await getUserId(sub.customer)
         if (!userId) break
-        const plan = planForPrice(sub.items.data[0]?.price?.id)
+        const plan = planForPrice(sub.items.data[0]?.price)
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_customer_id: sub.customer,

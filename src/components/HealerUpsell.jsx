@@ -2,7 +2,7 @@ import { useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
-// What Rhythm-plan ($7.97 engine-only) subscribers see in place of the AI
+// What Rhythm-plan ($9.97 engine-only) subscribers see in place of the AI
 // companion. Warm, not naggy: the trial already showed them what the
 // companion is; this is the door back to it. Compliance: describes app
 // features only — no wellness claims.

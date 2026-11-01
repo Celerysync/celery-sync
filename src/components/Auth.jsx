@@ -207,7 +207,7 @@ export default function Auth() {
                   </button>
                 </span>
                 <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
-                  Try free for 7 days, then plans from $7.97/month. Cancel anytime.
+                  Try free for 7 days, then plans from $9.97/month. Cancel anytime.
                 </div>
               </>
             )}

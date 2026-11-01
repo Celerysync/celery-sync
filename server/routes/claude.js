@@ -6,19 +6,16 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export const MODELS = {
   quick:    'claude-haiku-4-5-20251001', // daily check-ins, follow-ups, short lookups
-  standard: 'claude-sonnet-4-6',         // most conversation turns (resolveModel picks this for health queries)
+  standard: 'claude-sonnet-5-5',         // most conversation turns — newer than 4.6 and ~1/3 cheaper ($2/$10 vs $3/$15 per MTok)
   deep:     'claude-opus-4-8',           // practitioner protocol generation only
 }
-
-// Keywords that escalate a standard-tier request to Opus-class reasoning.
-// Sonnet handles the vast majority; only genuinely complex multi-condition or
-// longitudinal queries need the stronger model.
-const DEEP_SIGNALS = /interpret.*week|weeks? of (data|symptoms?|history)|multi.?condition|complex.*protocol|why (am i|is my|are my).*still|progress over|trend|pattern over|not improving|getting worse|compare.*months?|analyse my|analyse my journey/i
 
 // Lightweight router — picks the cheapest model that can do the job.
 // quick tier: forced Haiku (summaries, follow-up chips, welcome replies, short voice)
 // deep tier: forced Opus (practitioner portal only)
-// standard: smart routing — Sonnet for health questions, Haiku for trivial messages
+// standard: Haiku for very short messages, Sonnet for the rest. (Escalating
+// "trend / getting worse" questions to Opus was dropped 2026-11-01: the app's
+// answers are descriptive-only, Sonnet 5.5 handles them, and Opus cost ~2.5x.)
 function resolveModel(tier, messages = []) {
   if (tier === 'quick') return MODELS.quick
   if (tier === 'deep')  return MODELS.deep
@@ -31,9 +28,6 @@ function resolveModel(tier, messages = []) {
 
   // Very short messages are always conversational → Haiku
   if (words <= 10) return MODELS.quick
-
-  // Longitudinal / multi-condition reasoning → escalate to Opus
-  if (DEEP_SIGNALS.test(text)) return MODELS.deep
 
   // Everything else with medical content → Sonnet
   return MODELS.standard
@@ -50,7 +44,30 @@ function buildSystemParam({ system, staticSystem, dynamicSystem }) {
   return system || undefined
 }
 
-const CACHE_HEADERS = { 'anthropic-beta': 'prompt-caching-2024-07-31' }
+// Per-model request shape. Sonnet 5.5 thinks by default, which would eat the
+// small max_tokens a chat reply gets and delay the first words — this is a
+// short, warm helper, so thinking stays off ('between_tools' with no tools)
+// at low effort. It also gets Anthropic's server-side fallback: if it ever
+// declines, another model answers in the same call. (Prompt caching is GA —
+// the old caching beta header is no longer needed.)
+function requestFor(model, base) {
+  if (model === 'claude-sonnet-5-5') {
+    return {
+      api: anthropic.beta.messages,
+      params: {
+        ...base,
+        thinking: { type: 'between_tools' },
+        output_config: { effort: 'low' },
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+      },
+    }
+  }
+  return { api: anthropic.messages, params: base }
+}
+
+// If the whole chain declines (rare), say something kind instead of nothing.
+const DECLINED_TEXT = "I'm not able to help with that one — but I'm here for anything to do with your routine, your check-ins or finding your way around the app."
 
 router.post('/', async (req, res) => {
   const { system, staticSystem, dynamicSystem, messages, maxTokens = 900, tier = 'standard' } = req.body
@@ -61,11 +78,10 @@ router.post('/', async (req, res) => {
     const systemParam = buildSystemParam({ system, staticSystem, dynamicSystem })
     console.log(`🤖 [${tier}] → ${model.split('-').slice(1,3).join('-')} | cache=${!!staticSystem} (${messages[messages.length-1]?.content?.slice?.(0,60) ?? ''}…)`)
 
-    const response = await anthropic.messages.create(
-      { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
-      { headers: CACHE_HEADERS, timeout: 30000 }
-    )
-    res.json({ text: response.content.find(b => b.type === 'text')?.text ?? '' })
+    const { api, params } = requestFor(model, { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) })
+    const response = await api.create(params, { timeout: 30000 })
+    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('')
+    res.json({ text: text || (response.stop_reason === 'refusal' ? DECLINED_TEXT : '') })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -86,15 +102,19 @@ router.post('/stream', async (req, res) => {
     const systemParam = buildSystemParam({ system, staticSystem, dynamicSystem })
     console.log(`🤖 [stream/${tier}] → ${model.split('-').slice(1,3).join('-')} | cache=${!!staticSystem}`)
 
-    const stream = anthropic.messages.stream(
-      { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) },
-      { headers: CACHE_HEADERS, timeout: 60000 }
-    )
+    const { api, params } = requestFor(model, { model, max_tokens: maxTokens, messages, ...(systemParam ? { system: systemParam } : {}) })
+    const stream = api.stream(params, { timeout: 60000 })
 
+    let wroteText = false
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        wroteText = true
         res.write(`data: ${JSON.stringify({ delta: event.delta.text })}\n\n`)
       }
+    }
+    if (!wroteText) {
+      const final = await stream.finalMessage().catch(() => null)
+      if (final?.stop_reason === 'refusal') res.write(`data: ${JSON.stringify({ delta: DECLINED_TEXT })}\n\n`)
     }
     res.write('data: [DONE]\n\n')
     res.end()

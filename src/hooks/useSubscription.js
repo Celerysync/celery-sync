@@ -59,7 +59,7 @@ export function useSubscription(authUser) {
 
   const hasActivePlan = subData?.status === 'active' || subData?.status === 'trialing'
   const isPractitioner = isOwner || (hasActivePlan && subData?.plan === 'practitioner')
-  // Rhythm ($7.97): full engine, no AI companion (voice or text). Trial users
+  // Rhythm ($9.97): full engine, no AI companion (voice or text). Trial users
   // are NOT rhythm — the 7-day trial shows everyone the full Healer experience.
   const isRhythm = !isOwner && hasActivePlan && subData?.plan === 'rhythm'
 

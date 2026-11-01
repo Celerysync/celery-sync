@@ -234,7 +234,7 @@ async function includedSecondsFor(userId) {
       .eq('user_id', userId)
       .maybeSingle()
     if (sub?.status === 'active' || sub?.status === 'trialing') {
-      // Rhythm ($7.97 engine-only) includes no voice — the companion is what
+      // Rhythm ($9.97 engine-only) includes no voice — the companion is what
       // the Healer plan IS. Any topup_seconds_remaining still spends normally.
       if (sub.plan === 'rhythm') return 0
       return DEFAULT_INCLUDED_SECONDS
