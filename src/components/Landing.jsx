@@ -117,7 +117,7 @@ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 const isAndroid = /android/i.test(navigator.userAgent);
 const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
 
-export default function Landing({ onGetStarted }) {
+export default function Landing({ onGetStarted, onSignIn }) {
   const [openPain, setOpenPain] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
 
@@ -606,7 +606,7 @@ export default function Landing({ onGetStarted }) {
         <div style={{ textAlign: "center", marginTop: 16 }}>
           <span style={{ fontSize: 13, color: C.muted }}>Already a member? </span>
           <button
-            onClick={onGetStarted}
+            onClick={onSignIn || onGetStarted}
             style={{ background: "none", border: "none", color: C.sageDark, fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
           >
             Sign in →

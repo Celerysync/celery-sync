@@ -37,7 +37,14 @@ export default function Auth() {
   }
 
   if (!showAuth) {
-    return <Landing onGetStarted={() => setShowAuth(true)} />
+    return (
+      <Landing
+        onGetStarted={() => { setMode('signup'); setShowAuth(true) }}
+        // "Already a member? Sign in" used to open the Create Account form,
+        // so returning members got "User already registered".
+        onSignIn={() => { setMode('login'); setShowAuth(true) }}
+      />
+    )
   }
 
   const inputStyle = {
