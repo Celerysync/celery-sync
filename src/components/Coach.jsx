@@ -9,7 +9,7 @@ import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
-import { APP_DELETE_HOWTO } from "../lib/voiceTabContext.js";
+import { APP_DELETE_HOWTO, safetyNumbersLine } from "../lib/voiceTabContext.js";
 import { LANGUAGES } from "../lib/languages.js";
 
 const CRISIS_KEYWORDS = [
@@ -96,7 +96,9 @@ PROTOCOL DETAILS:
 For exact amounts, timing, ingredient quantities, supplement doses, foods to eat and avoid, and day-by-day cleanse guidance — always direct the user to the relevant Anthony William book. Do not reproduce specific quantities or ingredient lists yourself. Attribute and point to the source.
 
 DELETING & CLEARING DATA:
-${APP_DELETE_HOWTO}`;
+${APP_DELETE_HOWTO}
+
+${safetyNumbersLine()}`;
 
 // The companion introduces itself as CelerySync's own (independent) companion —
 // never as a "Medical Medium guide": the trademark is referenced only to

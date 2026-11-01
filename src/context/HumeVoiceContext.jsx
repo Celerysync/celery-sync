@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { VoiceProvider as HumeSDKProvider, useVoice as useHumeSDKVoice } from "@humeai/voice-react";
 import { useHealingMemory } from "../hooks/useHealingMemory.js";
 import { useVoiceTools } from "../hooks/useVoiceTools.js";
-import { TAB_CONTEXT, VOICE_ACTION_RULES, destinationsForPrompt } from "../lib/voiceTabContext.js";
+import { TAB_CONTEXT, VOICE_ACTION_RULES, destinationsForPrompt, safetyNumbersLine } from "../lib/voiceTabContext.js";
 import { supabase } from "../lib/supabase.js";
 import { setCompanionVoiceLive } from "../hooks/useVoice.js";
 import { APP_ACTIVITY_EVENT } from "../lib/appActivity.js";
@@ -11,6 +11,11 @@ import { APP_ACTIVITY_EVENT } from "../lib/appActivity.js";
 // later. Client-side enforcement backs up the EVI config's own timeout.
 const SILENCE_WARN_MS = 20_000;
 const SILENCE_CLOSE_MS = 30_000;
+// Quick mode: once the companion has DONE something ("done my juice" →
+// ticked) and the user goes quiet, the call ends after this instead of 30s.
+// Most voice use is one quick action, and every idle second is billed.
+const QUICK_CLOSE_MS = 8_000;
+const VOICE_ACTION_DONE_EVENT = "cs:voice-action-done";
 
 const HumeVoiceContext = createContext(null);
 
@@ -72,6 +77,14 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   // A long reply (or a tool call) used to count as silence: a user who spoke
   // for a while and then waited ~20s for the answer was hung up on mid-turn.
   const awaitingReplySinceRef = useRef(0);
+  // Armed when an action completes; disarmed when the user starts a new turn
+  // (if that turn completes an action too, it re-arms).
+  const quickCloseArmedRef = useRef(false);
+  useEffect(() => {
+    const arm = () => { quickCloseArmedRef.current = true; };
+    window.addEventListener(VOICE_ACTION_DONE_EVENT, arm);
+    return () => window.removeEventListener(VOICE_ACTION_DONE_EVENT, arm);
+  }, []);
   const playingRef = useRef(false);
   const disconnectRef = useRef(() => {});
   const sessionIdRef = useRef(null);
@@ -123,6 +136,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   // load the meter for the gauge, and prime the heartbeat clock (spec §2.4).
   useEffect(() => {
     if (voice.readyState === "open") {
+      quickCloseArmedRef.current = false;
       setSessionStartedAt(Date.now());
       setTimedOut(false);
       lastActivityRef.current = Date.now();
@@ -169,7 +183,13 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         setSilenceWarning(false);
       } else {
         const idle = Date.now() - lastActivityRef.current;
-        if (idle >= SILENCE_CLOSE_MS) {
+        if (quickCloseArmedRef.current && idle >= QUICK_CLOSE_MS) {
+          // Job done and nothing more said — end quietly, no "still there?"
+          quickCloseArmedRef.current = false;
+          setSilenceWarning(false);
+          setTimedOut(true);
+          disconnectRef.current();
+        } else if (idle >= SILENCE_CLOSE_MS) {
           setTimedOut(true);
           setSilenceWarning(false);
           disconnectRef.current();
@@ -386,10 +406,11 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     const localTimeLine = `The user's local date and time right now: ${new Date().toLocaleString("en-AU", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" })}. Use this for anything about time of day — ignore any other clock.`;
     // Kept so the live session can be refreshed (page changes, taps) by
     // resending this plus what's changed — see pushLiveContext.
-    baseContextRef.current = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, appMap, extraContext]
+    const safetyLine = safetyNumbersLine();
+    baseContextRef.current = [localTimeLine, safetyLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, appMap, extraContext]
       .filter(Boolean).join("\n\n");
     tapLogRef.current = [];
-    const contextText = [localTimeLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
+    const contextText = [localTimeLine, safetyLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
       .filter(Boolean)
       .join("\n\n");
     const sessionSettings = {
@@ -477,6 +498,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     const um = voice.lastUserMessage;
     if (um && !um.interim) {
       flushTurn();
+      quickCloseArmedRef.current = false;
       lastUserTurnRef.current = { text: um.message?.content || "", at: Date.now(), parts: [] };
       awaitingReplySinceRef.current = Date.now();
     }
@@ -551,6 +573,10 @@ export function HumeVoiceProvider({ authUser, profileId, tab, enabled, onSwitchT
     try {
       const args = message.parameters ? JSON.parse(message.parameters) : {};
       const result = await handler(args);
+      // A real, completed action (not a question waiting for a yes)
+      if (result && !result.error && !result.needs_confirmation && (result.saved || result.marked || result.logged)) {
+        window.dispatchEvent(new Event(VOICE_ACTION_DONE_EVENT));
+      }
       return send.success(result ?? { ok: true });
     } catch (err) {
       return send.error({

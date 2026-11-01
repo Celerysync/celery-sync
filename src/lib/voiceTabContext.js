@@ -103,3 +103,29 @@ export const VOICE_ACTION_RULES = [
   "Removing, replacing or ending anything: the tool will first answer needs_confirmation — ask the exact question it gives you, and only call again with confirmed: true if they clearly say yes. If you're not sure you heard them right, ask again. Never pass confirmed: true without hearing a yes in this conversation.",
   "Removed items are kept in their history and can always be brought back, so reassure them nothing is lost.",
 ].join(" ");
+
+// Emergency and crisis numbers for where the user actually is, worked out
+// from the device's time zone. Without this the companion guessed and gave
+// Australian users the UK's 999 and Samaritans. Most users are in Australia,
+// so that's the fallback when the zone is unknown.
+const SAFETY_NUMBERS = {
+  AU: "The user is in Australia. Emergency: 000. Crisis support, 24/7: Lifeline 13 11 14 (or text 0477 13 11 14). For Aboriginal and Torres Strait Islander people: 13YARN 13 92 76.",
+  NZ: "The user is in New Zealand. Emergency: 111. Crisis support, 24/7: call or text 1737.",
+  GB: "The user is in the UK. Emergency: 999. Crisis support, 24/7: Samaritans 116 123.",
+  IE: "The user is in Ireland. Emergency: 112 or 999. Crisis support, 24/7: Samaritans 116 123.",
+  US: "The user is in the United States. Emergency: 911. Crisis support, 24/7: call or text 988.",
+  CA: "The user is in Canada. Emergency: 911. Crisis support, 24/7: call or text 988.",
+};
+export function safetyNumbersLine(timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "") {
+  const tz = timeZone;
+  const country =
+    tz.startsWith("Australia/") ? "AU"
+    : tz === "Pacific/Auckland" || tz === "Pacific/Chatham" ? "NZ"
+    : tz === "Europe/London" ? "GB"
+    : tz === "Europe/Dublin" ? "IE"
+    : /^America\/(Toronto|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina)/.test(tz) ? "CA"
+    : tz.startsWith("America/") || tz.startsWith("US/") || tz === "Pacific/Honolulu" ? "US"
+    : tz ? null : "AU";
+  return (country ? SAFETY_NUMBERS[country] : `The user's time zone is ${tz}; if they need help urgently, ask where they are and point them to their local emergency number.`) +
+    " Only ever give these numbers — never numbers from another country.";
+}
