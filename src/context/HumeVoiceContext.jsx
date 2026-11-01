@@ -14,7 +14,11 @@ const SILENCE_CLOSE_MS = 30_000;
 // Quick mode: once the companion has DONE something ("done my juice" →
 // ticked) and the user goes quiet, the call ends after this instead of 30s.
 // Most voice use is one quick action, and every idle second is billed.
-const QUICK_CLOSE_MS = 8_000;
+// 15s, not 8: people here are often tired or foggy and pause to think — 8s
+// cut them off mid-thought. And if the companion's last words were a
+// question ("what's next?"), quick mode doesn't apply at all: it invited an
+// answer, so the normal 30s silence rule decides.
+const QUICK_CLOSE_MS = 15_000;
 const VOICE_ACTION_DONE_EVENT = "cs:voice-action-done";
 
 const HumeVoiceContext = createContext(null);
@@ -80,6 +84,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
   // Armed when an action completes; disarmed when the user starts a new turn
   // (if that turn completes an action too, it re-arms).
   const quickCloseArmedRef = useRef(false);
+  const lastReplyAskedRef = useRef(false); // companion's latest sentence ended with a question
   useEffect(() => {
     const arm = () => { quickCloseArmedRef.current = true; };
     window.addEventListener(VOICE_ACTION_DONE_EVENT, arm);
@@ -183,7 +188,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
         setSilenceWarning(false);
       } else {
         const idle = Date.now() - lastActivityRef.current;
-        if (quickCloseArmedRef.current && idle >= QUICK_CLOSE_MS) {
+        if (quickCloseArmedRef.current && !lastReplyAskedRef.current && idle >= QUICK_CLOSE_MS) {
           // Job done and nothing more said — end quietly, no "still there?"
           quickCloseArmedRef.current = false;
           setSilenceWarning(false);
@@ -531,6 +536,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     const turn = lastUserTurnRef.current;
     if (turn.firstReplyMs == null && turn.text) turn.firstReplyMs = Date.now() - turn.at;
     turn.parts.push(text);
+    lastReplyAskedRef.current = /\?\s*["'”’)\]]*\s*$/.test(text.trim());
   }, [voice.lastVoiceMessage]);
 
   // Call over — save the last turn.
