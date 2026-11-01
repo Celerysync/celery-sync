@@ -35,6 +35,20 @@ export default function VoiceOrb() {
   } = useHumeVoiceOrchestrator();
   const [connectError, setConnectError] = useState(null);
 
+  // The calm message hides the real error from the person — so record the
+  // real one (once per distinct error) where it can be looked up. A 414 from
+  // Hume hid behind "busy" for a day before this existed.
+  const rawError = (connectError && !micHelp(connectError) ? connectError : null)
+    || (error && !micHelp(error) ? error.message : null);
+  useEffect(() => {
+    if (!rawError || /Voice minutes are used up/.test(rawError)) return;
+    fetch("/api/analytics/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType: "voice_connect_error", properties: { message: String(rawError).slice(0, 300) } }),
+    }).catch(() => {});
+  }, [rawError]);
+
   // Session clock — ticks only while a session is live; shows 0:00 until
   // the first tick so render stays pure.
   const [now, setNow] = useState(0);

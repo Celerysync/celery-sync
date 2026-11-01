@@ -410,11 +410,18 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     baseContextRef.current = [localTimeLine, safetyLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, appMap, extraContext]
       .filter(Boolean).join("\n\n");
     tapLogRef.current = [];
-    const contextText = [localTimeLine, safetyLine, nameLine, historyLine, returningLine, rhythmLine, recentLine, memoryLine, VOICE_ACTION_RULES, TAB_CONTEXT[tab], appMap, extraContext]
+    // The SDK puts connect-time session settings into the WebSocket URL, and
+    // Hume refuses URLs past its length limit (HTTP 414). The full context —
+    // rhythm, recent conversation, memory, tool rules, app map — grew past it
+    // after a couple of conversations, so calls failed "busy". Connect with
+    // only what shapes the opening greeting, then send the full context
+    // inside the open socket, where length doesn't matter.
+    const greetingContext = [localTimeLine, safetyLine, nameLine, historyLine, returningLine, TAB_CONTEXT[tab], extraContext]
       .filter(Boolean)
-      .join("\n\n");
+      .join("\n\n")
+      .slice(0, 3000);
     const sessionSettings = {
-      ...(contextText ? { context: { text: contextText, type: "persistent" } } : {}),
+      ...(greetingContext ? { context: { text: greetingContext, type: "persistent" } } : {}),
       ...(chosenVoiceId ? { voiceId: chosenVoiceId } : {}),
     };
     await voice.connect({
@@ -441,6 +448,14 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
     ].filter(Boolean).join("\n\n");
     voice.sendSessionSettings?.({ context: { text, type: "persistent" } });
   }, [voice]);
+  // The call connects with only the greeting context (URL length limit —
+  // see prepareAndConnect); send the full context as soon as it's open. Done
+  // here, on the render that sees "open", because the SDK's send silently
+  // drops messages from a render where the socket wasn't open yet.
+  useEffect(() => {
+    if (voice.readyState === "open") pushLiveContext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.readyState]);
 
   useEffect(() => {
     if (tabRef.current === tab) return;
