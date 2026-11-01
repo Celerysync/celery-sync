@@ -3,16 +3,11 @@ import express from 'express'
 import cors from 'cors'
 import cron from 'node-cron'
 import { rateLimit } from 'express-rate-limit'
-import claudeRoutes from './routes/claude.js'
-import stripeRoutes from './routes/stripe.js'
-import humeRoutes from './routes/hume.js'
-import notificationRoutes from './routes/notifications.js'
-import wearableRoutes, { syncAllOuraUsers } from './routes/wearable.js'
-import analyticsRoutes, { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
-import memoryRoutes, { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
-import carerRoutes from './routes/carers.js'
-import encouragementRoutes, { runEncouragementTick } from './routes/encouragement.js'
-import communityRoutes from './routes/community.js'
+import { mountApi } from './api.js'
+import { syncAllOuraUsers } from './routes/wearable.js'
+import { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
+import { generateAllWeeklySummaries, generateAnniversaryLetters, refreshAllHealingProfiles } from './routes/memory.js'
+import { runEncouragementTick } from './routes/encouragement.js'
 import { sendRhythmReminders } from './routes/rhythm.js'
 import { checkRestockAlerts } from './routes/supplements.js'
 
@@ -60,23 +55,7 @@ const generalLimit = rateLimit({
   message: { error: 'Too many requests — please slow down.' },
 })
 
-// Stripe webhook needs raw body — must be registered before express.json()
-app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }))
-
-app.use(express.json({ limit: '50mb' }))
-
-app.use('/api/claude', aiLimit, claudeRoutes)
-app.use('/api/hume', generalLimit, humeRoutes)
-app.use('/api/stripe', generalLimit, stripeRoutes)
-app.use('/api/notifications', generalLimit, notificationRoutes)
-app.use('/api/wearable', generalLimit, wearableRoutes)
-app.use('/api/analytics', generalLimit, analyticsRoutes)
-app.use('/api/memory', generalLimit, memoryRoutes)
-app.use('/api/carers', generalLimit, carerRoutes)
-app.use('/api/encouragement', generalLimit, encouragementRoutes)
-app.use('/api/community', generalLimit, communityRoutes)
-
-app.get('/api/health', (_req, res) => res.json({ ok: true }))
+mountApi(app, { aiLimit, generalLimit })
 
 // ─── Scheduled push notifications ──────────────────────────────────────────
 // There is deliberately NO app-defined protocol schedule here. Scheduled
