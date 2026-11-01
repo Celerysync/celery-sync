@@ -2,7 +2,6 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import cron from 'node-cron'
-import { rateLimit } from 'express-rate-limit'
 import { mountApi } from './api.js'
 import { syncAllOuraUsers } from './routes/wearable.js'
 import { generateWeeklyDigest, checkTrialUserAlert } from './routes/analytics.js'
@@ -31,32 +30,7 @@ app.use(cors({
   credentials: true,
 }))
 
-// Rate limiting — protect AI endpoints from abuse / runaway costs
-const aiLimit = rateLimit({
-  windowMs: 60 * 1000,       // 1 minute window
-  max: 20,                   // 20 AI requests per minute per IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests — please wait a moment before trying again.' },
-})
-
-const ttsLimit = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,                   // TTS is expensive — 10 per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many voice requests — please wait a moment.' },
-})
-
-const generalLimit = rateLimit({
-  windowMs: 60 * 1000,
-  max: 60,                   // 60 general API calls per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests — please slow down.' },
-})
-
-mountApi(app, { aiLimit, generalLimit })
+mountApi(app)
 
 // ─── Scheduled push notifications ──────────────────────────────────────────
 // There is deliberately NO app-defined protocol schedule here. Scheduled
