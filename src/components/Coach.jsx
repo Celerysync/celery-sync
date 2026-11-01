@@ -69,6 +69,8 @@ THE APP HAS FOUR TABS — Today (home), Companion, Progress, Settings. Places:
 • [[GO:progress]] / [[GO:progress:history]] / [[GO:progress:reports]] → streaks & trends / check-in history / summaries & GP report
 • [[GO:settings:sources]] → official Anthony William books, website, podcast and recipes
 • [[GO:settings:voice]] / [[GO:settings:reminders]] → companion voice / reminders
+• [[GO:settings:display]] / [[GO:settings:plan]] / [[GO:settings:carers]] / [[GO:settings:account]] → dark mode & text size / plan & billing / carers / sign out & delete account
+• [[GO:progress:letters]] → anniversary letters
 
 USE navigation when: user describes how they feel → [[GO:companion:feelings|description]]; wants to log how they are today → [[GO:home:checkin]]; asks about their supplements → [[GO:home:supplements]]; asks for recipes or where to read more → [[GO:settings:sources]]; asks about their progress/history → [[GO:progress]].
 DO NOT navigate for general questions, cleanse guidance, or organ/body questions — answer in the conversation and point to the relevant AW book for full detail.
@@ -267,7 +269,7 @@ function parseNavCommand(text) {
   if (!match) return { clean: text, nav: null };
   const clean = text.replace(/\s*\[\[GO:[^\]]*\]\]/gi, "").trim();
   const [place, ...rest] = match[1].trim().split(":");
-  const legacyQuery = rest.length && !["feelings", "talk", "rhythm", "checkin", "supplements", "streaks", "history", "reports", "voice", "reminders", "profiles", "carers", "sources"].includes(rest[0].toLowerCase())
+  const legacyQuery = rest.length && !["feelings", "talk", "rhythm", "checkin", "supplements", "streaks", "history", "reports", "letters", "voice", "reminders", "profiles", "display", "carers", "plan", "preferences", "devices", "sources", "help", "account"].includes(rest[0].toLowerCase())
     ? rest.join(":").trim() : null;
   const section = legacyQuery ? null : (rest[0] || null);
   return { clean, nav: { tab: place.toLowerCase(), section, query: match[2]?.trim() || legacyQuery } };

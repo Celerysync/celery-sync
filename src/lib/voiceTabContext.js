@@ -15,7 +15,7 @@ export const TAB_CONTEXT = {
   progress:
     "The user is on the Progress tab — their streaks, trends over time, check-in history, weekly summaries, and the report they can share with their GP.",
   settings:
-    "The user is on the Settings tab — companion voice, reminders, profiles, carers, their plan, and official Anthony William sources (books, website, podcast, recipes).",
+    "The user is on the Settings tab — reminders, companion voice, profiles, display (dark mode, text size), carers, their plan, preferences, wearables, help, official Anthony William sources, and account (sign out, delete).",
 };
 
 export const SECTIONS = {
@@ -32,13 +32,20 @@ export const SECTIONS = {
     streaks: "streaks and adherence",
     history: "check-in history and trends",
     reports: "weekly/monthly summaries and the GP report",
+    letters: "anniversary letters",
   },
   settings: {
-    voice: "companion voice and voice minutes",
     reminders: "reminders and notifications",
-    profiles: "profiles",
-    carers: "carers",
+    voice: "companion voice and voice minutes",
+    profiles: "profiles (who you're looking after)",
+    display: "dark mode and text size",
+    carers: "carers and caregiver mode",
+    plan: "their plan, billing and cancelling",
+    preferences: "language, units, and what the companion remembers",
+    devices: "connecting a wearable",
     sources: "official Anthony William sources (books, website, podcast, recipes)",
+    help: "tips, the welcome tour, and official sources",
+    account: "sign out, Terms and Privacy, delete account",
   },
 };
 
@@ -58,8 +65,13 @@ const LEGACY_DESTINATIONS = {
   aw: "settings:sources",
   coach: "companion",
   reports: "progress:reports",
-  account: "settings",
+  account: "settings:account",
   carers: "settings:carers",
+  billing: "settings:plan",
+  subscription: "settings:plan",
+  dark: "settings:display",
+  wearable: "settings:devices",
+  letters: "progress:letters",
   practice: "settings",
   today: "home",
   cleanses: "home",

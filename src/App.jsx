@@ -22,22 +22,14 @@ import ReminderBanner from "./components/ReminderBanner.jsx";
 // Lazy-loaded: only fetched when first needed
 const Onboarding         = lazy(() => import("./components/Onboarding.jsx"));
 const Account            = lazy(() => import("./components/Account.jsx"));
-const ProfileManager     = lazy(() => import("./components/ProfileManager.jsx"));
-const ReminderSettings   = lazy(() => import("./components/ReminderSettings.jsx"));
 const WelcomeVoice       = lazy(() => import("./components/WelcomeVoice.jsx"));
 const CompanionTab       = lazy(() => import("./components/CompanionTab.jsx"));
-const OfficialSources    = lazy(() => import("./components/OfficialSources.jsx"));
 const Reports            = lazy(() => import("./components/Reports.jsx"));
-const CarerView          = lazy(() => import("./components/CarerView.jsx"));
-const PractitionerPortal = lazy(() => import("./components/PractitionerPortal.jsx"));
 const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.jsx"));
 const AdminDashboard     = lazy(() => import("./components/AdminDashboard.jsx"));
-const DoctorReport       = lazy(() => import("./components/DoctorReport.jsx"));
 const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"));
-const CarerInviteManager = lazy(() => import("./components/CarerInviteManager.jsx"));
+const SettingsPage       = lazy(() => import("./components/SettingsPage.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
-const CompanionVoiceSettings = lazy(() => import("./components/CompanionVoiceSettings.jsx"));
-const GettingTheMostCard = lazy(() => import("./components/GettingTheMostCard.jsx"));
 const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
 const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
 
@@ -371,49 +363,37 @@ export default function App() {
         );
 
       case "progress":
-        return <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />;
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Reports authUser={authUser} profileId={activeProfileId} user={activeProfile} />
+            {activeProfileId && (
+              <div id="section-letters" style={{ scrollMarginTop: 80 }}>
+                <HealingLetters profileId={activeProfileId} />
+              </div>
+            )}
+          </div>
+        );
 
       case "settings":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Account
-              authUser={authUser}
-              isSubscribed={isSubscribed}
-              isPractitioner={isPractitioner}
-              isRhythm={isRhythm}
-              subData={subData}
-              subLoading={subLoading}
-              isInTrial={isInTrial}
-              trialDaysLeft={trialDaysLeft}
-              onSignOut={signOut}
-              onReplayWelcome={() => setWelcomeOverride(true)}
-              onRefetchSub={refetchSub}
-              profileId={activeProfileId}
-            />
-            <div id="section-voice"><CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} /></div>
-            <GettingTheMostCard />
-            <div id="section-reminders"><ReminderSettings authUser={authUser} /></div>
-            <div id="section-profiles">
-              <ProfileManager
-                profiles={profiles}
-                activeProfileId={activeProfileId}
-                onSwitch={switchProfile}
-                onCreate={createProfile}
-                onUpdate={updateProfile}
-                onDelete={deleteProfile}
-              />
-            </div>
-            {activeProfileId && (
-              <>
-                <div id="section-carers"><CarerInviteManager authUser={authUser} profileId={activeProfileId} /></div>
-                <DoctorReport profileId={activeProfileId} />
-                <HealingLetters profileId={activeProfileId} />
-              </>
-            )}
-            <CarerView authUser={authUser} />
-            {isPractitioner && <PractitionerPortal authUser={authUser} />}
-            <div id="section-sources"><OfficialSources /></div>
-          </div>
+          <SettingsPage
+            accountProps={{
+              authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft,
+              onSignOut: signOut, onRefetchSub: refetchSub, profileId: activeProfileId,
+            }}
+            isRhythm={isRhythm}
+            isSubscribed={isSubscribed}
+            isPractitioner={isPractitioner}
+            authUser={authUser}
+            activeProfileId={activeProfileId}
+            profiles={profiles}
+            onSwitchProfile={switchProfile}
+            onCreateProfile={createProfile}
+            onUpdateProfile={updateProfile}
+            onDeleteProfile={deleteProfile}
+            onReplayWelcome={() => setWelcomeOverride(true)}
+            section={navSection}
+          />
         );
 
       case "admin":

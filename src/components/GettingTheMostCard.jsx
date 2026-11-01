@@ -12,7 +12,7 @@ const TIPS = [
   {
     emoji: "⏰",
     title: "Put a time on the things you want reminding about",
-    body: "Open My Rhythm, edit any item, and choose “At a set time”. That item will then nudge you at that time every day. Items left on “After previous step” just sit in order on your Rhythm screen — they won't chase you.",
+    body: "Open My Rhythm, edit any item, and tap “🔔 Remind me at…”. That item will then nudge you at that time every day. Items left on “After previous step” just sit in order on your Rhythm screen — they won't chase you.",
   },
   {
     emoji: "🎙",

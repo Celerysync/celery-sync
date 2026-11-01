@@ -111,7 +111,11 @@ function DeleteAccount({ onDeleted }) {
   );
 }
 
-export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId }) {
+export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId, part }) {
+  // Settings shows the account screen in groups (SettingsPage.jsx): `part`
+  // picks one group — plan, devices, people, preferences, display, account.
+  // Without it, everything renders in one go as before.
+  const show = (p) => !part || part === p;
   const [loading, setLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -121,14 +125,15 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
   const [memoryExpanded, setMemoryExpanded] = useState(false)
 
   useEffect(() => {
-    if (!isSubscribed || !profileId) return
+    if (!show("preferences") || !isSubscribed || !profileId) return
     supabase
       .from("healing_profiles")
       .select("healing_summary, hard_times, current_focus, wins, preferences, memory_updated_at")
       .eq("profile_id", profileId)
       .maybeSingle()
       .then(({ data }) => setMemoryData(data || null))
-  }, [isSubscribed, profileId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSubscribed, profileId, part])
   const [lang, setLang] = useLocalStorage("cs_lang", "en")
   const [units, setUnits] = useLocalStorage("cs_units", "metric")
   const [caregiver, setCaregiver] = useLocalStorage("cs_caregiver", false)
@@ -192,7 +197,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
     }
   }
 
-  if (subLoading) {
+  if (subLoading && show("plan")) {
     return (
       <div style={{ textAlign: 'center', padding: 48, color: C.muted, fontFamily: 'Georgia,serif', fontSize: 15 }}>
         🌿 Loading your account…
@@ -203,7 +208,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {!isSubscribed ? (
+      {show("plan") && (!isSubscribed ? (
         <>
           {/* Choose-your-plan hero */}
           <div style={{
@@ -556,12 +561,13 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </Card>
           )}
         </>
-      )}
+      ))}
 
       {/* Wearable integration — subscribed users only */}
-      {isSubscribed && <WearableConnect authUser={authUser} />}
+      {show("devices") && isSubscribed && <WearableConnect authUser={authUser} />}
 
       {/* Caregiver mode */}
+      {show("people") && (<>
       <Card>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -596,8 +602,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </div>
         )}
       </Card>
+      </>)}
 
       {/* Language */}
+      {show("preferences") && (<>
       <Card>
         <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
           🌍 Language
@@ -691,8 +699,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </Btn>
         </div>
       </Card>
+      </>)}
 
       {/* Eye comfort / dark mode */}
+      {show("display") && (<>
       <Card>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
           🌙 Eye Comfort Mode
@@ -719,9 +729,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           <Btn full onClick={() => { setLargeText(true); document.documentElement.setAttribute("data-large","true"); }} color={largeText ? C.sageDark : C.muted} style={{ opacity: largeText ? 1 : 0.6 }}>A+ Large</Btn>
         </div>
       </Card>
+      </>)}
 
       {/* Companion memory — subscribed users only */}
-      {isSubscribed && profileId && (
+      {show("preferences") && isSubscribed && profileId && (
         <Card>
           <div
             onClick={() => setMemoryExpanded(v => !v)}
@@ -809,13 +820,14 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
       )}
 
       {/* Sign out — always visible */}
+      {show("account") && (<>
       <Card>
         {!isSubscribed && (
           <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
             Signed in as <strong>{authUser.email}</strong>
           </div>
         )}
-        {onReplayWelcome && (
+        {!part && onReplayWelcome && (
           <Btn full onClick={onReplayWelcome} color={C.sage} style={{ marginBottom: 10 }}>
             🎙 Replay Welcome Tour
           </Btn>
@@ -844,6 +856,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </div>
         </div>
       </div>
+      </>)}
     </div>
   )
 }

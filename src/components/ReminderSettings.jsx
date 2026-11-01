@@ -132,7 +132,7 @@ export default function ReminderSettings({ authUser }) {
           background: C.mist, borderRadius: 10, padding: "10px 12px",
         }}>
           💡 To add or change a reminder time, open <strong>My Rhythm</strong>, edit an
-          item, and choose <strong>“At a set time”</strong>.
+          item, and tap <strong>“🔔 Remind me at…”</strong>.
         </div>
 
         {!supported ? (
