@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { price, CURRENCY_CODE } from "../lib/pricing.js";
 import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
@@ -194,7 +195,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
               const res = await fetch("/api/stripe/topup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: authUser?.id, email: authUser?.email }),
+                body: JSON.stringify({ userId: authUser?.id, email: authUser?.email, currency: CURRENCY_CODE }),
               });
               const { url, error } = await res.json();
               if (url) window.location.href = url;
@@ -214,7 +215,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           {topupBusy
             ? "Opening checkout…"
             : topupInfo
-            ? `＋ ${topupInfo.minutes} more minutes · $${topupInfo.amount.toFixed(2)}${topupInfo.currency === "AUD" ? "" : ` ${topupInfo.currency}`}`
+            ? `＋ ${topupInfo.minutes} more minutes · ${price("topup")}`
             : "＋ Top up voice minutes"}
         </button>
         {topupMsg && (

@@ -127,8 +127,13 @@ export default function VoiceOrb() {
           zIndex: 200,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark }}>
-              🌿 CelerySync Companion
+            <div>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark }}>
+                🌿 CelerySync Companion
+              </div>
+              {/* Required in several places (EU AI Act, California, New York) —
+                  and simply honest: people should always know it's an AI. */}
+              <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>An AI helper — not a person</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {isConnected && sessionStartedAt && (

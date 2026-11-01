@@ -60,9 +60,15 @@ async function priceIds() {
 }
 const PLAN_PRICES = priceIds
 
+// Charge in the currency the app showed (src/lib/pricing.js). Only the
+// currencies set as currency_options on the prices; anything else → AUD.
+// No GBP/EUR until a merchant-of-record handles UK/EU VAT.
+const CHECKOUT_CURRENCIES = ['aud', 'usd', 'cad', 'nzd']
+const checkoutCurrency = (c) => (CHECKOUT_CURRENCIES.includes(String(c || '').toLowerCase()) ? String(c).toLowerCase() : 'aud')
+
 // Create Stripe Checkout session (rhythm or healer plan)
 router.post('/checkout', async (req, res) => {
-  const { userId, email, plan = 'healer' } = req.body
+  const { userId, email, plan = 'healer', currency } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
   if (!['rhythm', 'healer'].includes(plan)) return res.status(400).json({ error: `Unknown plan: ${plan}` })
   const priceId = (await PLAN_PRICES())[plan]
@@ -73,6 +79,7 @@ router.post('/checkout', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
+      currency: checkoutCurrency(currency),
       payment_method_types: ['card'],
       // No Stripe-side trial: the 7 free days live in the app (useSubscription
       // counts from account creation). Card is charged as soon as they subscribe —
@@ -184,7 +191,7 @@ router.get('/topup-info', async (_req, res) => {
 // The webhook credits the minutes only after Stripe confirms payment —
 // nothing in the app trusts the client's word that they paid.
 router.post('/topup', async (req, res) => {
-  const { userId, email } = req.body
+  const { userId, email, currency } = req.body
   if (!userId || !email) return res.status(400).json({ error: 'userId and email required' })
   const topupPrice = (await PLAN_PRICES()).topup
   if (!topupPrice) return res.status(500).json({ error: 'Top-up not configured' })
@@ -195,6 +202,7 @@ router.post('/topup', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'payment',
+      currency: checkoutCurrency(currency),
       payment_method_types: ['card'],
       line_items: [{ price: topupPrice, quantity: 1 }],
       metadata: { supabase_user_id: userId, topup_seconds: String(topupSeconds) },

@@ -13,6 +13,7 @@ import { HumeVoiceProvider } from "./context/HumeVoiceContext.jsx";
 import VoiceOrb from "./components/VoiceOrb.jsx";
 import { resolveDestination } from "./lib/voiceTabContext.js";
 import { supabase } from "./lib/supabase.js";
+import { hasCurrentConsent } from "./lib/consent.js";
 
 // Always-loaded: auth and home are needed on every visit
 import Auth from "./components/Auth.jsx";
@@ -29,6 +30,7 @@ const CaregiverDashboard = lazy(() => import("./components/CaregiverDashboard.js
 const AdminDashboard     = lazy(() => import("./components/AdminDashboard.jsx"));
 const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"));
 const SettingsPage       = lazy(() => import("./components/SettingsPage.jsx"));
+const ConsentUpdate      = lazy(() => import("./components/ConsentUpdate.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
 const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
 const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
@@ -287,6 +289,11 @@ export default function App() {
 
   if (authLoading) return <LoadingScreen />;
   if (!authUser) return <Auth />;
+  // Accounts from before sign-up asked for these agreements agree once here
+  // (18+, Terms/Privacy, keeping health details — lib/consent.js).
+  if (!hasCurrentConsent(authUser)) {
+    return <Suspense fallback={<LoadingScreen />}><ConsentUpdate authUser={authUser} onSignOut={signOut} /></Suspense>;
+  }
   if (profilesLoading) return <LoadingScreen message="Loading your profiles…" />;
 
   // No profiles yet, or an existing profile never finished onboarding

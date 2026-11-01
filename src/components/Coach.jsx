@@ -595,7 +595,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           🎙 Your CelerySync helper
         </h2>
         <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-          Your CelerySync helper · Paraphrased & attributed teachings · Remembers your journey
+          Your CelerySync helper — an AI, not a person · Paraphrased & attributed teachings · Remembers your journey
         </div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
           Not medical advice — always work with your doctor or licensed practitioner

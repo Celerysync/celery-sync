@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { price, CURRENCY_CODE } from "../lib/pricing.js";
 import C, { alpha } from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
@@ -151,7 +152,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: authUser.id, email: authUser.email, plan }),
+        body: JSON.stringify({ userId: authUser.id, email: authUser.email, plan, currency: CURRENCY_CODE }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -242,7 +243,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4, marginBottom: 4 }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>✨ Rhythm + Voice</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
-                $24.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
+                {price("voice")}<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
               </div>
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
@@ -280,7 +281,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>🌱 Rhythm</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
-                $9.97<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo AUD</span>
+                {price("rhythm")}<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
               </div>
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
@@ -392,7 +393,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Keep Everything — Rhythm + Voice $24.97/month →'}
+                {loading ? '🌿 Please wait…' : `Keep Everything — Rhythm + Voice ${price("voice")}/month →`}
               </button>
               <button
                 onClick={() => subscribe('rhythm')}
@@ -405,7 +406,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? '🌿 Please wait…' : 'Just the engine — Rhythm $9.97/month →'}
+                {loading ? '🌿 Please wait…' : `Just the engine — Rhythm ${price("rhythm")}/month →`}
               </button>
             </div>
           )}
@@ -531,7 +532,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 to your current subscription straight away, prorated.
               </div>
               <Btn full onClick={() => changePlan('healer')} color={C.sage} disabled={loading}>
-                {loading ? '🌿 Please wait…' : 'Upgrade to Rhythm + Voice — $24.97/month →'}
+                {loading ? '🌿 Please wait…' : `Upgrade to Rhythm + Voice — ${price("voice")}/month →`}
               </Btn>
             </Card>
           )}
@@ -539,7 +540,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ textAlign: 'center' }}>
               <button
                 onClick={() => {
-                  if (confirm('Switch to the Rhythm plan ($9.97/month)? You keep your whole routine, tracking and reports, but the voice and chat companion turns off straight away.')) changePlan('rhythm')
+                  if (confirm(`Switch to the Rhythm plan (${price("rhythm")}/month)? You keep your whole routine, tracking and reports, but the voice and chat companion turns off straight away.`)) changePlan('rhythm')
                 }}
                 disabled={loading}
                 style={{
@@ -547,7 +548,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Georgia,serif',
                 }}
               >
-                Need to trim costs? Switch to Rhythm — $9.97/month (keeps the engine, pauses the companion)
+                Need to trim costs? Switch to Rhythm — {price("rhythm")}/month (keeps the engine, pauses the companion)
               </button>
             </div>
           )}
@@ -851,6 +852,21 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </Btn>
       </Card>
 
+      <div style={{ textAlign: "center" }}>
+        <button
+          onClick={async () => {
+            const res = await fetch("/api/account/export");
+            if (!res.ok) { alert("Your data couldn't be gathered just now — please try again."); return; }
+            const url = URL.createObjectURL(await res.blob());
+            const a = document.createElement("a");
+            a.href = url; a.download = `celerysync-my-data-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+            URL.revokeObjectURL(url);
+          }}
+          style={{ background: "none", border: "none", fontSize: 12, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
+        >
+          Download my data
+        </button>
+      </div>
       <DeleteAccount />
 
       <div style={{

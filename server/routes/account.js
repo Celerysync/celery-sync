@@ -51,4 +51,61 @@ router.post('/delete', async (req, res) => {
   }
 })
 
+// GET /api/account/export — everything we hold about the signed-in person,
+// as one JSON file (Privacy Policy: access + portability, GDPR Art. 15/20,
+// Australian Privacy Principle 12). Only their own rows: user-level tables
+// by user id, the rest by the profiles they own. Secrets are left out —
+// push-subscription keys, wearable tokens, Stripe ids.
+const USER_TABLES = [
+  'profiles', 'user_voice_prefs', 'voice_usage_meter', 'companion_sessions', 'voice_turns',
+  'analytics_events', 'push_subscriptions', 'wearable_tokens', 'profile_carers',
+]
+const PROFILE_TABLES = [
+  'rhythm_items', 'rhythm_item_changes', 'activity_events', 'daily_checkins', 'conversations',
+  'user_supplements', 'supplement_inventory', 'supplement_logs', 'saved_rhythms', 'active_protocols',
+  'healing_profiles', 'healing_milestones', 'healing_letters', 'weekly_summaries', 'cycle_logs',
+]
+const LEAVE_OUT = { push_subscriptions: ['keys', 'endpoint'], wearable_tokens: ['token', 'access_token', 'refresh_token'] }
+
+router.get('/export', async (req, res) => {
+  const user = req.user
+  if (!user) return res.status(401).json({ error: 'Please sign in again.' })
+  try {
+    const out = {
+      exported_at: new Date().toISOString(),
+      account: { email: user.email, created_at: user.created_at, agreements: {
+        age_confirmed_18: user.user_metadata?.age_confirmed_18 ?? null,
+        agreed_terms_at: user.user_metadata?.agreed_terms_at ?? null,
+        health_data_consent_at: user.user_metadata?.health_data_consent_at ?? null,
+      } },
+      data: {},
+    }
+    const strip = (table, rows) => (rows || []).map((r) => {
+      const copy = { ...r }
+      for (const k of LEAVE_OUT[table] || []) delete copy[k]
+      return copy
+    })
+    for (const table of USER_TABLES) {
+      const col = table === 'profile_carers' ? 'owner_id' : 'user_id'
+      const { data, error } = await supabaseAdmin.from(table).select('*').eq(col, user.id)
+      if (!error) out.data[table] = strip(table, data)
+    }
+    const { data: plan } = await supabaseAdmin.from('subscriptions').select('plan, status, current_period_end').eq('user_id', user.id)
+    out.data.subscriptions = plan || []
+    const profileIds = (out.data.profiles || []).map((p) => p.id)
+    if (profileIds.length) {
+      for (const table of PROFILE_TABLES) {
+        const { data, error } = await supabaseAdmin.from(table).select('*').in('profile_id', profileIds)
+        if (!error) out.data[table] = strip(table, data)
+      }
+    }
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="celerysync-my-data-${new Date().toISOString().slice(0, 10)}.json"`)
+    res.send(JSON.stringify(out, null, 2))
+  } catch (err) {
+    console.error('Data export failed:', err.message)
+    res.status(500).json({ error: "Your data couldn't be gathered just now — please try again, or email us." })
+  }
+})
+
 export default router

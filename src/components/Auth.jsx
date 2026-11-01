@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { HEALTH_CONSENT_TEXT, consentMetadata } from '../lib/consent.js'
+import { price } from "../lib/pricing.js";
 import C from '../lib/colors.js'
 import { supabase } from '../lib/supabase.js'
 import Landing from './Landing.jsx'
@@ -11,6 +13,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
   const [agreed, setAgreed] = useState(false)
+  const [healthConsent, setHealthConsent] = useState(false)
 
   const submit = async () => {
     if (!email.trim()) return setMsg({ ok: false, text: 'Please enter your email address.' })
@@ -21,11 +24,12 @@ export default function Auth() {
       if (mode === 'signup') {
         if (password.length < 6) throw new Error('Password must be at least 6 characters.')
         if (!agreed) throw new Error('Please confirm you\'re 18 or over and agree to the Terms and Privacy Policy.')
+        if (!healthConsent) throw new Error('Please tick the box about keeping your health details — the app can\'t work without it.')
         // Kept on the account as the record of what they agreed to, and when.
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { age_confirmed_18: true, agreed_terms_version: '2026-11-01', agreed_terms_at: new Date().toISOString() } },
+          options: { data: consentMetadata() },
         })
         if (error) throw error
         setMsg({ ok: true, text: 'Account created! Check your email to confirm it, then sign in.' })
@@ -168,6 +172,17 @@ export default function Auth() {
                 </span>
               </label>
             )}
+            {mode === 'signup' && (
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, color: C.mid, lineHeight: 1.5, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={healthConsent}
+                  onChange={e => setHealthConsent(e.target.checked)}
+                  style={{ width: 20, height: 20, marginTop: 1, flexShrink: 0, accentColor: C.sageDark }}
+                />
+                <span>{HEALTH_CONSENT_TEXT}</span>
+              </label>
+            )}
           </div>
 
           <button
@@ -207,7 +222,7 @@ export default function Auth() {
                   </button>
                 </span>
                 <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
-                  Try free for 7 days, then plans from $9.97/month. Cancel anytime.
+                  Try free for 7 days, then plans from {price("rhythm")}/month. Cancel anytime.
                 </div>
               </>
             )}

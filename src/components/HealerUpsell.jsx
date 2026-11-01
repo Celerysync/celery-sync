@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { price } from "../lib/pricing.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 
@@ -71,7 +72,7 @@ export default function HealerUpsell({ onUpgrade }) {
           cursor: busy ? "default" : "pointer",
         }}
       >
-        {busy ? "🌿 One moment…" : "Upgrade to Rhythm + Voice — $24.97/month →"}
+        {busy ? "🌿 One moment…" : `Upgrade to Rhythm + Voice — ${price("voice")}/month →`}
       </button>
       <div style={{ textAlign: "center", fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
         Upgrades apply to your existing subscription straight away — no second
