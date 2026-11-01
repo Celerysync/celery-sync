@@ -32,7 +32,7 @@ export function useSubscription(authUser) {
       .from('subscriptions')
       .select('status, current_period_end, stripe_customer_id, plan')
       .eq('user_id', authUser.id)
-      .single()
+      .maybeSingle() // no row = trial / never subscribed, not an error
 
     const hasActiveSub = data?.status === 'active' || data?.status === 'trialing'
     const daysLeft = getTrialDaysLeft(authUser.created_at)

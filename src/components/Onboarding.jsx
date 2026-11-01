@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PLACEHOLDER_NAME } from "../hooks/useProfiles.js";
 import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 import C from "../lib/colors.js";
 import { useRhythm } from "../hooks/useRhythm.js";
@@ -90,7 +91,6 @@ const skipBtn = {
 // something to hang data on. That is a placeholder, not a name the person gave
 // us — treat it as "no name yet" or onboarding skips the question and greets
 // everyone as "Me".
-const PLACEHOLDER_NAME = "Me";
 
 export default function Onboarding({ authUser, existingProfile, createProfile, switchProfile, updateProfile, onDone }) {
   const hasRealName = !!existingProfile && existingProfile.name !== PLACEHOLDER_NAME;

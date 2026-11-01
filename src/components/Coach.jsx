@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import RichText from "./RichText.jsx";
+import { realName } from "../hooks/useProfiles.js";
 import C, { alpha } from "../lib/colors.js";
 import { srSupported } from "../hooks/useVoice.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
@@ -162,8 +164,8 @@ ${priorMessages.length > 0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CAREGIVER MODE — YOU ARE SPEAKING WITH THE CARER:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You are NOT speaking with the patient. You are speaking with the adult caring for ${user?.name || "their loved one"}.
-Address them as a carer, not a patient. Use "your loved one" or "${user?.name || "them"}" to refer to the person being supported.
+You are NOT speaking with the patient. You are speaking with the adult caring for ${realName(user) || "their loved one"}.
+Address them as a carer, not a patient. Use "your loved one" or "${realName(user) || "them"}" to refer to the person being supported.
 Give practical, actionable guidance: what to prepare, what to buy, how to support the protocol, what to expect.
 Be warm and acknowledge how hard caregiving is — they need support too.
 If their loved one seems worse, never characterise symptoms as normal or expected — encourage checking with the doctor, and always flag red-flag signs (fever above 39°C, chest pain, severe breathing difficulty, sudden inability to walk) as needing prompt care.
@@ -246,7 +248,7 @@ Reference this naturally when relevant — e.g. "I see you were just looking at 
   return `${langInstruction}${caregiverIntro}${day1Section}${pageContextSection}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THIS USER'S PROFILE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name: ${user?.name || "friend"}
+Name: ${realName(user) || "friend"}
 Symptoms: ${user?.symptoms?.join(", ") || "general wellness"}
 Goal: ${user?.goal || "wellness and clarity"}
 Showed-up streak (days in a row they ticked off at least one item of their own rhythm): ${showedUpStreak > 0 ? `${showedUpStreak}` : "none yet"}
@@ -354,7 +356,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     };
     const hasHistory = priorMessages.length > 0 || healingProfile?.healing_summary || milestones?.length > 0;
     const translatedGreeting = lang && lang !== "en" && GREETINGS[lang]
-      ? GREETINGS[lang](user?.name || "")
+      ? GREETINGS[lang](realName(user) || "")
       : null;
 
     // Evolving greeting based on user's current state
@@ -365,13 +367,13 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     const energyNote = todaysCheckin?.energy ? ` I can see your energy is ${todaysCheckin.energy}/10 today — ${todaysCheckin.energy <= 4 ? "I'll keep things gentle and focused." : todaysCheckin.energy >= 8 ? "Wonderful to see you feeling good!" : "let me know how I can help."}` : "";
 
     const day1Greeting = (!caregiverMode && !translatedGreeting && activeProtocol?.day === 1)
-      ? `Today's the day${user?.name ? ", " + user.name : ""}! 🌿 You just started ${activeProtocol.name} — that takes real commitment, and I'm proud of you for beginning. Be gentle with yourself these first few days — rest and hydration go a long way, and if anything feels concerning, check in with your doctor. I'm right here with you every step. How are you feeling so far today?`
+      ? `Today's the day${realName(user) ? ", " + realName(user) : ""}! 🌿 You just started ${activeProtocol.name} — that takes real commitment, and I'm proud of you for beginning. Be gentle with yourself these first few days — rest and hydration go a long way, and if anything feels concerning, check in with your doctor. I'm right here with you every step. How are you feeling so far today?`
       : null;
 
     // Fires exactly once, right after onboarding finishes — reflects one
     // specific thing she just entered rather than a generic first greeting.
     const justOnboardedGreeting = (!caregiverMode && !translatedGreeting && justOnboarded)
-      ? `Hi ${justOnboarded.name || user?.name || "there"}! 🌿 ${
+      ? `Hi ${justOnboarded.name || realName(user) || "there"}! 🌿 ${
           justOnboarded.firstItem
             ? `${justOnboarded.firstItem.name}${justOnboarded.firstItem.fixedTime ? ` at ${formatFixedTime(justOnboarded.firstItem.fixedTime)}` : ""} — I'll remind you.`
             : "Your rhythm is ready — add to it anytime just by telling me."
@@ -385,14 +387,14 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       : translatedGreeting
       ? translatedGreeting
       : caregiverMode
-      ? `Hello! 💜 I'm here to support you as you care for ${user?.name || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
+      ? `Hello! 💜 I'm here to support you as you care for ${realName(user) || "your loved one"}. Caregiving is one of the most loving things a person can do. I can guide you on what to prepare, what to expect, how to support the protocol, and how to take care of yourself too. What do you need help with today?`
       : hasHistory
-      ? `Welcome back${user?.name ? ", " + user.name : ""}! 🌿${streakNote}${energyNote} ${
+      ? `Welcome back${realName(user) ? ", " + realName(user) : ""}! 🌿${streakNote}${energyNote} ${
           healingProfile?.healing_summary
             ? "I've been keeping your notes safe and I'm ready to pick up where we left off."
             : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
         } What's on your mind today?`
-      : `Hello${user?.name ? ", " + user.name : ""}! 🌿 I'm your CelerySync companion — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
+      : `Hello${realName(user) ? ", " + realName(user) : ""}! 🌿 I'm your CelerySync companion — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     setMessages([{ role: "assistant", content: greeting }]);
     if (justOnboardedGreeting) onConsumedJustOnboarded?.();
@@ -848,7 +850,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                   {m.via === "voice" && (
                     <div style={{ fontSize: 10.5, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
                   )}
-                  {m.content}
+                  {m.role === "assistant" ? <RichText text={m.content} /> : m.content}
                 </div>
               </div>
               {/* Message action bar — tap to copy or re-read */}

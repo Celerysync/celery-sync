@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import RichText from "./RichText.jsx";
+import { realName } from "../hooks/useProfiles.js";
 import C, { alpha } from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
@@ -21,7 +23,7 @@ function printDoctorSummary({ user, result }) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CelerySync — Wellness Summary for ${user?.name || "Patient"}</title>
+  <title>CelerySync — Wellness Summary for ${realName(user) || "Patient"}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Georgia, serif; color: #1a1a1a; padding: 36px; max-width: 780px; margin: 0 auto; }
@@ -47,7 +49,7 @@ function printDoctorSummary({ user, result }) {
     </div>
     <div style="font-size:12px;color:#555;text-align:right;line-height:1.6;">
       <strong>Date:</strong> ${now}<br>
-      <strong>Name:</strong> ${user?.name || "—"}<br>
+      <strong>Name:</strong> ${realName(user) || "—"}<br>
       <strong>Prepared by:</strong> CelerySync App
     </div>
   </header>
@@ -55,7 +57,7 @@ function printDoctorSummary({ user, result }) {
   <div class="patient-box">
     <h2>Profile</h2>
     <p>
-      <strong>Name:</strong> ${user?.name || "—"} &nbsp;&nbsp;
+      <strong>Name:</strong> ${realName(user) || "—"} &nbsp;&nbsp;
       <strong>Goal:</strong> ${user?.goal || "—"}
     </p>
   </div>
@@ -107,10 +109,10 @@ export default function Symptom({ user, navQuery, onPageContext }) {
 
     const prompt = `You are a compassionate CelerySync companion helping an adult reflect on how they're feeling and find the right official resources.
 
-Person: ${user?.name || "friend"}
+Person: ${realName(user) || "friend"}
 How they're feeling / what they're experiencing: ${all.join(", ")}
 
-Be warm and compassionate. Address them by name (${user?.name || "friend"}).
+Be warm and compassionate. Address them by name (${realName(user) || "friend"}).
 
 ⚠️ HARD RULES — do not break any of these:
 - NEVER diagnose, or claim anything treats, cures, heals, or prevents anything.
@@ -265,8 +267,8 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
             </div>
           )}
 
-          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
-            {result}
+          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.8 }}>
+            <RichText text={result} />
           </div>
         </Card>
       )}

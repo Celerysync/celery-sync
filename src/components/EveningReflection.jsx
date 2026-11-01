@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { realName } from "../hooks/useProfiles.js";
 import C, { alpha } from "../lib/colors.js";
 import { TODAY } from "../lib/rhythmSchedule.js";
 import { useVoice } from "../hooks/useVoice.js";
@@ -40,7 +41,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
   const h = new Date().getHours();
   if (dismissed || !prefs.evening_nudge || h < 19) return null;
 
-  const wrapUp = buildWrapUp(user?.name, sequence);
+  const wrapUp = buildWrapUp(realName(user), sequence);
 
   const finish = () => {
     localStorage.setItem(markerKey, "1");
@@ -181,7 +182,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
       {step === "done" && (
         <>
           <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, margin: "8px 0 12px" }}>
-            Saved. Rest well tonight{user?.name ? `, ${user.name}` : ""}. 🌙
+            Saved. Rest well tonight{realName(user) ? `, ${realName(user)}` : ""}. 🌙
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {companion.enabled && (

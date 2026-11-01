@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { realName } from "../hooks/useProfiles.js";
 import C, { alpha } from "../lib/colors.js";
 import { TODAY } from "../lib/rhythmSchedule.js";
 import { useVoice } from "../hooks/useVoice.js";
@@ -40,7 +41,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
   const h = new Date().getHours();
   if (dismissed || !prefs.morning_nudge || h < 5 || h >= 12) return null;
 
-  const greeting = buildGreeting(user?.name, sequence);
+  const greeting = buildGreeting(realName(user), sequence);
 
   const finish = () => {
     localStorage.setItem(markerKey, "1");

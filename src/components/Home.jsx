@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { realName } from "../hooks/useProfiles.js";
 import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
 import { useLocalStorage } from "../hooks/useLocalStorage.js";
@@ -294,10 +295,10 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   // the app never supplies protocol steps or quantities of its own).
   const remainingNames = sequence.filter((i) => !i.completedAt).map((i) => i.name);
   const morningScript = remainingNames.length > 0
-    ? `${greeting}${user?.name ? ", " + user.name : ""}. Here's what's on your rhythm today: ${remainingNames.slice(0, 6).join(", ")}${remainingNames.length > 6 ? `, and ${remainingNames.length - 6} more` : ""}. One thing at a time — you're doing something good for yourself today.`
+    ? `${greeting}${realName(user) ? ", " + realName(user) : ""}. Here's what's on your rhythm today: ${remainingNames.slice(0, 6).join(", ")}${remainingNames.length > 6 ? `, and ${remainingNames.length - 6} more` : ""}. One thing at a time — you're doing something good for yourself today.`
     : sequence.length > 0
-    ? `${greeting}${user?.name ? ", " + user.name : ""}. Everything on your rhythm is done — beautiful work today.`
-    : `${greeting}${user?.name ? ", " + user.name : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;
+    ? `${greeting}${realName(user) ? ", " + realName(user) : ""}. Everything on your rhythm is done — beautiful work today.`
+    : `${greeting}${realName(user) ? ", " + realName(user) : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;
 
   const nowWindow = getNowWindow();
 
@@ -322,7 +323,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
       {/* Welcome back — after 3+ days away; stays (as a "you're back" note) once they tick one thing */}
       {daysAway != null && daysAway >= 3 && welcomeBackDismissed !== TODAY && (!activeToday || rhythmDoneCount > 0) && (
         <WelcomeBack
-          name={user?.name}
+          name={realName(user)}
           daysAway={daysAway}
           doneToday={rhythmDoneCount > 0}
           onShowRhythm={() => document.getElementById("section-rhythm")?.scrollIntoView({ behavior: "smooth", block: "start" })}
@@ -342,7 +343,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           {new Date().toLocaleDateString("en-AU", { weekday: "long", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, marginTop: 4 }}>
-          {greeting}{user?.name ? ", " + user.name : ""} 🌿
+          {greeting}{realName(user) ? ", " + realName(user) : ""} 🌿
         </div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your routine, one day at a time</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>

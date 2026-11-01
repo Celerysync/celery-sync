@@ -2,6 +2,11 @@ import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
 import { useLocalStorage } from "./useLocalStorage.js";
 
+// New profiles start with this placeholder name until the person types
+// theirs; never greet anyone as "Me".
+export const PLACEHOLDER_NAME = "Me";
+export const realName = (profile) => (profile?.name && profile.name.trim() !== PLACEHOLDER_NAME ? profile.name.trim() : "");
+
 export const AVATAR_OPTIONS = ["🌿","🌸","🌺","💫","🌙","☀️","🦋","🌻","🍃","💚","🌈","⭐"];
 
 export function useProfiles(authUser) {
