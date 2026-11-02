@@ -357,7 +357,7 @@ function HumeVoiceBridge({ authUser, profileId, tab, enabled, toolHandlersRef, o
       const last = past?.[0]?.started_at ? new Date(past[0].started_at) : null;
       if (last && last.toDateString() === new Date().toDateString()) {
         const mins = Math.max(1, Math.round((Date.now() - last) / 60000));
-        historyLine = `You already spoke with the user earlier today (about ${mins < 90 ? `${mins} minutes` : `${Math.round(mins / 60)} hours`} ago). Don't welcome them or introduce yourself again — just a short, natural hello in fresh words (never the same opener as before) and ask what they'd like to do.`;
+        historyLine = `You already spoke with the user earlier today (about ${mins < 90 ? `${mins} minutes` : `${Math.round(mins / 60)} hours`} ago). Don't welcome them or introduce yourself again — a short, natural hello in fresh words (never the same opener as before) that picks up from something real from your recent conversation, like how they were feeling or what they did. Never a bare \"what can I do for you?\".`;
       } else if (count > 0) {
         historyLine = "You've talked with the user before. Never say \"nice to meet you\" or introduce yourself as if it's the first time. Greet them briefly and naturally, in fresh words each time.";
       }
