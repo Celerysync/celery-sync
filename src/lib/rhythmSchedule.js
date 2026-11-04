@@ -11,15 +11,15 @@
 // Local calendar day, NOT UTC — toISOString() would put anything ticked
 // before ~10am AEST on yesterday's date (spec §2.1: local_date is computed
 // from the user's timezone, never from UTC).
-export const TODAY = () => {
-  const d = new Date();
+export function localDateStr(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+}
+export const TODAY = () => localDateStr();
 
 export function addDays(dateStr, n) {
   const d = new Date(dateStr + "T00:00:00");
   d.setDate(d.getDate() + n);
-  return d.toISOString().split("T")[0];
+  return localDateStr(d); // toISOString() here lands a day early east of UTC
 }
 
 export function programDayNumber(startDate, totalDays) {

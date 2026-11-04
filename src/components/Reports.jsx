@@ -8,6 +8,7 @@ import ThenAndNow from "./ThenAndNow.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 const HealingTrends = lazy(() => import("./HealingTrends.jsx"));
 
 const DISCLAIMER =
@@ -316,7 +317,7 @@ export default function Reports({ authUser, profileId, user }) {
         <>
           {/* Today's meals */}
           {(() => {
-            const key = `cs_meals_${new Date().toISOString().split("T")[0]}`;
+            const key = `cs_meals_${localDateStr()}`;
             let meals = [];
             try { meals = JSON.parse(localStorage.getItem(key) || "[]"); } catch {}
             if (!meals.length) return null;

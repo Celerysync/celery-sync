@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 function todayStr() {
-  return new Date().toISOString().split("T")[0];
+  return localDateStr();
 }
 
 // Fired on window when supplements change outside this hook (voice tools).

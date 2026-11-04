@@ -15,13 +15,13 @@ import RhythmView from "./RhythmView.jsx";
 import MorningCheckIn from "./MorningCheckIn.jsx";
 import EveningReflection from "./EveningReflection.jsx";
 import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 // Full supplements page (list management + shop) — opened from Today's
 // supplements card now that it no longer has its own tab.
 const Supplements = lazy(() => import("./Supplements.jsx"));
 
-const TODAY = new Date().toISOString().split("T")[0];
 
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): paraphrase + attribute
 // only, wellbeing language, no named conditions, no protocol specifics or
@@ -205,6 +205,8 @@ function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismis
 }
 
 export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0 }) {
+  // Local calendar day, worked out each render (not UTC, not frozen at load).
+  const TODAY = localDateStr();
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
@@ -502,7 +504,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             {Array.from({ length: 7 }, (_, i) => {
               const d = new Date();
               d.setDate(d.getDate() - (6 - i));
-              const dateStr = d.toISOString().split("T")[0];
+              const dateStr = localDateStr(d);
               const isToday = dateStr === TODAY;
               const entry = last7.find(c => c.date === dateStr);
               const done = isToday ? rhythmDoneCount : (entry?.rhythm_completed || 0);

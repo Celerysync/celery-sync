@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 // The in-app "snack break" banner (every 90 min, with suggested food pairings)
 // was removed: the app was supplying a protocol step of its own. People who
@@ -35,7 +36,7 @@ export function useReminders(authUser) {
   const checkMorningProtocol = useCallback(() => {
     const now = new Date();
     const h = now.getHours();
-    const today = now.toISOString().split("T")[0];
+    const today = localDateStr(now);
     const lastShown = localStorage.getItem("cs_morning_reminder_date");
     if (h >= 5 && h < 9 && lastShown !== today) {
       localStorage.setItem("cs_morning_reminder_date", today);
