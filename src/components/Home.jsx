@@ -82,7 +82,7 @@ function StreakMilestone({ streak }) {
       <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, textAlign: "center" }}>
         {milestone.msg}
       </div>
-      <div style={{ fontSize: 11, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
+      <div style={{ fontSize: 12, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
         🌿 {streak}-day showed-up streak
       </div>
       <button
@@ -97,7 +97,7 @@ function StreakMilestone({ streak }) {
       >
         {shareCopied ? "✓ Copied — paste & share!" : "🌿 Share this milestone"}
       </button>
-      <div style={{ fontSize: 10, color: C.muted, textAlign: "center", marginTop: 6 }}>
+      <div style={{ fontSize: 12, color: C.muted, textAlign: "center", marginTop: 6 }}>
         Share it with someone who'd cheer you on
       </div>
     </div>
@@ -380,7 +380,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
               fontWeight: 700,
             }}
           >
-            {speaking ? "⏹ Stop" : "🔊 Read My Morning Plan"}
+            {speaking ? "⏹ Stop" : "🔊 Read Today's Plan"}
           </button>
         </div>
       </div>
@@ -498,7 +498,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
               🗓 Your week
             </div>
-            <div style={{ fontSize: 11, color: C.muted }}>last 7 days</div>
+            <div style={{ fontSize: 12, color: C.muted }}>last 7 days</div>
           </div>
           <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
             {Array.from({ length: 7 }, (_, i) => {
@@ -516,7 +516,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
                 : C.border;
               return (
                 <div key={dateStr} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>
+                  <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase" }}>
                     {d.toLocaleDateString("en-AU", { weekday: "short" }).slice(0, 2)}
                   </div>
                   <div style={{
@@ -534,7 +534,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             {[[C.sage, "Great day"], [C.gold, "Partial"], [C.border, "Rest day"]].map(([col, label]) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 3, background: col }} />
-                <span style={{ fontSize: 10, color: C.muted }}>{label}</span>
+                <span style={{ fontSize: 12, color: C.muted }}>{label}</span>
               </div>
             ))}
           </div>
@@ -647,7 +647,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             background: `${nowWindow.color}20`,
             borderRadius: 20,
             padding: "3px 10px",
-            fontSize: 10,
+            fontSize: 12,
             color: nowWindow.color,
             fontWeight: 700,
             flexShrink: 0,
@@ -680,13 +680,13 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             borderRadius: 16,
             padding: 18,
           }}>
-            <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Today's learning
             </div>
             <div style={{ fontFamily: "Georgia,serif", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
               💛 {teaching}
             </div>
-            <div style={{ fontSize: 11, color: C.gold, marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: C.gold, marginTop: 8 }}>
               Paraphrased from Anthony William's publicly shared teachings
             </div>
             <a

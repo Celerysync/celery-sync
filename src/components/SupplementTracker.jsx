@@ -201,8 +201,8 @@ export default function SupplementTracker({ authUser, profileId }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
             💊 Today's Supplements
           </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-            {doneCount}/{allSupps.length} taken · {pct}% done
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+            {allSupps.length ? `${doneCount}/${allSupps.length} taken · ${pct}% done` : "None listed yet. Tap to add yours."}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -238,7 +238,7 @@ export default function SupplementTracker({ authUser, profileId }) {
             return (
               <div key={t.id}>
                 <div style={{
-                  fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8,
+                  fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8,
                   marginBottom: 6, marginTop: 10, color: t.color,
                 }}>
                   {t.label}
@@ -314,7 +314,7 @@ export default function SupplementTracker({ authUser, profileId }) {
 
               {profileId && (
                 <>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
                     Optional — track inventory so we can remind you before you run out
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -404,7 +404,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
           />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <label style={{ fontSize: 11, color: C.muted, flex: 1 }}>
+          <label style={{ fontSize: 12, color: C.muted, flex: 1 }}>
             Alert when
             <input
               type="number"
@@ -427,7 +427,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
     return (
       <button
         onClick={onOpen}
-        style={{ marginLeft: 30, marginBottom: 8, background: "none", border: "none", color: C.muted, fontSize: 11, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+        style={{ marginLeft: 30, marginBottom: 8, background: "none", border: "none", color: C.muted, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" }}
       >
         + track inventory for {name}
       </button>
@@ -440,7 +440,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
       onClick={onOpen}
       style={{
         marginLeft: 30, marginBottom: 8, background: "none", border: "none",
-        color: low ? C.terracotta : C.muted, fontSize: 11, cursor: "pointer", padding: 0,
+        color: low ? C.terracotta : C.muted, fontSize: 12, cursor: "pointer", padding: 0,
       }}
     >
       {runOutInfo.unitsOnHand} left · runs out ~{formatRunOutDate(runOutInfo.runOutDate)}{low ? " · reorder soon" : ""}

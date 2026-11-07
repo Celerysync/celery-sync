@@ -10,7 +10,7 @@ export const Tag = ({ children, color = C.sage }) => (
       border: `1px solid ${color}40`,
       borderRadius: 20,
       padding: "2px 10px",
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: 700,
     }}
   >

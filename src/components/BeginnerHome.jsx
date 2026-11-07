@@ -54,7 +54,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
         borderRadius: 20, padding: "20px 22px", color: "#fff",
       }}>
-        <div style={{ fontSize: 11, letterSpacing: 0.6, opacity: 0.75, textTransform: "uppercase", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, letterSpacing: 0.6, opacity: 0.75, textTransform: "uppercase", marginBottom: 4 }}>
           Your wellness journey
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, marginBottom: 6 }}>
@@ -148,7 +148,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         </button>
       </div>
 
-      <div style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, paddingBottom: 4 }}>
+      <div style={{ fontSize: 12, color: C.muted, textAlign: "center", lineHeight: 1.6, paddingBottom: 4 }}>
         🌿 Independent app · Not affiliated with Anthony William or Medical Medium<br />
         Not affiliated with or endorsed by Medical Medium LLC
       </div>

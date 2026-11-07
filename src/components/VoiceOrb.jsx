@@ -133,11 +133,11 @@ export default function VoiceOrb() {
               </div>
               {/* Required in several places (EU AI Act, California, New York) —
                   and simply honest: people should always know it's an AI. */}
-              <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>An AI helper — not a person</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>An AI helper — not a person</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {isConnected && sessionStartedAt && (
-                <span style={{ fontSize: 11, color: C.muted, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontSize: 12, color: C.muted, fontVariantNumeric: "tabular-nums" }}>
                   {fmtElapsed(elapsedMs)}
                 </span>
               )}
@@ -150,7 +150,7 @@ export default function VoiceOrb() {
               Turns into a gentle warning when running low — no surprises. */}
           {meterSecondsRemaining != null && meterSecondsRemaining > 0 && (
             <div style={{
-              fontSize: 11, marginBottom: 8,
+              fontSize: 12, marginBottom: 8,
               color: meterSecondsRemaining <= 300 ? C.terracotta : C.muted,
               fontWeight: meterSecondsRemaining <= 300 ? 700 : 400,
             }}>
@@ -245,7 +245,7 @@ export default function VoiceOrb() {
           )}
           {lastUserMessage?.message?.content && (
             <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 13, color: C.charcoal }}>
-              <span style={{ fontSize: 10, color: C.muted, display: "block", marginBottom: 2 }}>You said</span>
+              <span style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 2 }}>You said</span>
               {lastUserMessage.message.content}
             </div>
           )}

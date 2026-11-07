@@ -17,7 +17,7 @@ function StatPill({ label, value, bg, color }) {
   return (
     <div style={{ background: bg, borderRadius: 10, padding: "8px 12px", textAlign: "center", flex: 1, minWidth: 90 }}>
       <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "Georgia,serif", color }}>{value}</div>
-      <div style={{ fontSize: 10, color: C.mid, marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.mid, marginTop: 1 }}>{label}</div>
     </div>
   );
 }
@@ -98,7 +98,12 @@ export default function AdherenceStreaks({ profileId }) {
       for (const [day, ids] of Object.entries(byDay)) {
         if (day >= since7) weekCompletedCount += ids.size;
       }
-      const weekScheduled = totalItems * 7;
+      // Only the days they've been tracking: a first-day tick out of a full
+      // week read as a discouraging "2%".
+      const rhythmDays = Object.keys(byDay).sort();
+      const firstDay = rhythmDays[0] || today;
+      const daysTracked = Math.min(7, Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${firstDay}T00:00:00Z`)) / 86_400_000) + 1);
+      const weekScheduled = totalItems * daysTracked;
       const weekAdherence = weekScheduled > 0 ? Math.round((weekCompletedCount / weekScheduled) * 100) : null;
 
       const sourceCounts = { tap: 0, voice: 0, auto: 0 };
@@ -115,7 +120,7 @@ export default function AdherenceStreaks({ profileId }) {
   }, [profileId]);
 
   if (loading) {
-    return <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your adherence…</div></Card>;
+    return <Card><div style={{ color: C.muted, fontSize: 13 }}>Loading your streaks…</div></Card>;
   }
   if (!stats || stats.totalItems === 0) return null;
 
@@ -125,10 +130,10 @@ export default function AdherenceStreaks({ profileId }) {
   return (
     <Card>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
-        🔥 Adherence & Streaks
+        🔥 Your streaks
       </div>
-      <div style={{ fontSize: 11, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
-        From your daily rhythm ledger — compared against your current {stats.totalItems}-item rhythm.
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
+        From what you've ticked, compared with the {stats.totalItems} {stats.totalItems === 1 ? "item" : "items"} on your rhythm now.
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: totalSourceEvents > 0 ? 12 : 0 }}>
         <StatPill label="Showed-up streak" value={`${showedUpStreak}d`} bg={C.sageLight} color={C.sageDark} />
@@ -138,7 +143,7 @@ export default function AdherenceStreaks({ profileId }) {
         )}
       </div>
       {totalSourceEvents > 0 && (
-        <div style={{ fontSize: 11, color: C.muted }}>
+        <div style={{ fontSize: 12, color: C.muted }}>
           Last 7 days: {sourceCounts.tap} tapped · {sourceCounts.voice} by voice
           {sourceCounts.auto ? ` · ${sourceCounts.auto} auto` : ""}
         </div>

@@ -62,7 +62,7 @@ function StatPill({ label, value, bg, color }) {
   return (
     <div style={{ background: bg, borderRadius: 10, padding: "8px 12px", textAlign: "center" }}>
       <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "Georgia,serif", color }}>{value}</div>
-      <div style={{ fontSize: 10, color: C.mid, marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.mid, marginTop: 1 }}>{label}</div>
     </div>
   );
 }
@@ -84,7 +84,7 @@ function DailyTable({ checkins }) {
             {headers.map((h) => (
               <th key={h} style={{
                 padding: "8px 6px", textAlign: "left",
-                fontSize: 10, fontWeight: 700, color: C.mid,
+                fontSize: 12, fontWeight: 700, color: C.mid,
                 textTransform: "uppercase", letterSpacing: 0.3,
               }}>
                 {h}
@@ -135,7 +135,7 @@ function MonthCard({ month }) {
         color: C.charcoal, marginBottom: 12,
       }}>
         {fmtMonth(month.ym)}
-        <span style={{ fontSize: 11, fontWeight: 400, color: C.muted, marginLeft: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 400, color: C.muted, marginLeft: 8 }}>
           ({month.weeks} {month.weeks === 1 ? "week" : "weeks"} logged)
         </span>
       </div>
@@ -281,7 +281,7 @@ export default function Reports({ authUser, profileId, user }) {
         <div style={{
           marginTop: 10, background: C.goldLight,
           border: "1px solid #f59e0b30", borderRadius: 10,
-          padding: "10px 12px", fontSize: 11, color: "#92400e", lineHeight: 1.6,
+          padding: "10px 12px", fontSize: 12, color: "#92400e", lineHeight: 1.6,
         }}>
           <strong>Note:</strong> {DISCLAIMER}
         </div>
@@ -336,7 +336,7 @@ export default function Reports({ authUser, profileId, user }) {
                       <span style={{ fontSize: 20 }}>{m.emoji}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{m.name}</div>
-                        <div style={{ fontSize: 11, color: C.muted }}>
+                        <div style={{ fontSize: 12, color: C.muted }}>
                           {MEAL_LABELS[m.mealType] || m.mealType} · {new Date(m.loggedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
                         </div>
                       </div>
@@ -373,7 +373,7 @@ export default function Reports({ authUser, profileId, user }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
               Daily Log — Last 30 Days
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 14 }}>
               Your self-reported data exactly as you entered it. No calculations or interpretations applied.
             </div>
             {loadingCheckins
@@ -414,7 +414,7 @@ export default function Reports({ authUser, profileId, user }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
             Monthly Overview
           </div>
-          <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.muted, marginBottom: 14 }}>
             Aggregated from your weekly summaries. Values are averages or totals of your self-reported data.
           </div>
           {loadingWeeklies ? (
@@ -453,7 +453,7 @@ export default function Reports({ authUser, profileId, user }) {
             Generate a clean PDF to bring to your doctor's appointment. Contains only your logged data — no interpretation or diagnoses included.
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: C.mid, flexShrink: 0 }}>Period:</div>
+            <div style={{ fontSize: 12, color: C.mid, flexShrink: 0 }}>Period:</div>
             {[1, 3, 6, 12].map((m) => (
               <button
                 key={m}

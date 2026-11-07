@@ -15,7 +15,7 @@ function Toggle({ on, onChange, label, desc }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
       </div>
       <button
         onClick={() => onChange(!on)}

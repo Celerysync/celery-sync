@@ -142,13 +142,13 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
           {e && (
             <div style={{ textAlign: "center", minWidth: 44 }}>
               <div style={{ fontSize: 26 }}>{e.emoji}</div>
-              <div style={{ fontSize: 10, color: C.mid, fontFamily: "Georgia,serif" }}>{e.label}</div>
+              <div style={{ fontSize: 12, color: C.mid, fontFamily: "Georgia,serif" }}>{e.label}</div>
             </div>
           )}
           {c && (
             <div style={{ textAlign: "center", minWidth: 44 }}>
               <div style={{ fontSize: 26 }}>{c.emoji}</div>
-              <div style={{ fontSize: 10, color: C.mid, fontFamily: "Georgia,serif" }}>
+              <div style={{ fontSize: 12, color: C.mid, fontFamily: "Georgia,serif" }}>
                 {c.val <= 2 ? "Brain fog" : "Clarity"}
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 color: energy === o.val ? C.white : C.charcoal, transition: "all 0.15s",
               }}>
               <div style={{ fontSize: 22 }}>{o.emoji}</div>
-              <div style={{ fontSize: 9, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
+              <div style={{ fontSize: 11, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
             </button>
           ))}
         </div>
@@ -205,7 +205,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 color: mentalClarity === o.val ? C.white : C.charcoal, transition: "all 0.15s",
               }}>
               <div style={{ fontSize: 22 }}>{o.emoji}</div>
-              <div style={{ fontSize: 9, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
+              <div style={{ fontSize: 11, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
             </button>
           ))}
         </div>
@@ -237,7 +237,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 <button key={s} onClick={() => toggleEmotional(s)}
                   style={{
                     padding: "5px 11px", borderRadius: 20, border: "none", cursor: "pointer",
-                    fontFamily: "Georgia,serif", fontSize: 11,
+                    fontFamily: "Georgia,serif", fontSize: 12,
                     background: emotionalState.includes(s)
                       ? (["Hopeful","Grateful","Calm","Determined"].includes(s) ? C.sage : C.plum)
                       : C.mist,
@@ -288,8 +288,8 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               <div style={{ fontSize: 13, color: C.charcoal }}>
                 🌀 I'm having a rough day — feeling worse than usual
               </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                Worsening symptoms can be a sign things are shifting — your companion tracks these for you
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                This goes in your log. If you're worried or feeling much worse, please talk to your doctor.
               </div>
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 <button key={s} onClick={() => toggleSymptom(s)}
                   style={{
                     padding: "5px 10px", borderRadius: 20, border: "none", cursor: "pointer",
-                    fontFamily: "Georgia,serif", fontSize: 11,
+                    fontFamily: "Georgia,serif", fontSize: 12,
                     background: symptoms.includes(s) ? C.terracotta : C.mist,
                     color: symptoms.includes(s) ? C.white : C.charcoal,
                     transition: "all 0.15s",
@@ -340,7 +340,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 {showVitals ? "▼" : "▶"} Sleep, water & vitals <span style={{ fontWeight: 400 }}>(optional)</span>
               </div>
               {!showVitals && (sleepHours || waterOz || hrv || painLevel) && (
-                <div style={{ fontSize: 10, color: C.sage, marginLeft: 4 }}>✓ filled</div>
+                <div style={{ fontSize: 12, color: C.sage, marginLeft: 4 }}>✓ filled</div>
               )}
             </button>
 
@@ -355,7 +355,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                       <button key={o.val} onClick={() => setWaterOz(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 11, fontWeight: 700,
+                          fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
                           background: waterOz === o.val ? C.sage : C.mist,
                           color: waterOz === o.val ? C.white : C.charcoal,
                         }}>
@@ -373,7 +373,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                       <button key={o.val} onClick={() => setPainLevel(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 11,
+                          fontFamily: "Georgia,serif", fontSize: 12,
                           background: painLevel === o.val ? C.terracotta : C.mist,
                           color: painLevel === o.val ? C.white : C.charcoal,
                         }}>
@@ -391,7 +391,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                       <button key={o.val} onClick={() => setSleepHours(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 11, fontWeight: 700,
+                          fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
                           background: sleepHours === o.val ? C.plum : C.mist,
                           color: sleepHours === o.val ? C.white : C.charcoal,
                         }}>

@@ -275,9 +275,9 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
 
       <div style={{
         background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`,
-        borderRadius: 12, padding: 10, fontSize: 11.5, color: C.sageDark,
+        borderRadius: 12, padding: 10, fontSize: 12, color: C.sageDark,
       }}>
-        📖 Descriptive only — this screen reflects what you share, it never interprets it. Not medical advice — always work with your healthcare provider. Your own copy of Anthony William's books (linked in <strong>Learn</strong>) is the source for anything you follow.
+        📖 Descriptive only — this screen reflects what you share, it never interprets it. Not medical advice — always work with your healthcare provider. Your own copy of Anthony William's books (linked in <strong>Settings → Official sources</strong>) is the source for anything you follow.
       </div>
     </div>
   );

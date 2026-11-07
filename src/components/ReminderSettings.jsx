@@ -10,7 +10,7 @@ function Toggle({ on, onChange, label, desc }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
       </div>
       <button
         onClick={() => onChange(!on)}
@@ -128,7 +128,7 @@ export default function ReminderSettings({ authUser }) {
         </div>
 
         <div style={{
-          fontSize: 11, color: C.mid, lineHeight: 1.6, marginBottom: 14,
+          fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 14,
           background: C.mist, borderRadius: 10, padding: "10px 12px",
         }}>
           💡 To add or change a reminder time, open <strong>My Rhythm</strong>, edit an
@@ -213,7 +213,7 @@ export default function ReminderSettings({ authUser }) {
         </div>
       )}
 
-      <div style={{ marginTop: 12, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+      <div style={{ marginTop: 12, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
         In-app reminders appear as banners when the app is open. Background notifications work when the app is closed — best installed as a home screen app.
       </div>
     </Card>

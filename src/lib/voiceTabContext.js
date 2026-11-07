@@ -128,16 +128,38 @@ const SAFETY_NUMBERS = {
   US: "The user is in the United States. Emergency: 911. Crisis support, 24/7: call or text 988.",
   CA: "The user is in Canada. Emergency: 911. Crisis support, 24/7: call or text 988.",
 };
-export function safetyNumbersLine(timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "") {
-  const tz = timeZone;
-  const country =
-    tz.startsWith("Australia/") ? "AU"
+function countryForTimeZone(tz) {
+  return tz.startsWith("Australia/") ? "AU"
     : tz === "Pacific/Auckland" || tz === "Pacific/Chatham" ? "NZ"
     : tz === "Europe/London" ? "GB"
     : tz === "Europe/Dublin" ? "IE"
     : /^America\/(Toronto|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina)/.test(tz) ? "CA"
     : tz.startsWith("America/") || tz.startsWith("US/") || tz === "Pacific/Honolulu" ? "US"
     : tz ? null : "AU";
+}
+
+const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+
+// The same numbers for screens. Empty when the zone isn't one we have numbers
+// for: better to say "your local emergency number" than show the wrong country's.
+const CRISIS_CONTACTS = {
+  AU: [["Lifeline", "13 11 14"], ["Beyond Blue", "1300 22 4636"], ["Emergency", "000"]],
+  NZ: [["Crisis support", "1737"], ["Emergency", "111"]],
+  GB: [["Samaritans", "116 123"], ["Emergency", "999"]],
+  IE: [["Samaritans", "116 123"], ["Emergency", "112"]],
+  US: [["Crisis line", "988"], ["Emergency", "911"]],
+  CA: [["Crisis line", "988"], ["Emergency", "911"]],
+};
+
+export function crisisContacts(timeZone = deviceTimeZone()) {
+  return (CRISIS_CONTACTS[countryForTimeZone(timeZone)] || []).map(([label, num]) => ({
+    label, num, href: `tel:${num.replace(/\s/g, "")}`,
+  }));
+}
+
+export function safetyNumbersLine(timeZone = deviceTimeZone()) {
+  const tz = timeZone;
+  const country = countryForTimeZone(tz);
   return (country ? SAFETY_NUMBERS[country] : `The user's time zone is ${tz}; if they need help urgently, ask where they are and point them to their local emergency number.`) +
     " Only ever give these numbers — never numbers from another country.";
 }

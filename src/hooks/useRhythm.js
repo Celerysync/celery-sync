@@ -2,7 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
-import {
+import { orderForDay,
   TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
   expandOccurrences, occurrenceId, parseOccurrenceId, RHYTHM_CHANGED_EVENT,
 } from "../lib/rhythmSchedule.js";
@@ -191,7 +191,7 @@ export function useRhythm(authUser, profileId) {
     const todaysItems = filterTodaysItems(baseItems, activeProgram);
     // Expanded before sequencing so an item scheduled twice a day is two
     // separate tickable rows, each with its own id.
-    return calculateSequence(expandOccurrences(todaysItems), anchorTime, completions);
+    return calculateSequence(orderForDay(expandOccurrences(todaysItems)), anchorTime, completions);
   }, [baseItems, activeProgram, anchorTime, completions]);
 
   const hasMedicine = useMemo(() => baseItems.some((i) => i.isMedicine), [baseItems]);

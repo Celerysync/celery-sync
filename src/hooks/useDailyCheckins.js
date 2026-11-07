@@ -1,6 +1,16 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 
+// Ticking a rhythm item writes the day's counts into daily_checkins too, so a
+// row existing doesn't mean the person told us how they feel. Treating it as
+// though it did hid the check-in after the first tick of the day.
+export function isRealCheckin(row) {
+  if (!row) return false;
+  return row.energy != null || row.mental_clarity != null || row.mood != null
+    || !!row.emotional_state?.length || !!row.symptoms?.length
+    || !!row.win_today || !!row.healing_reaction;
+}
+
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -71,7 +81,10 @@ export function useDailyCheckins(authUser, profileId) {
   }, [authUser?.id]);
 
   const todaysCheckin = useMemo(
-    () => checkins.find((c) => c.check_date === todayStr()) ?? null,
+    () => {
+      const row = checkins.find((c) => c.check_date === todayStr());
+      return isRealCheckin(row) ? row : null;
+    },
     [checkins]
   );
 

@@ -58,7 +58,7 @@ function LetterCard({ letter, profileId }) {
           }}>
             {ordinal(letter.year_number)} healing anniversary 💚
           </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
             {fmtDate(letter.created_at)}
           </div>
         </div>
@@ -66,7 +66,7 @@ function LetterCard({ letter, profileId }) {
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              padding: "5px 12px", borderRadius: 20, fontSize: 11,
+              padding: "5px 12px", borderRadius: 20, fontSize: 12,
               fontFamily: "Georgia,serif", fontWeight: 600,
               border: `1px solid ${C.border}`,
               background: expanded ? C.sageLight : C.surface,
@@ -79,7 +79,7 @@ function LetterCard({ letter, profileId }) {
             onClick={handleDownload}
             disabled={downloading}
             style={{
-              padding: "5px 12px", borderRadius: 20, fontSize: 11,
+              padding: "5px 12px", borderRadius: 20, fontSize: 12,
               fontFamily: "Georgia,serif", fontWeight: 600,
               border: `1px solid ${done ? C.sage : C.sageDark}`,
               background: done ? C.sage : C.sageDark,
@@ -173,7 +173,7 @@ export default function HealingLetters({ profileId }) {
           background: C.sageLight, borderRadius: 12,
           border: `1px solid ${alpha(C.sage, "30")}`,
         }}>
-          <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
             Letters are generated automatically on your anniversary each year and emailed to you. They're also stored here permanently — you'll never lose them.
           </div>
         </div>

@@ -74,7 +74,7 @@ export default function HealerUpsell({ onUpgrade }) {
       >
         {busy ? "🌿 One moment…" : `Upgrade to Rhythm + Voice — ${price("voice")}/month →`}
       </button>
-      <div style={{ textAlign: "center", fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+      <div style={{ textAlign: "center", fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
         Upgrades apply to your existing subscription straight away — no second
         subscription, just the difference for the rest of the month.
       </div>

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { price, CURRENCY_CODE } from "../lib/pricing.js";
 import C, { alpha } from '../lib/colors.js'
 import { Card, Btn } from './ui.jsx'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import { crisisContacts } from '../lib/voiceTabContext.js'
 import WearableConnect from './WearableConnect.jsx'
 import { supabase } from '../lib/supabase.js'
 
@@ -11,7 +12,7 @@ import { LANGUAGES } from '../lib/languages.js'
 function MemoryField({ label, value }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
         {label}
       </div>
       <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, background: C.sageLight, borderRadius: 8, padding: "8px 10px" }}>
@@ -236,7 +237,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{
               position: 'absolute', top: -11, left: 18,
               background: C.sageDark, color: C.white, borderRadius: 20,
-              padding: '3px 12px', fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+              padding: '3px 12px', fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
             }}>
               MOST LOVED
             </div>
@@ -258,7 +259,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 </div>
               </div>
             ))}
-            <div style={{ fontSize: 11, color: C.muted, margin: '8px 0 10px' }}>
+            <div style={{ fontSize: 12, color: C.muted, margin: '8px 0 10px' }}>
               Includes 100 voice minutes a month — top-ups available if you're chatty.
             </div>
             <button
@@ -292,7 +293,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 <div style={{ fontSize: 16, flexShrink: 0 }}>{f.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 12.5, color: C.charcoal }}>{f.label}</div>
-                  <div style={{ fontSize: 11.5, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{f.desc}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{f.desc}</div>
                 </div>
                 <div style={{ color: C.sage, fontSize: 14, flexShrink: 0, fontWeight: 700 }}>✓</div>
               </div>
@@ -331,21 +332,23 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </div>
           )}
 
-          <div style={{ textAlign: 'center', fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
+          <div style={{ textAlign: 'center', fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
             Billed when you subscribe. Cancel anytime — you keep access until the end of your billing period.{'\n'}
             Secure payment powered by Stripe.
           </div>
 
           <div style={{
-            textAlign: 'center', fontSize: 11, color: C.muted,
+            textAlign: 'center', fontSize: 12, color: C.muted,
             borderTop: `1px solid ${C.border}`, paddingTop: 12, lineHeight: 1.8,
           }}>
             If you're in crisis, please reach out:{' '}
-            <a href="tel:131114" style={{ color: C.mid, fontWeight: 700 }}>Lifeline 13 11 14</a>
-            {' · '}
-            <a href="tel:1300224636" style={{ color: C.mid, fontWeight: 700 }}>Beyond Blue 1300 22 4636</a>
-            {' · '}
-            <a href="tel:000" style={{ color: C.mid, fontWeight: 700 }}>Emergency 000</a>
+            {crisisContacts().map((c, i) => (
+              <Fragment key={c.label}>
+                {i > 0 && ' · '}
+                <a href={c.href} style={{ color: C.mid, fontWeight: 700 }}>{c.label} {c.num}</a>
+              </Fragment>
+            ))}
+            {!crisisContacts().length && 'your local emergency number or crisis line.'}
           </div>
         </>
       ) : isInTrial ? (
@@ -676,7 +679,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 13, color: units === opt.val ? C.sageDark : C.charcoal }}>
                 {opt.label}
               </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{opt.sub}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{opt.sub}</div>
             </button>
           ))}
         </div>
@@ -723,7 +726,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           🌙 Eye Comfort Mode
         </div>
         <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
-          Dims the screen and reduces blue light — ideal for photosensitivity, migraines, or evening use.
+          Dims the screen and reduces blue light — easier on sensitive eyes, or in the evening.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn full onClick={() => { setDarkMode(false); document.documentElement.setAttribute("data-dark","false"); }} color={!darkMode ? C.sage : C.muted} style={{ opacity: !darkMode ? 1 : 0.6 }}>☀️ Normal</Btn>
@@ -737,7 +740,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           🔤 Text Size
         </div>
         <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
-          Larger text helps with brain fog and visual fatigue — everything scales up by 25%.
+          Larger text is easier on tired eyes — everything scales up by 25%.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn full onClick={() => { setLargeText(false); document.documentElement.setAttribute("data-large","false"); }} color={!largeText ? C.sage : C.muted} style={{ opacity: !largeText ? 1 : 0.6 }}>A Normal</Btn>
@@ -758,7 +761,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 🧠 What the companion remembers
               </div>
               {memoryData?.memory_updated_at && (
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
                   Last updated {new Date(memoryData.memory_updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
                 </div>
               )}
@@ -875,10 +878,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         borderRadius: 16, padding: "14px 16px",
         textAlign: "center",
       }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.charcoal, marginBottom: 5, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 5, fontFamily: "Georgia,serif" }}>
           Independent App — Not Affiliated with Anthony William
         </div>
-        <div style={{ fontSize: 11, color: C.mid, lineHeight: 1.75 }}>
+        <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.75 }}>
           CelerySync is an independent app created by a Medical Medium community member. It is not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc. All content is for educational and personal reference only — not a substitute for medical advice.
           <div style={{ marginTop: 8 }}>
             <a href="/terms.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Terms of Use</a>{" · "}

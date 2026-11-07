@@ -37,9 +37,9 @@ export default function OfficialSources() {
             <span style={{ fontSize: 22, flexShrink: 0 }}>{l.emoji}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{l.label}</div>
-              <div style={{ fontSize: 11.5, color: C.muted, marginTop: 1 }}>{l.desc}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{l.desc}</div>
             </div>
-            <span style={{ fontSize: 9, fontWeight: 700, color: C.sage, letterSpacing: 0.4, textTransform: "uppercase" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.sage, letterSpacing: 0.4, textTransform: "uppercase" }}>
               Official ↗
             </span>
           </a>

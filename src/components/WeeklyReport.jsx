@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import RichText from "./RichText.jsx";
 
 function Bar({ value, max, color = C.sage }) {
   const pct = value && max ? Math.min((value / max) * 100, 100) : 0;
@@ -18,7 +19,7 @@ function MetricCard({ emoji, label, value, display, max, color }) {
       background: C.sageLight, borderRadius: 14, padding: "13px 14px",
       flex: "1 1 calc(50% - 6px)", minWidth: 0,
     }}>
-      <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>
+      <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>
         {emoji} {label}
       </div>
       <div style={{ fontSize: 20, fontWeight: 700, color: color || C.sageDark, fontFamily: "Georgia,serif" }}>
@@ -76,15 +77,15 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
           }}>
             {isLatest ? "🌟 This Week's Summary" : `Week of ${fmtDate(summary.week_start)}`}
           </div>
-          <div style={{ fontSize: 11, color: isLatest ? "rgba(255,255,255,0.75)" : C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: isLatest ? "rgba(255,255,255,0.75)" : C.muted, marginTop: 2 }}>
             {weekRange}
           </div>
         </div>
         <div style={{
-          fontSize: 11, color: isLatest ? "rgba(255,255,255,0.8)" : C.muted,
+          fontSize: 12, color: isLatest ? "rgba(255,255,255,0.8)" : C.muted,
           display: "flex", gap: 16, alignItems: "center",
         }}>
-          <span>🥬 {summary.celery_days}/7</span>
+          <span>🌿 {summary.protocol_days}/7</span>
           {summary.avg_energy && <span>⚡ {summary.avg_energy}/10</span>}
           <span style={{ fontSize: 14 }}>{expanded ? "▲" : "▼"}</span>
         </div>
@@ -94,9 +95,8 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
         <div style={{ padding: "16px 16px 14px" }}>
           {/* Metrics */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-            <MetricCard emoji="🥬" label="Celery Juice" value={summary.celery_days} max={7} display={`${summary.celery_days}/7 days`} />
             <MetricCard emoji="⚡" label="Avg Energy" value={summary.avg_energy} max={10} display={summary.avg_energy ? `${summary.avg_energy}/10` : "—"} />
-            <MetricCard emoji="☀️" label="Protocol" value={summary.protocol_days} max={7} display={`${summary.protocol_days}/7 days`} color={C.leaf} />
+            <MetricCard emoji="☀️" label="Rhythm days" value={summary.protocol_days} max={7} display={`${summary.protocol_days}/7 days`} color={C.leaf} />
             <MetricCard emoji="😊" label="Avg Mood" value={summary.avg_mood} max={5} display={summary.avg_mood ? `${summary.avg_mood}/5` : "—"} color={C.gold} />
           </div>
 
@@ -107,19 +107,17 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
               padding: "14px 16px", marginBottom: 12,
               borderLeft: `4px solid ${C.sage}`,
             }}>
-              <div style={{ fontSize: 10, color: C.sageDark, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: C.sageDark, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 Observations from your week
               </div>
-              <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }}>
-                {summary.ai_observations}
-              </div>
+              <RichText text={summary.ai_observations} style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }} />
               <button
                 onClick={() => speaking ? stopSpeaking() : speak(summary.ai_observations)}
                 style={{
                   marginTop: 10, background: speaking ? C.sage : "transparent",
                   border: `1px solid ${C.sage}`, color: speaking ? "#fff" : C.sage,
                   borderRadius: 20, padding: "5px 14px",
-                  fontFamily: "Georgia,serif", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
                 }}
               >
                 {speaking ? "⏹ Stop" : "🔊 Hear it"}
@@ -130,7 +128,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
           {/* Key moments */}
           {milestones.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 ✨ Key moments this week
               </div>
               {milestones.map((m, i) => (

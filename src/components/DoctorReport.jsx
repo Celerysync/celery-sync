@@ -80,7 +80,7 @@ export default function DoctorReport({ profileId }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>
               {extended ? "Extended report" : "Standard report"}
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
               {extended
                 ? "Includes details of your own routine — for naturopaths and integrative practitioners"
                 : "Objective data and clinical language only — suitable for any GP or specialist"}
@@ -107,7 +107,7 @@ export default function DoctorReport({ profileId }) {
 
       {/* What's included */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
           What's included
         </div>
         {[
@@ -125,7 +125,7 @@ export default function DoctorReport({ profileId }) {
         ))}
         <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "flex-start" }}>
           <span style={{ color: C.terracotta, fontWeight: 700, flexShrink: 0 }}>!</span>
-          <span style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
+          <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
             Self-reported data only. Includes disclaimer on every page. Not a medical record.
           </span>
         </div>

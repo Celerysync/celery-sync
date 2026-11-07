@@ -126,7 +126,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
           {speaking && (
             <button
               onClick={stopSpeaking}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: C.muted, padding: 0, marginBottom: 4 }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.muted, padding: 0, marginBottom: 4 }}
             >
               ⏹ Stop audio
             </button>

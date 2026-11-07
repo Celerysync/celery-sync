@@ -193,7 +193,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           borderRadius: 20, padding: "6px 14px",
           marginBottom: 28,
         }}>
-          <span style={{ fontSize: 11, opacity: 0.95, letterSpacing: 0.3 }}>
+          <span style={{ fontSize: 12, opacity: 0.95, letterSpacing: 0.3 }}>
             🌿 Independent app · Not affiliated with or endorsed by Anthony William or Medical Medium LLC
           </span>
         </div>
@@ -291,11 +291,11 @@ export default function Landing({ onGetStarted, onSignIn }) {
             }}>
               <div style={{ display: "flex", alignItems: "stretch" }}>
                 <div style={{ flex: 1, padding: "13px 14px", borderRight: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 9, color: "#ef4444", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Before</div>
+                  <div style={{ fontSize: 11, color: "#ef4444", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Before</div>
                   <div style={{ fontSize: 12.5, color: "#6b7280", lineHeight: 1.5 }}>{t.before}</div>
                 </div>
                 <div style={{ flex: 1, padding: "13px 14px", background: C.sageLight }}>
-                  <div style={{ fontSize: 9, color: C.sageDark, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>With CelerySync</div>
+                  <div style={{ fontSize: 11, color: C.sageDark, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>With CelerySync</div>
                   <div style={{ fontSize: 12.5, color: C.charcoal, lineHeight: 1.5, fontWeight: 600 }}>{t.after}</div>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
                 Alli · <span style={{ fontWeight: 400, color: C.muted }}>Founder</span>
               </div>
-              <div style={{ fontSize: 11, color: C.sage, marginTop: 2 }}>15 years living the MM lifestyle</div>
+              <div style={{ fontSize: 12, color: C.sage, marginTop: 2 }}>15 years living the MM lifestyle</div>
             </div>
           </div>
         </div>
@@ -432,7 +432,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 12.5, color: C.charcoal, marginBottom: 4, lineHeight: 1.3 }}>
                 {f.title}
               </div>
-              <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.55 }}>{f.desc}</div>
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.55 }}>{f.desc}</div>
             </div>
           ))}
         </div>
@@ -459,7 +459,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
 
           {/* Mock AI conversation */}
           <div style={{ background: C.surface, borderRadius: 18, padding: "18px 16px", border: `1px solid ${C.border}`, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: C.muted, fontFamily: "Georgia,serif", marginBottom: 12, textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: C.muted, fontFamily: "Georgia,serif", marginBottom: 12, textAlign: "center" }}>
               Example conversation
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
@@ -475,7 +475,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
                 energy's feeling while we wait?
               </div>
             </div>
-            <div style={{ fontSize: 11, color: C.muted, textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>
               The checkbox ticks itself on screen as you speak — that's the moment people don't go back from.
             </div>
           </div>
@@ -485,7 +485,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
               <div key={t} style={{
                 background: C.sageDark, color: "#fff",
                 borderRadius: 20, padding: "6px 14px",
-                fontSize: 11.5, fontFamily: "Georgia,serif",
+                fontSize: 12, fontFamily: "Georgia,serif",
               }}>
                 ✓ {t}
               </div>
@@ -577,10 +577,10 @@ export default function Landing({ onGetStarted, onSignIn }) {
           <div style={{ fontSize: 28, fontFamily: "Georgia,serif", fontWeight: 700, marginBottom: 4 }}>
             from {price("rhythm")}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.85 }}>/month {CURRENCY_CODE}</span>
           </div>
-          <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
+          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
             Rhythm {price("rhythm")} — the full routine engine · Rhythm + Voice {price("voice")} — adds the voice & chat helper
           </div>
-          <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 20 }}>
+          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 20 }}>
             Powered by the world's most advanced AI · Adult household profiles included (18+)
           </div>
 
@@ -626,7 +626,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 6, fontFamily: "Georgia,serif" }}>
             Independent App — Important Notice
           </div>
-          <div style={{ fontSize: 11.5, color: C.mid, lineHeight: 1.75 }}>
+          <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.75 }}>
             CelerySync is an <strong>independent</strong> companion app created by a Medical Medium community member. It is <strong>not affiliated with, endorsed by, or connected to</strong> Anthony William or Medical Medium LLC in any way. "Medical Medium" is a registered trademark of Anthony William, Inc. All health information in this app is for <strong>educational and personal reference only</strong> and is not a substitute for professional medical advice. Always work with your healthcare provider.
             <div style={{ marginTop: 8 }}>
               <a href="/terms.html" style={{ color: C.sageDark }}>Terms of Use</a>{" · "}

@@ -59,7 +59,8 @@ EXTRACT these fields if mentioned — leave them null/empty if not mentioned:
   four separate entries) — extract each one separately, don't merge them.
   Each entry: { "name": string (short item name, e.g. "B12"), "category": one of "morning"|
   "supplement"|"food"|"medicine"|"other", "fixedTime": string|null ("HH:MM" 24-hour, convert
-  "9am" -> "09:00"; null if they gave a relative time like "after breakfast" instead),
+  "9am" -> "09:00"; with no am/pm, use the sensible time of day for what it is: "tea at 8, in
+  bed by 10" -> "20:00" and "22:00", "breakfast at 8" -> "08:00"; null if they gave a relative time like "after breakfast" instead),
   "note": string|null (brief context they mentioned, e.g. "with detox smoothie"; null if none),
   "frequency": "daily"|"weekdays" (default "daily") }. Empty array [] if nothing schedule-like
   was mentioned. This stores only what the user says about their OWN routine — never suggest or

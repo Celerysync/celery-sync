@@ -11,7 +11,8 @@ import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
-import { APP_DELETE_HOWTO, safetyNumbersLine } from "../lib/voiceTabContext.js";
+import { APP_DELETE_HOWTO, crisisContacts, safetyNumbersLine } from "../lib/voiceTabContext.js";
+import { todayStatus } from "../hooks/useVoiceTools.js";
 import { LANGUAGES } from "../lib/languages.js";
 
 const CRISIS_KEYWORDS = [
@@ -76,6 +77,7 @@ THE APP HAS FOUR TABS — Today (home), Companion, Progress, Settings. Places:
 
 USE navigation when: user describes how they feel → [[GO:companion:feelings|description]]; wants to log how they are today → [[GO:home:checkin]]; asks about their supplements → [[GO:home:supplements]]; asks for recipes or where to read more → [[GO:settings:sources]]; asks about their progress/history → [[GO:progress]].
 DO NOT navigate for general questions, cleanse guidance, or organ/body questions — answer in the conversation and point to the relevant AW book for full detail.
+DO NOT navigate when you can simply answer (for example "what's left today?", which TODAY'S RHYTHM below lets you answer), or when their message also asks something else. Leaving the conversation takes your answer off their screen.
 In your response text, naturally mention you're taking them there.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -123,6 +125,20 @@ const GREETINGS = {
   ru: (name) => `Привет${name ? ", " + name : ""}! 🌿 Я ваш спутник благополучия CelerySync — независимое приложение, вдохновлённое учениями Энтони Уильяма. Вы можете говорить со мной или писать ниже. Как я могу помочь вам сегодня?`,
   tr: (name) => `Merhaba${name ? ", " + name : ""}! 🌿 Ben CelerySync sağlıklı yaşam yol arkadaşınızım — Anthony William'ın öğretilerinden ilham alan bağımsız bir uygulama. Benimle konuşabilir veya aşağıya yazabilirsiniz. Bugün size nasıl yardımcı olabilirim?`,
 };
+
+// What's on their own rhythm and supplement list today, ticked or not. Their
+// own wording only. Without this the chat offered "What's left in my rhythm
+// today?" and then said it couldn't see anything.
+function todaySection(today) {
+  if (!today) return "";
+  const rhythm = today.items.length
+    ? today.items.map((i) => `• ${i.done ? "done" : "not yet"}: ${i.name}${i.time ? ` (${String(i.time).slice(0, 5)})` : ""}`).join("\n")
+    : "Nothing on their rhythm yet.";
+  const supplements = today.supplements?.length
+    ? `\nTheir supplements today:\n${today.supplements.map((s) => `• ${s.taken ? "ticked" : "not ticked"}: ${s.name}`).join("\n")}`
+    : "";
+  return `\nTODAY'S RHYTHM (their own items, right now):\n${rhythm}${supplements}\nReport this only if asked. Never tell them to take or skip anything.\n`;
+}
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
 function buildDynamicSystem({ user, healingProfile, priorMessages, milestones, lang, caregiverMode, units, todaysCheckin, showedUpStreak, daysAway, pageContext, activeProtocol }) {
@@ -444,9 +460,11 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         resetQueue();
         chatAbortRef.current?.abort();
         chatAbortRef.current = new AbortController();
+        // Fresh each message, because they may have just ticked something.
+        const today = profileId ? await todayStatus(profileId).catch(() => null) : null;
         const reply = await streamClaude({
           staticSystem: systemRef.current.staticSystem,
-          dynamicSystem: systemRef.current.dynamicSystem,
+          dynamicSystem: systemRef.current.dynamicSystem + todaySection(today),
           messages: newMsgs.slice(-8).map(({ role, content }) => ({ role, content })),
           maxTokens: voiceModeRef.current ? 350 : 700,
           signal: chatAbortRef.current.signal,
@@ -597,7 +615,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
           Your CelerySync helper — an AI, not a person · Paraphrased & attributed teachings · Remembers your journey
         </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
           Not medical advice — always work with your doctor or licensed practitioner
         </div>
       </div>
@@ -618,7 +636,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <div style={{ fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700, color: C.sageDark }}>
               🧠 I remember your journey
             </div>
-            <div style={{ fontSize: 11, color: C.muted }}>{showMemory ? "hide ▲" : "show ▼"}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{showMemory ? "hide ▲" : "show ▼"}</div>
           </div>
           {showMemory && (
             <div style={{ marginTop: 10, fontSize: 12.5, color: C.mid, lineHeight: 1.7 }}>
@@ -634,7 +652,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     border: `1px solid ${C.border}`,
                     borderRadius: 20,
                     padding: "3px 10px",
-                    fontSize: 11,
+                    fontSize: 12,
                     color: C.muted,
                     cursor: "pointer",
                   }}
@@ -762,11 +780,12 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             💛 You're not alone — please reach out
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              { label: "Lifeline Australia", num: "13 11 14", href: "tel:131114" },
-              { label: "Beyond Blue", num: "1300 22 4636", href: "tel:1300224636" },
-              { label: "Emergency services", num: "000", href: "tel:000" },
-            ].map((s) => (
+            {!crisisContacts().length && (
+              <div style={{ fontSize: 14, color: "#374151", lineHeight: 1.5 }}>
+                Please call your local emergency number, or a crisis line where you are.
+              </div>
+            )}
+            {crisisContacts().map((s) => (
               <a
                 key={s.label}
                 href={s.href}
@@ -793,7 +812,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               background: "none",
               border: "none",
               color: "#9CA3AF",
-              fontSize: 11,
+              fontSize: 12,
               cursor: "pointer",
             }}
           >
@@ -848,7 +867,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                   }}
                 >
                   {m.via === "voice" && (
-                    <div style={{ fontSize: 10.5, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
                   )}
                   {m.role === "assistant" ? <RichText text={m.content} /> : m.content}
                 </div>
@@ -865,7 +884,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     style={{
                       background: copied ? C.sage : C.surface, color: copied ? C.white : C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
-                      padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      padding: "5px 12px", fontSize: 12, cursor: "pointer",
                       fontFamily: "Georgia,serif", transition: "all 0.2s",
                     }}
                   >
@@ -876,7 +895,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     style={{
                       background: C.surface, color: C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
-                      padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      padding: "5px 12px", fontSize: 12, cursor: "pointer",
                       fontFamily: "Georgia,serif",
                     }}
                   >
@@ -984,7 +1003,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               border: `1.5px solid ${handsFree ? C.sage : C.border}`,
               background: handsFree ? C.sage : C.surface,
               color: handsFree ? C.white : C.muted,
-              fontSize: 11, fontFamily: "Georgia,serif", fontWeight: 700,
+              fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
               cursor: "pointer", whiteSpace: "nowrap",
               boxShadow: handsFree ? `0 0 0 3px ${alpha(C.sage, "30")}` : "none",
               transition: "all 0.2s",
@@ -1086,7 +1105,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Follow-up suggestions — appear after each AI response */}
       {followUps.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          <div style={{ width: "100%", fontSize: 10, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>
+          <div style={{ width: "100%", fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>
             Ask next
           </div>
           {followUps.map((q) => (
@@ -1117,11 +1136,11 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         const query = encodeURIComponent(lastUser.content.slice(0, 60));
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
-            <span style={{ fontSize: 10, color: C.muted, flexShrink: 0 }}>Go deeper:</span>
+            <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>Go deeper:</span>
             <a
               href={`https://www.youtube.com/results?search_query=medical+medium+${query}`}
               target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 11, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+              style={{ fontSize: 12, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
             >
               ▶ AW on YouTube
             </a>
@@ -1129,7 +1148,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <a
               href="https://medicalmedium.com/medical-medium-podcast"
               target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 11, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+              style={{ fontSize: 12, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
             >
               🎙 MM Podcast
             </a>

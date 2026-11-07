@@ -121,9 +121,9 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
           &nbsp;&nbsp;&nbsp;<strong>token</strong> = your key below · <strong>sleep_hours</strong> = the Calculate result · <strong>date</strong> = the formatted date{"\n"}
           7. In <strong>Automation</strong> → new personal automation → <strong>Time of Day</strong>, e.g. 9:00am daily → <strong>Run Immediately</strong> → pick this shortcut
           <div style={{ marginTop: 10, fontWeight: 700 }}>Your URL:</div>
-          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
+          <code style={{ fontSize: 12, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
           <div style={{ marginTop: 8, fontWeight: 700 }}>Your private key (keep it to yourself):</div>
-          <code style={{ fontSize: 11, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
+          <code style={{ fontSize: 12, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
           <button
             onClick={() => {
               navigator.clipboard?.writeText(`URL: ${ingestUrl}\nKey: ${ingestToken}`).then(() => {
@@ -143,7 +143,7 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
         </div>
       )}
       {err && <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{err}</div>}
-      <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
         Once the automation runs each morning, last night's sleep appears in your check-in
         automatically. Prefer to type it in? Manual entry still works below.
       </div>
@@ -197,7 +197,7 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
         {fields.map(f => (
           <div key={f.key}>
-            <div style={{ fontSize: 11, color: C.muted, marginBottom: 3 }}>{f.label}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 3 }}>{f.label}</div>
             <input
               type={f.type}
               step={f.step || "1"}
@@ -363,22 +363,22 @@ export default function WearableConnect({ authUser }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{w.name}</div>
                     {isConnected && (
-                      <div style={{ fontSize: 10, background: C.sage, color: "#fff", borderRadius: 10, padding: "1px 7px", fontWeight: 700 }}>
+                      <div style={{ fontSize: 12, background: C.sage, color: "#fff", borderRadius: 10, padding: "1px 7px", fontWeight: 700 }}>
                         Connected
                       </div>
                     )}
                     {w.type === "auto" && !isConnected && (
-                      <div style={{ fontSize: 10, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
+                      <div style={{ fontSize: 12, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
                         Auto sync
                       </div>
                     )}
                     {w.type === "manual" && (
-                      <div style={{ fontSize: 10, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
+                      <div style={{ fontSize: 12, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
                         Manual
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{w.desc}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{w.desc}</div>
                 </div>
                 <div style={{ fontSize: 14, color: C.muted, flexShrink: 0 }}>{isExpanded ? "▲" : "▼"}</div>
               </button>
@@ -388,9 +388,9 @@ export default function WearableConnect({ authUser }) {
                 <div style={{ padding: "0 14px 14px", borderTop: `1px solid ${C.border}` }}>
                   {/* What we read */}
                   <div style={{ background: C.mist, borderRadius: 10, padding: "10px 12px", margin: "12px 0 12px" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.sageDark, marginBottom: 5 }}>What CelerySync reads:</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark, marginBottom: 5 }}>What CelerySync reads:</div>
                     {w.metrics.map(m => (
-                      <div key={m} style={{ fontSize: 11, color: C.charcoal, lineHeight: 1.6 }}>• {m}</div>
+                      <div key={m} style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>• {m}</div>
                     ))}
                   </div>
 
@@ -482,8 +482,8 @@ export default function WearableConnect({ authUser }) {
         })}
       </div>
 
-      <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 11, color: C.mid, lineHeight: 1.6 }}>
-        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up alongside your own logged trends in your trends.
+      <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
+        No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up in your trends.
       </div>
     </Card>
   );

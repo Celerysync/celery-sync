@@ -186,7 +186,7 @@ export default function RhythmBuilder({
                   flex: 1, padding: "8px 4px", border: "none", borderRadius: 20,
                   background: level === t.id ? C.sageDark : C.mist,
                   color: level === t.id ? C.white : C.mid,
-                  fontSize: 11, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                  fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
                   minWidth: "fit-content",
                 }}
               >
@@ -204,10 +204,10 @@ export default function RhythmBuilder({
               {/* Wake anchor */}
               <Card>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
-                  ⏰ Your wake anchor
+                  ⏰ Your usual wake time
                 </div>
                 <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
-                  Set your usual wake time — the app maps your whole day's sequence from this one anchor.
+                  Optional. Steps with no set time follow on from this.
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <input
@@ -224,8 +224,8 @@ export default function RhythmBuilder({
                   <Btn small color={C.sage} onClick={saveAnchor}>Save</Btn>
                 </div>
                 {anchorTime && (
-                  <div style={{ fontSize: 11, color: C.sage, marginTop: 6 }}>
-                    ✓ Current anchor: {anchorTime}
+                  <div style={{ fontSize: 12, color: C.sage, marginTop: 6 }}>
+                    ✓ Currently: {anchorTime}
                   </div>
                 )}
               </Card>
@@ -262,7 +262,7 @@ export default function RhythmBuilder({
                       <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                         {(row.items || []).map((item, i) => (
                           <span key={i} style={{
-                            fontSize: 10, background: `${alpha(C.sage, "15")}`, color: C.sageDark,
+                            fontSize: 12, background: `${alpha(C.sage, "15")}`, color: C.sageDark,
                             borderRadius: 20, padding: "2px 7px",
                           }}>
                             {item.emoji} {item.name}
@@ -281,7 +281,7 @@ export default function RhythmBuilder({
                     >✕</button>
                   </div>
                   {confirmDeleteSavedId === row.id && (
-                    <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6 }}>
+                    <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
                       Tap ✕ again to delete this template
                     </div>
                   )}
@@ -372,7 +372,7 @@ export default function RhythmBuilder({
                           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
                             {prog.name}
                           </div>
-                          <span style={{ fontSize: 10, background: `${alpha(C.plum, "15")}`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
+                          <span style={{ fontSize: 12, background: `${alpha(C.plum, "15")}`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
                             {prog.totalDays} days
                           </span>
                         </div>
@@ -384,7 +384,7 @@ export default function RhythmBuilder({
                         <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                           {prog.items.map((item, i) => (
                             <span key={i} style={{
-                              fontSize: 10, background: `${alpha(C.plum, "12")}`, color: C.plum,
+                              fontSize: 12, background: `${alpha(C.plum, "12")}`, color: C.plum,
                               borderRadius: 20, padding: "2px 7px",
                             }}>
                               {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}
@@ -403,7 +403,7 @@ export default function RhythmBuilder({
                       >✕</button>
                     </div>
                     {confirmDeleteSavedId === row.id && (
-                      <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6 }}>
+                      <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
                         Tap ✕ again to delete this program
                       </div>
                     )}
@@ -509,7 +509,7 @@ export default function RhythmBuilder({
                         <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>
                           {item.name}
                         </div>
-                        <div style={{ fontSize: 11, color: C.muted }}>
+                        <div style={{ fontSize: 12, color: C.muted }}>
                           Days {item.programDayRange[0]}–{item.programDayRange[1]} · +{item.spacingMinutes}min
                         </div>
                       </div>
@@ -635,7 +635,7 @@ export default function RhythmBuilder({
             <>
               {/* Wake anchor compact */}
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 13, color: C.muted }}>⏰ Wake anchor:</span>
+                <span style={{ fontSize: 13, color: C.muted }}>⏰ Usual wake time:</span>
                 <input
                   type="time"
                   value={localAnchor}
@@ -673,7 +673,7 @@ export default function RhythmBuilder({
                           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
                             {scheduleTimes(item).length
                               ? <span style={{ color: C.sageDark, fontWeight: 700 }}>
                                   🔔 {scheduleTimes(item).map(formatFixedTime).join(" · ")}
@@ -682,7 +682,7 @@ export default function RhythmBuilder({
                                   onClick={() => startEdit(item)}
                                   style={{
                                     background: "none", border: "none", padding: 0, cursor: "pointer",
-                                    fontSize: 11, color: C.sage, fontWeight: 700, fontFamily: "inherit",
+                                    fontSize: 12, color: C.sage, fontWeight: 700, fontFamily: "inherit",
                                     textDecoration: "underline",
                                   }}
                                 >
@@ -719,7 +719,7 @@ export default function RhythmBuilder({
                             style={{
                               background: `${alpha(C.sage, "15")}`, border: "none",
                               borderRadius: 8, padding: "4px 10px",
-                              fontSize: 11, color: C.sageDark, cursor: "pointer",
+                              fontSize: 12, color: C.sageDark, cursor: "pointer",
                             }}
                           >Edit</button>
                           <button
@@ -736,7 +736,7 @@ export default function RhythmBuilder({
                         </div>
                       </div>
                       {confirmClearId === item.id && (
-                        <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6 }}>
+                        <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
                           Tap ✕ again to confirm removal
                         </div>
                       )}
@@ -945,7 +945,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
         </div>
         {form.isMedicine && (
           <div style={{
-            marginTop: 8, fontSize: 11, color: C.plum, lineHeight: 1.6,
+            marginTop: 8, fontSize: 12, color: C.plum, lineHeight: 1.6,
             background: `${alpha(C.plum, "12")}`, borderRadius: 10, padding: "8px 12px",
           }}>
             ⚕️ This item will be marked as a prescribed medicine. The app will show a standing note to confirm timing with your doctor or pharmacist. The app and AI will never advise on prescribed medication timing or interactions.
@@ -970,7 +970,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               background: !timed ? C.sage : C.mist,
               color: !timed ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
-              fontSize: 11, cursor: "pointer",
+              fontSize: 12, cursor: "pointer",
             }}
           >
             No set time
@@ -982,7 +982,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               background: timed ? C.sage : C.mist,
               color: timed ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
-              fontSize: 11, cursor: "pointer",
+              fontSize: 12, cursor: "pointer",
             }}
           >
             🔔 Remind me at…
@@ -1000,7 +1000,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
                     background: sameTimes(times, p.times) ? C.sageDark : C.mist,
                     color: sameTimes(times, p.times) ? C.white : C.mid,
                     border: "none", borderRadius: 20, padding: "6px 12px",
-                    fontSize: 11, cursor: "pointer",
+                    fontSize: 12, cursor: "pointer",
                   }}
                 >
                   {p.label}
@@ -1054,12 +1054,12 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               </button>
             </div>
 
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
               🔔 {times.length === 1
                 ? "You'll get one reminder a day at this time"
                 : `You'll get ${times.length} reminders a day, and this item appears ${times.length} times on your rhythm so you can tick each one off`}
               , if background notifications are on in Settings. Timed items sit at
-              their own time and aren't affected by your wake anchor.
+              their own time and aren't affected by your wake time.
             </div>
           </>
         ) : (
@@ -1079,8 +1079,8 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
               />
               <span style={{ fontSize: 13, color: C.muted }}>minutes after the previous step</span>
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-              How many minutes after the previous item completes (or after your wake anchor
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+              How many minutes after the previous item completes (or after your wake time
               for the first item). Tap “🔔 Remind me at…” to get a reminder for this item.
             </div>
           </>
@@ -1099,7 +1099,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
                 background: form.frequency === val ? C.sage : C.mist,
                 color: form.frequency === val ? C.white : C.mid,
                 border: "none", borderRadius: 10, padding: "8px 4px",
-                fontSize: 11, cursor: "pointer",
+                fontSize: 12, cursor: "pointer",
               }}
             >
               {label}
@@ -1111,7 +1111,9 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
       {/* Duration */}
       <FieldGroup label="Duration">
         <div style={{ display: "flex", gap: 6 }}>
-          {Object.entries(DUR_LABELS).map(([val, label]) => (
+          {/* "During cleanse only" items only ever appear through a program, so
+              picking this for an everyday item made it vanish with no explanation. */}
+          {Object.entries(DUR_LABELS).filter(([val]) => val !== "cleanse" || form.durationType === "cleanse").map(([val, label]) => (
             <button
               key={val}
               onClick={() => setForm((f) => ({
@@ -1125,7 +1127,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
                 background: form.durationType === val ? C.sage : C.mist,
                 color: form.durationType === val ? C.white : C.mid,
                 border: "none", borderRadius: 10, padding: "8px 4px",
-                fontSize: 11, cursor: "pointer",
+                fontSize: 12, cursor: "pointer",
               }}
             >
               {label}

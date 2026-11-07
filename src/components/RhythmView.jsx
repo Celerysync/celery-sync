@@ -46,7 +46,7 @@ export default function RhythmView({
           Your daily rhythm is empty
         </div>
         <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
-          Set up your daily rhythm to see today's sequence here — one anchor time, and the app maps out your whole day.
+          Add what you do each day, in your own words, and it will show here.
         </div>
         <button
           onClick={onEdit}
@@ -97,7 +97,7 @@ export default function RhythmView({
                   transition: "width 0.3s",
                 }} />
               </div>
-              <div style={{ fontSize: 10, color: C.plum, marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: C.plum, marginTop: 4 }}>
                 {activeProgram.totalDays - currentProgramDay} days remaining
               </div>
             </div>
@@ -129,8 +129,8 @@ export default function RhythmView({
           onClick={onEdit}
           style={{
             background: "none", border: `1.5px solid ${C.border}`,
-            borderRadius: 20, padding: "4px 12px",
-            fontSize: 11, color: C.mid, cursor: "pointer",
+            borderRadius: 20, padding: "8px 16px",
+            fontSize: 13, color: C.mid, cursor: "pointer",
           }}
         >
           Edit
@@ -159,11 +159,13 @@ export default function RhythmView({
           statusLabel = `Done · ${new Date(item.completedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}`;
           statusColor = C.sage;
         } else if (isNext) {
-          statusLabel = item.scheduledMs != null ? `Now · ${formatTime(item.scheduledMs)}` : "Up next";
+          statusLabel = item.scheduledMs != null ? `Up next · ${formatTime(item.scheduledMs)}` : "Up next";
           statusColor = C.leaf;
         } else if (isPast) {
-          statusLabel = `Overdue · ${formatTime(item.scheduledMs)}`;
-          statusColor = C.gold;
+          // Never "overdue": many people here are unwell, and a missed time
+          // isn't a failing. It simply happened earlier in the day.
+          statusLabel = `Earlier · ${formatTime(item.scheduledMs)}`;
+          statusColor = C.muted;
         } else if (item.scheduledMs != null) {
           const minsTillScheduled = Math.round((item.scheduledMs - now) / 60_000);
           statusLabel = minsTillScheduled > 0
@@ -182,7 +184,7 @@ export default function RhythmView({
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.leaf, flexShrink: 0 }} />
                 <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
-                <div style={{ fontSize: 10, color: C.leaf, fontWeight: 700, letterSpacing: 0.5 }}>NOW</div>
+                <div style={{ fontSize: 12, color: C.leaf, fontWeight: 700, letterSpacing: 0.5 }}>UP NEXT</div>
                 <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
               </div>
             )}
@@ -201,8 +203,9 @@ export default function RhythmView({
                 {/* Check button */}
                 <button
                   onClick={() => isDone ? onUncomplete(item.id) : onComplete(item.id)}
+                  aria-label={isDone ? `Mark ${item.name} as not done` : `Mark ${item.name} as done`}
                   style={{
-                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
                     border: `2px solid ${isDone ? C.sage : isNext ? C.sage : C.border}`,
                     background: isDone ? C.sage : "transparent",
                     color: C.white, fontWeight: 700, fontSize: 13,
@@ -226,12 +229,12 @@ export default function RhythmView({
                     </span>
                     {isMed && (
                       <span style={{
-                        fontSize: 9, background: `${alpha(C.plum, "20")}`, color: C.plum,
+                        fontSize: 11, background: `${alpha(C.plum, "20")}`, color: C.plum,
                         borderRadius: 20, padding: "1px 6px", fontWeight: 700,
                       }}>Rx</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 11, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
+                  <div style={{ fontSize: 12, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
                     {statusLabel}
                   </div>
                 </div>
@@ -244,7 +247,7 @@ export default function RhythmView({
                       onClick={() => setExpandedId(expanded ? null : item.id)}
                       style={{
                         background: "none", border: "none", color: C.muted,
-                        fontSize: 11, cursor: "pointer", padding: 0,
+                        fontSize: 12, cursor: "pointer", padding: 0,
                       }}
                     >
                       {expanded ? "▲" : "▼"}
@@ -266,7 +269,7 @@ export default function RhythmView({
                     const today = new Date();
                     const dayOn = Math.floor((today - start) / 86_400_000) + 1;
                     return (
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
                         Day {dayOn} of {item.durationDays}
                       </div>
                     );
@@ -289,7 +292,7 @@ export default function RhythmView({
             Rhythm complete today!
           </div>
           <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}>
-            Every step done. Your body is grateful.
+            Every step done. Nicely done.
           </div>
         </div>
       )}

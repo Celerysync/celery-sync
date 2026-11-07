@@ -28,7 +28,7 @@ const CATEGORY_COLORS = {
 };
 
 function EnergyBar({ value, max = 10 }) {
-  if (!value) return <span style={{ fontSize: 11, color: C.muted }}>No data</span>;
+  if (!value) return <span style={{ fontSize: 12, color: C.muted }}>No data</span>;
   const pct = (value / max) * 100;
   const color = value >= 7 ? C.sage : value >= 4 ? C.gold : C.terracotta;
   return (
@@ -74,14 +74,14 @@ function PatientCard({ patient }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
               {patient.name}
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
               Last check-in: {lastCheckinLabel}
             </div>
           </div>
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              padding: "6px 14px", borderRadius: 20, fontSize: 11,
+              padding: "6px 14px", borderRadius: 20, fontSize: 12,
               fontFamily: "Georgia,serif", fontWeight: 700,
               border: `1.5px solid ${alpha(C.plum, "40")}`,
               background: expanded ? C.plum : "transparent",
@@ -98,7 +98,7 @@ function PatientCard({ patient }) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {patient.symptoms.slice(0, 4).map(s => (
               <span key={s} style={{
-                padding: "3px 10px", borderRadius: 20, fontSize: 10,
+                padding: "3px 10px", borderRadius: 20, fontSize: 12,
                 background: `${alpha(C.plum, "15")}`, color: C.plum,
                 fontFamily: "Georgia,serif",
               }}>
@@ -106,7 +106,7 @@ function PatientCard({ patient }) {
               </span>
             ))}
             {patient.symptoms.length > 4 && (
-              <span style={{ fontSize: 10, color: C.muted, alignSelf: "center" }}>
+              <span style={{ fontSize: 12, color: C.muted, alignSelf: "center" }}>
                 +{patient.symptoms.length - 4} more
               </span>
             )}
@@ -124,19 +124,19 @@ function PatientCard({ patient }) {
           <div style={{ fontSize: 20, fontWeight: 700, color: rhythmDays >= 5 ? C.sage : C.gold, fontFamily: "Georgia,serif" }}>
             {rhythmDays}/7
           </div>
-          <div style={{ fontSize: 10, color: C.muted }}>rhythm days</div>
+          <div style={{ fontSize: 12, color: C.muted }}>rhythm days</div>
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: avgEnergy >= 7 ? C.sage : avgEnergy >= 4 ? C.gold : C.terracotta, fontFamily: "Georgia,serif" }}>
             {avgEnergy ?? "—"}
           </div>
-          <div style={{ fontSize: 10, color: C.muted }}>avg energy</div>
+          <div style={{ fontSize: 12, color: C.muted }}>avg energy</div>
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: C.plum, fontFamily: "Georgia,serif" }}>
             {milestones.length}
           </div>
-          <div style={{ fontSize: 10, color: C.muted }}>milestones</div>
+          <div style={{ fontSize: 12, color: C.muted }}>milestones</div>
         </div>
       </div>
 
@@ -159,7 +159,7 @@ function PatientCard({ patient }) {
           {/* This week's check-ins */}
           {checkins.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 This week
               </div>
               {checkins.map(c => (
@@ -172,13 +172,13 @@ function PatientCard({ patient }) {
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     {c.rhythm_total > 0 && (
-                      <span title="Own rhythm items done" style={{ fontSize: 11, color: C.sageDark }}>
+                      <span title="Own rhythm items done" style={{ fontSize: 12, color: C.sageDark }}>
                         🌿 {c.rhythm_completed || 0}/{c.rhythm_total}
                       </span>
                     )}
                     {c.energy && (
                       <span style={{
-                        fontSize: 11, fontWeight: 700, padding: "2px 8px",
+                        fontSize: 12, fontWeight: 700, padding: "2px 8px",
                         borderRadius: 20, background: C.sageLight, color: C.sageDark,
                       }}>
                         ⚡ {c.energy}
@@ -193,7 +193,7 @@ function PatientCard({ patient }) {
           {/* Recent milestones */}
           {milestones.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 Recent milestones
               </div>
               {milestones.map((m, i) => {
@@ -203,7 +203,7 @@ function PatientCard({ patient }) {
                     display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start",
                   }}>
                     <span style={{
-                      padding: "2px 8px", borderRadius: 20, fontSize: 9, fontWeight: 700,
+                      padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700,
                       background: cat.bg, color: cat.color, flexShrink: 0, marginTop: 1,
                       textTransform: "uppercase", letterSpacing: 0.3,
                     }}>

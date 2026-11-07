@@ -8,11 +8,8 @@ import { useVoicePrefs } from "../context/VoiceContext.jsx";
 // user logged, in their own numbers, and never interprets it.
 function buildScript(userName, week) {
   const parts = [`Here's your week in review${userName ? ", " + userName : ""}.`];
-  if (week.celery_days > 0) {
-    parts.push(`You logged celery juice on ${week.celery_days} ${week.celery_days === 1 ? "day" : "days"}.`);
-  }
   if (week.protocol_days > 0) {
-    parts.push(`You completed your rhythm on ${week.protocol_days} ${week.protocol_days === 1 ? "day" : "days"}.`);
+    parts.push(`You ticked off something from your rhythm on ${week.protocol_days} ${week.protocol_days === 1 ? "day" : "days"}.`);
   }
   if (week.avg_energy) {
     parts.push(`Your average energy was ${Number(week.avg_energy).toFixed(1)} out of ten.`);
@@ -49,7 +46,7 @@ export default function WeeklyVoiceSummary({ user, weeklies }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
             🔊 Your week, out loud
           </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
             Your Sunday summary, read in your companion's voice — just your own logged numbers.
           </div>
         </div>

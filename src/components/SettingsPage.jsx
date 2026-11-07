@@ -29,7 +29,7 @@ function Group({ id, label, children }) {
   return (
     <section id={id} style={{ scrollMarginTop: 80, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{
-        fontSize: 11.5, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
+        fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
         color: C.muted, fontFamily: "Georgia,serif", padding: "10px 4px 0",
       }}>
         {label}

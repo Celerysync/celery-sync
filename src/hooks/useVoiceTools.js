@@ -76,7 +76,7 @@ async function todaysItems(profileId) {
 // Today's rhythm state from the activity_events ledger (spec §1) — the same
 // v_daily_status the Rhythm screen reads, so the companion and the checkboxes
 // can never disagree.
-async function todayStatus(profileId) {
+export async function todayStatus(profileId) {
   const [items, statusRes] = await Promise.all([
     todaysItems(profileId),
     supabase.from("v_daily_status")

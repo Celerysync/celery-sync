@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
+import { crisisContacts } from "../lib/voiceTabContext.js";
 import { PLACEHOLDER_NAME } from "../hooks/useProfiles.js";
 import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 import C from "../lib/colors.js";
@@ -29,16 +30,18 @@ const SLOTS = [
 function Footer() {
   return (
     <div style={{ marginTop: 20 }}>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
         🌿 Independent app · Not affiliated with Anthony William or Medical Medium LLC
       </div>
-      <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", textAlign: "center", marginTop: 10, lineHeight: 1.8 }}>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", textAlign: "center", marginTop: 10, lineHeight: 1.8 }}>
         If you're in crisis, please reach out:{" "}
-        <a href="tel:131114" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Lifeline 13 11 14</a>
-        {" · "}
-        <a href="tel:1300224636" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Beyond Blue 1300 22 4636</a>
-        {" · "}
-        <a href="tel:000" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>Emergency 000</a>
+        {crisisContacts().map((c, i) => (
+          <Fragment key={c.label}>
+            {i > 0 && " · "}
+            <a href={c.href} style={{ color: "#fff", fontWeight: 700 }}>{c.label} {c.num}</a>
+          </Fragment>
+        ))}
+        {!crisisContacts().length && "your local emergency number or crisis line."}
       </div>
     </div>
   );
@@ -142,11 +145,15 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     }
   };
 
-  const saveSlot = async (slot, rawText) => {
+  // The section label goes with the text so "tea at 8" under Wind-down reads as
+  // the evening.
+  const parseSlot = (slot, text) => parseVoiceTranscript(`${slot.label}: ${text}`).catch(() => null);
+
+  const saveSlot = async (slot, rawText, parsing) => {
     const trimmed = rawText.trim();
     if (!trimmed || slotSaving[slot.key]) return;
     setSlotSaving((p) => ({ ...p, [slot.key]: true }));
-    const parsed = await parseVoiceTranscript(trimmed).catch(() => null);
+    const parsed = await (parsing || parseSlot(slot, trimmed));
     const items = parsed?.fields?.scheduleItems?.length
       ? parsed.fields.scheduleItems
       : [{ name: trimmed.slice(0, 60), category: slot.key, fixedTime: null, note: "", frequency: "daily" }];
@@ -170,7 +177,13 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
 
   const continueFromSlots = async () => {
     setSavingAll(true);
-    await Promise.all((quick ? [QUICK_SLOT] : SLOTS).map((slot) => saveSlot(slot, slotText[slot.key] || "")));
+    // Understand them together, but save one at a time, so the routine keeps the
+    // order it was written in.
+    const slots = (quick ? [QUICK_SLOT] : SLOTS).filter((slot) => (slotText[slot.key] || "").trim());
+    const parsing = slots.map((slot) => parseSlot(slot, slotText[slot.key].trim()));
+    for (let i = 0; i < slots.length; i++) {
+      await saveSlot(slots[i], slotText[slots[i].key], parsing[i]);
+    }
     setSavingAll(false);
     setStep(quick ? 3 : 2); // the low-energy path skips the symptom list
   };
@@ -284,11 +297,11 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <div style={{ flex: 1, padding: "10px 12px", borderRadius: 12, background: C.sageLight, textAlign: "center" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark }}>⚡ Energy</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>always included</div>
+              <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>always included</div>
             </div>
             <div style={{ flex: 1, padding: "10px 12px", borderRadius: 12, background: C.sageLight, textAlign: "center" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark }}>🙂 Mood</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>always included</div>
+              <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>always included</div>
             </div>
           </div>
 
@@ -341,7 +354,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: C.mist, borderRadius: 12, padding: "10px 14px" }}>
             <div>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>🩸 Track my cycle</div>
-              <div style={{ fontSize: 10.5, color: C.mid, marginTop: 1 }}>Adds a cycle-day overlay to Progress reports</div>
+              <div style={{ fontSize: 12, color: C.mid, marginTop: 1 }}>Adds a cycle-day overlay to Progress reports</div>
             </div>
             <button
               onClick={() => setCycleTracking((v) => !v)}
@@ -408,6 +421,9 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
 
   // ── Step 4: Finish ────────────────────────────────────────────────────────
   const first = savedItems[0];
+  const firstTime = first?.fixedTime
+    ? new Date(`2000-01-01T${first.fixedTime}`).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })
+    : null;
   return (
     <Shell step={4} total={5}>
       <div style={cardStyle}>
@@ -417,7 +433,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
         </div>
         <div style={{ fontSize: 13, color: C.mid, textAlign: "center", lineHeight: 1.6, marginBottom: 4 }}>
           {first
-            ? `${first.name}${first.fixedTime ? ` at ${first.fixedTime}` : ""} is on your rhythm — I'll remind you.`
+            ? `${first.name}${firstTime ? ` at ${firstTime}` : ""} is on your rhythm${firstTime && notifChoice === "yes" ? " — I'll remind you." : "."}`
             : "Your day is ready — add to it anytime from Today, or by just talking to me."}
         </div>
         {/* Three concrete things to actually do. Ending on "you're all set"
@@ -442,13 +458,13 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
               <em>“add magnesium at 9pm”</em>.
             </li>
           </ol>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
             There's a short guide any time in <strong>Settings → Getting the most
             out of CelerySync</strong>.
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 12, marginBottom: 4 }}>
+        <div style={{ fontSize: 12, color: C.muted, textAlign: "center", marginTop: 12, marginBottom: 4 }}>
           🎉 Your 7-day free trial starts now
         </div>
         <button style={primaryBtn} onClick={finish}>Take me to Today →</button>
@@ -495,9 +511,9 @@ function SlotInput({ slot, text, onTextChange, onSubmit, saving, savedLabel }) {
           </button>
         )}
       </div>
-      {saving && <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Saving…</div>}
+      {saving && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Saving…</div>}
       {savedLabel && !saving && (
-        <div style={{ fontSize: 11, color: C.sage, marginTop: 4 }}>✓ {savedLabel} — added to your rhythm</div>
+        <div style={{ fontSize: 12, color: C.sage, marginTop: 4 }}>✓ {savedLabel} — added to your rhythm</div>
       )}
     </div>
   );

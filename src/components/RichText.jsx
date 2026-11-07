@@ -7,13 +7,13 @@ import { Fragment } from "react";
 // can inject markup.
 
 function inline(text, keyBase) {
-  // **bold** (and __bold__); a lone * or _ is left as it is
-  const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__)/g);
-  return parts.map((p, i) =>
-    /^(\*\*|__)[^*_]+(\*\*|__)$/.test(p)
-      ? <strong key={`${keyBase}-${i}`}>{p.slice(2, -2)}</strong>
-      : <Fragment key={`${keyBase}-${i}`}>{p}</Fragment>
-  );
+  // **bold** (and __bold__), *italic*; a lone * or _ is left as it is
+  const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*\s](?:[^*]*[^*\s])?\*)/g);
+  return parts.map((p, i) => {
+    if (/^(\*\*|__)[^*_]+(\*\*|__)$/.test(p)) return <strong key={`${keyBase}-${i}`}>{p.slice(2, -2)}</strong>;
+    if (/^\*[^*]+\*$/.test(p)) return <em key={`${keyBase}-${i}`}>{p.slice(1, -1)}</em>;
+    return <Fragment key={`${keyBase}-${i}`}>{p}</Fragment>;
+  });
 }
 
 export default function RichText({ text, style }) {

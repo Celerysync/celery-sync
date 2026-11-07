@@ -152,7 +152,7 @@ function SessionModal({ client, session, onSave, onClose }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
           {(client.conditions?.length > 0 ? client.conditions : ["Fatigue","Brain fog","Anxiety","Bloating","Insomnia"]).map(s => (
             <div key={s} onClick={() => toggleSym(s)} style={{
-              padding: "5px 10px", borderRadius: 20, fontSize: 11, cursor: "pointer",
+              padding: "5px 10px", borderRadius: 20, fontSize: 12, cursor: "pointer",
               background: symptoms.includes(s) ? C.terracotta : C.mist,
               color: symptoms.includes(s) ? C.white : C.charcoal, fontFamily: "Georgia,serif",
             }}>{s}</div>
@@ -271,7 +271,7 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
         {client.conditions?.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
             {client.conditions.map(c => (
-              <div key={c} style={{ background: "rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontFamily: "Georgia,serif" }}>{c}</div>
+              <div key={c} style={{ background: "rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 10px", fontSize: 12, fontFamily: "Georgia,serif" }}>{c}</div>
             ))}
           </div>
         )}
@@ -305,7 +305,7 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
 
           {protocol ? (
             <Card>
-              <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
                 Generated {new Date(protocol.generated_at).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
               </div>
               <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.85, whiteSpace: "pre-wrap" }}>
@@ -339,14 +339,14 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
                   {new Date(s.session_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  {s.energy && <div style={{ fontSize: 11, background: C.sageLight, color: C.sageDark, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>⚡ {s.energy}/10</div>}
+                  {s.energy && <div style={{ fontSize: 12, background: C.sageLight, color: C.sageDark, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>⚡ {s.energy}/10</div>}
                 </div>
               </div>
               {s.client_notes && <div style={{ fontSize: 12, color: C.mid, marginBottom: 4, lineHeight: 1.5 }}>Client: {s.client_notes.slice(0, 120)}{s.client_notes.length > 120 ? "…" : ""}</div>}
               {s.practitioner_notes && <div style={{ fontSize: 12, color: C.sageDark, lineHeight: 1.5 }}>Notes: {s.practitioner_notes.slice(0, 120)}{s.practitioner_notes.length > 120 ? "…" : ""}</div>}
               {s.symptoms?.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                  {s.symptoms.slice(0, 4).map(sym => <div key={sym} style={{ fontSize: 10, background: C.terracottaLight, color: C.terracotta, borderRadius: 20, padding: "2px 8px" }}>{sym}</div>)}
+                  {s.symptoms.slice(0, 4).map(sym => <div key={sym} style={{ fontSize: 12, background: C.terracottaLight, color: C.terracotta, borderRadius: 20, padding: "2px 8px" }}>{sym}</div>)}
                 </div>
               )}
             </Card>
@@ -427,11 +427,11 @@ export default function PractitionerPortal({ authUser }) {
               <div style={{ fontSize: 34, flexShrink: 0 }}>{client.avatar_emoji}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>{client.name}</div>
-                {client.age && <div style={{ fontSize: 11, color: C.muted }}>{client.age} years old</div>}
+                {client.age && <div style={{ fontSize: 12, color: C.muted }}>{client.age} years old</div>}
                 {client.conditions?.length > 0 && (
                   <div style={{ fontSize: 12, color: C.mid, marginTop: 3 }}>{client.conditions.slice(0, 3).join(", ")}{client.conditions.length > 3 ? ` +${client.conditions.length - 3}` : ""}</div>
                 )}
-                {client.goal && <div style={{ fontSize: 11, color: C.muted, marginTop: 2, fontStyle: "italic" }}>{client.goal}</div>}
+                {client.goal && <div style={{ fontSize: 12, color: C.muted, marginTop: 2, fontStyle: "italic" }}>{client.goal}</div>}
               </div>
               <div style={{ color: C.sage, fontSize: 20, flexShrink: 0 }}>›</div>
             </div>

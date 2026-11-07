@@ -35,7 +35,7 @@ function getNowCareTask() {
   };
   if (h >= 17 && h < 20) return {
     emoji: "🌆", label: "Dinner time",
-    prep: ["See what they've planned for dinner in their rhythm", "Earlier and lighter tends to make evenings easier", "Start winding the household down as dinner finishes"],
+    prep: ["See what they've planned for dinner in their rhythm", "Keep it simple and unhurried", "Start winding the household down as dinner finishes"],
     offer: "Follow their plan, and keep the evening gentle afterwards.",
     tip: "Tip: Anthony William writes about the value of an earlier, lighter evening meal — his books explain his approach if they'd like to follow it.",
   };
@@ -98,11 +98,11 @@ export default function CaregiverDashboard({ patient }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
               {task.emoji} {task.label}
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>What to prepare right now</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>What to prepare right now</div>
           </div>
           <div style={{
             background: `${alpha(C.plum, "18")}`, borderRadius: 20, padding: "3px 10px",
-            fontSize: 10, color: C.plum, fontWeight: 700, flexShrink: 0,
+            fontSize: 12, color: C.plum, fontWeight: 700, flexShrink: 0,
           }}>
             {new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
           </div>
@@ -122,7 +122,7 @@ export default function CaregiverDashboard({ patient }) {
           <div style={{ fontSize: 12, color: C.plum, fontWeight: 700, marginBottom: 2 }}>When to offer it</div>
           <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>{task.offer}</div>
         </div>
-        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6, fontStyle: "italic" }}>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, fontStyle: "italic" }}>
           {task.tip}
         </div>
       </Card>
@@ -131,7 +131,7 @@ export default function CaregiverDashboard({ patient }) {
       {patient?.symptoms?.length > 0 && (
         <Card>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
-            🔍 {patient.name}'s conditions
+            🔍 What {patient.name} is keeping an eye on
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
             {patient.symptoms.map((s) => (
@@ -186,7 +186,7 @@ export default function CaregiverDashboard({ patient }) {
             frightens you — don't wait. Contact their doctor or emergency services straight away.
           </div>
         </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
           If they're feeling worse than usual, don't assume it's part of their routine —
           for anything that concerns you, always check with their doctor first.
         </div>

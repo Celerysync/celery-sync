@@ -69,7 +69,7 @@ export default function GettingTheMostCard() {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
             💡 Getting the most out of CelerySync
           </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
             Short guide — worth a look on a clearer day
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function GettingTheMostCard() {
             </div>
           ))}
 
-          <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6, paddingTop: 2 }}>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, paddingTop: 2 }}>
             Not sure about something? Ask the companion — it knows how the app works and
             can take you to the right screen.
           </div>

@@ -81,7 +81,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
         border: `1px solid ${C.border}`,
         zIndex: 20, minWidth: 200, overflow: "hidden",
       }}>
-        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 11, color: C.muted, fontFamily: "Georgia,serif" }}>
+        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 12, color: C.muted, fontFamily: "Georgia,serif" }}>
           Switch profile
         </div>
         {profiles.map((p) => (
@@ -102,12 +102,12 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
                 {p.name}
               </div>
               {p.id === activeProfileId && (
-                <div style={{ fontSize: 10, color: C.sage }}>● active</div>
+                <div style={{ fontSize: 12, color: C.sage }}>● active</div>
               )}
             </div>
           </button>
         ))}
-        <div style={{ padding: "10px 14px", fontSize: 11, color: C.muted, textAlign: "center", borderTop: `1px solid ${C.border}` }}>
+        <div style={{ padding: "10px 14px", fontSize: 12, color: C.muted, textAlign: "center", borderTop: `1px solid ${C.border}` }}>
           Manage profiles in Settings
         </div>
       </div>
@@ -322,7 +322,7 @@ export default function App() {
   }
 
   const handleTabClick = (t) => {
-    if (!t.free && !isSubscribed && !subLoading) setTab("settings");
+    if (!t.free && !isSubscribed && !subLoading) handleNavigate("settings:plan");
     else { setNavSection(null); setTab(t.id); track("tab_view", { tab: t.id }); }
   };
 
@@ -445,10 +445,12 @@ export default function App() {
             {!subLoading && isSubscribed && (
               <div style={{
                 background: "rgba(255,255,255,0.2)", borderRadius: 20,
-                padding: "3px 10px", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                padding: "3px 10px", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
                 whiteSpace: "nowrap",
               }}>
-                {isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Rhythm + Voice"}
+                {isInTrial
+                  ? `Free trial · ${trialDaysLeft} ${trialDaysLeft === 1 ? "day" : "days"} left`
+                  : isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Rhythm + Voice"}
               </div>
             )}
 
@@ -472,7 +474,7 @@ export default function App() {
                     {activeProfile.name}
                   </span>
                   {profiles.length > 1 && (
-                    <span style={{ fontSize: 9, opacity: 0.8, flexShrink: 0 }}>▼</span>
+                    <span style={{ fontSize: 11, opacity: 0.8, flexShrink: 0 }}>▼</span>
                   )}
                 </button>
 
@@ -501,6 +503,27 @@ export default function App() {
           </div>
         }>
           <div key={tab} className="cs-tab-content">
+            {!subLoading && !isSubscribed && tabOf(tab) !== "settings" && (
+              <div style={{
+                background: C.surface, border: `1.5px solid ${C.sage}`, borderRadius: 14,
+                padding: "14px 16px", marginBottom: 14, fontFamily: "Georgia,serif",
+              }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: C.charcoal }}>Your free trial has ended</div>
+                <div style={{ fontSize: 14, color: C.mid, marginTop: 4, lineHeight: 1.5 }}>
+                  Everything you've logged is safe. Today still works, and you can choose a plan whenever you're ready.
+                </div>
+                <button
+                  onClick={() => handleNavigate("settings:plan")}
+                  style={{
+                    marginTop: 10, padding: "10px 18px", borderRadius: 30, border: "none",
+                    background: C.sageDark, color: C.white, fontFamily: "Georgia,serif",
+                    fontWeight: 700, fontSize: 14, cursor: "pointer",
+                  }}
+                >
+                  See plans
+                </button>
+              </div>
+            )}
             {renderTab()}
           </div>
         </Suspense>
@@ -541,7 +564,7 @@ export default function App() {
                   )}
                 </div>
                 <div style={{
-                  fontSize: 11.5, fontFamily: "Georgia,serif",
+                  fontSize: 12, fontFamily: "Georgia,serif",
                   color: active ? C.sage : C.muted,
                   fontWeight: active ? 700 : 400,
                 }}>

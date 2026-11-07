@@ -154,7 +154,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
         <div style={{ background: C.sageLight, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif" }}>Track my cycle</div>
-            <div style={{ fontSize: 11, color: C.mid, marginTop: 2 }}>Adds a cycle-day overlay to your Progress reports</div>
+            <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>Adds a cycle-day overlay to your Progress reports</div>
           </div>
           <button
             onClick={() => setCycleTracking((v) => !v)}
@@ -257,7 +257,7 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
           Add Family Member
         </div>
-        <div style={{ fontSize: 11.5, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
           Profiles are for adults (18+). For supporting a loved one, use Carer mode in Account settings.
         </div>
         <ProfileForm onSave={handleCreate} onCancel={() => setMode(null)} saving={saving} />
@@ -301,15 +301,15 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: isActive ? 700 : 400, fontSize: 14, color: C.charcoal }}>
                   {p.name}
-                  {isActive && <span style={{ fontSize: 11, color: C.sage, marginLeft: 8 }}>● active</span>}
+                  {isActive && <span style={{ fontSize: 12, color: C.sage, marginLeft: 8 }}>● active</span>}
                 </div>
                 {p.goal && (
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.goal}
                   </div>
                 )}
                 {p.symptoms?.length > 0 && (
-                  <div style={{ fontSize: 11, color: C.mid, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
                     {p.symptoms.slice(0, 3).join(", ")}{p.symptoms.length > 3 ? ` +${p.symptoms.length - 3} more` : ""}
                   </div>
                 )}
@@ -317,14 +317,14 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); setMode({ editing: p }); }}
-                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 8px", fontSize: 11, color: C.mid, cursor: "pointer" }}
+                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 8px", fontSize: 12, color: C.mid, cursor: "pointer" }}
                 >
                   Edit
                 </button>
                 {profiles.length > 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }}
-                    style={{ background: "none", border: `1px solid #fca5a5`, borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#ef4444", cursor: "pointer" }}
+                    style={{ background: "none", border: `1px solid #fca5a5`, borderRadius: 8, padding: "4px 8px", fontSize: 12, color: "#ef4444", cursor: "pointer" }}
                   >
                     ✕
                   </button>

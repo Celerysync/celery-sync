@@ -63,12 +63,12 @@ function ChartRow({ label, dot, points, min, max, days }) {
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: dot }} />
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.mid }}>{label}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid }}>{label}</div>
       </div>
       <Sparkline points={points} color={dot} min={min} max={max} />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
         {days.map((d) => (
-          <div key={d.date} style={{ fontSize: 9, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
+          <div key={d.date} style={{ fontSize: 11, color: C.muted, width: 40, textAlign: "center" }}>{d.day}</div>
         ))}
       </div>
     </div>
@@ -138,7 +138,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
   return (
     <Card>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 14 }}>
-        📈 Your Healing Trends
+        📈 Your Trends
       </div>
 
       {daysWithData === 0 ? (
@@ -152,23 +152,23 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
             {avgEnergy7 !== null && (
               <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: C.sageLight, borderRadius: 12 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.leaf }}>{avgEnergy7}</div>
-                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>avg energy</div>
+                <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>avg energy</div>
               </div>
             )}
             <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: alpha("#16a34a", "14"), borderRadius: 12 }}>
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sage }}>{streak}</div>
-              <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>🌿 day streak</div>
+              <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>🌿 day streak</div>
             </div>
             {avgSleep && (
               <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: C.plumLight, borderRadius: 12 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: C.plum }}>{avgSleep}h</div>
-                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>avg sleep</div>
+                <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>avg sleep</div>
               </div>
             )}
             {avgHrv && (
               <div style={{ flex: "1 0 60px", textAlign: "center", padding: "10px 6px", background: alpha("#e05252", "14"), borderRadius: 12 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "Georgia,serif", color: "#e05252" }}>{avgHrv}</div>
-                <div style={{ fontSize: 10, color: C.mid, marginTop: 2 }}>HRV ms</div>
+                <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>HRV ms</div>
               </div>
             )}
           </div>
@@ -182,7 +182,7 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
           {/* AI weekly insight */}
           {(insight || loadingInsight || insightError) && (
             <div style={{ background: C.goldLight, border: `1px solid ${alpha(C.gold, "40")}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 5 }}>✨ Weekly Insight</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, marginBottom: 5 }}>✨ Weekly Insight</div>
               {loadingInsight
                 ? <div style={{ fontSize: 12, color: C.mid }}>Generating your insight…</div>
                 : insightError
@@ -193,8 +193,8 @@ Write 2-3 sentences describing what the data shows — trends in energy, how muc
           )}
 
           {!hasSleep && !hasHrv && (
-            <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "8px 0" }}>
-              Add sleep & HRV to today's check-in to see nervous system trends
+            <div style={{ fontSize: 12, color: C.muted, textAlign: "center", padding: "8px 0" }}>
+              Add sleep and HRV to today's check-in to see them here
             </div>
           )}
         </>

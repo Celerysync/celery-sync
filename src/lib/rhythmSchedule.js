@@ -52,6 +52,21 @@ export function itemIsOver(item, dateStr) {
   return item.durationType === "cleanse" && !item.programId;
 }
 
+// Today in time order, wherever items were added. Something with no time of its
+// own stays straight after the item it follows, which keeps "then my juice"
+// steps together; anything before the first timed item stays at the top.
+export function orderForDay(items) {
+  const blocks = [];
+  for (const item of items) {
+    if (item.fixedTime || !blocks.length) blocks.push({ time: item.fixedTime || "", items: [item] });
+    else blocks[blocks.length - 1].items.push(item);
+  }
+  return blocks
+    .map((block, i) => ({ ...block, i }))
+    .sort((a, b) => (a.time || "").localeCompare(b.time || "") || a.i - b.i)
+    .flatMap((block) => block.items);
+}
+
 export function filterTodaysItems(baseItems, activeProgram) {
   const today = TODAY();
   const dow = new Date().getDay();
