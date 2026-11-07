@@ -33,6 +33,7 @@ function formatRunOutDate(date) {
 
 export default function SupplementTracker({ profileId }) {
   const [checked, setChecked] = useState({});
+  const [saveError, setSaveError] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
@@ -70,27 +71,36 @@ export default function SupplementTracker({ profileId }) {
     }
   }, [key, date, profileId]);
 
-  const toggle = (supp) => {
+  const toggle = async (supp) => {
     const dbKey = `${supp.label}__${supp.timing}`;
-    announceActivity(checked[dbKey] ? `marked ${supp.label} as not taken` : `marked ${supp.label} as taken`);
-    setChecked((prev) => {
-      const next = { ...prev, [dbKey]: !prev[dbKey] };
+    const nowTaken = !checked[dbKey];
+    const show = (taken) => setChecked((prev) => {
+      const next = { ...prev, [dbKey]: taken };
       localStorage.setItem(key, JSON.stringify(next));
-      if (profileId) {
-        supabase.from("supplement_logs").upsert({
-          profile_id: profileId,
-          date,
-          supplement_name: supp.label,
-          timing: supp.timing,
-          taken: next[dbKey],
-          taken_at: next[dbKey] ? new Date().toISOString() : null,
-        }, { onConflict: "profile_id,date,supplement_name,timing" }).catch(() => {});
-        if (supp.source === "custom") {
-          adjustStockOnDoseChange(supp.name, next[dbKey]).catch(() => {});
-        }
-      }
       return next;
     });
+
+    show(nowTaken);
+    setSaveError("");
+    if (profileId) {
+      const { error } = await supabase.from("supplement_logs").upsert({
+        profile_id: profileId,
+        date,
+        supplement_name: supp.label,
+        timing: supp.timing,
+        taken: nowTaken,
+        taken_at: nowTaken ? new Date().toISOString() : null,
+      }, { onConflict: "profile_id,date,supplement_name,timing" });
+      if (error) {
+        show(!nowTaken);
+        setSaveError(`That didn't save, so ${supp.label} is back as it was. Please try again.`);
+        return;
+      }
+      if (supp.source === "custom") {
+        adjustStockOnDoseChange(supp.name, nowTaken).catch(() => {});
+      }
+    }
+    announceActivity(nowTaken ? `marked ${supp.label} as taken` : `marked ${supp.label} as not taken`);
   };
 
   const saveCustom = async () => {
@@ -210,6 +220,11 @@ export default function SupplementTracker({ profileId }) {
 
       {expanded && (
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 2 }}>
+          {saveError && (
+            <div role="alert" style={{ fontSize: 13, color: C.charcoal, background: C.goldLight, borderRadius: 10, padding: "8px 12px", marginBottom: 6 }}>
+              {saveError}
+            </div>
+          )}
           {TIMINGS.map((t) => {
             const group = byTiming[t.id];
             if (!group.length) return null;
