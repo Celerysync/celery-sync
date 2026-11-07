@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { callClaude } from "../lib/api.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 const W = 280, H = 72;
 const XS = [20, 60, 100, 140, 180, 220, 260];
@@ -85,7 +86,7 @@ export default function HealingTrends({ last7, streak, protocolDays, avgEnergy7 
 
   useEffect(() => {
     if (daysWithData < 3) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateStr();
     const key = INSIGHT_KEY + today;
     const cached = localStorage.getItem(key);
     if (cached) { setInsight(cached); return; }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
 // protocol content of its own — no recipes, quantities, or food lists. Each
@@ -53,7 +54,7 @@ function PatientCard({ patient }) {
     : null;
   const lastCheckin = checkins[0];
   const lastCheckinLabel = lastCheckin
-    ? lastCheckin.check_date === new Date().toISOString().split("T")[0] ? "Today" : lastCheckin.check_date
+    ? lastCheckin.check_date === localDateStr() ? "Today" : lastCheckin.check_date
     : "No check-ins yet";
 
   return (

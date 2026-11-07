@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 function todayStr() {
-  return new Date().toISOString().split("T")[0];
+  return localDateStr();
 }
 
 export function useCycleTracking(profileId) {

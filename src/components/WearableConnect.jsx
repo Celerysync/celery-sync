@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
-const TODAY = new Date().toISOString().split("T")[0];
 
 const WEARABLES = [
   {
@@ -159,7 +159,7 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
   const save = async () => {
     setSaving(true);
     setError(null);
-    const payload = { userId: authUser.id, date: TODAY, source: wearable.id };
+    const payload = { userId: authUser.id, date: localDateStr(), source: wearable.id };
     if (form.sleep_hours) payload.sleep_hours = form.sleep_hours;
     if (form.sleep_quality) payload.sleep_quality = form.sleep_quality;
     if (form.hrv) payload.hrv = form.hrv;

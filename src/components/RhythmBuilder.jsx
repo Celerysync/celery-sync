@@ -3,7 +3,7 @@ import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
-import { scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
+import { localDateStr, scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -62,7 +62,7 @@ export default function RhythmBuilder({
   const [addForm, setAddForm] = useState(BLANK_ITEM);
   const [localAnchor, setLocalAnchor] = useState(anchorTime || "07:00");
   const [programStartDate, setProgramStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+    localDateStr()
   );
   const [confirmClearId, setConfirmClearId] = useState(null);
   const [saveTemplateName, setSaveTemplateName] = useState("");
@@ -124,7 +124,7 @@ export default function RhythmBuilder({
 
   const saveNewItem = () => {
     if (!addForm.name.trim()) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = localDateStr();
     onAddItem({
       ...addForm,
       startDate: addForm.durationType === "days" ? today : null,
@@ -868,7 +868,7 @@ const TIME_PRESETS = [
 const sameTimes = (a, b) => a.length === b.length && a.every((t, i) => t === b[i]);
 
 function ItemForm({ form, setForm, onSave, onCancel, title }) {
-  const TODAY = new Date().toISOString().split("T")[0];
+  const TODAY = localDateStr();
 
   // The schedule is the source of truth; fixedTime is kept in step with the
   // first time purely so the legacy column stays valid as a rollback path.

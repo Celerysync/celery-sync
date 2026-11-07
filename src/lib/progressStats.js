@@ -4,6 +4,7 @@
  * always show identical numbers. No interpretation, no correlation, no
  * causation — every value here is "what was logged," never "what it means."
  */
+import { localDateStr } from "./rhythmSchedule.js";
 
 const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -17,7 +18,7 @@ function weekBucketKey(dateStr) {
   const day = d.getDay();
   const diffToMonday = (day + 6) % 7;
   d.setDate(d.getDate() - diffToMonday);
-  return d.toISOString().split("T")[0];
+  return localDateStr(d);
 }
 
 function bucketTrend(rows, field, bucket) {

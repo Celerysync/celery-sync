@@ -4,6 +4,7 @@ import { Card, Btn } from "./ui.jsx";
 import { usePractitioner } from "../hooks/usePractitioner.js";
 import { callClaude } from "../lib/api.js";
 import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
 
 const AVATARS = ["🌿","🌸","🌺","💫","🌙","☀️","🦋","🌻","🍃","💚","🌈","⭐","🫐","🍋","🫁","🧠"];
 
@@ -107,7 +108,7 @@ function ClientModal({ client, onSave, onClose }) {
 
 // ── Session Modal ─────────────────────────────────────────────────────────────
 function SessionModal({ client, session, onSave, onClose }) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
   const [date, setDate] = useState(session?.session_date || today);
   const [energy, setEnergy] = useState(session?.energy || null);
   const [symptoms, setSymptoms] = useState(session?.symptoms || []);
