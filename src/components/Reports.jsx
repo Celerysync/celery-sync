@@ -5,6 +5,7 @@ import WeeklyReport from "./WeeklyReport.jsx";
 import ProgressCharts from "./ProgressCharts.jsx";
 import AdherenceStreaks from "./AdherenceStreaks.jsx";
 import ThenAndNow from "./ThenAndNow.jsx";
+import RhythmChanges from "./RhythmChanges.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
@@ -432,6 +433,7 @@ export default function Reports({ authUser, profileId, user }) {
         ) : (
           <>
             <ThenAndNow checkins={progressCheckins} />
+            <RhythmChanges profileId={profileId} />
             <ProgressCharts checkins={progressCheckins} periodStartDates={periodStartDates} bucket="week" />
             <ShareButton onClick={downloadProgressReport} downloading={progressDownloading} />
           </>
