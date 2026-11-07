@@ -1,6 +1,7 @@
 import { Router } from "express";
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { localDateInZone } from "../../src/lib/rhythmSchedule.js";
 
 const router = Router();
 
@@ -201,7 +202,12 @@ router.post("/shortcut/ingest", async (req, res) => {
   if (!tokenRow) return res.status(401).json({ error: "Unknown token" });
 
   const userId = tokenRow.user_id;
-  const checkDate = /^\d{4}-\d{2}-\d{2}$/.test(String(date || "")) ? date : new Date().toISOString().split("T")[0];
+  let checkDate = date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) {
+    const { data: sub } = await supabaseAdmin
+      .from("push_subscriptions").select("timezone").eq("user_id", userId).limit(1).maybeSingle();
+    checkDate = localDateInZone(sub?.timezone || "UTC");
+  }
 
   // Only columns daily_checkins actually has — no steps/readiness/updated_at
   // (setting phantom columns is what silently broke manual entry for months).

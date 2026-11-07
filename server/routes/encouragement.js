@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 import { MODELS } from './claude.js'
+import { addDays, localDateInZone } from '../../src/lib/rhythmSchedule.js'
 
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -113,15 +114,10 @@ export async function generateMessages(context) {
   }
 }
 
-function todayStr() {
-  return new Date().toISOString().split('T')[0]
-}
-
 // Gathers a profile's real state — streak, day-over-day comparison, memory summary,
 // active protocol day — used to ground the generated messages in this specific person.
-export async function buildContextForProfile(profileId) {
-  const today = todayStr()
-  const yesterday = new Date(Date.now() - 86_400_000).toISOString().split('T')[0]
+export async function buildContextForProfile(profileId, today) {
+  const yesterday = addDays(today, -1)
 
   const [checkinsRes, profileRowRes, healingProfileRes, protocolRes] = await Promise.all([
     supabaseAdmin
@@ -211,10 +207,13 @@ async function primaryProfileFor(userId) {
 export async function runEncouragementTick() {
   const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('*')
   if (!subs?.length) return
-  const today = todayStr()
 
   for (const sub of subs) {
     try {
+      // Their own day: with one UTC date for everyone, messages made on an
+      // Australian morning were filed under "yesterday" and the afternoon and
+      // evening sends then looked under a date with nothing in it.
+      const today = localDateInZone(sub.timezone || 'UTC')
       const localHour = parseInt(
         new Date().toLocaleTimeString('en-US', { timeZone: sub.timezone || 'UTC', hour: 'numeric', hour12: false }),
         10
@@ -231,7 +230,7 @@ export async function runEncouragementTick() {
           .limit(1)
         if (existing?.length) continue
 
-        const context = await buildContextForProfile(profileId)
+        const context = await buildContextForProfile(profileId, today)
         const { afternoon, evening } = await generateMessages(context)
         const rows = []
         if (afternoon) rows.push({ profile_id: profileId, date: today, time_window: 'afternoon', message: afternoon })

@@ -1,6 +1,6 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
-import { occurrencesFor, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
+import { itemIsOver, localDateInZone, occurrencesFor, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -13,10 +13,6 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   )
-}
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0]
 }
 
 // Hourly tick — sends a push for each scheduled occurrence of a rhythm item
@@ -35,12 +31,12 @@ export async function sendRhythmReminders() {
   const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('user_id, endpoint, keys, timezone')
   if (!subs?.length) return
 
-  const today = todayStr()
   let sent = 0
 
   for (const sub of subs) {
     try {
       const tz = sub.timezone || 'UTC'
+      const today = localDateInZone(tz)
       const localHour = parseInt(
         new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }),
         10
@@ -70,6 +66,7 @@ export async function sendRhythmReminders() {
 
       for (const item of items) {
         if (item.frequency === 'weekdays' && isWeekend) continue
+        if (itemIsOver(rhythmRowToItem(item), today)) continue
 
         // A new day clears the per-slot record, so slots can fire again.
         const rolledOver = item.last_reminded_on !== today

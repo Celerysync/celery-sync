@@ -1,5 +1,6 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
+import { localDateInZone } from '../../src/lib/rhythmSchedule.js'
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -12,10 +13,6 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   )
-}
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0]
 }
 
 function formatRunOutDate(date, daysRemaining) {
@@ -52,11 +49,11 @@ export async function checkRestockAlerts() {
   const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('user_id, endpoint, keys, timezone')
   if (!subs?.length) return
 
-  const today = todayStr()
   let sent = 0
 
   for (const sub of subs) {
     try {
+      const today = localDateInZone(sub.timezone || 'UTC')
       const localHour = parseInt(
         new Date().toLocaleTimeString('en-US', { timeZone: sub.timezone || 'UTC', hour: 'numeric', hour12: false }),
         10

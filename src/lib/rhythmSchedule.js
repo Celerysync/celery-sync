@@ -16,6 +16,16 @@ export function localDateStr(d = new Date()) {
 }
 export const TODAY = () => localDateStr();
 
+// The calendar day for someone in a given time zone, as YYYY-MM-DD. For server
+// jobs: the server runs in UTC, where an Australian morning is still yesterday.
+export function localDateInZone(timeZone, now = new Date()) {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  } catch {
+    return now.toISOString().split("T")[0]; // unrecognised zone name
+  }
+}
+
 export function addDays(dateStr, n) {
   const d = new Date(dateStr + "T00:00:00");
   d.setDate(d.getDate() + n);
@@ -29,6 +39,17 @@ export function programDayNumber(startDate, totalDays) {
   const diff = Math.floor((today - start) / 86_400_000) + 1;
   if (diff < 1 || diff > totalDays) return null;
   return diff;
+}
+
+// True once an item shouldn't appear any more: its "for N days" run has
+// finished, or it's a cleanse item left over with no program. The Rhythm
+// screen, voice tools and reminder job all share this, so nothing can keep
+// reminding about an item that has gone from the screen.
+export function itemIsOver(item, dateStr) {
+  if (item.durationType === "days" && item.durationDays && item.startDate) {
+    if (dateStr > addDays(item.startDate, item.durationDays - 1)) return true;
+  }
+  return item.durationType === "cleanse" && !item.programId;
 }
 
 export function filterTodaysItems(baseItems, activeProgram) {
@@ -53,12 +74,7 @@ export function filterTodaysItems(baseItems, activeProgram) {
 
   return [...baseItems, ...programItems].filter((item) => {
     if (item.frequency === "weekdays" && !isWeekday) return false;
-    if (item.durationType === "days" && item.durationDays && item.startDate) {
-      const endDate = addDays(item.startDate, item.durationDays - 1);
-      if (today > endDate) return false;
-    }
-    if (item.durationType === "cleanse" && !item.programId) return false;
-    return true;
+    return !itemIsOver(item, today);
   }).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 

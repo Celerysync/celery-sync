@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { addDays, localDateStr, filterTodaysItems, TODAY } from "../src/lib/rhythmSchedule.js";
+import { addDays, localDateInZone, localDateStr, filterTodaysItems, TODAY } from "../src/lib/rhythmSchedule.js";
 import { countShowedUpStreak } from "../src/hooks/useDailyCheckins.js";
 
 // All of this runs in Sydney time (see vitest.config.js).
@@ -17,6 +17,19 @@ describe("dates use the local day, not UTC", () => {
     expect(addDays("2026-11-05", 1)).toBe("2026-11-06");
     expect(addDays("2026-11-05", -1)).toBe("2026-11-04");
     expect(addDays("2026-11-30", 1)).toBe("2026-12-01");
+  });
+});
+
+describe("the server working out someone's day", () => {
+  const moment = new Date("2026-11-05T21:00:00Z");
+
+  it("follows their time zone", () => {
+    expect(localDateInZone("Australia/Sydney", moment)).toBe("2026-11-06");
+    expect(localDateInZone("America/New_York", moment)).toBe("2026-11-05");
+  });
+
+  it("falls back to UTC for a time zone it doesn't recognise", () => {
+    expect(localDateInZone("Not/AZone", moment)).toBe("2026-11-05");
   });
 });
 
