@@ -63,16 +63,12 @@ export default function AdherenceStreaks({ profileId }) {
 
       const totalItems = itemsRes.count || 0;
 
-      // Supplements share the ledger but are counted on their own: rhythm
-      // streaks and percentages only compare rhythm ticks with rhythm items.
+      // Supplements share the ledger but have their own card: rhythm streaks
+      // and percentages only compare rhythm ticks with rhythm items.
       const byDay = {};
-      let weekSupplements = 0;
       for (const row of statusRes.data || []) {
         if (row.status !== "completed") continue;
-        if (row.item_category === "supplement") {
-          if (row.local_date >= since7) weekSupplements++;
-          continue;
-        }
+        if (row.item_category === "supplement") continue;
         (byDay[row.local_date] ||= new Set()).add(row.item_id);
       }
 
@@ -111,7 +107,7 @@ export default function AdherenceStreaks({ profileId }) {
         sourceCounts[row.source] = (sourceCounts[row.source] || 0) + 1;
       }
 
-      setStats({ perfectStreak, showedUpStreak, weekAdherence, totalItems, sourceCounts, weekSupplements });
+      setStats({ perfectStreak, showedUpStreak, weekAdherence, totalItems, sourceCounts });
       setLoading(false);
     })();
 
@@ -145,11 +141,6 @@ export default function AdherenceStreaks({ profileId }) {
         <div style={{ fontSize: 11, color: C.muted }}>
           Last 7 days: {sourceCounts.tap} tapped · {sourceCounts.voice} by voice
           {sourceCounts.auto ? ` · ${sourceCounts.auto} auto` : ""}
-        </div>
-      )}
-      {stats.weekSupplements > 0 && (
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-          Last 7 days: {stats.weekSupplements} supplement {stats.weekSupplements === 1 ? "tick" : "ticks"}
         </div>
       )}
     </Card>

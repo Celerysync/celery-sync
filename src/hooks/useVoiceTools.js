@@ -8,6 +8,7 @@ import { CHECKIN_CHANGED_EVENT } from "./useDailyCheckins.js";
 import { VOICE_PREFS_CHANGED_EVENT } from "./useVoicePrefs.js";
 import { EMOTIONAL_STATES as CHECKIN_FEELINGS } from "../lib/checkinOptions.js";
 import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
+import { SUPPLEMENT_CATEGORY, SUPPLEMENT_TIMING_LABELS, supplementEventRow } from "../lib/supplementEvents.js";
 
 const todayStr = TODAY;
 
@@ -91,7 +92,73 @@ async function todayStatus(profileId) {
     done: doneIds.has(i.id),
     time: i.fixedTime || undefined,
   }));
-  return { items: withStatus, completed: withStatus.filter((i) => i.done).length, total: withStatus.length };
+  const supplements = (await todaysSupplements(profileId)).map((s) => ({
+    name: s.name,
+    when: SUPPLEMENT_TIMING_LABELS[s.timing] || undefined,
+    taken: s.taken,
+  }));
+  return { items: withStatus, completed: withStatus.filter((i) => i.done).length, total: withStatus.length, supplements };
+}
+
+// Their own supplement list, with what's been ticked today from the ledger.
+async function todaysSupplements(profileId) {
+  const [listRes, statusRes] = await Promise.all([
+    supabase.from("user_supplements")
+      .select("id, name, dose_label, timing")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: true }),
+    supabase.from("v_daily_status")
+      .select("item_id, status")
+      .eq("profile_id", profileId)
+      .eq("local_date", TODAY())
+      .eq("item_category", SUPPLEMENT_CATEGORY),
+  ]);
+  const taken = new Set((statusRes.data || []).filter((r) => r.status === "completed").map((r) => r.item_id));
+  return (listRes.data || []).map((s) => ({ ...s, taken: taken.has(`supp:${s.id}`) }));
+}
+
+// Same as a tap: optional stock tracking follows the dose, if it's turned on.
+async function adjustSupplementStock(profileId, name, taken) {
+  const { data: row } = await supabase.from("supplement_inventory")
+    .select("units_on_hand, units_per_dose")
+    .eq("profile_id", profileId)
+    .eq("supplement_name", name)
+    .maybeSingle();
+  if (!row || row.units_on_hand == null) return;
+  const delta = (taken ? -1 : 1) * (row.units_per_dose || 1);
+  await supabase.from("supplement_inventory")
+    .update({ units_on_hand: Math.max(0, row.units_on_hand + delta), updated_at: new Date().toISOString() })
+    .eq("profile_id", profileId)
+    .eq("supplement_name", name);
+}
+
+// A supplement taken more than once a day is several rows with the same name:
+// "took my B12" ticks the next one not yet taken, and undo takes back the last.
+async function markSupplement({ matches, action, userId, profileId }) {
+  const taken = action === "completed";
+  const supplement = taken ? matches.find((s) => !s.taken) : [...matches].reverse().find((s) => s.taken);
+  const name = matches[0].name;
+  if (!supplement) {
+    return {
+      changed_nothing: true,
+      message: taken
+        ? `${name} is already ticked for today, every time it's on their list.`
+        : `${name} isn't ticked today, so there's nothing to take back.`,
+    };
+  }
+  const { error } = await supabase.from("activity_events").insert(supplementEventRow({
+    userId, profileId, supplement, taken, source: "voice", date: todayStr(),
+  }));
+  if (error) throw new Error(error.message);
+  await adjustSupplementStock(profileId, supplement.name, taken).catch(() => {});
+  window.dispatchEvent(new Event(SUPPLEMENTS_CHANGED_EVENT));
+  return {
+    saved: true,
+    marked: name,
+    action,
+    is_supplement: true,
+    when: SUPPLEMENT_TIMING_LABELS[supplement.timing] || undefined,
+  };
 }
 
 // Hume EVI tool implementations — write directly to Supabase rather than
@@ -132,17 +199,24 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const action = args?.action === "uncomplete" ? "uncompleted" : "completed";
 
       const items = await todaysItems(profileId);
-      const matches = items.filter((i) => {
-        const n = i.name.toLowerCase();
+      const nameMatches = (name) => {
+        const n = name.toLowerCase();
         return n === query || n.includes(query) || query.includes(n);
-      });
-      if (matches.length === 0) {
-        const names = items.map((i) => i.name).join(", ") || "nothing scheduled today";
-        return { error: "not_found", message: `No item scheduled for today matches "${args.item_name}". Today's items are: ${names}. Ask which one they meant — never guess.` };
+      };
+      const matches = items.filter((i) => nameMatches(i.name));
+      const supplements = await todaysSupplements(profileId);
+      const suppMatches = supplements.filter((s) => nameMatches(s.name));
+      const suppNames = [...new Set(suppMatches.map((s) => s.name.toLowerCase()))];
+
+      if (matches.length === 0 && suppMatches.length === 0) {
+        const names = [...items.map((i) => i.name), ...new Set(supplements.map((s) => s.name))].join(", ") || "nothing scheduled today";
+        return { error: "not_found", message: `Nothing for today matches "${args.item_name}". Today's items and supplements are: ${names}. Ask which one they meant — never guess.` };
       }
-      if (matches.length > 1) {
-        return { error: "ambiguous", message: `Multiple items match: ${matches.map((m) => m.name).join(", ")}. Ask the user which one they meant.` };
+      if (matches.length + suppNames.length > 1) {
+        const names = [...matches.map((m) => m.name), ...new Set(suppMatches.map((s) => s.name))].join(", ");
+        return { error: "ambiguous", message: `Multiple things match: ${names}. Ask the user which one they meant.` };
       }
+      if (suppMatches.length) return markSupplement({ matches: suppMatches, action, userId, profileId });
 
       const item = matches[0];
       const activeProgram = readActiveProgram();

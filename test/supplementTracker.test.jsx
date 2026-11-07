@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/re
 import SupplementTracker from "../src/components/SupplementTracker.jsx";
 
 vi.mock("../src/hooks/useUserSupplements.js", () => ({
+  SUPPLEMENTS_CHANGED_EVENT: "cs:supplements-changed",
   useUserSupplements: () => ({
     supplements: [{ id: "s1", name: "Vitamin C", dose_label: "", timing: "morning_food" }],
     addSupplement: vi.fn(), removeSupplement: vi.fn(),

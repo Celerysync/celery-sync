@@ -6,6 +6,7 @@ import { Resend } from 'resend'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { computeProgressStats, computeCycleOverlay } from '../../src/lib/progressStats.js'
+import { SUPPLEMENT_CATEGORY, summarizeSupplements } from '../../src/lib/supplementEvents.js'
 
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -342,7 +343,8 @@ router.get('/weekly/:profileId/pdf', async (req, res) => {
     if (!summaries?.length) return res.status(404).json({ error: 'No summary found' })
 
     const summary = summaries[0]
-    const pdfBuffer = await buildWeeklyPDF(summary, false)
+    const supplements = await supplementSummaryFor(profileId, summary.week_start, summary.week_end)
+    const pdfBuffer = await buildWeeklyPDF(summary, false, supplements)
 
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="weekly-summary-${summary.week_start}.pdf"`)
@@ -409,6 +411,8 @@ async function makeDoctorReport(profileId, months = 3, extended = false) {
   cutoff.setMonth(cutoff.getMonth() - Number(months))
   const cutoffStr = cutoff.toISOString().split('T')[0]
 
+  const supplements = await supplementSummaryFor(profileId, cutoffStr)
+
   const [summariesRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
       .from('weekly_summaries')
@@ -436,6 +440,7 @@ async function makeDoctorReport(profileId, months = 3, extended = false) {
     profileId,
     months: Number(months),
     isExtended: !!extended,
+    supplements,
   })
   return pdfBuffer
 }
@@ -505,6 +510,46 @@ router.post('/report/email', async (req, res) => {
   }
 })
 
+// Supplement ticks for a period, from the ledger. Paged because a long period
+// with many supplements can pass the 1,000 rows one request returns.
+//
+// With no `to` it runs up to the newest tick. The server's date is UTC, so on an
+// Australian morning a tick made today carries tomorrow's date as far as the
+// server can tell, and a fixed cut-off at "today" would leave it out.
+async function supplementSummaryFor(profileId, from, to = null) {
+  const { data: list } = await supabaseAdmin
+    .from('user_supplements')
+    .select('id, name, dose_label, timing, created_at')
+    .eq('profile_id', profileId)
+
+  const statusRows = []
+  const pageSize = 1000
+  for (let start = 0; ; start += pageSize) {
+    let query = supabaseAdmin
+      .from('v_daily_status')
+      .select('item_id, item_name, occurrence_slot, local_date, status')
+      .eq('profile_id', profileId)
+      .eq('item_category', SUPPLEMENT_CATEGORY)
+      .gte('local_date', from)
+    if (to) query = query.lte('local_date', to)
+    const { data: page, error } = await query
+      .order('local_date', { ascending: true })
+      .range(start, start + pageSize - 1)
+    if (error) throw error
+    statusRows.push(...(page || []))
+    if (!page || page.length < pageSize) break
+  }
+  const serverToday = new Date().toISOString().split('T')[0]
+  const newest = statusRows[statusRows.length - 1]?.local_date
+  const end = to || (newest && newest > serverToday ? newest : serverToday)
+  return summarizeSupplements({ supplements: list || [], statusRows, from, to: end })
+}
+
+const supplementDaysText = (item) => {
+  const noun = (n) => (n === 1 ? 'day' : 'days')
+  return item.ofDays ? `${item.days} of ${item.ofDays} ${noun(item.ofDays)}` : `${item.days} ${noun(item.days)}`
+}
+
 // ── Progress / wellness log PDF — descriptive only, no interpretation ──
 async function makeProgressReport(profileId, range = 'weekly') {
   const days = range === 'monthly' ? 180 : 28
@@ -527,6 +572,7 @@ async function makeProgressReport(profileId, range = 'weekly') {
   const checkins = checkinsRes.data || []
   const stats = computeProgressStats(checkins, { bucket })
   const cycleOverlay = computeCycleOverlay(checkins, (cycleRes.data || []).map(r => r.period_start_date))
+  const supplements = await supplementSummaryFor(profileId, cutoffStr)
 
   const pdfBuffer = await buildProgressReportPDF({
     profileName: profileRes.data?.name || 'Friend',
@@ -535,6 +581,7 @@ async function makeProgressReport(profileId, range = 'weekly') {
     periodEnd: checkins[checkins.length - 1]?.check_date,
     stats,
     cycleOverlay,
+    supplements,
   })
   return pdfBuffer
 }
@@ -554,7 +601,7 @@ router.get('/progress/:profileId/pdf', async (req, res) => {
 })
 
 // ── Build weekly healing summary PDF ──
-async function buildWeeklyPDF(summary, forEmail = false) {
+async function buildWeeklyPDF(summary, forEmail = false, supplements = null) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'CelerySync Weekly Summary' } })
     const chunks = []
@@ -571,9 +618,9 @@ async function buildWeeklyPDF(summary, forEmail = false) {
 
     // ── Header ──
     doc.rect(0, 0, doc.page.width, 110).fill(GREEN)
-    doc.fillColor('#fff').fontSize(28).font('Helvetica-Bold').text('🌿 CelerySync', 50, 28)
+    doc.fillColor('#fff').fontSize(28).font('Helvetica-Bold').text('CelerySync', 50, 28)
     doc.fontSize(13).font('Helvetica').text('Weekly Summary', 50, 60)
-    doc.fontSize(11).fillColor('rgba(255,255,255,0.8)').text(
+    doc.fontSize(11).fillColor('#FFFFFF').text(
       `${fmtDate(summary.week_start)} — ${fmtDate(summary.week_end)}`,
       50, 80
     )
@@ -582,10 +629,10 @@ async function buildWeeklyPDF(summary, forEmail = false) {
     doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('This Week', 50, 130)
 
     const metrics = [
-      { label: 'Rhythm Done', value: `${summary.rhythm_completion_pct ?? '—'}%`, max: 100, current: summary.rhythm_completion_pct, emoji: '🌿' },
-      { label: 'Avg Energy', value: `${summary.avg_energy ?? '—'}/10`, max: 10, current: summary.avg_energy, emoji: '⚡' },
-      { label: 'Rhythm Days', value: `${summary.protocol_days}/7 days`, max: 7, current: summary.protocol_days, emoji: '☀️' },
-      { label: 'Avg Mood', value: `${summary.avg_mood ?? '—'}/5`, max: 5, current: summary.avg_mood, emoji: '😊' },
+      { label: 'Rhythm Done', value: `${summary.rhythm_completion_pct ?? '—'}%`, max: 100, current: summary.rhythm_completion_pct, },
+      { label: 'Avg Energy', value: `${summary.avg_energy ?? '—'}/10`, max: 10, current: summary.avg_energy, },
+      { label: 'Rhythm Days', value: `${summary.protocol_days}/7 days`, max: 7, current: summary.protocol_days, },
+      { label: 'Avg Mood', value: `${summary.avg_mood ?? '—'}/5`, max: 5, current: summary.avg_mood, },
     ]
 
     let y = 155
@@ -594,7 +641,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
       if (i === 2) y += 70
 
       doc.rect(x, y, 220, 55).fill(CREAM).stroke('#e0e8db')
-      doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica-Bold').text(`${m.emoji}  ${m.label}`, x + 10, y + 10)
+      doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica-Bold').text(m.label, x + 10, y + 10)
       doc.fillColor(GREEN).fontSize(16).font('Helvetica-Bold').text(m.value, x + 10, y + 28)
 
       // Progress bar
@@ -633,9 +680,29 @@ async function buildWeeklyPDF(summary, forEmail = false) {
       y += 10
     }
 
+    // ── Supplements ticked this week ──
+    const weekSupplements = [...(supplements?.current || []), ...(supplements?.previous || [])]
+    if (weekSupplements.length) {
+      if (y > doc.page.height - 200) { doc.addPage(); y = 50 }
+      doc.rect(50, y, pageW, 8).fill(GREEN)
+      y += 20
+      doc.fillColor(CHARCOAL).fontSize(14).font('Helvetica-Bold').text('Supplements You Ticked', 50, y)
+      y += 22
+      weekSupplements.forEach(item => {
+        if (y > doc.page.height - 90) { doc.addPage(); y = 50 }
+        doc.fillColor(CHARCOAL).fontSize(11).font('Helvetica').text(item.name, 50, y, { width: pageW - 90 })
+        const nextY = doc.y
+        doc.fillColor(MUTED).text(supplementDaysText(item), 50 + pageW - 90, y, { width: 90, align: 'right' })
+        y = nextY + 4
+      })
+      y += 10
+    }
+
     // ── Footer ──
+    // It sits inside the bottom margin; without this, PDFKit starts a new page for it.
+    doc.page.margins.bottom = 0
     doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill(GREEN)
-    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+    doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica')
       .text(
         'CelerySync — independent app, not affiliated with Anthony William or Medical Medium  |  This is a personal tracking record, not medical advice.',
         50, doc.page.height - 35, { width: pageW, align: 'center' }
@@ -646,7 +713,7 @@ async function buildWeeklyPDF(summary, forEmail = false) {
 }
 
 // ── Build doctor report PDF ──
-async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false }) {
+async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false, supplements = null }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Personal Health Tracking Report' } })
     const chunks = []
@@ -709,6 +776,41 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
     y += 10
     doc.rect(50, y, pageW, 1).fill('#eee')
     y += 16
+
+    // ── Supplement list: what they entered, and how often they ticked it ──
+    const listed = supplements?.current || []
+    const earlier = supplements?.previous || []
+    if (listed.length || earlier.length) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('SUPPLEMENTS', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 10
+      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(
+        'Names and amounts as entered by the user, with the days each was ticked as taken in the app. Self-reported. Please review for potential interactions with prescribed medications.',
+        50, y, { width: pageW }
+      )
+      y = doc.y + 10
+      const supplementRow = (item) => {
+        if (y > doc.page.height - 90) { doc.addPage(); y = 50 }
+        const when = item.timingLabel ? `  (${item.timingLabel})` : ''
+        doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(`${item.name}${when}`, 50, y, { width: pageW - 110 })
+        const nextY = doc.y
+        doc.fillColor(MUTED).fontSize(9).text(supplementDaysText(item), 50 + pageW - 110, y, { width: 110, align: 'right' })
+        y = nextY + 5
+      }
+      listed.forEach(supplementRow)
+      if (earlier.length) {
+        y += 6
+        if (y > doc.page.height - 110) { doc.addPage(); y = 50 }
+        doc.fillColor(MUTED).fontSize(9).font('Helvetica-Bold').text('No longer on their list', 50, y)
+        y = doc.y + 5
+        earlier.forEach(supplementRow)
+      }
+      y += 10
+      doc.rect(50, y, pageW, 1).fill('#eee')
+      y += 16
+    }
 
     // ── Supplement milestones ──
     const suppMilestones = milestones.filter(m => m.category === 'supplement')
@@ -773,7 +875,7 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
     // ── Extended: healing protocol context ──
     if (isExtended && healingSummary) {
       if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
-      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('HEALING PROTOCOL CONTEXT (Extended Report)', 50, y)
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('PROTOCOL CONTEXT (Extended Report)', 50, y)
       y += 18
       doc.rect(50, y, pageW, 1).fill('#ccc')
       y += 10
@@ -787,8 +889,10 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
     }
 
     // ── Footer ──
+    // It sits inside the bottom margin; without this, PDFKit starts a new page for it.
+    doc.page.margins.bottom = 0
     doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill('#1a365d')
-    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+    doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica')
       .text(
         'CelerySync Personal Health Tracking  |  This document is for personal reference only and is not a medical record.',
         50, doc.page.height - 33, { width: pageW, align: 'center' }
@@ -801,7 +905,7 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
 // ── Build progress / wellness log PDF — descriptive only ──
 // Every section is labelled "what you logged" — no interpretation, no
 // correlation, no causation language. See LEGAL_CONSTRAINTS.md / rule 2.
-async function buildProgressReportPDF({ profileName, range, periodStart, periodEnd, stats, cycleOverlay }) {
+async function buildProgressReportPDF({ profileName, range, periodStart, periodEnd, stats, cycleOverlay, supplements = null }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Self-Reported Wellness Log' } })
     const chunks = []
@@ -852,9 +956,9 @@ async function buildProgressReportPDF({ profileName, range, periodStart, periodE
     doc.rect(0, 0, doc.page.width, 100).fill(SAGE)
     doc.fillColor('#fff').font('Heading').fontSize(11).text('CELERYSYNC', 50, 26)
     doc.font('Heading').fontSize(20).text('Self-Reported Wellness Log', 50, 42)
-    doc.font('Body').fontSize(11).fillColor('rgba(255,255,255,0.85)').text('generated by CelerySync', 50, 68)
+    doc.font('Body').fontSize(11).fillColor('#FFFFFF').text('generated by CelerySync', 50, 68)
 
-    doc.font('Body').fontSize(10).fillColor('rgba(255,255,255,0.9)')
+    doc.font('Body').fontSize(10).fillColor('#FFFFFF')
       .text(profileName, doc.page.width - 250, 30, { width: 200, align: 'right' })
     doc.text(`${fmtShort(periodStart)} — ${fmtShort(periodEnd)}`, doc.page.width - 250, 46, { width: 200, align: 'right' })
     doc.text(`Generated ${today}`, doc.page.width - 250, 60, { width: 200, align: 'right' })
@@ -956,9 +1060,25 @@ async function buildProgressReportPDF({ profileName, range, periodStart, periodE
     )
     doc.y += 22
 
+    // ── Supplements ──
+    const supplementItems = [...(supplements?.current || []), ...(supplements?.previous || [])]
+    if (supplementItems.length) {
+      sectionTitle('Supplements', 'what you ticked · days')
+      supplementItems.forEach((item) => {
+        ensureRoom(15)
+        const label = item.name.length > 30 ? `${item.name.slice(0, 28)}...` : item.name
+        const max = item.ofDays || supplements.periodDays
+        barRow(label, item.days, max, item.ofDays ? `${item.days}/${item.ofDays}d` : `${item.days}d`, item.onList ? SAGE : MUTED, doc.y, 130)
+        doc.y += 15
+      })
+      doc.y += 8
+    }
+
     // ── Footer ──
+    // It sits inside the bottom margin; without this, PDFKit starts a new page for it.
+    doc.page.margins.bottom = 0
     doc.rect(0, doc.page.height - 60, doc.page.width, 60).fill(SAGE)
-    doc.font('Body').fontSize(8).fillColor('rgba(255,255,255,0.85)').text(
+    doc.font('Body').fontSize(8).fillColor('#FFFFFF').text(
       'All data on this page is self-reported by the user via the CelerySync app. This document is not a medical record and does not constitute medical advice or diagnosis. CelerySync operates independently and is not affiliated with or endorsed by Anthony William or Medical Medium LLC. Please share with a licensed health practitioner for clinical interpretation.',
       50, doc.page.height - 48, { width: pageW, align: 'center', lineGap: 2 }
     )
@@ -986,11 +1106,10 @@ async function buildAnnualLetterPDF(letter, name, milestones) {
     doc.rect(0, 0, doc.page.width, 130).fill(GREEN)
     doc.fillColor('#fff').fontSize(13).font('Helvetica').text('CelerySync', 70, 32)
     doc.fontSize(26).font('Helvetica-Bold').text(`Year ${letter.year_number} Anniversary Letter`, 70, 52)
-    doc.fontSize(12).font('Helvetica').fillColor('rgba(255,255,255,0.8)')
+    doc.fontSize(12).font('Helvetica').fillColor('#FFFFFF')
       .text(`For ${name}  ·  ${new Date(letter.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`, 70, 94)
 
     // ── Decorative leaf ──
-    doc.fontSize(48).text('🌿', doc.page.width - 110, 40)
 
     let y = 160
 
@@ -1028,11 +1147,13 @@ async function buildAnnualLetterPDF(letter, name, milestones) {
     y += 20
     doc.rect(70, y, pageW, 1).fill('#e0e8db')
     y += 20
-    doc.fillColor(GREEN).fontSize(12).font('Helvetica-Bold').text('Keep going. 🌿', 70, y, { align: 'center', width: pageW })
+    doc.fillColor(GREEN).fontSize(12).font('Helvetica-Bold').text('Keep going.', 70, y, { align: 'center', width: pageW })
 
     // ── Footer ──
+    // It sits inside the bottom margin; without this, PDFKit starts a new page for it.
+    doc.page.margins.bottom = 0
     doc.rect(0, doc.page.height - 45, doc.page.width, 45).fill(GREEN)
-    doc.fillColor('rgba(255,255,255,0.7)').fontSize(9).font('Helvetica')
+    doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica')
       .text('CelerySync · independent app, not affiliated with Anthony William or Medical Medium', 70, doc.page.height - 30, { width: pageW, align: 'center' })
 
     doc.end()
@@ -1205,7 +1326,7 @@ async function sendAnniversaryEmail(userId, name, yearNumber, letterText) {
     ${paragraphs.map(p => `<p style="margin:0 0 20px;">${p}</p>`).join('')}
   </div>
   <div style="background:#f0f7f0;padding:20px 32px;text-align:center;">
-    <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:13px 28px;font-family:Georgia,serif;font-weight:700;font-size:14px;text-decoration:none;">Open Your Healing Journey →</a>
+    <a href="https://celerysync.com" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:13px 28px;font-family:Georgia,serif;font-weight:700;font-size:14px;text-decoration:none;">Open CelerySync →</a>
   </div>
   <div style="padding:16px 32px;text-align:center;border-top:1px solid #e8f0e4;">
     <p style="margin:0;font-size:11px;color:#aaa;">CelerySync · independent app, not affiliated with Anthony William or Medical Medium</p>
@@ -1474,4 +1595,5 @@ router.get('/checkins/:profileId', async (req, res) => {
   }
 })
 
+export { makeProgressReport, makeDoctorReport, buildWeeklyPDF, supplementSummaryFor }
 export default router

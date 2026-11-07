@@ -3,9 +3,8 @@ import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
-import { useUserSupplements } from "../hooks/useUserSupplements.js";
-
-const SUPPLEMENT_CATEGORY = "supplement";
+import { SUPPLEMENTS_CHANGED_EVENT, useUserSupplements } from "../hooks/useUserSupplements.js";
+import { SUPPLEMENT_CATEGORY, supplementEventRow, supplementLabel } from "../lib/supplementEvents.js";
 
 const TIMINGS = [
   { id: "morning_empty", label: "Morning · empty stomach", color: C.leaf },
@@ -36,6 +35,7 @@ function formatRunOutDate(date) {
 export default function SupplementTracker({ authUser, profileId }) {
   const [checked, setChecked] = useState({});
   const [saveError, setSaveError] = useState("");
+  const [reloadTick, setReloadTick] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
@@ -73,7 +73,14 @@ export default function SupplementTracker({ authUser, profileId }) {
     } else {
       try { setChecked(JSON.parse(localStorage.getItem(key) || "{}")); } catch { setChecked({}); }
     }
-  }, [key, date, profileId]);
+  }, [key, date, profileId, reloadTick]);
+
+  // A tick made by voice arrives from outside this component.
+  useEffect(() => {
+    const reload = () => setReloadTick((n) => n + 1);
+    window.addEventListener(SUPPLEMENTS_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(SUPPLEMENTS_CHANGED_EVENT, reload);
+  }, []);
 
   const toggle = async (supp) => {
     const dbKey = `${supp.label}__${supp.timing}`;
@@ -87,18 +94,9 @@ export default function SupplementTracker({ authUser, profileId }) {
     show(nowTaken);
     setSaveError("");
     if (profileId && authUser?.id) {
-      const { error } = await supabase.from("activity_events").insert({
-        user_id: authUser.id,
-        profile_id: profileId,
-        item_id: `supp:${supp.id}`,
-        item_name: supp.label,
-        item_category: SUPPLEMENT_CATEGORY,
-        occurrence_slot: supp.timing,
-        event_type: nowTaken ? "completed" : "uncompleted",
-        source: "tap",
-        occurred_at: new Date().toISOString(),
-        local_date: date,
-      });
+      const { error } = await supabase.from("activity_events").insert(supplementEventRow({
+        userId: authUser.id, profileId, supplement: supp, taken: nowTaken, source: "tap", date,
+      }));
       if (error) {
         show(!nowTaken);
         setSaveError(`That didn't save, so ${supp.label} is back as it was. Please try again.`);
@@ -170,7 +168,8 @@ export default function SupplementTracker({ authUser, profileId }) {
 
   const customSuppItems = supplements.map((s) => ({
     id: s.id,
-    label: s.dose_label ? `${s.name} (${s.dose_label})` : s.name,
+    label: supplementLabel(s),
+    dose_label: s.dose_label,
     timing: s.timing,
     name: s.name,
     source: "custom",

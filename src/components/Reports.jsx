@@ -6,6 +6,7 @@ import ProgressCharts from "./ProgressCharts.jsx";
 import AdherenceStreaks from "./AdherenceStreaks.jsx";
 import ThenAndNow from "./ThenAndNow.jsx";
 import RhythmChanges from "./RhythmChanges.jsx";
+import SupplementSummary from "./SupplementSummary.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
@@ -288,6 +289,7 @@ export default function Reports({ authUser, profileId, user }) {
 
       <div id="section-streaks" style={{ scrollMarginTop: 80 }} />
       <AdherenceStreaks profileId={profileId} />
+      <SupplementSummary profileId={profileId} />
 
       {/* View selector — "history" lands here (the daily table is the default view) */}
       <div id="section-history" style={{ scrollMarginTop: 80 }} />
