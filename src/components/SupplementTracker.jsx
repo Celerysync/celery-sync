@@ -5,6 +5,8 @@ import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
 
+const SUPPLEMENT_CATEGORY = "supplement";
+
 const TIMINGS = [
   { id: "morning_empty", label: "Morning · empty stomach", color: C.leaf },
   { id: "morning_food", label: "Morning · with food", color: C.sage },
@@ -31,7 +33,7 @@ function formatRunOutDate(date) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export default function SupplementTracker({ profileId }) {
+export default function SupplementTracker({ authUser, profileId }) {
   const [checked, setChecked] = useState({});
   const [saveError, setSaveError] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -48,18 +50,20 @@ export default function SupplementTracker({ profileId }) {
   const key = todayKey();
   const date = todayDate();
 
-  // Load today's checked state — Supabase first if logged in, localStorage fallback
+  // Load today's checked state from the activity ledger — the same place every
+  // other completion lives — with localStorage as the fallback.
   useEffect(() => {
     if (profileId) {
       supabase
-        .from("supplement_logs")
-        .select("supplement_name, timing, taken")
+        .from("v_daily_status")
+        .select("item_name, occurrence_slot, status")
         .eq("profile_id", profileId)
-        .eq("date", date)
+        .eq("local_date", date)
+        .eq("item_category", SUPPLEMENT_CATEGORY)
         .then(({ data }) => {
           if (data?.length) {
             const fromDb = {};
-            for (const row of data) fromDb[`${row.supplement_name}__${row.timing}`] = row.taken;
+            for (const row of data) fromDb[`${row.item_name}__${row.occurrence_slot}`] = row.status === "completed";
             setChecked(fromDb);
             localStorage.setItem(key, JSON.stringify(fromDb));
           } else {
@@ -82,15 +86,19 @@ export default function SupplementTracker({ profileId }) {
 
     show(nowTaken);
     setSaveError("");
-    if (profileId) {
-      const { error } = await supabase.from("supplement_logs").upsert({
+    if (profileId && authUser?.id) {
+      const { error } = await supabase.from("activity_events").insert({
+        user_id: authUser.id,
         profile_id: profileId,
-        date,
-        supplement_name: supp.label,
-        timing: supp.timing,
-        taken: nowTaken,
-        taken_at: nowTaken ? new Date().toISOString() : null,
-      }, { onConflict: "profile_id,date,supplement_name,timing" });
+        item_id: `supp:${supp.id}`,
+        item_name: supp.label,
+        item_category: SUPPLEMENT_CATEGORY,
+        occurrence_slot: supp.timing,
+        event_type: nowTaken ? "completed" : "uncompleted",
+        source: "tap",
+        occurred_at: new Date().toISOString(),
+        local_date: date,
+      });
       if (error) {
         show(!nowTaken);
         setSaveError(`That didn't save, so ${supp.label} is back as it was. Please try again.`);

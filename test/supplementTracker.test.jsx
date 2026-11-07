@@ -24,7 +24,7 @@ describe("ticking a supplement", () => {
     writes = [];
     failWrites = false;
     vi.stubGlobal("fetch", vi.fn(async (url, init = {}) => {
-      if (String(url).includes("supplement_logs") && init.method === "POST") {
+      if (String(url).includes("activity_events") && init.method === "POST") {
         writes.push(JSON.parse(init.body));
         return failWrites ? jsonResponse({ message: "nope" }, 500) : jsonResponse([], 201);
       }
@@ -38,7 +38,7 @@ describe("ticking a supplement", () => {
   });
 
   const openAndTick = () => {
-    render(<SupplementTracker profileId="profile-1" />);
+    render(<SupplementTracker authUser={{ id: "user-1" }} profileId="profile-1" />);
     fireEvent.click(screen.getByText(/Today's Supplements/));
     fireEvent.click(screen.getByText("Vitamin C"));
   };
@@ -46,8 +46,19 @@ describe("ticking a supplement", () => {
   it("saves the tick to the database and shows it as taken", async () => {
     openAndTick();
     await waitFor(() => expect(writes.length).toBe(1));
-    expect(writes[0]).toMatchObject({ profile_id: "profile-1", supplement_name: "Vitamin C", taken: true });
+    expect(writes[0]).toMatchObject({
+      user_id: "user-1", profile_id: "profile-1", item_id: "supp:s1", item_name: "Vitamin C",
+      item_category: "supplement", occurrence_slot: "morning_food", event_type: "completed", source: "tap",
+    });
     expect(screen.getByText(/1\/1 taken/)).toBeTruthy();
+  });
+
+  it("un-ticking adds a reversal to the ledger rather than deleting", async () => {
+    openAndTick();
+    await waitFor(() => expect(writes.length).toBe(1));
+    fireEvent.click(screen.getByText("Vitamin C"));
+    await waitFor(() => expect(writes.length).toBe(2));
+    expect(writes[1].event_type).toBe("uncompleted");
   });
 
   it("takes the tick back and says so if the save fails", async () => {

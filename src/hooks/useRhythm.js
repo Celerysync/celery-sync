@@ -137,7 +137,7 @@ export function useRhythm(authUser, profileId) {
     (async () => {
       const { data, error } = await supabase
         .from("v_daily_status")
-        .select("item_id, occurrence_slot, status, occurred_at")
+        .select("item_id, item_category, occurrence_slot, status, occurred_at")
         .eq("profile_id", profileId)
         .eq("local_date", TODAY());
       if (error) return;
@@ -146,7 +146,8 @@ export function useRhythm(authUser, profileId) {
         // Keyed by occurrence, so an item scheduled twice a day tracks each
         // time separately. Rows written before slots existed have a null
         // slot and key to the plain item id, exactly as they used to.
-        if (r.status === "completed") fromDb[occurrenceId(r.item_id, r.occurrence_slot)] = r.occurred_at;
+        // Supplements share the ledger but aren't rhythm items.
+        if (r.status === "completed" && r.item_category !== "supplement") fromDb[occurrenceId(r.item_id, r.occurrence_slot)] = r.occurred_at;
       });
       setCompletions(fromDb);
     })();
@@ -164,7 +165,7 @@ export function useRhythm(authUser, profileId) {
         table: "activity_events",
         filter: `profile_id=eq.${profileId}`,
       }, ({ new: row }) => {
-        if (row.local_date !== TODAY()) return;
+        if (row.local_date !== TODAY() || row.item_category === "supplement") return;
         const key = occurrenceId(row.item_id, row.occurrence_slot);
         setCompletions((prev) => {
           if (row.event_type === "completed") {

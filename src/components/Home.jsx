@@ -563,7 +563,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
       {/* Supplement tracker */}
       {authUser && (
         <div id="section-supplements" style={{ scrollMarginTop: 80, display: "flex", flexDirection: "column", gap: 6 }}>
-          <SupplementTracker profileId={profileId} />
+          <SupplementTracker authUser={authUser} profileId={profileId} />
           <button
             onClick={() => setShowSupplements(true)}
             style={{

@@ -45,7 +45,7 @@ export default function AdherenceStreaks({ profileId }) {
 
       const [statusRes, itemsRes, eventsRes] = await Promise.all([
         supabase.from("v_daily_status")
-          .select("item_id, local_date, status")
+          .select("item_id, item_category, local_date, status")
           .eq("profile_id", profileId)
           .gte("local_date", since60),
         supabase.from("rhythm_items")
@@ -53,7 +53,7 @@ export default function AdherenceStreaks({ profileId }) {
           .eq("profile_id", profileId)
           .is("archived_at", null),
         supabase.from("activity_events")
-          .select("source")
+          .select("source, item_category")
           .eq("profile_id", profileId)
           .eq("event_type", "completed")
           .gte("local_date", since7),
@@ -63,9 +63,16 @@ export default function AdherenceStreaks({ profileId }) {
 
       const totalItems = itemsRes.count || 0;
 
+      // Supplements share the ledger but are counted on their own: rhythm
+      // streaks and percentages only compare rhythm ticks with rhythm items.
       const byDay = {};
+      let weekSupplements = 0;
       for (const row of statusRes.data || []) {
         if (row.status !== "completed") continue;
+        if (row.item_category === "supplement") {
+          if (row.local_date >= since7) weekSupplements++;
+          continue;
+        }
         (byDay[row.local_date] ||= new Set()).add(row.item_id);
       }
 
@@ -100,10 +107,11 @@ export default function AdherenceStreaks({ profileId }) {
 
       const sourceCounts = { tap: 0, voice: 0, auto: 0 };
       for (const row of eventsRes.data || []) {
+        if (row.item_category === "supplement") continue;
         sourceCounts[row.source] = (sourceCounts[row.source] || 0) + 1;
       }
 
-      setStats({ perfectStreak, showedUpStreak, weekAdherence, totalItems, sourceCounts });
+      setStats({ perfectStreak, showedUpStreak, weekAdherence, totalItems, sourceCounts, weekSupplements });
       setLoading(false);
     })();
 
@@ -137,6 +145,11 @@ export default function AdherenceStreaks({ profileId }) {
         <div style={{ fontSize: 11, color: C.muted }}>
           Last 7 days: {sourceCounts.tap} tapped · {sourceCounts.voice} by voice
           {sourceCounts.auto ? ` · ${sourceCounts.auto} auto` : ""}
+        </div>
+      )}
+      {stats.weekSupplements > 0 && (
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+          Last 7 days: {stats.weekSupplements} supplement {stats.weekSupplements === 1 ? "tick" : "ticks"}
         </div>
       )}
     </Card>
