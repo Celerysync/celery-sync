@@ -605,17 +605,17 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
       }}>
         <div style={{ fontSize: 26, flexShrink: 0 }}>💧</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#1e40af" }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
             Water today — {waterCount} {waterCount === 1 ? "glass" : "glasses"}
           </div>
-          <div style={{ fontSize: 12, color: "#3b82f6", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
             {waterCount < 8 ? `${8 - waterCount} more to reach today's 8-glass goal` : "Beautifully hydrated today ✓"}
           </div>
           <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} style={{
                 width: 20, height: 20, borderRadius: "50%",
-                background: i < waterCount ? "#3b82f6" : "#BFDBFE",
+                background: i < waterCount ? "#3b82f6" : alpha("#3b82f6", "30"),
                 transition: "background 0.2s",
               }} />
             ))}

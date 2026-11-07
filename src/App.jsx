@@ -449,7 +449,7 @@ export default function App() {
                 whiteSpace: "nowrap",
               }}>
                 {isInTrial
-                  ? `Free trial · ${trialDaysLeft} ${trialDaysLeft === 1 ? "day" : "days"} left`
+                  ? `${trialDaysLeft} ${trialDaysLeft === 1 ? "day" : "days"} free`
                   : isPractitioner ? "🏥 Practitioner" : isRhythm ? "🌱 Rhythm" : "✨ Rhythm + Voice"}
               </div>
             )}
