@@ -6,6 +6,64 @@ import { KITCHEN_KINDS, KIND_BY_ID, sortRecipeText } from "../lib/kitchen.js";
 import { supabase } from "../lib/supabase.js";
 import { RHYTHM_CHANGED_EVENT, rhythmItemToRow } from "../lib/rhythmSchedule.js";
 import CookMode from "./CookMode.jsx";
+import { useMealPlan } from "../hooks/useMealPlan.js";
+import { PLAN_SLOTS, SLOT_LABEL, dayLabel, defaultSlot, planRecipe, unplan } from "../lib/mealPlan.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const nextDays = (n = 7) => Array.from({ length: n }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return localDateStr(d); });
+
+// "Plan it": which day and when. One recipe per day and slot.
+function PlanForm({ recipe, profileId, onDone }) {
+  const [date, setDate] = useState(nextDays()[0]);
+  const [slot, setSlot] = useState(defaultSlot(recipe.kind) || "dinner");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const sel = { padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.surface, fontSize: 15, color: C.charcoal, flex: 1 };
+  return (
+    <div style={{ background: C.mist, borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 14, color: C.charcoal }}>When are you having it?</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <select aria-label="Day" value={date} onChange={(e) => setDate(e.target.value)} style={sel}>
+          {nextDays().map((d) => <option key={d} value={d}>{dayLabel(d)}</option>)}
+        </select>
+        <select aria-label="Time of day" value={slot} onChange={(e) => setSlot(e.target.value)} style={sel}>
+          {PLAN_SLOTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+        </select>
+      </div>
+      {error && <div role="alert" style={{ fontSize: 13, color: C.terracotta }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button style={btn(true)} disabled={saving} onClick={async () => {
+          setSaving(true); setError("");
+          try { await planRecipe(profileId, { recipeId: recipe.id, date, slot }); onDone(`Planned for ${dayLabel(date).toLowerCase()}, ${SLOT_LABEL[slot].toLowerCase()}.`); }
+          catch { setError("That didn't save. Please try again."); setSaving(false); }
+        }}>{saving ? "Saving…" : "Plan it"}</button>
+        <button style={btn(false)} onClick={() => onDone("")}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+// What's planned for the next week, so planning is never invisible.
+function ComingUp({ profileId, recipes, onOpen }) {
+  const days = nextDays();
+  const { entries } = useMealPlan(profileId, days[0], days[days.length - 1]);
+  if (!entries.length) return null;
+  return (
+    <Card style={{ padding: "12px 14px" }}>
+      <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>📅 Coming up</div>
+      {entries.map((e) => (
+        <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", fontSize: 14, color: C.charcoal }}>
+          <span style={{ color: C.muted, minWidth: 130 }}>{dayLabel(e.plan_date)} · {SLOT_LABEL[e.slot]}</span>
+          <button onClick={() => recipes.some((r) => r.id === e.recipe_id) && onOpen(e.recipe_id)} style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 14, color: C.sageDark, fontFamily: "Georgia,serif", cursor: "pointer" }}>
+            {e.recipe.name}
+          </button>
+          <button onClick={() => unplan(e.id).catch(() => {})} aria-label={`Take ${e.recipe.name} off ${dayLabel(e.plan_date)}`} style={{ background: "none", border: "none", color: C.muted, fontSize: 16, cursor: "pointer" }}>✕</button>
+        </div>
+      ))}
+    </Card>
+  );
+}
 
 const pill = (on) => ({
   padding: "8px 14px", borderRadius: 30, border: `1.5px solid ${on ? C.sage : C.border}`,
@@ -32,7 +90,8 @@ function Photo({ path, size = 56, radius = 12 }) {
 }
 
 // One recipe, read-only, with its actions. Also used from Today's 📖.
-export function RecipeView({ recipe, onCook, onEdit, onClose, onAddToRhythm, onFavourite, onDelete, onPhoto, compact = false }) {
+export function RecipeView({ recipe, onCook, onEdit, onClose, onAddToRhythm, onFavourite, onDelete, onPhoto, profileId, compact = false }) {
+  const [planning, setPlanning] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [msg, setMsg] = useState("");
   const [msgIsError, setMsgIsError] = useState(false);
@@ -74,6 +133,7 @@ export function RecipeView({ recipe, onCook, onEdit, onClose, onAddToRhythm, onF
 
       {!compact && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {profileId && <button style={btn(false)} onClick={() => setPlanning(true)}>📅 Plan it</button>}
           {onAddToRhythm && <button style={btn(false)} onClick={async () => { const r = await onAddToRhythm(recipe); say(r.message, !r.ok); }}>+ Add to my rhythm</button>}
           {onEdit && <button style={btn(false)} onClick={() => onEdit(recipe)}>Edit</button>}
           {onPhoto && (
@@ -96,6 +156,7 @@ export function RecipeView({ recipe, onCook, onEdit, onClose, onAddToRhythm, onF
           {onClose && <button style={btn(false)} onClick={onClose}>Back</button>}
         </div>
       )}
+      {planning && <PlanForm recipe={recipe} profileId={profileId} onDone={(m) => { setPlanning(false); if (m) say(m); }} />}
       {msg && <div role={msgIsError ? "alert" : "status"} style={{ fontSize: 14, color: msgIsError ? C.terracotta : C.sageDark }}>{msg}</div>}
     </div>
   );
@@ -244,6 +305,7 @@ export default function Kitchen({ profileId, section }) {
           onFavourite={toggleFavourite}
           onDelete={async (id) => { await remove(id); setView(null); }}
           onPhoto={setPhoto}
+          profileId={profileId}
         />
       </Card>
     );
@@ -264,6 +326,8 @@ export default function Kitchen({ profileId, section }) {
           You're offline, so this is the copy saved on your phone. Changes need a connection.
         </div>
       )}
+
+      <ComingUp profileId={profileId} recipes={recipes} onOpen={setView} />
 
       <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or ingredient…" aria-label="Search your recipes" style={field} />
 
@@ -293,7 +357,7 @@ export default function Kitchen({ profileId, section }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>{r.favourite ? "⭐ " : ""}{r.name}</div>
             <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>
-              <span style={{ textTransform: "capitalize" }}>{KIND_BY_ID[r.kind]?.one}</span> · {r.ingredients?.length || 0} ingredients{r.steps?.length ? ` · ${r.steps.length} steps` : ""}
+              <span style={{ textTransform: "capitalize" }}>{KIND_BY_ID[r.kind]?.one}</span> · {plural(r.ingredients?.length || 0, "ingredient")}{r.steps?.length ? ` · ${plural(r.steps.length, "step")}` : ""}
             </div>
           </div>
         </button>

@@ -17,7 +17,10 @@ import RhythmView from "./RhythmView.jsx";
 import MorningCheckIn from "./MorningCheckIn.jsx";
 import EveningReflection from "./EveningReflection.jsx";
 import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
-import { localDateStr } from "../lib/rhythmSchedule.js";
+import { localDateStr, parseOccurrenceId } from "../lib/rhythmSchedule.js";
+import { useMealPlan } from "../hooks/useMealPlan.js";
+import { useKitchen } from "../hooks/useKitchen.js";
+import { planForSteps, SLOT_LABEL } from "../lib/mealPlan.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
 const RecipeSheet = lazy(() => import("./RecipeSheet.jsx"));
@@ -289,6 +292,29 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   const { speak, speaking, stopSpeaking, voicePrefs, voicePrefsLoaded } = useVoiceOrchestrator();
   useProtocolNudges(sequence, voicePrefs, voicePrefsLoaded);
 
+  // Their own recipes on today's steps: a plan for today ("potato bake for
+  // dinner") wins over the step's usual recipe.
+  const { recipes: kitchenRecipes } = useKitchen(profileId);
+  const { entries: planEntries } = useMealPlan(profileId, localDateStr());
+  const todaysPlan = useMemo(() => {
+    const steps = [];
+    const seen = new Set();
+    for (const s of sequence) {
+      const { itemId } = parseOccurrenceId(s.id);
+      if (!seen.has(itemId)) { seen.add(itemId); steps.push({ id: itemId, name: s.name, recipeId: s.recipeId ?? null }); }
+    }
+    return { steps, ...planForSteps(planEntries, steps) };
+  }, [sequence, planEntries]);
+  const recipeFor = (occId) => {
+    const { itemId } = parseOccurrenceId(occId);
+    const planned = todaysPlan.byItem[itemId];
+    if (planned) return { ...planned, planned: true };
+    const step = todaysPlan.steps.find((s) => s.id === itemId);
+    if (!step?.recipeId) return null;
+    const r = kitchenRecipes.find((x) => x.id === step.recipeId);
+    return { recipeId: step.recipeId, recipeName: r?.name ?? null, planned: false };
+  };
+
   // Rhythm completion comes from the same ledger-backed sequence the Rhythm
   // list renders (spec §1 single source of truth) — no private checklist copy.
   const rhythmDoneCount = sequence.filter((i) => i.completedAt).length;
@@ -444,7 +470,9 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         hasMedicine={hasMedicine}
         activeProgram={activeProgram}
         currentProgramDay={currentProgramDay}
-        onComplete={completeItem}
+        onComplete={(occId) => completeItem(occId, recipeFor(occId))}
+        recipeFor={recipeFor}
+        plannedLoose={todaysPlan.loose.map((e) => ({ id: e.id, recipeId: e.recipe_id, label: `${SLOT_LABEL[e.slot]}: ${e.recipe.name}` }))}
         onUncomplete={uncompleteItem}
         onEdit={() => setShowRhythmBuilder(true)}
         lastFinishedProgram={lastFinishedProgram}

@@ -37,6 +37,8 @@ export default function RhythmView({
   takenWith = {},
   onTickTakenWith,
   onOpenRecipe,
+  recipeFor = () => null,
+  plannedLoose = [],
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [offerFor, setOfferFor] = useState(null); // step just ticked that has supplements with it
@@ -283,6 +285,11 @@ export default function RhythmView({
                   <div style={{ fontSize: 12, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
                     {statusLabel}
                   </div>
+                  {recipeFor(item.id)?.planned && recipeFor(item.id).recipeName && (
+                    <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+                      🍽 {recipeFor(item.id).recipeName}
+                    </div>
+                  )}
                   {linkedTo(item).length > 0 && (
                     <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
                       💊 with {linkedTo(item).map((s) => s.name).join(", ")}
@@ -293,9 +300,9 @@ export default function RhythmView({
                 {/* Category dot + expand */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: catColor }} />
-                  {item.recipeId && onOpenRecipe && (
+                  {recipeFor(item.id) && onOpenRecipe && (
                     <button
-                      onClick={() => onOpenRecipe(item.recipeId)}
+                      onClick={() => onOpenRecipe(recipeFor(item.id).recipeId)}
                       aria-label={`Open the recipe for ${item.name}`}
                       style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 2, lineHeight: 1 }}
                     >
@@ -366,6 +373,17 @@ export default function RhythmView({
           </div>
         );
       })}
+
+      {plannedLoose.length > 0 && (
+        <div style={{ fontSize: 13, color: C.mid, background: C.mist, borderRadius: 12, padding: "8px 12px", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <span>🍽 Planned today:</span>
+          {plannedLoose.map((p) => (
+            <button key={p.id} onClick={() => onOpenRecipe?.(p.recipeId)} style={{ background: "none", border: "none", padding: 0, color: C.sageDark, fontSize: 13, fontFamily: "Georgia,serif", textDecoration: "underline", cursor: "pointer" }}>
+              📖 {p.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* All done banner */}
       {sequence.length > 0 && sequence.every((i) => i.completedAt) && (

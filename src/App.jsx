@@ -19,6 +19,7 @@ import { hasCurrentConsent } from "./lib/consent.js";
 import Auth from "./components/Auth.jsx";
 import Home from "./components/Home.jsx";
 import ReminderBanner from "./components/ReminderBanner.jsx";
+import CookAlong from "./components/CookAlong.jsx";
 
 // Lazy-loaded: only fetched when first needed
 const Onboarding         = lazy(() => import("./components/Onboarding.jsx"));
@@ -533,6 +534,8 @@ export default function App() {
           </div>
         </Suspense>
       </div>
+
+      <CookAlong />
 
       {/* Bottom nav */}
       <div style={{

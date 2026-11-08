@@ -245,7 +245,7 @@ export function useRhythm(authUser, profileId) {
 
   // Takes an OCCURRENCE id — plain item id for a once-a-day item, or
   // "<itemId>@HH:MM" for one slot of a multi-time item.
-  const completeItem = useCallback(async (occId) => {
+  const completeItem = useCallback(async (occId, recipe = null) => {
     if (!authUser?.id || !profileId) {
       // Can't persist yet (profile still loading) — don't show a false "done"
       setSyncError("Still loading your profile — try again in a moment.");
@@ -276,6 +276,8 @@ export function useRhythm(authUser, profileId) {
       local_date: TODAY(),
       program_id: activeProgram?.id ?? null,
       program_day: currentProgramDay ?? null,
+      // Which of their recipes it was (copied name: history survives a delete).
+      ...(recipe?.recipeId ? { recipe_id: recipe.recipeId, recipe_name: recipe.recipeName ?? null } : {}),
     });
 
     if (error) {
@@ -284,7 +286,7 @@ export function useRhythm(authUser, profileId) {
       setSyncError("Couldn't save — check your connection and try again.");
       return;
     }
-    announceActivity(`ticked off "${item?.name ?? "an item"}"`);
+    announceActivity(`ticked off "${item?.name ?? "an item"}"${recipe?.recipeName ? ` (${recipe.recipeName})` : ""}`);
 
     setCompletions((latest) => {
       // Counted per occurrence, so an item due twice a day counts twice —

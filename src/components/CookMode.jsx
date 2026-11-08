@@ -4,10 +4,10 @@ import { formatTimer, stepTimerSeconds } from "../lib/kitchen.js";
 
 // Cook mode, for any recipe (meals, juices, smoothies): big text, one step at a
 // time, the screen kept on, and a timer when a step mentions a time.
-export default function CookMode({ recipe, onClose }) {
+export default function CookMode({ recipe, onClose, initialPage = 0, onPage }) {
   const steps = recipe.steps || [];
   // Page 0 is the ingredients, then one page per step.
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(initialPage);
   const [timerLeft, setTimerLeft] = useState(null);
   const [timerDone, setTimerDone] = useState(false);
   const wakeLock = useRef(null);
@@ -47,7 +47,11 @@ export default function CookMode({ recipe, onClose }) {
     return () => clearTimeout(t);
   }, [timerLeft]);
 
-  const go = (n) => { setPage(Math.max(0, Math.min(total - 1, n))); setTimerLeft(null); setTimerDone(false); };
+  const go = (n) => {
+    const next = Math.max(0, Math.min(total - 1, n));
+    setPage(next); setTimerLeft(null); setTimerDone(false);
+    onPage?.(next); // cook-along with the companion stays on the same step
+  };
 
   return (
     <div role="dialog" aria-label={`Cooking ${recipe.name}`} style={{

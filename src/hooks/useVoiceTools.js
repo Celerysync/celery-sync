@@ -11,6 +11,7 @@ import { EMOTIONAL_STATES as CHECKIN_FEELINGS } from "../lib/checkinOptions.js";
 import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 import { SUPPLEMENT_CATEGORY, SUPPLEMENT_TIMING_LABELS, supplementEventRow } from "../lib/supplementEvents.js";
 import { kitchenVoiceTools } from "../lib/kitchenVoice.js";
+import { recipeForTick } from "../lib/mealPlan.js";
 
 const todayStr = TODAY;
 
@@ -238,6 +239,9 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     update_recipe: kitchen.update_recipe,
     find_recipe: kitchen.find_recipe,
     delete_recipe: kitchen.delete_recipe,
+    plan_recipe: kitchen.plan_recipe,
+    get_meal_plan: kitchen.get_meal_plan,
+    cook_along: kitchen.cook_along,
     async link_recipe(args) {
       if (!profileId) throw new Error("No active profile");
       return kitchen.link_recipe(args, await activeRhythmRows(profileId));
@@ -293,6 +297,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
 
       const item = matches[0];
       const activeProgram = readActiveProgram();
+      const recipe = action === "completed" ? await recipeForTick(profileId, item, items) : null;
       const { error } = await supabase.from("activity_events").insert({
         user_id: userId,
         profile_id: profileId,
@@ -304,6 +309,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         occurred_at: new Date().toISOString(),
         local_date: todayStr(),
         program_id: activeProgram?.id ?? null,
+        ...(recipe?.recipeId ? { recipe_id: recipe.recipeId, recipe_name: recipe.recipeName ?? null } : {}),
       });
       if (error) throw new Error(error.message);
 
@@ -321,6 +327,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       return {
         marked: item.name,
         action,
+        recipe: recipe?.recipeName || undefined,
         completed_today: status.completed,
         total_today: status.total,
         program: status.program,

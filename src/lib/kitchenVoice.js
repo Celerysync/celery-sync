@@ -4,6 +4,16 @@
 import { supabase } from "./supabase.js";
 import { KIND_BY_ID, KITCHEN_CHANGED_EVENT, matchRecipe, normalizeRecipe, recipesWith } from "./kitchen.js";
 import { RHYTHM_CHANGED_EVENT } from "./rhythmSchedule.js";
+import { SLOT_LABEL, dayLabel, defaultSlot, loadPlan, planRecipe, resolvePlanDay, unplan } from "./mealPlan.js";
+import { stepTimerSeconds, formatTimer } from "./kitchen.js";
+
+// Cook-along: which recipe and step Fern is on. Page 0 is the ingredients,
+// then one page per step — the same pages as cook mode on the screen, which
+// follows along (COOK_ALONG_EVENT) and reports taps back (syncCookAlong).
+export const COOK_ALONG_EVENT = "cs:cook-along";
+let cooking = null; // { recipe, page }
+export function syncCookAlong(page) { if (cooking) cooking.page = page; if (page == null) cooking = null; }
+const showCook = () => window.dispatchEvent(new CustomEvent(COOK_ALONG_EVENT, { detail: cooking ? { recipe: cooking.recipe, page: cooking.page } : null }));
 
 const COLUMNS = "id, kind, name, ingredients, steps, notes, tags, favourite, photo_path";
 const kitchenChanged = () => window.dispatchEvent(new Event(KITCHEN_CHANGED_EVENT));
@@ -14,7 +24,7 @@ const kitchenChanged = () => window.dispatchEvent(new Event(KITCHEN_CHANGED_EVEN
 const readBack = new Map(); // key → time
 const keyOf = (r) => JSON.stringify([r.name.toLowerCase(), r.kind, r.ingredients.map((i) => i.text), r.steps]);
 const recentlyRead = (key) => { const t = readBack.get(key); return t && Date.now() - t < 10 * 60_000; };
-export const _resetKitchenVoice = () => readBack.clear();
+export const _resetKitchenVoice = () => { readBack.clear(); cooking = null; };
 
 async function loadRecipes(profileId) {
   const { data, error } = await supabase.from("kitchen_items").select(COLUMNS).eq("profile_id", profileId).order("name");
@@ -163,6 +173,85 @@ export function kitchenVoiceTools(profileId) {
       kitchenChanged();
       window.dispatchEvent(new Event(RHYTHM_CHANGED_EVENT)); // any 📖 link goes
       return { saved: true, deleted: found.match.name, message: `"${found.match.name}" is deleted from their Kitchen.` };
+    },
+
+    // "Put my liver smoothie on tomorrow morning", "potato bake for dinner".
+    async plan_recipe(args) {
+      if (!profileId) throw new Error("No active profile");
+      const recipes = await loadRecipes(profileId);
+      const found = matchRecipe(recipes, args?.recipe_name);
+      if (found.error) return { ...found, changed_nothing: true };
+      const recipe = found.match;
+      const date = resolvePlanDay(args?.day);
+      if (!date) return { error: "unclear_day", changed_nothing: true, message: "Ask which day: today, tomorrow, or a day of the week." };
+      const slot = SLOT_LABEL[args?.slot] ? args.slot : defaultSlot(recipe.kind);
+      if (!slot) return { error: "which_meal", changed_nothing: true, message: `Ask whether "${recipe.name}" is for breakfast, lunch or dinner.` };
+      if (args?.remove === true) {
+        const hit = (await loadPlan(profileId, date)).find((e) => e.recipe_id === recipe.id && (!args?.slot || e.slot === slot));
+        if (!hit) return { changed_nothing: true, message: `"${recipe.name}" isn't planned for ${dayLabel(date).toLowerCase()}.` };
+        await unplan(hit.id);
+        return { saved: true, message: `Taken "${recipe.name}" off ${dayLabel(date).toLowerCase()}.` };
+      }
+      const before = (await loadPlan(profileId, date)).find((e) => e.slot === slot);
+      await planRecipe(profileId, { recipeId: recipe.id, date, slot });
+      return {
+        saved: true, recipe: recipe.name, day: dayLabel(date), slot: SLOT_LABEL[slot],
+        replaced: before && before.recipe_id !== recipe.id ? before.recipe.name : undefined,
+        message: `Planned "${recipe.name}" for ${dayLabel(date).toLowerCase()}, ${SLOT_LABEL[slot].toLowerCase()}${before && before.recipe_id !== recipe.id ? ` (instead of ${before.recipe.name})` : ""}. On that day it shows on the matching step in their rhythm (or under it), and opens with 📖.`,
+      };
+    },
+
+    // "What's for dinner tonight?", "what have I planned this week?"
+    async get_meal_plan(args) {
+      if (!profileId) throw new Error("No active profile");
+      const from = resolvePlanDay(args?.day || "today");
+      if (!from) return { error: "unclear_day", message: "Ask which day they mean." };
+      const to = args?.whole_week ? (() => { const d = new Date(`${from}T00:00:00`); d.setDate(d.getDate() + 6); return d.toLocaleDateString("en-CA"); })() : from;
+      const entries = await loadPlan(profileId, from, to);
+      return {
+        planned: entries.map((e) => `${dayLabel(e.plan_date)}, ${SLOT_LABEL[e.slot].toLowerCase()}: ${e.recipe.name}`),
+        message: entries.length ? "Only these are planned." : "Nothing is planned then. Offer to plan one of their own recipes (plan_recipe) — never suggest a recipe that isn't theirs.",
+      };
+    },
+
+    // Read a recipe one step at a time: start, next, back, repeat, stop.
+    async cook_along(args) {
+      if (!profileId) throw new Error("No active profile");
+      const action = ["start", "next", "back", "repeat", "stop"].includes(args?.action) ? args.action : "start";
+      if (action === "start" || (args?.recipe_name && (!cooking || cooking.recipe.name.toLowerCase() !== String(args.recipe_name).toLowerCase()))) {
+        const found = matchRecipe(await loadRecipes(profileId), args?.recipe_name);
+        if (found.error) return found;
+        cooking = { recipe: { ...found.match, ...normalizeRecipe(found.match), id: found.match.id, photo_path: found.match.photo_path }, page: 0 };
+      } else if (!cooking) {
+        return { error: "not_cooking", message: "Nothing is open to cook along with. Ask which of their recipes they'd like." };
+      } else if (action === "stop") {
+        const name = cooking.recipe.name;
+        cooking = null; showCook();
+        return { stopped: true, message: `Stopped cooking along with "${name}".` };
+      } else if (action === "next") {
+        if (cooking.page >= cooking.recipe.steps.length) {
+          const name = cooking.recipe.name;
+          cooking = null; showCook();
+          return { finished: true, message: `That was the last step of "${name}". Cook mode is closed. Tell them warmly that's it.` };
+        }
+        cooking.page += 1;
+      } else if (action === "back") {
+        cooking.page = Math.max(0, cooking.page - 1);
+      }
+      showCook();
+      const r = cooking.recipe;
+      if (cooking.page === 0) {
+        return {
+          recipe: r.name, showing: "ingredients", ingredients: r.ingredients.map((i) => i.text), steps_total: r.steps.length,
+          message: `Cook mode is open on their screen. Read the ingredients, in their words, then ask them to say "next" when they're ready for step 1.${r.steps.length ? "" : " This recipe has no steps saved."}`,
+        };
+      }
+      const text = r.steps[cooking.page - 1];
+      const secs = stepTimerSeconds(text);
+      return {
+        recipe: r.name, step: cooking.page, of: r.steps.length, text, timer: secs ? formatTimer(secs) : undefined,
+        message: `Read ONLY step ${cooking.page} of ${r.steps.length}, word for word: "${text}". Then stop and wait for "next", "repeat" or "back".${secs ? ` There's a ${formatTimer(secs)} timer button on their screen for this step.` : ""}${cooking.page === r.steps.length ? " This is the last step." : ""}`,
+      };
     },
 
     // "Link my green smoothie to my morning smoothie step" — Today then shows
