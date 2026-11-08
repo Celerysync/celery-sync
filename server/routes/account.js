@@ -42,6 +42,10 @@ router.post('/delete', async (req, res) => {
       if (error && error.code !== '42P01') throw new Error(`${table}: ${error.message}`)
     }
 
+    // Their Kitchen photos live in storage under <user id>/, which doesn't
+    // cascade from the account. Remove them before the account goes.
+    await removeKitchenPhotos(user.id)
+
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
     if (error) throw error
     res.json({ deleted: true })
@@ -50,6 +54,15 @@ router.post('/delete', async (req, res) => {
     res.status(500).json({ error: "Sorry — the account couldn't be deleted just now. Please try again, or email us and we'll do it for you." })
   }
 })
+
+async function removeKitchenPhotos(userId) {
+  for (let i = 0; i < 50; i++) {
+    const { data, error } = await supabaseAdmin.storage.from('kitchen-photos').list(userId, { limit: 100 })
+    if (error || !data?.length) return
+    const { error: rmError } = await supabaseAdmin.storage.from('kitchen-photos').remove(data.map((f) => `${userId}/${f.name}`))
+    if (rmError) throw new Error(`kitchen photos: ${rmError.message}`)
+  }
+}
 
 // GET /api/account/export — everything we hold about the signed-in person,
 // as one JSON file (Privacy Policy: access + portability, GDPR Art. 15/20,
@@ -64,6 +77,7 @@ const PROFILE_TABLES = [
   'rhythm_items', 'rhythm_item_changes', 'activity_events', 'daily_checkins', 'conversations',
   'user_supplements', 'supplement_inventory', 'supplement_logs', 'saved_rhythms', 'active_protocols',
   'healing_profiles', 'healing_milestones', 'healing_letters', 'weekly_summaries', 'cycle_logs',
+  'kitchen_items', 'shopping_list_items', 'meal_plan_entries',
 ]
 const LEAVE_OUT = { push_subscriptions: ['keys', 'endpoint'], wearable_tokens: ['token', 'access_token', 'refresh_token'] }
 

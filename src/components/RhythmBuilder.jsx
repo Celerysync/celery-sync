@@ -4,6 +4,26 @@ import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram, rowTotalDays } from "../lib/savedRhythms.js";
 import { isRelative, localDateStr, scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
+import { useKitchen } from "../hooks/useKitchen.js";
+import { KIND_BY_ID } from "../lib/kitchen.js";
+
+// Link a step to one of their own recipes, so Today shows 📖 to open it.
+function RecipePicker({ recipes, value, onChange, small = false }) {
+  if (!recipes.length) return null;
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: small ? 12 : 13, color: C.charcoal }}>
+      📖 Recipe from your Kitchen (optional)
+      <select
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.surface, fontSize: 14, color: C.charcoal }}
+      >
+        <option value="">None</option>
+        {recipes.map((r) => <option key={r.id} value={r.id}>{KIND_BY_ID[r.kind]?.emoji} {r.name}</option>)}
+      </select>
+    </label>
+  );
+}
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -56,6 +76,7 @@ export default function RhythmBuilder({
   onStartProgram,
   onCancelProgram,
 }) {
+  const { recipes } = useKitchen(profileId);
   // Open on the items themselves when there are any — "Edit" opening on an
   // empty Day Templates page made it look as if nothing had been added.
   const [level, setLevel] = useState(() => (baseItems.length ? "edit" : "templates")); // templates | programs | program-new | edit | add | save-template
@@ -99,9 +120,9 @@ export default function RhythmBuilder({
   const addStepsFrom = (source) => {
     const days = progForm.totalDays;
     const from = source === "everyday"
-      ? baseItems.map((i) => ({ name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note, fromDay: 1, toDay: days }))
+      ? baseItems.map((i) => ({ name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note, recipeId: i.recipeId, fromDay: 1, toDay: days }))
       : (savedRows.find((r) => r.id === source)?.items || []).map((i) => ({
-          name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note,
+          name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note, recipeId: i.recipeId,
           fromDay: i.programDayRange?.[0] ?? 1, toDay: i.programDayRange?.[1] ?? days,
         }));
     setProgForm((f) => ({
@@ -705,6 +726,9 @@ export default function RhythmBuilder({
                     background: C.surface, outline: "none", marginBottom: 10,
                   }}
                 />
+                <div style={{ marginBottom: 10 }}>
+                  <RecipePicker small recipes={recipes} value={progItemForm.recipeId} onChange={(recipeId) => setProgItemForm((f) => ({ ...f, recipeId }))} />
+                </div>
                 <Btn
                   small
                   color={C.plum}
@@ -906,6 +930,7 @@ export default function RhythmBuilder({
               onCancel={() => setEditingId(null)}
               title="Edit item"
               otherItems={baseItems}
+              recipes={recipes}
             />
           )}
 
@@ -918,6 +943,7 @@ export default function RhythmBuilder({
               onCancel={() => setLevel("edit")}
               title="Add new item"
               otherItems={baseItems}
+              recipes={recipes}
             />
           )}
 
@@ -1014,7 +1040,7 @@ function relativeLabel(item, items) {
   return "";
 }
 
-function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [] }) {
+function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [], recipes = [] }) {
   const TODAY = localDateStr();
 
   // The schedule is the source of truth; fixedTime is kept in step with the
@@ -1397,6 +1423,8 @@ function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [] }) {
           </div>
         )}
       </FieldGroup>
+
+      <RecipePicker recipes={recipes} value={form.recipeId} onChange={(recipeId) => setForm((f) => ({ ...f, recipeId }))} />
 
       {/* Note */}
       <FieldGroup label="Your note (optional)">

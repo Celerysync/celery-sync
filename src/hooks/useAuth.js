@@ -18,7 +18,13 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = () => {
+    // The phone's copy of their recipes (kept for offline use) goes with them.
+    try {
+      Object.keys(localStorage).filter((k) => k.startsWith("cs_kitchen_")).forEach((k) => localStorage.removeItem(k))
+    } catch { /* storage blocked */ }
+    return supabase.auth.signOut()
+  }
 
   return { authUser, authLoading, signOut }
 }

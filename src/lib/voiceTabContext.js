@@ -10,6 +10,8 @@
 export const TAB_CONTEXT = {
   home:
     "The user is on the Today tab — their own daily rhythm (things they tick off), today's check-in (energy, clarity, mood, symptoms), their supplements for today, water, and their streak.",
+  kitchen:
+    "The user is on the Kitchen tab — their OWN library of juices, smoothies, meals, snacks and drinks that they typed, pasted or told you. Each recipe has their ingredients, steps, notes and maybe their own photo; they can open cook mode, or add one to their daily rhythm.",
   companion:
     "The user is on the Companion tab — talking or typing with you, or in the 'How I feel' section where they describe how they're feeling and get a warm, descriptive reflection.",
   progress:
@@ -23,6 +25,14 @@ export const SECTIONS = {
     rhythm: "their daily rhythm list",
     checkin: "today's check-in",
     supplements: "today's supplements (manage & restock links)",
+  },
+  kitchen: {
+    juice: "their juices",
+    smoothie: "their smoothies",
+    meal: "their meals",
+    snack: "their snacks",
+    drink: "their drinks",
+    other: "their other recipes",
   },
   companion: {
     talk: "the conversation with you",
@@ -58,8 +68,10 @@ const LEGACY_DESTINATIONS = {
   feelings: "companion:feelings",
   supplements: "home:supplements",
   learn: "settings:sources",
-  recipes: "settings:sources",
-  juices: "settings:sources",
+  recipes: "kitchen",
+  juices: "kitchen:juice",
+  smoothies: "kitchen:smoothie",
+  meals: "kitchen:meal",
   knowledge: "settings:sources",
   resources: "settings:sources",
   aw: "settings:sources",
@@ -112,6 +124,7 @@ export const VOICE_ACTION_RULES = [
   "How they feel: when they tell you their mood, energy, clarity or symptoms, save it for them with log_checkin and tell them it's saved — they don't need to tap the check-in. Energy is 1-10 (exhausted 2, struggling 4, okay 6, good 8, great 10). Ask before saving only if it's unclear they meant today.",
   "Supplements taken with a step ('B12 and zinc with my smoothie'): add_supplement with with_item set to that step, once per supplement; it also links one they already have. After you tick that step, the result says what's usually taken with it: ask, and tick those only if they say yes.",
   "Supplements: add_supplement and remove_supplement (only ever the amount the user tells you from their own bottle or book — never suggest one). When they say they took one, tick it with mark_activity, the same as a rhythm item; get_today_status lists which supplements are ticked today. Never tell them to take one, skip one, or that they're missing one — only record what they say.",
+  "Their Kitchen (their own recipes): when they tell you a recipe, sort what they said into name, kind (juice, smoothie, meal, snack, drink, other), ingredients (one per entry, their amounts and words) and steps (in their order) and call save_recipe. Use ONLY what they said — never add, complete, correct or suggest an ingredient, amount or step, and never offer recipes of your own or from anywhere else. save_recipe first answers with a read-back: read it to them, and save (confirmed: true) only on a yes. It never overwrites: if the name exists, ask whether to change that one (update_recipe) or use another name. find_recipe reads one of theirs out, lists them, or finds which of THEIR recipes use an ingredient. link_recipe makes a step in their everyday rhythm open a recipe (📖 on Today); program steps are linked on the screen. delete_recipe needs a yes.",
   "Reports and people: share_report emails their health summary (kind doctor) or wellness log (kind progress) as a PDF to someone they name, e.g. their GP — always spell the email address back to them; you can also just take them to it with switch_tab('progress:reports'). invite_carer invites someone to see their progress. update_preferences renames you or turns the morning check-in / evening reflection on or off.",
   "Only say something is added, changed or removed AFTER the tool returns saved: true — never before, and never for an item you didn't call a tool for. When they list several things, do them one by one, then confirm them together.",
   "Removing, replacing or ending anything: the tool will first answer needs_confirmation — ask the exact question it gives you, and only call again with confirmed: true if they clearly say yes. If you're not sure you heard them right, ask again. Never pass confirmed: true without hearing a yes in this conversation.",

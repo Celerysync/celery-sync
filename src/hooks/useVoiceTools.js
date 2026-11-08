@@ -10,6 +10,7 @@ import { VOICE_PREFS_CHANGED_EVENT } from "./useVoicePrefs.js";
 import { EMOTIONAL_STATES as CHECKIN_FEELINGS } from "../lib/checkinOptions.js";
 import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 import { SUPPLEMENT_CATEGORY, SUPPLEMENT_TIMING_LABELS, supplementEventRow } from "../lib/supplementEvents.js";
+import { kitchenVoiceTools } from "../lib/kitchenVoice.js";
 
 const todayStr = TODAY;
 
@@ -229,7 +230,19 @@ async function markSupplement({ matches, action, userId, profileId }) {
 // separate post-hoc text parse.
 export function useVoiceTools(authUser, profileId, onSwitchTab) {
   const userId = authUser?.id;
-  return useMemo(() => ({
+  return useMemo(() => {
+    const kitchen = kitchenVoiceTools(profileId);
+    return {
+    // Their own recipes (src/lib/kitchenVoice.js).
+    save_recipe: kitchen.save_recipe,
+    update_recipe: kitchen.update_recipe,
+    find_recipe: kitchen.find_recipe,
+    delete_recipe: kitchen.delete_recipe,
+    async link_recipe(args) {
+      if (!profileId) throw new Error("No active profile");
+      return kitchen.link_recipe(args, await activeRhythmRows(profileId));
+    },
+
     // Lets the user navigate by voice ("take me to Track", "open supplements").
     // Ambient tab context (voiceTabContext.js) only tells the companion where
     // the user IS; this is the one tool that actually moves them.
@@ -880,5 +893,6 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       window.dispatchEvent(new Event(VOICE_PREFS_CHANGED_EVENT));
       return { saved: true, changes: said, message: `Done: ${said.join("; ")}.` };
     },
-  }), [userId, profileId, onSwitchTab]);
+  };
+  }, [userId, profileId, onSwitchTab]);
 }

@@ -20,6 +20,7 @@ import { useProtocolNudges } from "../hooks/useProtocolNudges.js";
 import { localDateStr } from "../lib/rhythmSchedule.js";
 
 const RhythmBuilder = lazy(() => import("./RhythmBuilder.jsx"));
+const RecipeSheet = lazy(() => import("./RecipeSheet.jsx"));
 // Full supplements page (list management + shop) — opened from Today's
 // supplements card now that it no longer has its own tab.
 const Supplements = lazy(() => import("./Supplements.jsx"));
@@ -211,6 +212,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
 
   const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
   const [showSupplements, setShowSupplements] = useState(false);
+  const [openRecipeId, setOpenRecipeId] = useState(null);
   // Being taken somewhere (by the companion or a link) closes panels that
   // would cover it — e.g. "go to my mood" while the rhythm editor is open.
   const [seenNavSeq, setSeenNavSeq] = useState(navSeq);
@@ -450,7 +452,19 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         onDismissFinished={dismissLastFinished}
         takenWith={takenWith}
         onTickTakenWith={(list) => tickSupplements({ userId: authUser?.id, profileId, supplements: list })}
+        onOpenRecipe={setOpenRecipeId}
       />
+
+      {openRecipeId && (
+        <Suspense fallback={null}>
+          <RecipeSheet
+            profileId={profileId}
+            recipeId={openRecipeId}
+            onClose={() => setOpenRecipeId(null)}
+            onOpenKitchen={onNavigate ? () => { setOpenRecipeId(null); onNavigate("kitchen"); } : null}
+          />
+        </Suspense>
+      )}
 
       {/* Rhythm builder modal */}
       {showSupplements && (

@@ -135,6 +135,7 @@ export function rhythmRowToItem(row) {
     isMedicine: row.is_medicine,
     note: row.note,
     sortOrder: row.sort_order,
+    recipeId: row.recipe_id ?? null, // a recipe in their Kitchen this step opens
   };
 }
 
@@ -155,6 +156,8 @@ export function rhythmItemToRow(item, profileId) {
     is_medicine: item.isMedicine ?? false,
     note: item.note ?? "",
     sort_order: item.sortOrder ?? 0,
+    // Only written when the caller knows it, so older writers never unlink one.
+    ...(item.recipeId !== undefined ? { recipe_id: item.recipeId || null } : {}),
     // Who made the change — read by the rhythm_item_changes diary trigger.
     changed_via: item.changedVia ?? "tap",
   };

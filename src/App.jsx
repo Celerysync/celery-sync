@@ -32,15 +32,17 @@ const HealingLetters     = lazy(() => import("./components/HealingLetters.jsx"))
 const SettingsPage       = lazy(() => import("./components/SettingsPage.jsx"));
 const ConsentUpdate      = lazy(() => import("./components/ConsentUpdate.jsx"));
 const BeginnerHome       = lazy(() => import("./components/BeginnerHome.jsx"));
+const Kitchen            = lazy(() => import("./components/Kitchen.jsx"));
 const HealerUpsell = lazy(() => import("./components/HealerUpsell.jsx"));
 const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) => ({ default: m.UpsellOrb })));
 
-// Four tabs: what you do today, who you talk to, how it's going, settings.
+// Five tabs: what you do today, their own recipes (Kitchen), who you talk to, how it's going, settings.
 // Track folded into Progress (history) and Today (the one check-in);
 // Supplements into Today; "How I feel" into Companion; Learn's official links
 // into Settings. Old ids still resolve via lib/voiceTabContext.js.
 const TABS = [
   { id: "home",      label: "Today",     emoji: "🏠", free: true  },
+  { id: "kitchen",   label: "Kitchen",   emoji: "🥬", free: false },
   { id: "companion", label: "Companion", emoji: "🎙", free: false },
   { id: "progress",  label: "Progress",  emoji: "📋", free: false },
   { id: "settings",  label: "Settings",  emoji: "⚙️", free: true  },
@@ -351,6 +353,9 @@ export default function App() {
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
           : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} />;
+
+      case "kitchen":
+        return <Kitchen profileId={activeProfileId} section={navSection} key={`${activeProfileId}-${navSeq}`} />;
 
       case "companion":
         // Rhythm plan = engine without the companion — this tab becomes the

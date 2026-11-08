@@ -40,6 +40,7 @@ export function buildProgramItem(raw, totalDays, sortOrder) {
     frequency: "daily",
     durationType: "cleanse",
     note: raw.note || "",
+    recipeId: raw.recipeId || null, // a recipe in their Kitchen this step opens
     programDayRange: [from, to],
     sortOrder,
   };

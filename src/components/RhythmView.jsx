@@ -36,6 +36,7 @@ export default function RhythmView({
   onDismissFinished,
   takenWith = {},
   onTickTakenWith,
+  onOpenRecipe,
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [offerFor, setOfferFor] = useState(null); // step just ticked that has supplements with it
@@ -292,6 +293,15 @@ export default function RhythmView({
                 {/* Category dot + expand */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: catColor }} />
+                  {item.recipeId && onOpenRecipe && (
+                    <button
+                      onClick={() => onOpenRecipe(item.recipeId)}
+                      aria-label={`Open the recipe for ${item.name}`}
+                      style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 2, lineHeight: 1 }}
+                    >
+                      📖
+                    </button>
+                  )}
                   {item.note && (
                     <button
                       onClick={() => setExpandedId(expanded ? null : item.id)}
