@@ -9,7 +9,15 @@ import { TODAY } from "./rhythmSchedule.js";
 
 export const ACTIVE_PROGRAM_KEY = "cs_active_program";
 
-const savedIdOf = (programId) => (String(programId || "").startsWith("sr-") ? String(programId).slice(3) : null);
+// The saved program a running one came from, when there is one. Older programs
+// carry other kinds of id, which the database's uuid link would reject.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const savedIdOf = (programId) => {
+  const id = String(programId || "").replace(/^sr-/, "");
+  return String(programId || "").startsWith("sr-") && UUID.test(id) ? id : null;
+};
+// 23503: the saved program was deleted since. Keep the run, drop the link.
+const isMissingLink = (error) => error?.code === "23503";
 
 export function programFromRow(row) {
   if (!row?.items?.length) return null;
@@ -44,7 +52,7 @@ export async function fetchRunningProgram(profileId) {
 }
 
 export async function startProgramInAccount({ profileId, program, startDate, keepEveryday = null, chainedFromId = null }) {
-  const { data, error } = await supabase.from("active_protocols").insert({
+  const row = {
     profile_id: profileId,
     program_id: program.id,
     program_name: program.name,
@@ -54,7 +62,11 @@ export async function startProgramInAccount({ profileId, program, startDate, kee
     keep_everyday: keepEveryday,
     saved_rhythm_id: savedIdOf(program.id),
     chained_from_id: chainedFromId,
-  }).select(COLUMNS).single();
+  };
+  let { data, error } = await supabase.from("active_protocols").insert(row).select(COLUMNS).single();
+  if (isMissingLink(error)) {
+    ({ data, error } = await supabase.from("active_protocols").insert({ ...row, saved_rhythm_id: null }).select(COLUMNS).single());
+  }
   if (error) throw new Error(error.message);
   return programFromRow(data);
 }
@@ -80,9 +92,11 @@ export async function reconcileRunningProgram(profileId, local) {
       .select("completed, abandoned").eq("id", local.dbId).maybeSingle();
     if (data?.completed || data?.abandoned) return null; // ended on another device
     if (data) {
-      const { data: row, error } = await supabase.from("active_protocols")
-        .update({ items: local.items, saved_rhythm_id: savedIdOf(local.id) })
+      const update = (link) => supabase.from("active_protocols")
+        .update({ items: local.items, saved_rhythm_id: link })
         .eq("id", local.dbId).select(COLUMNS).single();
+      let { data: row, error } = await update(savedIdOf(local.id));
+      if (isMissingLink(error)) ({ data: row, error } = await update(null));
       if (error) throw new Error(error.message);
       return programFromRow(row);
     }

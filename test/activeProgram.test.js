@@ -34,12 +34,12 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const program = { id: "sr-abc", name: "My 3-day mono cleanse", totalDays: 3, items: [{ id: "i1", name: "Potatoes and lettuce", programDayRange: [1, 3] }] };
+const program = { id: "sr-0b9c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d", name: "My 3-day mono cleanse", totalDays: 3, items: [{ id: "i1", name: "Potatoes and lettuce", programDayRange: [1, 3] }] };
 
 describe("the running program lives in the account", () => {
   it("is saved with its steps and its saved-program link", async () => {
     const started = await startProgramInAccount({ profileId: "p1", program, startDate: "2026-11-08" });
-    expect(rows[0]).toMatchObject({ profile_id: "p1", program_name: "My 3-day mono cleanse", total_days: 3, saved_rhythm_id: "abc" });
+    expect(rows[0]).toMatchObject({ profile_id: "p1", program_name: "My 3-day mono cleanse", total_days: 3, saved_rhythm_id: "0b9c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d" });
     expect(rows[0].items).toHaveLength(1);
     expect(started).toMatchObject({ name: "My 3-day mono cleanse", startDate: "2026-11-08", dbId: "row1" });
   });
@@ -80,6 +80,29 @@ describe("the running program lives in the account", () => {
     await startProgramInAccount({ profileId: "p1", program });
     await endProgramInAccount("row2", { completed: true });
     expect(rows[1].completed).toBe(true);
+  });
+
+  it("saves an older program whose id isn't a saved-program link", async () => {
+    await startProgramInAccount({ profileId: "p1", program: { ...program, id: "sr-legacy" } });
+    expect(rows[0].saved_rhythm_id).toBeNull();
+    await startProgramInAccount({ profileId: "p1", program: { ...program, id: "369" } });
+    expect(rows[1].saved_rhythm_id).toBeNull();
+  });
+
+  it("still starts when its saved program was deleted", async () => {
+    let first = true;
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal("fetch", vi.fn(async (url, init = {}) => {
+      if ((init.method || "GET") === "POST" && first) {
+        first = false;
+        return json({ code: "23503", message: "violates foreign key constraint" }, 409);
+      }
+      return realFetch(url, init);
+    }));
+    const id = "sr-11111111-2222-3333-4444-555555555555";
+    const started = await startProgramInAccount({ profileId: "p1", program: { ...program, id } });
+    expect(started?.name).toBe("My 3-day mono cleanse");
+    expect(rows[0].saved_rhythm_id).toBeNull();
   });
 
   it("ignores a row without steps", () => {
