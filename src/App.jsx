@@ -353,7 +353,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} hasVoice={!isRhythm} />;
 
       case "kitchen":
         return <Kitchen profileId={activeProfileId} section={navSection} key={`${activeProfileId}-${navSeq}`} />;
@@ -417,7 +417,7 @@ export default function App() {
           ? <CaregiverDashboard patient={activeProfile} />
           : isBeginnerMode
           ? <BeginnerHome onGraduate={graduateToFullApp} onNavigate={handleNavigate} />
-          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} />;
+          : <Home user={activeProfile} authUser={authUser} profileId={activeProfileId} onNavigate={handleNavigate} navSeq={navSeq} hasVoice={!isRhythm} />;
     }
   };
 

@@ -7,6 +7,7 @@ import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { useWater } from "../hooks/useWater.js";
+import GettingStarted from "./GettingStarted.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
@@ -163,7 +164,7 @@ function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismis
   );
 }
 
-export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0 }) {
+export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0, hasVoice = true }) {
   // Local calendar day, worked out each render (not UTC, not frozen at load).
   const TODAY = localDateStr();
   const h = new Date().getHours();
@@ -385,6 +386,23 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           />
         </>
       )}
+
+      {/* For someone new: one thing at a time */}
+      <GettingStarted
+        profileId={profileId}
+        user={user}
+        authUser={authUser}
+        hasVoice={hasVoice}
+        stepsCount={sequence.length}
+        doneToday={rhythmDoneCount}
+        hasCheckin={!!todaysCheckin}
+        supplementsCount={userSupplements.length}
+        recipesCount={kitchenRecipes.length}
+        onAddStep={() => setShowRhythmBuilder({ level: "add" })}
+        onShowCheckin={() => document.getElementById("section-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        onOpenSupplements={() => setShowSupplements(true)}
+        onOpenKitchen={onNavigate ? () => onNavigate("kitchen") : null}
+      />
 
       {/* Daily rhythm sequence */}
       {syncError && (

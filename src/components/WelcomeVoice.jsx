@@ -8,15 +8,17 @@ import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 // Hume-only — one companion, everywhere (spec §3.2).
 const WELCOME_TAB_TOUR =
   "This is the user's very first time opening CelerySync. Warmly welcome " +
-  "them, then briefly explain in your own words what each of the app's " +
-  "four tabs is for - Today (their own daily rhythm to tick off, today's " +
-  "check-in, and their supplements), Companion (talking with you any time, " +
-  "plus 'How I feel'), Progress (their own streaks and trends over time, " +
-  "and a report for their GP), and Settings (voice, reminders, carers, and " +
-  "official Anthony William sources). Keep it warm and conversational, not " +
-  "a lecture - a sentence or two per tab at most. Mention they can ask you " +
-  "to take them anywhere. Then invite them to ask you anything or just " +
-  "start exploring.";
+  "them in a sentence. Say simply what the app is for: helping them keep up " +
+  "their own healing routine, one day at a time, using what's in their own " +
+  "books or protocol. Then, briefly and in your own words, the five tabs: " +
+  "Today (their daily steps to tick off, supplements, how they're feeling, " +
+  "and water), Kitchen (their own juices, smoothies and meals, a week plan " +
+  "and a shopping list), Companion (talking with you any time), Progress " +
+  "(how they're going over time, and a report for their GP), and Settings. " +
+  "Tell them there's a short 'Getting started' list on Today that shows " +
+  "them around one thing at a time, and that they can just tell you things " +
+  "instead of tapping, for example 'I've had my celery juice'. Keep it " +
+  "warm and short, not a lecture. Then ask if they'd like help with anything.";
 
 export default function WelcomeVoice({ onDone }) {
   const companion = useHumeVoiceOrchestrator();
