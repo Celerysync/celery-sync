@@ -2,6 +2,9 @@ import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useMealPlan } from "../hooks/useMealPlan.js";
+import { localDateStr } from "../lib/rhythmSchedule.js";
+import { PlannedRecipe } from "./CarerView.jsx";
 
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
 // protocol content of its own — no recipes, quantities, or food lists. Each
@@ -51,6 +54,8 @@ export default function CaregiverDashboard({ patient }) {
   const { voiceName } = useVoicePrefs();
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
   const task = getNowCareTask();
+  // Their own recipes planned for today, in full, so you can make them.
+  const { entries: planned } = useMealPlan(patient?.id, localDateStr());
 
   const readScript = () => {
     const s = `You are caring for ${patient?.name || "your loved one"}. Right now: ${task.label}. To prepare: ${task.prep.join(". ")}. ${task.offer} ${task.tip}`;
@@ -90,6 +95,15 @@ export default function CaregiverDashboard({ patient }) {
           </button>
         </div>
       </div>
+
+      {planned.length > 0 && (
+        <Card>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 8 }}>
+            🍽 Planned for today
+          </div>
+          {planned.map((e) => <PlannedRecipe key={e.id} recipe={{ slot: e.slot, ...e.recipe }} />)}
+        </Card>
+      )}
 
       {/* What to do right now */}
       <Card style={{ border: `2px solid ${alpha(C.plum, "25")}` }}>

@@ -14,7 +14,7 @@ vi.mock("@supabase/supabase-js", () => ({
         return range ? all.slice(range[0], range[1] + 1) : all;
       };
       const chain = {
-        select: () => chain, eq: () => chain, gte: () => chain, lte: () => chain, order: () => chain, limit: () => chain,
+        select: () => chain, eq: () => chain, not: () => chain, gte: () => chain, lte: () => chain, order: () => chain, limit: () => chain,
         range: (a, b) => { range = [a, b]; db.ranges.push([a, b]); return chain; },
         maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
         then: (resolve) => resolve({ data: rows(), error: null }),
@@ -67,6 +67,18 @@ describe("supplements in the PDF reports", () => {
     const pdf = await makeDoctorReport("p1", 3);
     keep("doctor-report", pdf);
     expect(isPdf(pdf)).toBe(true);
+  });
+
+  it("adds 'what they made' to the doctor report only when they ask", async () => {
+    db.tables.activity_events = [
+      { item_id: "dinner", occurrence_slot: null, local_date: daysAgo(1), event_type: "completed", recipe_name: "Potato bake", occurred_at: `${daysAgo(1)}T08:00:00Z` },
+      { item_id: "dinner", occurrence_slot: null, local_date: daysAgo(2), event_type: "completed", recipe_name: "Potato bake", occurred_at: `${daysAgo(2)}T08:00:00Z` },
+    ];
+    const without = await makeDoctorReport("p1", 3);
+    const withMeals = await makeDoctorReport("p1", 3, false, { meals: true });
+    keep("doctor-report-meals", withMeals);
+    expect(isPdf(withMeals)).toBe(true);
+    expect(withMeals.length).toBeGreaterThan(without.length);
   });
 
   it("builds the weekly summary", async () => {

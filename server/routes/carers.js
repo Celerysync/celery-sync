@@ -2,6 +2,8 @@ import express from 'express'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
+import { loadMade } from '../../src/lib/whatYouMade.js'
+
 const router = express.Router()
 
 const supabaseAdmin = createClient(
@@ -115,17 +117,30 @@ router.get('/my-patients', async (req, res) => {
 
   if (!rels?.length) return res.json([])
 
+  // The carer's own "today" (their phone's date), for today's planned recipe.
+  const today = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.date || '')) ? req.query.date : new Date().toISOString().split('T')[0]
+  const weekAgo = new Date(`${today}T12:00:00Z`)
+  weekAgo.setUTCDate(weekAgo.getUTCDate() - 6)
+  const weekAgoStr = weekAgo.toISOString().split('T')[0]
+
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
 
   const enriched = await Promise.all(rels.map(async ({ profile_id }) => {
-    const [{ data: profile }, { data: checkins }, { data: milestones }] = await Promise.all([
+    const [{ data: profile }, { data: checkins }, { data: milestones }, { data: plan }, made] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, name, avatar_emoji, symptoms, goal, created_at').eq('id', profile_id).single(),
       supabaseAdmin.from('daily_checkins').select('check_date, energy, mood, rhythm_completed, rhythm_total').eq('profile_id', profile_id).gte('check_date', sevenDaysAgoStr).order('check_date', { ascending: false }),
       supabaseAdmin.from('healing_milestones').select('insight, category, session_date').eq('profile_id', profile_id).order('created_at', { ascending: false }).limit(5),
+      // Today's planned recipes, in full, so the carer can make them.
+      supabaseAdmin.from('meal_plan_entries').select('slot, recipe:kitchen_items(name, kind, ingredients, steps, notes)').eq('profile_id', profile_id).eq('plan_date', today),
+      loadMade(supabaseAdmin, profile_id, weekAgoStr, today).catch(() => []),
     ])
-    return { ...profile, checkins: checkins || [], milestones: milestones || [] }
+    const slotOrder = ['morning', 'breakfast', 'lunch', 'snack', 'dinner', 'evening']
+    const plannedToday = (plan || []).filter((e) => e.recipe)
+      .sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot))
+      .map((e) => ({ slot: e.slot, ...e.recipe }))
+    return { ...profile, checkins: checkins || [], milestones: milestones || [], planned_today: plannedToday, made_week: made.slice(0, 8) }
   }))
 
   res.json(enriched)

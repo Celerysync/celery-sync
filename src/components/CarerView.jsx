@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import C, { alpha } from "../lib/colors.js";
+import { timesText } from "../lib/whatYouMade.js";
 import { Card } from "./ui.jsx";
 import { localDateStr } from "../lib/rhythmSchedule.js";
 
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): the app never supplies
-// protocol content of its own — no recipes, quantities, or food lists. Each
+// protocol content of its own — no recipes, quantities, or food lists. (Their
+// OWN saved recipes, planned for today, are shown in full: that's their data.) Each
 // window points the carer to the patient's OWN Daily Rhythm (single source of
 // truth) and to their own copy of the books for preparation specifics.
 function getNowTask() {
@@ -37,6 +39,35 @@ function EnergyBar({ value, max = 10 }) {
         <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: color }} />
       </div>
       <span style={{ fontSize: 12, color, fontWeight: 700 }}>{value}/10</span>
+    </div>
+  );
+}
+
+const SLOT_NAMES = { morning: "Morning", breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner", evening: "Evening" };
+
+// One of their own recipes, opened up for the carer to make.
+export function PlannedRecipe({ recipe }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ background: C.mist, borderRadius: 12, padding: "10px 12px", marginBottom: 8 }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+        <span style={{ fontSize: 14, color: C.charcoal, fontFamily: "Georgia,serif" }}>
+          <span style={{ color: C.muted }}>{SLOT_NAMES[recipe.slot] || recipe.slot}:</span> <strong>{recipe.name}</strong>
+        </span>
+        <span style={{ fontSize: 13, color: C.sageDark }}>{open ? "Hide" : "📖 Show recipe"}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, fontSize: 14, color: C.charcoal, lineHeight: 1.6 }}>
+          {(recipe.ingredients || []).length > 0 && (
+            <ul style={{ margin: "0 0 6px", paddingLeft: 20 }}>{recipe.ingredients.map((x, i) => <li key={i}>{x.text}</li>)}</ul>
+          )}
+          {(recipe.steps || []).length > 0 && (
+            <ol style={{ margin: 0, paddingLeft: 22 }}>{recipe.steps.map((x, i) => <li key={i}>{x}</li>)}</ol>
+          )}
+          {recipe.notes && <div style={{ fontSize: 13, color: C.mid, marginTop: 6 }}>📝 {recipe.notes}</div>}
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Their own recipe, as they saved it.</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -156,6 +187,30 @@ function PatientCard({ patient }) {
             <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>{task.detail}</div>
           </div>
 
+          {/* Today's planned recipes, in full, so the carer can make them */}
+          {(patient.planned_today || []).length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Planned for today
+              </div>
+              {patient.planned_today.map((r, i) => <PlannedRecipe key={i} recipe={r} />)}
+            </div>
+          )}
+
+          {/* What they made this week (their own recipes, counts only) */}
+          {(patient.made_week || []).length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Made this week
+              </div>
+              {patient.made_week.map((m) => (
+                <div key={m.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.charcoal, padding: "4px 0" }}>
+                  <span>{m.name}</span><span style={{ color: C.muted }}>{timesText(m.count)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* This week's check-ins */}
           {checkins.length > 0 && (
             <div style={{ marginBottom: 14 }}>
@@ -233,7 +288,9 @@ export default function CarerView({ authUser }) {
 
   useEffect(() => {
     if (!authUser?.id) return;
-    fetch(`/api/carers/my-patients?userId=${authUser.id}`)
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    fetch(`/api/carers/my-patients?userId=${authUser.id}&date=${today}`)
       .then(r => r.json())
       .then(data => { setPatients(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

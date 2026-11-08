@@ -8,6 +8,7 @@ import ThenAndNow from "./ThenAndNow.jsx";
 import RhythmChanges from "./RhythmChanges.jsx";
 import SupplementSummary from "./SupplementSummary.jsx";
 import ProgramHistory from "./ProgramHistory.jsx";
+import WhatYouMade from "./WhatYouMade.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
@@ -249,10 +250,12 @@ export default function Reports({ authUser, profileId, user }) {
     }
   };
 
+  // Off unless they choose it: their own recipe names, in a report for their GP.
+  const [drMeals, setDrMeals] = useState(false);
   const downloadDoctorReport = async () => {
     setDrDownloading(true);
     try {
-      const res = await fetch(`/api/memory/doctor/${profileId}/pdf?months=${drMonths}`);
+      const res = await fetch(`/api/memory/doctor/${profileId}/pdf?months=${drMonths}${drMeals ? "&meals=1" : ""}`);
       if (!res.ok) return;
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -292,6 +295,7 @@ export default function Reports({ authUser, profileId, user }) {
       <AdherenceStreaks profileId={profileId} />
       <SupplementSummary profileId={profileId} />
       <ProgramHistory profileId={profileId} />
+      <WhatYouMade profileId={profileId} />
 
       {/* View selector — "history" lands here (the daily table is the default view) */}
       <div id="section-history" style={{ scrollMarginTop: 80 }} />
@@ -472,6 +476,10 @@ export default function Reports({ authUser, profileId, user }) {
               </button>
             ))}
           </div>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: C.charcoal, marginBottom: 12, lineHeight: 1.5 }}>
+            <input type="checkbox" checked={drMeals} onChange={(e) => setDrMeals(e.target.checked)} style={{ width: 20, height: 20, flexShrink: 0 }} />
+            Include what I made (the names of my own recipes I ticked, and how often)
+          </label>
           <button
             onClick={downloadDoctorReport}
             disabled={drDownloading}

@@ -7,6 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { computeProgressStats, computeCycleOverlay } from '../../src/lib/progressStats.js'
 import { SUPPLEMENT_CATEGORY, summarizeSupplements } from '../../src/lib/supplementEvents.js'
+import { loadMade, timesText } from '../../src/lib/whatYouMade.js'
 import { PROGRAM_STATUS_LABELS, summarizePrograms } from '../../src/lib/programHistory.js'
 
 const router = Router()
@@ -407,13 +408,17 @@ router.get('/letters/:profileId/:letterId/pdf', async (req, res) => {
 // ── Doctor report PDF download ──
 // Shared by the download route and the email route, so the report someone
 // emails is exactly the one they'd download.
-async function makeDoctorReport(profileId, months = 3, extended = false) {
+async function makeDoctorReport(profileId, months = 3, extended = false, { meals = false } = {}) {
   const cutoff = new Date()
   cutoff.setMonth(cutoff.getMonth() - Number(months))
   const cutoffStr = cutoff.toISOString().split('T')[0]
 
   const supplements = await supplementSummaryFor(profileId, cutoffStr)
   const programs = await programHistoryFor(profileId, cutoffStr)
+  // Only when they choose to include it.
+  const made = meals
+    ? await loadMade(supabaseAdmin, profileId, cutoffStr, new Date().toISOString().split('T')[0]).catch(() => [])
+    : []
 
   const [summariesRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
@@ -444,15 +449,16 @@ async function makeDoctorReport(profileId, months = 3, extended = false) {
     isExtended: !!extended,
     supplements,
     programs,
+    made,
   })
   return pdfBuffer
 }
 
 router.get('/doctor/:profileId/pdf', async (req, res) => {
   const { profileId } = req.params
-  const { months = 3, extended = 'false' } = req.query
+  const { months = 3, extended = 'false', meals = '0' } = req.query
   try {
-    const pdfBuffer = await makeDoctorReport(profileId, months, extended === 'true')
+    const pdfBuffer = await makeDoctorReport(profileId, months, extended === 'true', { meals: meals === '1' })
     const dateStr = new Date().toISOString().split('T')[0]
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="health-report-${dateStr}.pdf"`)
@@ -475,7 +481,7 @@ router.post('/report/email', async (req, res) => {
     const user = auth?.user
     if (!user) return res.status(401).json({ error: 'Please sign in again.' })
 
-    const { profileId, kind = 'doctor', to, months = 3, range = 'weekly' } = req.body || {}
+    const { profileId, kind = 'doctor', to, months = 3, range = 'weekly', include_meals = false } = req.body || {}
     const email = String(to || '').trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.status(400).json({ error: 'That email address doesn\'t look right.' })
 
@@ -488,7 +494,7 @@ router.post('/report/email', async (req, res) => {
 
     if (!process.env.RESEND_API_KEY) return res.status(503).json({ error: 'Email isn\'t set up.' })
     const isDoctor = kind !== 'progress'
-    const pdf = isDoctor ? await makeDoctorReport(profileId, Math.min(Math.max(Number(months) || 3, 1), 12)) : await makeProgressReport(profileId, range === 'monthly' ? 'monthly' : 'weekly')
+    const pdf = isDoctor ? await makeDoctorReport(profileId, Math.min(Math.max(Number(months) || 3, 1), 12), false, { meals: include_meals === true }) : await makeProgressReport(profileId, range === 'monthly' ? 'monthly' : 'weekly')
     const dateStr = new Date().toISOString().split('T')[0]
     const filename = `${isDoctor ? 'health-report' : 'wellness-log'}-${dateStr}.pdf`
     const who = profile.name && profile.name !== 'Me' ? profile.name : 'Your patient'
@@ -734,7 +740,7 @@ async function buildWeeklyPDF(summary, forEmail = false, supplements = null) {
 }
 
 // ── Build doctor report PDF ──
-async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false, supplements = null, programs = [] }) {
+async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false, supplements = null, programs = [], made = [] }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Personal Health Tracking Report' } })
     const chunks = []
@@ -850,6 +856,30 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
         doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(`${p.name}  (${fmtDate(p.startDate)} to ${fmtDate(p.endDate)}, ${p.totalDays} days)`, 50, y, { width: pageW - 130 })
         const nextY = doc.y
         doc.fillColor(MUTED).fontSize(9).text(`${PROGRAM_STATUS_LABELS[p.status]} · ticked ${p.daysTicked}d`, 50 + pageW - 130, y, { width: 130, align: 'right' })
+        y = nextY + 5
+      })
+      y += 10
+      doc.rect(50, y, pageW, 1).fill('#eee')
+      y += 16
+    }
+
+    // ── What they made from their own recipes (only if they chose it) ──
+    if (made.length) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('MEALS AND DRINKS MADE', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 10
+      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(
+        'Recipes from the user\'s own library that they ticked as made in this period, named as they entered them, with how many times. Self-reported.',
+        50, y, { width: pageW }
+      )
+      y = doc.y + 10
+      made.slice(0, 25).forEach((r) => {
+        if (y > doc.page.height - 90) { doc.addPage(); y = 50 }
+        doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(r.name, 50, y, { width: pageW - 110 })
+        const nextY = doc.y
+        doc.fillColor(MUTED).fontSize(9).text(timesText(r.count), 50 + pageW - 110, y, { width: 110, align: 'right' })
         y = nextY + 5
       })
       y += 10

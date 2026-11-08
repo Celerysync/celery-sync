@@ -68,7 +68,7 @@ export function planForSteps(entries, steps) {
   return { byItem, loose };
 }
 
-const SELECT = "id, plan_date, slot, recipe_id, note, recipe:kitchen_items(id, name, kind)";
+const SELECT = "id, plan_date, slot, recipe_id, note, recipe:kitchen_items(id, name, kind, ingredients, steps, notes)";
 const slotOrder = (s) => PLAN_SLOTS.findIndex((x) => x.id === s);
 
 export async function loadPlan(profileId, from, to = from) {
