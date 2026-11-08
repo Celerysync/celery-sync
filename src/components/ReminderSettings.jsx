@@ -131,8 +131,8 @@ export default function ReminderSettings({ authUser }) {
           fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 14,
           background: C.mist, borderRadius: 10, padding: "10px 12px",
         }}>
-          💡 To add or change a reminder time, open <strong>My Rhythm</strong>, edit an
-          item, and tap <strong>“🔔 Remind me at…”</strong>.
+          💡 To add or change a reminder time: on <strong>Today</strong>, tap the step's
+          name, then <strong>“🔔 Remind me at…”</strong>.
         </div>
 
         {!supported ? (

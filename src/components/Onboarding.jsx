@@ -4,6 +4,7 @@ import { PLACEHOLDER_NAME } from "../hooks/useProfiles.js";
 import C from "../lib/colors.js";
 import { useRhythm } from "../hooks/useRhythm.js";
 import { withStepWords } from "../lib/stepEmoji.js";
+import { splitRoutine, timeIn } from "../lib/routineSplit.js";
 import { supabase } from "../lib/supabase.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
@@ -143,37 +144,58 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     if (!trimmed || slotSaving[slot.key]) return;
     setSlotSaving((p) => ({ ...p, [slot.key]: true }));
     const parsed = await (parsing || parseSlot(slot, trimmed));
+    // If the AI couldn't sort it, split it ourselves (their words only) —
+    // never one long step made of their whole day.
     const items = parsed?.fields?.scheduleItems?.length
       ? parsed.fields.scheduleItems
-      : [{ name: trimmed.slice(0, 60), category: slot.key, fixedTime: null, note: "", frequency: "daily" }];
+      : splitRoutine(trimmed).map((i) => ({ ...i, category: slot.key === "day" ? "other" : slot.key }));
 
     // Supplements go on the supplement list, so they have one home. If a time
     // was given, a "Supplements" step at that time carries the reminder, and
     // they're linked to it ("with" it).
     if (slot.key === "supplement" && profile?.id) {
-      let timed = items.find((i) => i.fixedTime)?.fixedTime || null;
-      let step = null;
-      // "B12 and zinc with my smoothie": link them to that step if they have it.
-      const withWords = withStepWords(trimmed);
-      if (withWords) {
-        const { data: steps } = await supabase.from("rhythm_items").select("id, name, fixed_time")
-          .eq("profile_id", profile.id).is("archived_at", null);
-        const words = withWords.toLowerCase().split(/\s+/).filter((w) => w.length >= 4);
+      // Each supplement goes with what was said about IT: "B12 and zinc with
+      // my smoothie, magnesium at bedtime" links B12 and zinc to the smoothie,
+      // and puts magnesium in the evening on its own.
+      const parts = trimmed.split(/[,;\n]/).map((x) => x.trim()).filter(Boolean);
+      const partFor = (name) => {
+        const first = String(name).toLowerCase().split(/\s+/)[0];
+        return parts.find((x) => x.toLowerCase().includes(first)) || trimmed;
+      };
+      const { data: steps } = await supabase.from("rhythm_items").select("id, name, fixed_time")
+        .eq("profile_id", profile.id).is("archived_at", null);
+      const stepFor = (words) => {
+        if (!words) return null;
+        const w = words.toLowerCase();
+        const keys = w.split(/\s+/).filter((k) => k.length >= 4);
         const hits = (steps || []).filter((st) => {
           const n = st.name.toLowerCase();
-          return n.includes(withWords.toLowerCase()) || withWords.toLowerCase().includes(n) || words.some((w) => n.includes(w));
+          return n.includes(w) || w.includes(n) || keys.some((k) => n.includes(k));
         });
-        if (hits.length === 1) { step = hits[0]; timed = timed || (hits[0].fixed_time ? String(hits[0].fixed_time).slice(0, 5) : null); }
+        return hits.length === 1 ? hits[0] : null;
+      };
+      const madeSteps = {}; // one "Supplements" step per time they gave
+      const rows = [];
+      const said = [];
+      for (const i of items) {
+        const part = partFor(i.name);
+        let step = stepFor(withStepWords(part));
+        const time = i.fixedTime || timeIn(part) || (step?.fixed_time ? String(step.fixed_time).slice(0, 5) : null);
+        if (!step && time) {
+          madeSteps[time] ||= await addItem({ name: "Supplements", category: "supplement", fixedTime: time, note: "", frequency: "daily" });
+          step = madeSteps[time];
+        }
+        const evening = /bed|night|evening|dinner/i.test(part);
+        const hour = time ? Number(time.slice(0, 2)) : evening ? 20 : 8;
+        const timing = hour < 11 ? "morning_food" : hour < 16 ? "midday" : "evening";
+        rows.push({ profile_id: profile.id, name: i.name, dose_label: null, timing, with_item_id: step?.id ?? null });
+        said.push(step && step.name !== "Supplements" ? `${i.name} (with ${step.name})` : time ? `${i.name} (at ${time})` : i.name);
+        if (step) setSavedItems((prev) => (prev.some((x) => x.id === step.id) ? prev : [...prev, step]));
       }
-      if (!step && timed) step = await addItem({ name: "Supplements", category: "supplement", fixedTime: timed, note: "", frequency: "daily" });
-      const hour = timed ? Number(timed.slice(0, 2)) : 8;
-      const timing = hour < 11 ? "morning_food" : hour < 16 ? "midday" : "evening";
-      const rows = items.map((i) => ({ profile_id: profile.id, name: i.name, dose_label: null, timing, with_item_id: step?.id ?? null }));
       await supabase.from("user_supplements").insert(rows);
       setSlotSaving((p) => ({ ...p, [slot.key]: false }));
-      setSlotSaved((p) => ({ ...p, [slot.key]: `${items.map((i) => i.name).join(", ")} (on your supplement list${step && step.name !== "Supplements" ? `, taken with ${step.name}` : timed ? `, reminder at ${timed}` : ""})` }));
+      setSlotSaved((p) => ({ ...p, [slot.key]: `${said.join(", ")}, on your supplement list` }));
       setSlotText((p) => ({ ...p, [slot.key]: "" }));
-      if (step) setSavedItems((prev) => (prev.some((x) => x.id === step.id) ? prev : [...prev, step]));
       return;
     }
 

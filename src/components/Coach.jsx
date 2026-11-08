@@ -391,7 +391,9 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     const justOnboardedGreeting = (!caregiverMode && !translatedGreeting && justOnboarded)
       ? `Hi ${justOnboarded.name || realName(user) || "there"}! 🌿 ${
           justOnboarded.firstItem
-            ? `${justOnboarded.firstItem.name}${justOnboarded.firstItem.fixedTime ? ` at ${formatFixedTime(justOnboarded.firstItem.fixedTime)}` : ""} — I'll remind you.`
+            ? (justOnboarded.firstItem.fixedTime
+                ? `${justOnboarded.firstItem.name} at ${formatFixedTime(justOnboarded.firstItem.fixedTime)} is on your list.`
+                : `${justOnboarded.firstItem.name} is on your list, and your other steps are on Today.`)
             : "Your rhythm is ready — add to it anytime just by telling me."
         } I'm your companion — here whenever you need me. How are you feeling right now?`
       : null;

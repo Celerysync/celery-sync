@@ -100,7 +100,10 @@ OUTPUT FORMAT (strict JSON, no markdown):
  * @returns {Promise<{hasData, fields, confirmation, conversationalReply}|null>}
  *   Returns null on network error or if the response couldn't be parsed as JSON.
  */
-export async function parseVoiceTranscript(transcript, { signal } = {}) {
+// maxTokens: a whole day ("lemon water, celery juice at 6:30, smoothie at 8,
+// snack every 2 hours, dinner at 6, tea at 8") is six entries; 400 tokens cut
+// the JSON off part way and the wizard saved the day as one long step.
+export async function parseVoiceTranscript(transcript, { signal, maxTokens = 1500 } = {}) {
   if (!transcript?.trim()) return null;
 
   try {
@@ -112,7 +115,7 @@ export async function parseVoiceTranscript(transcript, { signal } = {}) {
         system: PARSE_SYSTEM,
         messages: [{ role: "user", content: transcript.trim() }],
         tier: "quick",
-        maxTokens: 400,
+        maxTokens,
       }),
     });
 
