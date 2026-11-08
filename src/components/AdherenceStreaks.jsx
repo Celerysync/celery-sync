@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isRhythmCategory } from "../lib/waterEvents.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
@@ -63,12 +64,12 @@ export default function AdherenceStreaks({ profileId }) {
 
       const totalItems = itemsRes.count || 0;
 
-      // Supplements share the ledger but have their own card: rhythm streaks
+      // Supplements and water share the ledger but have their own cards: rhythm streaks
       // and percentages only compare rhythm ticks with rhythm items.
       const byDay = {};
       for (const row of statusRes.data || []) {
         if (row.status !== "completed") continue;
-        if (row.item_category === "supplement") continue;
+        if (!isRhythmCategory(row.item_category)) continue;
         (byDay[row.local_date] ||= new Set()).add(row.item_id);
       }
 
@@ -108,7 +109,7 @@ export default function AdherenceStreaks({ profileId }) {
 
       const sourceCounts = { tap: 0, voice: 0, auto: 0 };
       for (const row of eventsRes.data || []) {
-        if (row.item_category === "supplement") continue;
+        if (!isRhythmCategory(row.item_category)) continue;
         sourceCounts[row.source] = (sourceCounts[row.source] || 0) + 1;
       }
 

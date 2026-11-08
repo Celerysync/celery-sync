@@ -9,6 +9,7 @@ import RhythmChanges from "./RhythmChanges.jsx";
 import SupplementSummary from "./SupplementSummary.jsx";
 import ProgramHistory from "./ProgramHistory.jsx";
 import WhatYouMade from "./WhatYouMade.jsx";
+import WaterWeek from "./WaterWeek.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
@@ -296,6 +297,7 @@ export default function Reports({ authUser, profileId, user }) {
       <SupplementSummary profileId={profileId} />
       <ProgramHistory profileId={profileId} />
       <WhatYouMade profileId={profileId} />
+      <WaterWeek profileId={profileId} />
 
       {/* View selector — "history" lands here (the daily table is the default view) */}
       <div id="section-history" style={{ scrollMarginTop: 80 }} />

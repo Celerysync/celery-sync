@@ -4,6 +4,7 @@ import { PLACEHOLDER_NAME } from "../hooks/useProfiles.js";
 import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 import C from "../lib/colors.js";
 import { useRhythm } from "../hooks/useRhythm.js";
+import { withStepWords } from "../lib/stepEmoji.js";
 import { supabase } from "../lib/supabase.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
@@ -163,15 +164,27 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     // was given, a "Supplements" step at that time carries the reminder, and
     // they're linked to it ("with" it).
     if (slot.key === "supplement" && profile?.id) {
-      const timed = items.find((i) => i.fixedTime)?.fixedTime || null;
+      let timed = items.find((i) => i.fixedTime)?.fixedTime || null;
       let step = null;
-      if (timed) step = await addItem({ name: "Supplements", category: "supplement", fixedTime: timed, note: "", frequency: "daily" });
+      // "B12 and zinc with my smoothie": link them to that step if they have it.
+      const withWords = withStepWords(trimmed);
+      if (withWords) {
+        const { data: steps } = await supabase.from("rhythm_items").select("id, name, fixed_time")
+          .eq("profile_id", profile.id).is("archived_at", null);
+        const words = withWords.toLowerCase().split(/\s+/).filter((w) => w.length >= 4);
+        const hits = (steps || []).filter((st) => {
+          const n = st.name.toLowerCase();
+          return n.includes(withWords.toLowerCase()) || withWords.toLowerCase().includes(n) || words.some((w) => n.includes(w));
+        });
+        if (hits.length === 1) { step = hits[0]; timed = timed || (hits[0].fixed_time ? String(hits[0].fixed_time).slice(0, 5) : null); }
+      }
+      if (!step && timed) step = await addItem({ name: "Supplements", category: "supplement", fixedTime: timed, note: "", frequency: "daily" });
       const hour = timed ? Number(timed.slice(0, 2)) : 8;
       const timing = hour < 11 ? "morning_food" : hour < 16 ? "midday" : "evening";
       const rows = items.map((i) => ({ profile_id: profile.id, name: i.name, dose_label: null, timing, with_item_id: step?.id ?? null }));
       await supabase.from("user_supplements").insert(rows);
       setSlotSaving((p) => ({ ...p, [slot.key]: false }));
-      setSlotSaved((p) => ({ ...p, [slot.key]: `${items.map((i) => i.name).join(", ")} (on your supplement list${timed ? `, reminder at ${timed}` : ""})` }));
+      setSlotSaved((p) => ({ ...p, [slot.key]: `${items.map((i) => i.name).join(", ")} (on your supplement list${step && step.name !== "Supplements" ? `, taken with ${step.name}` : timed ? `, reminder at ${timed}` : ""})` }));
       setSlotText((p) => ({ ...p, [slot.key]: "" }));
       if (step) setSavedItems((prev) => [...prev, step]);
       return;
@@ -198,7 +211,9 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     setSavingAll(true);
     // Understand them together, but save one at a time, so the routine keeps the
     // order it was written in.
-    const slots = (quick ? [QUICK_SLOT] : SLOTS).filter((slot) => (slotText[slot.key] || "").trim());
+    // Supplements last, so "with my smoothie / breakfast" finds that step.
+    const slots = (quick ? [QUICK_SLOT] : SLOTS).filter((slot) => (slotText[slot.key] || "").trim())
+      .sort((a, b) => Number(a.key === "supplement") - Number(b.key === "supplement"));
     const parsing = slots.map((slot) => parseSlot(slot, slotText[slot.key].trim()));
     for (let i = 0; i < slots.length; i++) {
       await saveSlot(slots[i], slotText[slots[i].key], parsing[i]);

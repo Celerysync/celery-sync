@@ -1,6 +1,7 @@
 import { useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { stepEmoji } from "../lib/stepEmoji.js";
 
 function formatTime(ms) {
   return new Date(ms).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
@@ -39,8 +40,12 @@ export default function RhythmView({
   onOpenRecipe,
   recipeFor = () => null,
   plannedLoose = [],
+  // One clear door per job: onOpen("add" | "step" | "order" | "saved" | "wake" | "programs", itemId)
+  onOpen = null,
 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const open = (level, itemId) => { setMoreOpen(false); if (onOpen) onOpen(level, itemId); else onEdit?.(); };
   const [offerFor, setOfferFor] = useState(null); // step just ticked that has supplements with it
   const [offerError, setOfferError] = useState("");
   const linkedTo = (item) => takenWith[item.baseItemId ?? item.id] || [];
@@ -60,16 +65,23 @@ export default function RhythmView({
           Add what you do each day, in your own words, and it will show here.
         </div>
         <button
-          onClick={onEdit}
+          onClick={() => open("add")}
           style={{
             background: C.sageDark, color: C.white, border: "none",
-            borderRadius: 30, padding: "10px 22px",
-            fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14,
+            borderRadius: 30, padding: "12px 24px",
+            fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15,
             cursor: "pointer",
           }}
         >
-          Set up my rhythm →
+          + Add my first step
         </button>
+        {onOpen && (
+          <div style={{ marginTop: 12 }}>
+            <button onClick={() => open("programs")} style={{ background: "none", border: "none", color: C.plum, fontFamily: "Georgia,serif", fontSize: 14, textDecoration: "underline", cursor: "pointer" }}>
+              Or start a program (a cleanse) →
+            </button>
+          </div>
+        )}
       </Card>
     );
   }
@@ -143,6 +155,14 @@ export default function RhythmView({
               </div>
             </div>
           </div>
+          {onOpen && (
+            <button onClick={() => open("programs")} style={{
+              marginTop: 10, background: "none", border: `1.5px solid ${alpha(C.plum, "50")}`, color: C.plum,
+              borderRadius: 30, padding: "7px 14px", fontFamily: "Georgia,serif", fontSize: 13, cursor: "pointer",
+            }}>
+              See this program, or end it
+            </button>
+          )}
         </div>
       )}
 
@@ -166,22 +186,63 @@ export default function RhythmView({
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
           🗓 Today's Rhythm
         </div>
-        <button
-          onClick={onEdit}
-          style={{
-            background: "none", border: `1.5px solid ${C.border}`,
-            borderRadius: 20, padding: "8px 16px",
-            fontSize: 13, color: C.mid, cursor: "pointer",
-          }}
-        >
-          Edit
-        </button>
+        {onOpen ? (
+          <div style={{ display: "flex", gap: 6, position: "relative" }}>
+            <button onClick={() => open("add")} style={{
+              background: C.sageDark, color: C.white, border: "none", borderRadius: 20, padding: "8px 14px",
+              fontSize: 14, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+            }}>
+              + Add
+            </button>
+            <button onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} aria-label="More options for your rhythm" style={{
+              background: "none", border: `1.5px solid ${C.border}`, borderRadius: 20, padding: "8px 12px",
+              fontSize: 14, color: C.mid, cursor: "pointer",
+            }}>
+              ⋯ More
+            </button>
+            {moreOpen && (
+              <div role="menu" style={{
+                position: "absolute", top: "110%", right: 0, zIndex: 20, background: C.surface,
+                border: `1.5px solid ${C.border}`, borderRadius: 14, boxShadow: "0 8px 24px #1e2a1e22",
+                padding: 6, minWidth: 230, display: "flex", flexDirection: "column",
+              }}>
+                {[
+                  ["order", "↕  Change the order of steps"],
+                  ["saved", "📅  My saved days"],
+                  ["wake", "⏰  My usual wake time"],
+                  ["programs", "✨  Programs (cleanses)"],
+                ].map(([level, label]) => (
+                  <button key={level} role="menuitem" onClick={() => open(level)} style={{
+                    textAlign: "left", background: "none", border: "none", padding: "12px 12px", fontSize: 15,
+                    fontFamily: "Georgia,serif", color: C.charcoal, cursor: "pointer", borderRadius: 10,
+                  }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={onEdit}
+            style={{
+              background: "none", border: `1.5px solid ${C.border}`,
+              borderRadius: 20, padding: "8px 16px",
+              fontSize: 13, color: C.mid, cursor: "pointer",
+            }}
+          >
+            Edit
+          </button>
+        )}
       </div>
+      {onOpen && (
+        <div style={{ fontSize: 12, color: C.muted, marginTop: -4 }}>Tick a step when it's done. Tap its name to change it.</div>
+      )}
 
       {/* Anchor time display */}
       {anchorTime && (
         <div style={{ fontSize: 12, color: C.muted }}>
-          ⏰ Wake anchor: <strong style={{ color: C.sageDark }}>{anchorTime}</strong>
+          ⏰ Wake time: <strong style={{ color: C.sageDark }}>{new Date(`2000-01-01T${anchorTime}`).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}</strong>
         </div>
       )}
 
@@ -267,14 +328,28 @@ export default function RhythmView({
                 {/* Emoji + name */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 16 }}>{item.emoji}</span>
-                    <span style={{
-                      fontFamily: "Georgia,serif", fontWeight: 700,
-                      fontSize: 14, color: C.charcoal,
-                      textDecoration: isDone ? "line-through" : "none",
-                    }}>
-                      {item.name}
-                    </span>
+                    <span style={{ fontSize: 18 }} aria-hidden="true">{stepEmoji(item)}</span>
+                    {onOpen ? (
+                      <button
+                        onClick={() => (item.programId ? open("programs") : open("step", item.baseItemId ?? item.id))}
+                        aria-label={`Change ${item.name}`}
+                        style={{
+                          background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer",
+                          fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal,
+                          textDecoration: isDone ? "line-through" : "none",
+                        }}
+                      >
+                        {item.name}
+                      </button>
+                    ) : (
+                      <span style={{
+                        fontFamily: "Georgia,serif", fontWeight: 700,
+                        fontSize: 14, color: C.charcoal,
+                        textDecoration: isDone ? "line-through" : "none",
+                      }}>
+                        {item.name}
+                      </span>
+                    )}
                     {isMed && (
                       <span style={{
                         fontSize: 11, background: `${alpha(C.plum, "20")}`, color: C.plum,
@@ -373,6 +448,15 @@ export default function RhythmView({
           </div>
         );
       })}
+
+      {onOpen && !activeProgram && (
+        <button onClick={() => open("programs")} style={{
+          background: "none", border: `1.5px dashed ${alpha(C.plum, "60")}`, color: C.plum, borderRadius: 14,
+          padding: "12px", fontFamily: "Georgia,serif", fontSize: 15, cursor: "pointer",
+        }}>
+          ✨ Start a program (a cleanse or protocol)
+        </button>
+      )}
 
       {plannedLoose.length > 0 && (
         <div style={{ fontSize: 13, color: C.mid, background: C.mist, borderRadius: 12, padding: "8px 12px", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>

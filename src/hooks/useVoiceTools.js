@@ -12,6 +12,13 @@ import { TAB_CONTEXT, resolveDestination } from "../lib/voiceTabContext.js";
 import { SUPPLEMENT_CATEGORY, SUPPLEMENT_TIMING_LABELS, supplementEventRow } from "../lib/supplementEvents.js";
 import { kitchenVoiceTools } from "../lib/kitchenVoice.js";
 import { recipeForTick } from "../lib/mealPlan.js";
+import { WATER_CHANGED_EVENT, WATER_GOAL, WATER_ITEM_ID, glassesByDay, waterChanges } from "../lib/waterEvents.js";
+
+async function waterToday(profileId) {
+  const { data } = await supabase.from("v_daily_status").select("item_id, local_date, status")
+    .eq("profile_id", profileId).eq("item_id", WATER_ITEM_ID).eq("local_date", TODAY());
+  return glassesByDay(data)[TODAY()] || 0;
+}
 
 const todayStr = TODAY;
 
@@ -345,7 +352,25 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     // Spec §3.3 — the companion always knows the real state before speaking.
     async get_today_status() {
       if (!profileId) throw new Error("No active profile");
-      return todayStatus(profileId);
+      const [status, water] = await Promise.all([todayStatus(profileId), waterToday(profileId)]);
+      return { ...status, water_glasses: water };
+    },
+
+    // "I've had two glasses of water", "take one off, I miscounted".
+    async log_water(args) {
+      if (!profileId) throw new Error("No active profile");
+      if (!userId) throw new Error("Not signed in");
+      const n = Math.round(Number(args?.glasses ?? 1));
+      if (!Number.isFinite(n) || n < 1 || n > 12) return { error: "unclear", changed_nothing: true, message: "Ask how many glasses (1 to 12)." };
+      const current = await waterToday(profileId);
+      const remove = args?.remove === true;
+      if (remove && current === 0) return { changed_nothing: true, message: "No water is logged today, so there's nothing to take off." };
+      const rows = waterChanges({ current, add: remove ? 0 : n, remove: remove ? n : 0, userId, profileId, date: TODAY(), source: "voice" });
+      const { error } = await supabase.from("activity_events").insert(rows);
+      if (error) throw new Error(error.message);
+      window.dispatchEvent(new Event(WATER_CHANGED_EVENT));
+      const now = Math.max(0, current + (remove ? -n : n));
+      return { saved: true, glasses_today: now, goal: WATER_GOAL, message: `Water today: ${now} glass${now === 1 ? "" : "es"}. Say it simply; no pressure about the rest.` };
     },
 
     // Spec §3.3 — spoken reflection saved to today's journal notes.

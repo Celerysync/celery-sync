@@ -6,9 +6,8 @@ import { useLocalStorage } from "../hooks/useLocalStorage.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useDailyCheckins } from "../hooks/useDailyCheckins.js";
 import { useRhythm } from "../hooks/useRhythm.js";
-import { Card } from "./ui.jsx";
+import { useWater } from "../hooks/useWater.js";
 import DailyCheckIn from "./DailyCheckIn.jsx";
-import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
 import { useUserSupplements } from "../hooks/useUserSupplements.js";
 import { supplementsByStep, tickSupplements } from "../lib/supplementTicks.js";
@@ -115,49 +114,6 @@ function getTodaysTeaching() {
 // Time-of-day companion card. Deliberately carries NO food lists or protocol
 // steps (compliance: the app never ships protocol content) — the user's own
 // rhythm above is the plan; the books are the pointer for meal specifics.
-function getNowWindow() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 9) return {
-    emoji: "🌅", label: "Morning window",
-    note: "A gentle start. Your morning rhythm items are on your list above — begin when you're ready.",
-    color: C.leaf,
-  };
-  if (h >= 9 && h < 12) return {
-    emoji: "☀️", label: "Mid-morning",
-    note: "Keep your pace easy and tick things off as they happen.",
-    color: C.sage,
-  };
-  if (h >= 12 && h < 14) return {
-    emoji: "🥗", label: "Midday",
-    note: "A natural pause point — a good moment to see how your day is tracking.",
-    color: C.sage,
-  };
-  if (h >= 14 && h < 17) return {
-    emoji: "🍎", label: "Afternoon",
-    note: "A steady afternoon snack can help keep your energy feeling even.",
-    color: C.gold,
-  };
-  if (h >= 17 && h < 20) return {
-    emoji: "🌆", label: "Evening wind-down",
-    note: "The day is winding down — anything still on your rhythm can happen at your own pace.",
-    color: C.sageDark,
-  };
-  if (h >= 20 && h < 23) return {
-    emoji: "🌙", label: "Evening",
-    note: "Time to slow down. Your evening reflection is a lovely way to close the day.",
-    color: C.plum,
-  };
-  return {
-    emoji: "🌛", label: "Rest time",
-    note: "Rest matters. Let the day go — tomorrow starts fresh.",
-    color: C.charcoal,
-  };
-}
-
-// Shown when someone returns after 3+ days with nothing ticked or logged.
-// Chronic illness means bad patches; the worst thing an app can do then is
-// greet them with a zeroed streak. No guilt, nothing to catch up on — one
-// thing today is a full win, and the companion is a tap away.
 function WelcomeBack({ name, daysAway, doneToday, onShowRhythm, onTalk, onDismiss }) {
   if (doneToday) {
     return (
@@ -213,7 +169,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
-  const [showRhythmBuilder, setShowRhythmBuilder] = useState(false);
+  const [showRhythmBuilder, setShowRhythmBuilder] = useState(false); // false | true (old full editor) | { level, itemId }
   const [showSupplements, setShowSupplements] = useState(false);
   const [openRecipeId, setOpenRecipeId] = useState(null);
   // Being taken somewhere (by the companion or a link) closes panels that
@@ -267,12 +223,13 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   const { supplements: userSupplements } = useUserSupplements(profileId);
   const takenWith = useMemo(() => supplementsByStep(userSupplements), [userSupplements]);
 
-  const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
-  const [, setNow] = useState(Date.now()); // re-render each minute so the time-of-day card stays current
+  // Water lives in the history now (lib/waterEvents.js), not just this phone.
+  const { count: waterCount, add: addWater, remove: removeWater, error: waterError } = useWater(authUser, profileId);
+  const [, setNow] = useState(Date.now()); // re-render each minute so 'Up next' and times stay current
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   const {
-    todaysCheckin, last7, showedUpStreak, protocolDays, avgEnergy7,
+    todaysCheckin, showedUpStreak,
     daysAway, totalShowedUpDays, activeToday,
     loadCheckins, saveCheckin,
   } = useDailyCheckins(authUser, profileId);
@@ -331,8 +288,6 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     : sequence.length > 0
     ? `${greeting}${realName(user) ? ", " + realName(user) : ""}. Everything on your rhythm is done — beautiful work today.`
     : `${greeting}${realName(user) ? ", " + realName(user) : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;
-
-  const nowWindow = getNowWindow();
 
   const handleSaveCheckin = async (data) => {
     setSavingCheckin(true);
@@ -475,6 +430,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         plannedLoose={todaysPlan.loose.map((e) => ({ id: e.id, recipeId: e.recipe_id, label: `${SLOT_LABEL[e.slot]}: ${e.recipe.name}` }))}
         onUncomplete={uncompleteItem}
         onEdit={() => setShowRhythmBuilder(true)}
+        onOpen={(level, itemId) => setShowRhythmBuilder({ level, itemId })}
         lastFinishedProgram={lastFinishedProgram}
         onAnotherRound={anotherRound}
         onDismissFinished={dismissLastFinished}
@@ -529,6 +485,8 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             profileId={profileId}
             authUser={authUser}
             onClose={() => setShowRhythmBuilder(false)}
+            openAt={typeof showRhythmBuilder === "object" ? showRhythmBuilder : null}
+            key={typeof showRhythmBuilder === "object" ? `${showRhythmBuilder.level}-${showRhythmBuilder.itemId || ""}` : "full"}
             onApplyTemplate={applyTemplate}
             onAddItem={addItem}
             onUpdateItem={updateItem}
@@ -539,62 +497,6 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             onCancelProgram={cancelProgram}
           />
         </Suspense>
-      )}
-
-      {/* Weekly healing report — shows Sundays */}
-      <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
-
-      {/* Showed-up streak milestone */}
-      <StreakMilestone streak={showedUpStreak} />
-
-      {/* 7-day habit grid */}
-      {last7 && last7.length > 0 && (
-        <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-              🗓 Your week
-            </div>
-            <div style={{ fontSize: 12, color: C.muted }}>last 7 days</div>
-          </div>
-          <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
-            {Array.from({ length: 7 }, (_, i) => {
-              const d = new Date();
-              d.setDate(d.getDate() - (6 - i));
-              const dateStr = localDateStr(d);
-              const isToday = dateStr === TODAY;
-              const entry = last7.find(c => c.date === dateStr);
-              const done = isToday ? rhythmDoneCount : (entry?.rhythm_completed || 0);
-              const total = isToday ? sequence.length : (entry?.rhythm_total || 0);
-              const hasCheckin = (entry?.energy || 0) > 0 || (isToday && !!todaysCheckin);
-              const color = total > 0 && done >= total ? C.sage
-                : done > 0 ? C.gold
-                : hasCheckin ? C.muted
-                : C.border;
-              return (
-                <div key={dateStr} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase" }}>
-                    {d.toLocaleDateString("en-AU", { weekday: "short" }).slice(0, 2)}
-                  </div>
-                  <div style={{
-                    width: "100%", aspectRatio: "1", borderRadius: 8,
-                    background: color,
-                    border: isToday ? `2px solid ${C.sageDark}` : "none",
-                    opacity: isToday && !hasCheckin ? 0.5 : 1,
-                  }} />
-                  {isToday && <div style={{ fontSize: 7, color: C.sage, fontWeight: 700 }}>today</div>}
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-            {[[C.sage, "Great day"], [C.gold, "Partial"], [C.border, "Rest day"]].map(([col, label]) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 3, background: col }} />
-                <span style={{ fontSize: 12, color: C.muted }}>{label}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
       )}
 
       {/* Streak protection warning */}
@@ -667,6 +569,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
             {waterCount < 8 ? `${8 - waterCount} more to reach today's 8-glass goal` : "Beautifully hydrated today ✓"}
           </div>
+          {waterError && <div role="alert" style={{ fontSize: 12, color: C.terracotta, marginTop: 2 }}>{waterError}</div>}
           <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} style={{
@@ -678,53 +581,26 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-          <button onClick={() => setWaterCount(n => n + 1)} style={{
+          <button onClick={addWater} aria-label="Add a glass of water" style={{
             background: "#3b82f6", color: "#fff", border: "none",
-            borderRadius: 20, padding: "6px 14px", fontSize: 18,
-            cursor: "pointer", fontWeight: 700, lineHeight: 1,
-          }}>+</button>
+            borderRadius: 20, padding: "10px 14px", fontSize: 15,
+            cursor: "pointer", fontWeight: 700, lineHeight: 1, fontFamily: "Georgia,serif", whiteSpace: "nowrap",
+          }}>+ 1 glass</button>
           {waterCount > 0 && (
-            <button onClick={() => setWaterCount(n => Math.max(0, n - 1))} style={{
+            <button onClick={removeWater} aria-label="Take back one glass" style={{
               background: "transparent", color: "#93c5fd", border: "1px solid #93c5fd",
               borderRadius: 20, padding: "4px 14px", fontSize: 13,
               cursor: "pointer",
-            }}>−</button>
+            }}>Undo</button>
           )}
         </div>
       </div>
 
-      {/* Where you are in the day */}
-      <Card style={{ border: `2px solid ${nowWindow.color}30` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
-            {nowWindow.emoji} {nowWindow.label}
-          </div>
-          <div style={{
-            background: `${nowWindow.color}20`,
-            borderRadius: 20,
-            padding: "3px 10px",
-            fontSize: 12,
-            color: nowWindow.color,
-            fontWeight: 700,
-            flexShrink: 0,
-          }}>
-            {new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
-          </div>
-        </div>
-        <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6 }}>
-          {nowWindow.note}
-        </div>
-      </Card>
+      {/* Weekly healing report — shows Sundays */}
+      <WeeklyReport authUser={authUser} profileId={profileId} user={user} />
 
-      {/* Healing trends — shown once tracking has started */}
-      {authUser && (
-        <HealingTrends
-          last7={last7}
-          streak={showedUpStreak}
-          protocolDays={protocolDays}
-          avgEnergy7={avgEnergy7}
-        />
-      )}
+      {/* Showed-up streak milestone */}
+      <StreakMilestone streak={showedUpStreak} />
 
       {/* Daily teaching — rotates each day */}
       {(() => {
@@ -734,7 +610,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             background: C.goldLight,
             border: `1px solid ${alpha(C.gold, "50")}`,
             borderRadius: 16,
-            padding: 18,
+            padding: 14,
           }}>
             <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Today's learning

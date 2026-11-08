@@ -197,6 +197,13 @@ function PatientCard({ patient }) {
             </div>
           )}
 
+          {/* Water logged today */}
+          {(patient.water_today > 0 || Object.keys(patient.water_week || {}).length > 0) && (
+            <div style={{ fontSize: 13, color: C.charcoal, marginBottom: 14 }}>
+              💧 Water today: <strong>{patient.water_today || 0}</strong> {patient.water_today === 1 ? "glass" : "glasses"}
+            </div>
+          )}
+
           {/* What they made this week (their own recipes, counts only) */}
           {(patient.made_week || []).length > 0 && (
             <div style={{ marginBottom: 14 }}>

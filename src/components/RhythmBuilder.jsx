@@ -75,12 +75,19 @@ export default function RhythmBuilder({
   onSetAnchorTime,
   onStartProgram,
   onCancelProgram,
+  // Opened from one clear button on Today (focused): one job, plain title,
+  // no tab bar. { level: "add" | "step" | "order" | "saved" | "wake" | "programs", itemId }
+  openAt = null,
 }) {
+  const focused = !!openAt;
   const { recipes } = useKitchen(profileId);
   // Open on the items themselves when there are any — "Edit" opening on an
   // empty Day Templates page made it look as if nothing had been added.
-  const [level, setLevel] = useState(() => (baseItems.length ? "edit" : "templates")); // templates | programs | program-new | edit | add | save-template
-  const [editingId, setEditingId] = useState(null);
+  const [level, setLevel] = useState(() => {
+    if (openAt) return { add: "add", step: "edit", order: "edit", saved: "templates", wake: "wake", programs: "programs" }[openAt.level] || "edit";
+    return baseItems.length ? "edit" : "templates";
+  }); // templates | programs | program-new | edit | add | save-template | wake
+  const [editingId, setEditingId] = useState(() => (openAt?.level === "step" ? openAt.itemId : null));
   const [addForm, setAddForm] = useState(BLANK_ITEM);
   const [localAnchor, setLocalAnchor] = useState(anchorTime || "07:00");
   const [programStartDate, setProgramStartDate] = useState(
@@ -156,7 +163,10 @@ export default function RhythmBuilder({
   };
 
   const editingItem = editingId ? baseItems.find((i) => i.id === editingId) : null;
-  const [editForm, setEditForm] = useState({});
+  const [editForm, setEditForm] = useState(() => {
+    const it = openAt?.level === "step" ? baseItems.find((i) => i.id === openAt.itemId) : null;
+    return it ? { ...it } : {};
+  });
 
   const startEdit = (item) => {
     setEditingId(item.id);
@@ -166,11 +176,13 @@ export default function RhythmBuilder({
 
   const saveAnchor = () => {
     onSetAnchorTime(localAnchor);
+    if (focused && level === "wake") onClose();
   };
 
   const saveEditedItem = () => {
     onUpdateItem(editingId, editForm);
     setEditingId(null);
+    if (openAt?.level === "step") { onClose(); return; }
     setLevel("edit");
   };
 
@@ -182,6 +194,7 @@ export default function RhythmBuilder({
       startDate: addForm.durationType === "days" ? today : null,
     });
     setAddForm(BLANK_ITEM);
+    if (focused) { onClose(); return; }
     setLevel("edit");
   };
 
@@ -213,7 +226,10 @@ export default function RhythmBuilder({
           <div style={{ width: 40, height: 4, background: C.border, borderRadius: 2, margin: "0 auto 14px" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.charcoal }}>
-              My Daily Rhythm
+              {focused ? ({
+                add: "Add a step", step: "Change this step", order: "Your steps", saved: "My saved days",
+                wake: "Your usual wake time", programs: "Programs",
+              }[openAt.level] || "My Daily Rhythm") : "My Daily Rhythm"}
             </div>
             <button
               onClick={onClose}
@@ -223,8 +239,8 @@ export default function RhythmBuilder({
             </button>
           </div>
 
-          {/* Level tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+          {/* Level tabs (only when opened the old way) */}
+          <div style={{ display: focused ? "none" : "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
             {[
               { id: "templates", label: "Day Templates" },
               { id: "programs", label: "Programs" },
@@ -251,10 +267,10 @@ export default function RhythmBuilder({
         <div style={{ padding: "0 18px 32px", display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* ── LEVEL: DAY TEMPLATES ─────────────────────────────────────────── */}
-          {level === "templates" && (
+          {(level === "templates" || level === "wake") && (
             <>
               {/* Wake anchor */}
-              <Card>
+              {(!focused || level === "wake") && <Card>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
                   ⏰ Your usual wake time
                 </div>
@@ -280,24 +296,35 @@ export default function RhythmBuilder({
                     ✓ Currently: {anchorTime}
                   </div>
                 )}
-              </Card>
+              </Card>}
+              {level === "templates" && <>
 
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
-                My day templates
+                {focused ? "Days you've saved" : "My day templates"}
               </div>
               <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-                Build your daily rhythm from your own copy of the books — add each item under
-                <strong> + Add Item</strong>, then save the day as a template here so you can
-                reload it any time.
+                {focused
+                  ? "Save your whole set of steps as a day, and load it again any time (for example a work day and a weekend day)."
+                  : <>Build your daily rhythm from your own copy of the books — add each item under
+                    <strong> + Add Item</strong>, then save the day as a template here so you can
+                    reload it any time.</>}
               </div>
+
+              {focused && baseItems.length > 0 && (
+                <Btn full color={C.sageDark} onClick={() => { setSaveTemplateName(""); setSaveTemplateEmoji("✨"); setLevel("save-template"); }}>
+                  💾 Save my steps as a day
+                </Btn>
+              )}
 
               {savedTemplates.length === 0 && (
                 <Card>
                   <div style={{ textAlign: "center", padding: "10px 0", color: C.muted }}>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>📖</div>
                     <div style={{ fontSize: 13, lineHeight: 1.65 }}>
-                      No saved templates yet. Set up your rhythm in <strong>My Rhythm</strong>,
-                      then tap “Save as my custom template” — it will appear here.
+                      {focused
+                        ? <>No saved days yet. Tap the button below to save your steps as they are now.</>
+                        : <>No saved templates yet. Set up your rhythm in <strong>My Rhythm</strong>,
+                      then tap “Save as my custom template” — it will appear here.</>}
                     </div>
                   </div>
                 </Card>
@@ -356,6 +383,7 @@ export default function RhythmBuilder({
                   </button>
                 </Card>
               ))}
+            </>}
             </>
           )}
 
@@ -792,7 +820,7 @@ export default function RhythmBuilder({
           {level === "edit" && !editingId && (
             <>
               {/* Wake anchor compact */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: focused ? "none" : "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 13, color: C.muted }}>⏰ Usual wake time:</span>
                 <input
                   type="time"
@@ -915,7 +943,7 @@ export default function RhythmBuilder({
                     fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
                   }}
                 >
-                  💾 Save as my custom template
+                  💾 Save my steps as a day
                 </button>
               )}
             </>
@@ -927,8 +955,9 @@ export default function RhythmBuilder({
               form={editForm}
               setForm={setEditForm}
               onSave={saveEditedItem}
-              onCancel={() => setEditingId(null)}
-              title="Edit item"
+              onCancel={() => (openAt?.level === "step" ? onClose() : setEditingId(null))}
+              onRemove={openAt?.level === "step" ? () => { onRemoveItem(editingId); onClose(); } : null}
+              title={focused ? "" : "Edit item"}
               otherItems={baseItems}
               recipes={recipes}
             />
@@ -940,8 +969,8 @@ export default function RhythmBuilder({
               form={addForm}
               setForm={setAddForm}
               onSave={saveNewItem}
-              onCancel={() => setLevel("edit")}
-              title="Add new item"
+              onCancel={() => (focused ? onClose() : setLevel("edit"))}
+              title={focused ? "" : "Add new item"}
               otherItems={baseItems}
               recipes={recipes}
             />
@@ -954,7 +983,7 @@ export default function RhythmBuilder({
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
                   Save as my template
                 </div>
-                <button onClick={() => setLevel("edit")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer" }}>
+                <button onClick={() => setLevel(focused ? "templates" : "edit")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer" }}>
                   Cancel
                 </button>
               </div>
@@ -1010,7 +1039,7 @@ export default function RhythmBuilder({
                   if (data) setSavedRows((prev) => [data, ...prev]);
                   setSavingTemplate(false);
                   setSavedTemplateMsg(`✓ "${saveTemplateName}" saved! Find it in My Rhythm.`);
-                  setTimeout(() => { setSavedTemplateMsg(""); setLevel("edit"); }, 1800);
+                  setTimeout(() => { setSavedTemplateMsg(""); setLevel(focused ? "templates" : "edit"); }, 1800);
                 }}
               >
                 {savingTemplate ? "Saving…" : "Save template"}
@@ -1040,7 +1069,8 @@ function relativeLabel(item, items) {
   return "";
 }
 
-function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [], recipes = [] }) {
+function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, otherItems = [], recipes = [] }) {
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const TODAY = localDateStr();
 
   // The schedule is the source of truth; fixedTime is kept in step with the
@@ -1099,7 +1129,7 @@ function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [], rec
           type="text"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder="Item name"
+          placeholder="What is it? e.g. Celery juice"
           style={{
             flex: 1, border: `2px solid ${C.border}`, borderRadius: 10,
             padding: "10px 14px", fontSize: 14, color: C.charcoal,
@@ -1443,8 +1473,19 @@ function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [], rec
       </FieldGroup>
 
       <Btn full color={C.sageDark} onClick={onSave} disabled={!form.name.trim()}>
-        {!form.name.trim() ? "Enter a name above" : "Save item"}
+        {!form.name.trim() ? "Enter a name above" : "Save"}
       </Btn>
+      {onRemove && (
+        <button
+          onClick={() => (confirmRemove ? onRemove() : setConfirmRemove(true))}
+          style={{
+            background: "none", border: `1.5px solid ${confirmRemove ? C.terracotta : C.border}`, color: C.terracotta,
+            borderRadius: 30, padding: "12px", fontFamily: "Georgia,serif", fontSize: 15, cursor: "pointer",
+          }}
+        >
+          {confirmRemove ? "Tap again to remove it" : "Remove this step"}
+        </button>
+      )}
     </div>
   );
 }

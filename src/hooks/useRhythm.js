@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState } from "react";
+import { isRhythmCategory } from "../lib/waterEvents.js";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
@@ -177,7 +178,7 @@ export function useRhythm(authUser, profileId) {
         // time separately. Rows written before slots existed have a null
         // slot and key to the plain item id, exactly as they used to.
         // Supplements share the ledger but aren't rhythm items.
-        if (r.status === "completed" && r.item_category !== "supplement") fromDb[occurrenceId(r.item_id, r.occurrence_slot)] = r.occurred_at;
+        if (r.status === "completed" && isRhythmCategory(r.item_category)) fromDb[occurrenceId(r.item_id, r.occurrence_slot)] = r.occurred_at;
       });
       setCompletions(fromDb);
     })();
@@ -195,7 +196,7 @@ export function useRhythm(authUser, profileId) {
         table: "activity_events",
         filter: `profile_id=eq.${profileId}`,
       }, ({ new: row }) => {
-        if (row.local_date !== TODAY() || row.item_category === "supplement") return;
+        if (row.local_date !== TODAY() || !isRhythmCategory(row.item_category)) return;
         const key = occurrenceId(row.item_id, row.occurrence_slot);
         setCompletions((prev) => {
           if (row.event_type === "completed") {

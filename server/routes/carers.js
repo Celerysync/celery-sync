@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 import { loadMade } from '../../src/lib/whatYouMade.js'
+import { WATER_ITEM_ID, glassesByDay } from '../../src/lib/waterEvents.js'
 
 const router = express.Router()
 
@@ -128,19 +129,21 @@ router.get('/my-patients', async (req, res) => {
   const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
 
   const enriched = await Promise.all(rels.map(async ({ profile_id }) => {
-    const [{ data: profile }, { data: checkins }, { data: milestones }, { data: plan }, made] = await Promise.all([
+    const [{ data: profile }, { data: checkins }, { data: milestones }, { data: plan }, made, { data: water }] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, name, avatar_emoji, symptoms, goal, created_at').eq('id', profile_id).single(),
       supabaseAdmin.from('daily_checkins').select('check_date, energy, mood, rhythm_completed, rhythm_total').eq('profile_id', profile_id).gte('check_date', sevenDaysAgoStr).order('check_date', { ascending: false }),
       supabaseAdmin.from('healing_milestones').select('insight, category, session_date').eq('profile_id', profile_id).order('created_at', { ascending: false }).limit(5),
       // Today's planned recipes, in full, so the carer can make them.
       supabaseAdmin.from('meal_plan_entries').select('slot, recipe:kitchen_items(name, kind, ingredients, steps, notes)').eq('profile_id', profile_id).eq('plan_date', today),
       loadMade(supabaseAdmin, profile_id, weekAgoStr, today).catch(() => []),
+      supabaseAdmin.from('v_daily_status').select('item_id, local_date, status').eq('profile_id', profile_id).eq('item_id', WATER_ITEM_ID).gte('local_date', weekAgoStr),
     ])
+    const waterByDay = glassesByDay(water || [])
     const slotOrder = ['morning', 'breakfast', 'lunch', 'snack', 'dinner', 'evening']
     const plannedToday = (plan || []).filter((e) => e.recipe)
       .sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot))
       .map((e) => ({ slot: e.slot, ...e.recipe }))
-    return { ...profile, checkins: checkins || [], milestones: milestones || [], planned_today: plannedToday, made_week: made.slice(0, 8) }
+    return { ...profile, checkins: checkins || [], milestones: milestones || [], planned_today: plannedToday, made_week: made.slice(0, 8), water_today: waterByDay[today] || 0, water_week: waterByDay }
   }))
 
   res.json(enriched)
