@@ -4,6 +4,7 @@ import { Card, Btn } from "./ui.jsx";
 import { useReminders } from "../hooks/useReminders.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useEncouragementPrefs } from "../hooks/useEncouragementPrefs.js";
+import { supabase } from "../lib/supabase.js";
 
 function Toggle({ on, onChange, label, desc }) {
   return (
@@ -86,6 +87,7 @@ function EncouragementWindowRow({ label, desc, window, hourOptions, prefs, updat
 }
 
 export default function ReminderSettings({ authUser }) {
+  const [monthlyEmail, setMonthlyEmail] = useState(!authUser?.user_metadata?.monthly_email_off);
   const { settings, updateSetting } = useReminders(authUser);
   const { supported, permission, subscribed, loading, error, subscribe, unsubscribe, sendTest } = useWebPush(authUser);
   const { prefs: encouragementPrefs, updateWindow: updateEncouragementWindow } = useEncouragementPrefs(authUser, subscribed);
@@ -114,6 +116,17 @@ export default function ReminderSettings({ authUser }) {
         onChange={(v) => updateSetting("morningProtocol", v)}
         label="Morning check-in banner"
         desc="A gentle nudge in the app each morning to start your rhythm"
+      />
+
+      <Toggle
+        on={monthlyEmail}
+        onChange={async (v) => {
+          setMonthlyEmail(v);
+          const { error } = await supabase.auth.updateUser({ data: { monthly_email_off: !v } });
+          if (error) setMonthlyEmail(!v);
+        }}
+        label="Monthly email"
+        desc="On the 1st of each month: a short look back at what you kept up"
       />
 
       {/* Push notifications */}

@@ -11,6 +11,7 @@ import carerRoutes from './routes/carers.js'
 import encouragementRoutes from './routes/encouragement.js'
 import communityRoutes from './routes/community.js'
 import accountRoutes from './routes/account.js'
+import { monthlyEmailRoutes } from './routes/monthlyEmails.js'
 import { signedInOwner, except, guardPathIds } from './auth.js'
 
 // Every /api route, with who may call it. The login check runs before the
@@ -71,6 +72,8 @@ export function mountApi(app, {
   app.use('/api/encouragement', auth, generalLimit, encouragementRoutes)
   app.use('/api/account', auth, generalLimit, accountRoutes)
   app.use('/api/community', generalLimit, communityRoutes)
+  // One-tap 'turn off monthly emails' from the email itself: signed link, no sign-in.
+  app.use('/api/email', generalLimit, monthlyEmailRoutes)
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
 }
