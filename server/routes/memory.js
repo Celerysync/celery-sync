@@ -7,6 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { computeProgressStats, computeCycleOverlay } from '../../src/lib/progressStats.js'
 import { SUPPLEMENT_CATEGORY, summarizeSupplements } from '../../src/lib/supplementEvents.js'
+import { PROGRAM_STATUS_LABELS, summarizePrograms } from '../../src/lib/programHistory.js'
 
 const router = Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -412,6 +413,7 @@ async function makeDoctorReport(profileId, months = 3, extended = false) {
   const cutoffStr = cutoff.toISOString().split('T')[0]
 
   const supplements = await supplementSummaryFor(profileId, cutoffStr)
+  const programs = await programHistoryFor(profileId, cutoffStr)
 
   const [summariesRes, milestonesRes, profileRes] = await Promise.all([
     supabaseAdmin
@@ -441,6 +443,7 @@ async function makeDoctorReport(profileId, months = 3, extended = false) {
     months: Number(months),
     isExtended: !!extended,
     supplements,
+    programs,
   })
   return pdfBuffer
 }
@@ -543,6 +546,24 @@ async function supplementSummaryFor(profileId, from, to = null) {
   const newest = statusRows[statusRows.length - 1]?.local_date
   const end = to || (newest && newest > serverToday ? newest : serverToday)
   return summarizeSupplements({ supplements: list || [], statusRows, from, to: end })
+}
+
+async function programHistoryFor(profileId, from) {
+  const { data: rows } = await supabaseAdmin
+    .from('active_protocols')
+    .select('id, program_id, program_name, start_date, end_date, total_days, completed, abandoned, chained_from_id')
+    .eq('profile_id', profileId)
+    .gte('start_date', from)
+    .order('start_date', { ascending: false })
+  if (!rows?.length) return []
+  const { data: ticks } = await supabaseAdmin
+    .from('v_daily_status')
+    .select('program_id, local_date, status')
+    .eq('profile_id', profileId)
+    .not('program_id', 'is', null)
+    .gte('local_date', from)
+    .limit(5000)
+  return summarizePrograms(rows, ticks || [], new Date().toISOString().split('T')[0])
 }
 
 const supplementDaysText = (item) => {
@@ -713,7 +734,7 @@ async function buildWeeklyPDF(summary, forEmail = false, supplements = null) {
 }
 
 // ── Build doctor report PDF ──
-async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false, supplements = null }) {
+async function buildDoctorPDF({ summaries, milestones, healingSummary, months, isExtended = false, supplements = null, programs = [] }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4', info: { Title: 'Personal Health Tracking Report' } })
     const chunks = []
@@ -807,6 +828,30 @@ async function buildDoctorPDF({ summaries, milestones, healingSummary, months, i
         y = doc.y + 5
         earlier.forEach(supplementRow)
       }
+      y += 10
+      doc.rect(50, y, pageW, 1).fill('#eee')
+      y += 16
+    }
+
+    // ── Programs run in the period ──
+    if (programs.length) {
+      if (y > doc.page.height - 150) { doc.addPage(); y = 50 }
+      doc.fillColor(BLUE).fontSize(13).font('Helvetica-Bold').text('PROGRAMS', 50, y)
+      y += 18
+      doc.rect(50, y, pageW, 1).fill('#ccc')
+      y += 10
+      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(
+        'Multi-day programs the user set up and ran, from their own notes, with the days they ticked a step. Self-reported.',
+        50, y, { width: pageW }
+      )
+      y = doc.y + 10
+      programs.forEach((p) => {
+        if (y > doc.page.height - 90) { doc.addPage(); y = 50 }
+        doc.fillColor(CHARCOAL).fontSize(10).font('Helvetica').text(`${p.name}  (${fmtDate(p.startDate)} to ${fmtDate(p.endDate)}, ${p.totalDays} days)`, 50, y, { width: pageW - 130 })
+        const nextY = doc.y
+        doc.fillColor(MUTED).fontSize(9).text(`${PROGRAM_STATUS_LABELS[p.status]} · ticked ${p.daysTicked}d`, 50 + pageW - 130, y, { width: 130, align: 'right' })
+        y = nextY + 5
+      })
       y += 10
       doc.rect(50, y, pageW, 1).fill('#eee')
       y += 16
@@ -1595,5 +1640,5 @@ router.get('/checkins/:profileId', async (req, res) => {
   }
 })
 
-export { makeProgressReport, makeDoctorReport, buildWeeklyPDF, supplementSummaryFor }
+export { makeProgressReport, makeDoctorReport, buildWeeklyPDF, supplementSummaryFor, programHistoryFor }
 export default router

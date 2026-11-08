@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
-import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram } from "../lib/savedRhythms.js";
+import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram, rowTotalDays } from "../lib/savedRhythms.js";
 import { localDateStr, scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
@@ -79,6 +79,35 @@ export default function RhythmBuilder({
   const [progForm, setProgForm] = useState({ name: "", emoji: "✨", totalDays: 9, items: [] });
   const [progItemForm, setProgItemForm] = useState(BLANK_PROGRAM_ITEM);
   const [savingProgram, setSavingProgram] = useState(false);
+  const [editingProgramId, setEditingProgramId] = useState(null); // null = building a new one
+  const [programError, setProgramError] = useState("");
+
+  // A copy of a saved program, to change without touching the original.
+  const copyProgram = async (row) => {
+    const taken = new Set(savedRows.map((r) => r.name));
+    let name = `${row.name} (copy)`;
+    for (let n = 2; taken.has(name); n++) name = `${row.name} (copy ${n})`;
+    const { data } = await supabase.from("saved_rhythms").insert({
+      profile_id: profileId, name, emoji: row.emoji, description: row.description, items: row.items,
+    }).select().single();
+    if (data) setSavedRows((prev) => [data, ...prev]);
+  };
+
+  // Steps they already have, added in one go: from their everyday rhythm or
+  // another saved program. Each runs every day of this program to start with.
+  const addStepsFrom = (source) => {
+    const days = progForm.totalDays;
+    const from = source === "everyday"
+      ? baseItems.map((i) => ({ name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note, fromDay: 1, toDay: days }))
+      : (savedRows.find((r) => r.id === source)?.items || []).map((i) => ({
+          name: i.name, emoji: i.emoji, category: i.category, spacingMinutes: i.spacingMinutes, note: i.note,
+          fromDay: i.programDayRange?.[0] ?? 1, toDay: i.programDayRange?.[1] ?? days,
+        }));
+    setProgForm((f) => ({
+      ...f,
+      items: [...f.items, ...from.map((raw, i) => buildProgramItem(raw, f.totalDays, f.items.length + i + 1))],
+    }));
+  };
 
   useEffect(() => {
     if (!profileId) return;
@@ -349,6 +378,8 @@ export default function RhythmBuilder({
               <Btn full color={C.plum} onClick={() => {
                 setProgForm({ name: "", emoji: "✨", totalDays: 9, items: [] });
                 setProgItemForm(BLANK_PROGRAM_ITEM);
+                setEditingProgramId(null);
+                setProgramError("");
                 setLevel("program-new");
               }}>
                 + Build a program from my book
@@ -398,6 +429,7 @@ export default function RhythmBuilder({
                           ))}
                         </div>
                       </div>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                       <button
                         onClick={() => deleteSavedRow(row.id)}
                         style={{
@@ -407,6 +439,23 @@ export default function RhythmBuilder({
                           color: confirmDeleteSavedId === row.id ? C.white : C.terracotta, fontSize: 13,
                         }}
                       >✕</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                        <button
+                          onClick={() => {
+                            setProgForm({ name: row.name, emoji: row.emoji || "✨", totalDays: rowTotalDays(row), items: row.items || [] });
+                            setProgItemForm(BLANK_PROGRAM_ITEM);
+                            setEditingProgramId(row.id);
+                            setProgramError("");
+                            setLevel("program-new");
+                          }}
+                          style={{ background: "transparent", border: `1px solid ${C.plum}`, borderRadius: 8, padding: "8px 16px", cursor: "pointer", color: C.plum, fontSize: 14 }}
+                        >Edit</button>
+                        <button
+                          onClick={() => copyProgram(row)}
+                          style={{ background: "transparent", border: `1px solid ${C.plum}`, borderRadius: 8, padding: "8px 16px", cursor: "pointer", color: C.plum, fontSize: 14 }}
+                        >Copy</button>
                     </div>
                     {confirmDeleteSavedId === row.id && (
                       <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
@@ -476,7 +525,7 @@ export default function RhythmBuilder({
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
-                  Build a program
+                  {editingProgramId ? "Edit program" : "Build a program"}
                 </div>
                 <button onClick={() => setLevel("programs")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer" }}>
                   Cancel
@@ -487,6 +536,28 @@ export default function RhythmBuilder({
                 Enter the program as it appears in your own book — name it, set how many days it
                 runs, and add each item with the days it applies to.
               </div>
+              {editingProgramId && activeProgram?.savedRhythmId === editingProgramId && (
+                <div style={{ fontSize: 13, color: C.plum }}>
+                  This program is running now. Changes apply the next time you start it.
+                </div>
+              )}
+
+              {(baseItems.length > 0 || savedRows.some((r) => isProgramRow(r) && r.id !== editingProgramId)) && (
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: C.charcoal }}>
+                  Add steps you already have
+                  <select
+                    value=""
+                    onChange={(e) => { if (e.target.value) addStepsFrom(e.target.value); }}
+                    style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.surface, fontSize: 14, color: C.charcoal }}
+                  >
+                    <option value="">Choose where from…</option>
+                    {baseItems.length > 0 && <option value="everyday">My everyday rhythm ({baseItems.length} steps)</option>}
+                    {savedRows.filter((r) => isProgramRow(r) && r.id !== editingProgramId).map((r) => (
+                      <option key={r.id} value={r.id}>{r.name} ({(r.items || []).length} steps)</option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               <div style={{ display: "flex", gap: 8 }}>
                 <input
@@ -646,21 +717,40 @@ export default function RhythmBuilder({
                 disabled={!progForm.name.trim() || progForm.items.length === 0 || savingProgram}
                 onClick={async () => {
                   if (!profileId) return;
+                  const name = progForm.name.trim();
+                  // One name per program, so Fern can always tell them apart.
+                  if (savedRows.some((r) => r.name === name && r.id !== editingProgramId)) {
+                    setProgramError(`You already have a program called "${name}". Choose another name, or edit that one.`);
+                    return;
+                  }
                   setSavingProgram(true);
-                  const { data } = await supabase.from("saved_rhythms").insert({
+                  const row = {
                     profile_id: profileId,
-                    name: progForm.name.trim(),
+                    name,
                     emoji: progForm.emoji || "✨",
                     description: programDescription(progForm.totalDays),
-                    items: progForm.items,
-                  }).select().single();
+                    items: progForm.items.map((it) => ({
+                      ...it,
+                      programDayRange: [
+                        Math.min(it.programDayRange?.[0] ?? 1, progForm.totalDays),
+                        Math.min(it.programDayRange?.[1] ?? progForm.totalDays, progForm.totalDays),
+                      ],
+                    })),
+                  };
+                  const { data, error } = editingProgramId
+                    ? await supabase.from("saved_rhythms").update({ ...row, updated_at: new Date().toISOString() }).eq("id", editingProgramId).select().single()
+                    : await supabase.from("saved_rhythms").insert(row).select().single();
                   setSavingProgram(false);
-                  if (data) setSavedRows((prev) => [data, ...prev]);
+                  if (error || !data) { setProgramError("That didn't save. Please try again."); return; }
+                  setSavedRows((prev) => [data, ...prev.filter((r) => r.id !== data.id)]);
+                  setEditingProgramId(null);
+                  setProgramError("");
                   setLevel("programs");
                 }}
               >
-                {savingProgram ? "Saving…" : "Save program"}
+                {savingProgram ? "Saving…" : editingProgramId ? "Save changes" : "Save program"}
               </Btn>
+              {programError && <div role="alert" style={{ fontSize: 13, color: C.terracotta }}>{programError}</div>}
             </div>
           )}
 

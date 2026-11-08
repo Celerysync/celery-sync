@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { ACTIVE_PROGRAM_KEY, endProgramInAccount, fetchLastFinishedProgram, startAnotherRound, startProgramInAccount } from "../lib/activeProgram.js";
-import { TODAY, filterTodaysItems, rhythmRowToItem, rhythmItemToRow, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
+import { orderForDay, programDayNumber, TODAY, filterTodaysItems, rhythmRowToItem, rhythmItemToRow, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { buildProgramItem, programDescription, isProgramRow, savedRowToProgram } from "../lib/savedRhythms.js";
 import { setLocalStorageValue } from "./useLocalStorage.js";
 import { SUPPLEMENTS_CHANGED_EVENT } from "./useUserSupplements.js";
@@ -78,7 +78,7 @@ async function todaysItems(profileId) {
 // v_daily_status the Rhythm screen reads, so the companion and the checkboxes
 // can never disagree.
 export async function todayStatus(profileId) {
-  const [items, statusRes] = await Promise.all([
+  const [unordered, statusRes] = await Promise.all([
     todaysItems(profileId),
     supabase.from("v_daily_status")
       .select("item_id, status")
@@ -88,17 +88,55 @@ export async function todayStatus(profileId) {
   const doneIds = new Set(
     (statusRes.data || []).filter((r) => r.status === "completed").map((r) => r.item_id)
   );
+  // In the same order as Today, so "what's next" means the same thing to both.
+  const items = orderForDay(unordered);
   const withStatus = items.map((i) => ({
+    id: i.id,
     name: i.name,
     done: doneIds.has(i.id),
     time: i.fixedTime || undefined,
+    minutes_after_previous: !i.fixedTime && i.spacingMinutes ? i.spacingMinutes : undefined,
+    in_program: !!i.programId || undefined,
   }));
+  const running = readActiveProgram();
+  const day = running ? programDayNumber(running.startDate, running.totalDays) : null;
+  const program = running && day ? { name: running.name, day, total_days: running.totalDays } : undefined;
   const supplements = (await todaysSupplements(profileId)).map((s) => ({
     name: s.name,
     when: SUPPLEMENT_TIMING_LABELS[s.timing] || undefined,
     taken: s.taken,
   }));
-  return { items: withStatus, completed: withStatus.filter((i) => i.done).length, total: withStatus.length, supplements };
+  return {
+    items: withStatus.map(({ id: _id, ...rest }) => rest),
+    completed: withStatus.filter((i) => i.done).length,
+    total: withStatus.length,
+    program,
+    next_up: nextUp(withStatus),
+    supplements,
+  };
+}
+
+// The next thing not yet done today, in Today's order, with when it's due:
+// a set time, or a gap after the step before it.
+function nextUp(items, afterId = null) {
+  const from = afterId ? items.findIndex((i) => i.id === afterId) + 1 : 0;
+  const next = [...items.slice(from), ...items.slice(0, from)].find((i) => !i.done && i.id !== afterId);
+  if (!next) return null;
+  return {
+    name: next.name,
+    time: next.time,
+    minutes_after_previous: next.minutes_after_previous,
+    in_program: next.in_program,
+  };
+}
+
+// What Fern says after a tick: the program day if one is running, then the
+// next thing on their own list and when. Gentle, never an instruction.
+function nextUpMessage(next, program) {
+  const day = program ? `It's day ${program.day} of ${program.total_days} of ${program.name}. ` : "";
+  if (!next) return `${day}Everything on their list for today is done; celebrate that warmly.`;
+  const when = next.time ? ` at ${next.time}` : next.minutes_after_previous ? `, about ${next.minutes_after_previous} minutes after this` : "";
+  return `${day}Mention gently what's next on their own list: ${next.name}${when}. No pressure, and nothing that isn't on their list.`;
 }
 
 // Their own supplement list, with what's been ticked today from the ledger.
@@ -236,7 +274,21 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       if (error) throw new Error(error.message);
 
       const status = await todayStatus(profileId);
-      return { marked: item.name, action, completed_today: status.completed, total_today: status.total };
+      const ordered = orderForDay(await todaysItems(profileId)).map((i) => ({
+        id: i.id, name: i.name, time: i.fixedTime || undefined,
+        minutes_after_previous: !i.fixedTime && i.spacingMinutes ? i.spacingMinutes : undefined,
+        in_program: !!i.programId || undefined,
+        done: status.items.find((s) => s.name === i.name)?.done,
+      }));
+      return {
+        marked: item.name,
+        action,
+        completed_today: status.completed,
+        total_today: status.total,
+        program: status.program,
+        next_up: action === "completed" ? nextUp(ordered, item.id) : undefined,
+        message: action === "completed" ? nextUpMessage(nextUp(ordered, item.id), status.program) : undefined,
+      };
     },
 
     // Spec §3.3 — the companion always knows the real state before speaking.
@@ -373,13 +425,22 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         items.push(buildProgramItem(it, totalDays, idx + 1));
       }
 
-      // Same name = update in place, so voice corrections don't pile up copies
+      // A program with this name already exists: never overwrite it without
+      // asking. Their library is built up over months.
       const { data: existing } = await supabase
         .from("saved_rhythms")
         .select("id")
         .eq("profile_id", profileId)
         .eq("name", name)
+        .limit(1)
         .maybeSingle();
+      if (existing && args?.replace !== true) {
+        return {
+          needs_choice: true,
+          changed_nothing: true,
+          message: `They already have a saved program called "${name}". Nothing is saved yet. Ask: update that one, or keep both and save this under a new name? If update, call again with replace: true. If new, call again with the new name.`,
+        };
+      }
 
       const row = {
         profile_id: profileId,
@@ -653,11 +714,17 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     async end_program(args) {
       const running = readActiveProgram();
       if (!running) return { error: "none_running", message: "No program is running right now." };
-      if (args?.confirmed !== true) return needsYes(`End "${running.name}" now?`);
-      await endProgramInAccount(running.dbId);
+      const finished = args?.finished === true;
+      if (args?.confirmed !== true) {
+        return needsYes(finished ? `Mark "${running.name}" as finished?` : `End "${running.name}" now?`);
+      }
+      await endProgramInAccount(running.dbId, { completed: finished });
       setLocalStorageValue(ACTIVE_PROGRAM_KEY, null);
       rhythmChanged();
-      return { saved: true, ended: running.name, message: `"${running.name}" has ended. Their everyday rhythm carries on as normal.` };
+      return {
+        saved: true, ended: running.name, finished,
+        message: `"${running.name}" is recorded as ${finished ? "finished" : "ended early"}. Their everyday rhythm carries on as normal. If they're starting another program now, call start_program.`,
+      };
     },
 
     async add_supplement(args) {

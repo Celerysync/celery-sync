@@ -107,10 +107,18 @@ export function filterTodaysItems(baseItems, activeProgram) {
     }
   }
 
-  return [...everydayItemsDuring(baseItems, activeProgram), ...programItems].filter((item) => {
+  // Each list keeps its own order. Sorting them together by sortOrder (both
+  // count from 1) wedged program steps into the middle of the everyday
+  // sequence, so "smoothie, after celery juice" followed a program step instead.
+  const bySort = (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  const keep = (item) => {
     if (item.frequency === "weekdays" && !isWeekday) return false;
     return !itemIsOver(item, today);
-  }).sort((a, b) => a.sortOrder - b.sortOrder);
+  };
+  return [
+    ...everydayItemsDuring(baseItems, activeProgram).filter(keep).sort(bySort),
+    ...programItems.filter(keep).sort(bySort),
+  ];
 }
 
 export function rhythmRowToItem(row) {
