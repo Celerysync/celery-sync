@@ -9,6 +9,7 @@
 -- No existing data changes; safe to run more than once.
 --
 -- To undo:
+--   DROP TABLE IF EXISTS meal_plan_entries;
 --   DROP TABLE IF EXISTS shopping_list_items;
 --   ALTER TABLE rhythm_items DROP COLUMN IF EXISTS recipe_id;
 --   ALTER TABLE activity_events DROP COLUMN IF EXISTS recipe_id, DROP COLUMN IF EXISTS recipe_name;
@@ -74,7 +75,29 @@ CREATE POLICY "Users manage own shopping list" ON shopping_list_items
   FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()))
   WITH CHECK (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
 
--- 5. Photos of their own dishes: a PRIVATE bucket. Files live under
+-- 5. The week plan: which of their recipes on which day, and roughly when.
+CREATE TABLE IF NOT EXISTS meal_plan_entries (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  plan_date date NOT NULL,
+  slot text NOT NULL DEFAULT 'dinner'
+    CHECK (slot IN ('morning', 'breakfast', 'lunch', 'snack', 'dinner', 'evening')),
+  recipe_id uuid REFERENCES kitchen_items(id) ON DELETE CASCADE,
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS meal_plan_entries_profile_date ON meal_plan_entries (profile_id, plan_date);
+
+ALTER TABLE meal_plan_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage own meal plan" ON meal_plan_entries;
+CREATE POLICY "Users manage own meal plan" ON meal_plan_entries
+  FOR ALL USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()))
+  WITH CHECK (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- Aisle grouping for the shopping list (filled in when items are added).
+ALTER TABLE shopping_list_items ADD COLUMN IF NOT EXISTS aisle text;
+
+-- 6. Photos of their own dishes: a PRIVATE bucket. Files live under
 --    <user id>/..., and each person can only see and change their own folder.
 --    Never public; the app shows them with short-lived signed links.
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

@@ -5,6 +5,11 @@ Database change: `supabase/kitchen.sql` (additive, safe to re-run, undo included
 
 Agreed with Alli (2026-11-08): a **Kitchen** tab; recipes spoken in full and
 sorted by Fern; a shopping list; photos of their own dishes; build in four steps.
+Added after comparing with popular recipe apps: cook mode (for meals, juices and
+smoothies), a week view, a shopping list grouped by aisle, recipes offline.
+Deliberately left out: importing from web links or photos of books (copying
+published recipes, mostly Anthony William's, is against the rails), nutrition
+figures (health-claim risk), sharing recipes between people.
 
 ## Rules (binding)
 
@@ -42,6 +47,12 @@ sorted by Fern; a shopping list; photos of their own dishes; build in four steps
 - Kitchen is on both plans (it's part of the routine); Fern's help stays with
   Rhythm + Voice.
 
+- **Cook mode** (any recipe — meals, juices, smoothies): big text, one step at a
+  time, the screen stays on, and a timer button when a step mentions a time
+  ("blend for 30 seconds"). Works with Fern's cook-along.
+- **Offline**: the Kitchen and recipes are kept on the phone too, so they open
+  without signal.
+
 ## Step 2: Fern in the kitchen
 
 - "What's in my green smoothie?", "what can I make with potatoes and spinach?"
@@ -58,12 +69,15 @@ sorted by Fern; a shopping list; photos of their own dishes; build in four steps
   short descriptive section if they want it.
 - The carer view shows tonight's chosen recipe, so a carer can prepare it.
 
-## Step 4: shopping list
+## Step 4: week view and shopping list
 
-- Pick recipes ("this week") → one combined list of their ingredients, ticked
-  off in the shop. Add anything by hand or by voice ("add lemons to my list").
-- Combining is simple and honest: identical lines merge; nothing is
-  converted or guessed.
+- **Week view**: their own recipes placed on days (breakfast, lunch, dinner…),
+  by tap or voice ("potato bake on Thursday night"); today's plan shows on Today.
+- **Shopping list** from the week's recipes (or any picked), ticked off in the
+  shop. Add anything by hand or by voice ("add lemons to my list").
+- Grouped by aisle (fruit & veg, pantry, fridge…), sorted by AI from their own
+  ingredient words. Combining is simple and honest: identical lines merge;
+  nothing is converted or guessed.
 
 ## Database (supabase/kitchen.sql)
 
@@ -72,6 +86,8 @@ sorted by Fern; a shopping list; photos of their own dishes; build in four steps
 - `activity_events.recipe_id`, `recipe_name` (which recipe a tick was; no FK so
   the ledger stays append-only and history survives deletes).
 - `shopping_list_items` (RLS by profile owner).
+- `meal_plan_entries` (the week plan; RLS by profile owner).
+- `shopping_list_items.aisle` (aisle grouping).
 - Private storage bucket `kitchen-photos` (5 MB images; each person's own
   folder only; shown via short-lived signed links).
 
