@@ -83,8 +83,8 @@ export default function MonthSummary({ profileId, user }) {
       {summary && !summary.empty && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "14px 0 6px" }}>
           <Tile value={summary.showedUpDays} label={`${summary.showedUpDays === 1 ? "day" : "days"} kept up`} />
-          <Tile value={summary.totalTicks} label="steps ticked" />
-          <Tile value={summary.checkinCount} label="check-ins" />
+          <Tile value={summary.totalTicks} label={summary.totalTicks === 1 ? "step ticked" : "steps ticked"} />
+          <Tile value={summary.checkinCount} label={summary.checkinCount === 1 ? "check-in" : "check-ins"} />
         </div>
       )}
       {summary && (
