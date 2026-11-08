@@ -6,6 +6,8 @@ import { KIND_BY_ID, KITCHEN_CHANGED_EVENT, matchRecipe, normalizeRecipe, recipe
 import { RHYTHM_CHANGED_EVENT } from "./rhythmSchedule.js";
 import { SLOT_LABEL, dayLabel, defaultSlot, loadPlan, planRecipe, resolvePlanDay, unplan } from "./mealPlan.js";
 import { stepTimerSeconds, formatTimer } from "./kitchen.js";
+import { addLines, groupList, lineKey, linesFromRecipes, loadList, setChecked } from "./shopping.js";
+import { localDateStr } from "./rhythmSchedule.js";
 
 // Cook-along: which recipe and step Fern is on. Page 0 is the ingredients,
 // then one page per step — the same pages as cook mode on the screen, which
@@ -252,6 +254,56 @@ export function kitchenVoiceTools(profileId) {
         recipe: r.name, step: cooking.page, of: r.steps.length, text, timer: secs ? formatTimer(secs) : undefined,
         message: `Read ONLY step ${cooking.page} of ${r.steps.length}, word for word: "${text}". Then stop and wait for "next", "repeat" or "back".${secs ? ` There's a ${formatTimer(secs)} timer button on their screen for this step.` : ""}${cooking.page === r.steps.length ? " This is the last step." : ""}`,
       };
+    },
+
+    // "Add lemons to my list", "add the potato bake to my shopping list",
+    // "put this week's recipes on my list".
+    async add_to_shopping_list(args) {
+      if (!profileId) throw new Error("No active profile");
+      const lines = (Array.isArray(args?.items) ? args.items : []).map((text) => ({ text }));
+      const from = [];
+      const recipes = (args?.recipe_names?.length || args?.this_week) ? await loadRecipes(profileId) : [];
+      for (const name of args?.recipe_names || []) {
+        const found = matchRecipe(recipes, name);
+        if (found.error) return { ...found, changed_nothing: true };
+        from.push(found.match);
+      }
+      if (args?.this_week) {
+        const end = new Date(); end.setDate(end.getDate() + 6);
+        const plan = await loadPlan(profileId, localDateStr(), localDateStr(end));
+        if (!plan.length) return { error: "nothing_planned", changed_nothing: true, message: "Nothing is planned for this week, so there's nothing to add from it. Offer to plan some of their recipes first, or add items one by one." };
+        from.push(...plan.map((e) => ({ id: e.recipe_id, ingredients: e.recipe.ingredients })));
+      }
+      const all = [...lines, ...linesFromRecipes(from)];
+      if (!all.length) return { error: "nothing_to_add", changed_nothing: true, message: "Ask what they'd like on their list." };
+      const n = await addLines(profileId, all);
+      return { saved: true, added: n, message: `Added ${n} item${n === 1 ? "" : "s"} to their shopping list, as written. It's in Kitchen, Shopping list, grouped by aisle.` };
+    },
+
+    async get_shopping_list() {
+      if (!profileId) throw new Error("No active profile");
+      const groups = groupList(await loadList(profileId));
+      const still = groups.map((g) => ({ aisle: g.label, items: g.lines.filter((l) => !l.checked).map((l) => (l.count > 1 ? `${l.text} (x${l.count})` : l.text)) })).filter((g) => g.items.length);
+      const done = groups.reduce((n, g) => n + g.lines.filter((l) => l.checked).length, 0);
+      return {
+        still_to_get: still, ticked: done,
+        message: still.length ? "Read it aisle by aisle if they want the whole list; keep it short." : (done ? "Everything on their list is ticked." : "Their shopping list is empty."),
+      };
+    },
+
+    // "Got the celery" in the shop.
+    async tick_shopping_item(args) {
+      if (!profileId) throw new Error("No active profile");
+      const q = lineKey(args?.item);
+      if (!q) return { error: "item_required", message: "Ask which item." };
+      const lines = groupList(await loadList(profileId)).flatMap((g) => g.lines);
+      const exact = lines.filter((l) => l.key === q);
+      const loose = exact.length ? exact : lines.filter((l) => l.key.includes(q) || q.includes(l.key));
+      if (!loose.length) return { error: "not_found", changed_nothing: true, message: `"${args.item}" isn't on their list. It has: ${lines.map((l) => l.text).join(", ") || "nothing"}.` };
+      if (loose.length > 1) return { error: "ambiguous", changed_nothing: true, message: `Several lines match: ${loose.map((l) => l.text).join(", ")}. Ask which one.` };
+      const untick = args?.untick === true;
+      await setChecked(loose[0].ids, !untick);
+      return { saved: true, item: loose[0].text, ticked: !untick };
     },
 
     // "Link my green smoothie to my morning smoothie step" — Today then shows

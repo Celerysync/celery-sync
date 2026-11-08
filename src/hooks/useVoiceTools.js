@@ -242,6 +242,9 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
     plan_recipe: kitchen.plan_recipe,
     get_meal_plan: kitchen.get_meal_plan,
     cook_along: kitchen.cook_along,
+    add_to_shopping_list: kitchen.add_to_shopping_list,
+    get_shopping_list: kitchen.get_shopping_list,
+    tick_shopping_item: kitchen.tick_shopping_item,
     async link_recipe(args) {
       if (!profileId) throw new Error("No active profile");
       return kitchen.link_recipe(args, await activeRhythmRows(profileId));

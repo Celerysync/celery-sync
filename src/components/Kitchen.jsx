@@ -6,6 +6,8 @@ import { KITCHEN_KINDS, KIND_BY_ID, sortRecipeText } from "../lib/kitchen.js";
 import { supabase } from "../lib/supabase.js";
 import { RHYTHM_CHANGED_EVENT, rhythmItemToRow } from "../lib/rhythmSchedule.js";
 import CookMode from "./CookMode.jsx";
+import KitchenWeek from "./KitchenWeek.jsx";
+import ShoppingList from "./ShoppingList.jsx";
 import { useMealPlan } from "../hooks/useMealPlan.js";
 import { PLAN_SLOTS, SLOT_LABEL, dayLabel, defaultSlot, planRecipe, unplan } from "../lib/mealPlan.js";
 import { localDateStr } from "../lib/rhythmSchedule.js";
@@ -252,6 +254,7 @@ export default function Kitchen({ profileId, section }) {
   const [view, setView] = useState(null); // recipe id being viewed
   const [editing, setEditing] = useState(null); // null | "new" | recipe
   const [cooking, setCooking] = useState(null);
+  const [mode, setMode] = useState(section === "week" || section === "shopping" ? section : "recipes");
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -318,8 +321,18 @@ export default function Kitchen({ profileId, section }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: C.charcoal }}>🥬 Kitchen</div>
           <div style={{ fontSize: 13, color: C.muted }}>Your own juices, smoothies, meals and more.</div>
         </div>
-        <button style={btn(true)} onClick={() => setEditing("new")}>+ Add</button>
+        {mode === "recipes" && <button style={btn(true)} onClick={() => setEditing("new")}>+ Add</button>}
       </div>
+
+      <div role="tablist" style={{ display: "flex", gap: 6 }}>
+        {[["recipes", "📖 Recipes"], ["week", "📅 Week"], ["shopping", "🛒 Shopping list"]].map(([id, label]) => (
+          <button key={id} role="tab" aria-selected={mode === id} onClick={() => setMode(id)} style={{ ...pill(mode === id), flex: 1, padding: "9px 6px" }}>{label}</button>
+        ))}
+      </div>
+
+      {mode === "week" && <KitchenWeek profileId={profileId} recipes={recipes} onOpen={(id) => { setMode("recipes"); setView(id); }} onShopping={() => setMode("shopping")} />}
+      {mode === "shopping" && <ShoppingList profileId={profileId} recipes={recipes} />}
+      {mode === "recipes" && <>
 
       {offline && (
         <div style={{ fontSize: 13, color: C.mid, background: alpha(C.gold, "20"), borderRadius: 12, padding: "8px 12px" }}>
@@ -362,6 +375,7 @@ export default function Kitchen({ profileId, section }) {
           </div>
         </button>
       ))}
+      </>}
     </div>
   );
 }
