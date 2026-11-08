@@ -433,7 +433,7 @@ export function useRhythm(authUser, profileId) {
       setProgramSyncError(err.message);
       return false;
     }
-  }, [authUser?.id, profileId, activeProgram?.dbId, setActiveProgram]);
+  }, [authUser?.id, profileId, activeProgram, setActiveProgram]);
 
   const cancelProgram = useCallback(async () => {
     if (!activeProgram) return;
