@@ -3,6 +3,7 @@ import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
+import { RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { SUPPLEMENTS_CHANGED_EVENT, useUserSupplements } from "../hooks/useUserSupplements.js";
 import { SUPPLEMENT_CATEGORY, supplementEventRow, supplementLabel } from "../lib/supplementEvents.js";
 
@@ -44,8 +45,25 @@ export default function SupplementTracker({ authUser, profileId }) {
 
   const {
     supplements, addSupplement, removeSupplement,
-    inventoryFor, setInventoryFor, adjustStockOnDoseChange, runOutInfoFor,
+    inventoryFor, setInventoryFor, adjustStockOnDoseChange, runOutInfoFor, setWithItem,
   } = useUserSupplements(profileId);
+
+  // Steps a supplement can be taken with: their everyday rhythm, plus the
+  // running program's steps.
+  const [steps, setSteps] = useState([]);
+  useEffect(() => {
+    if (!profileId) return;
+    const load = async () => {
+      const { data } = await supabase.from("rhythm_items").select("id, name, emoji")
+        .eq("profile_id", profileId).is("archived_at", null).order("sort_order");
+      let programSteps = [];
+      try { programSteps = (JSON.parse(localStorage.getItem("cs_active_program") || "null")?.items || []).map((i) => ({ id: i.id, name: i.name, emoji: i.emoji })); } catch { programSteps = []; }
+      setSteps([...(data || []), ...programSteps]);
+    };
+    load();
+    window.addEventListener(RHYTHM_CHANGED_EVENT, load);
+    return () => window.removeEventListener(RHYTHM_CHANGED_EVENT, load);
+  }, [profileId]);
 
   const key = todayKey();
   const date = todayDate();
@@ -115,7 +133,7 @@ export default function SupplementTracker({ authUser, profileId }) {
     const dose = form.dose.trim();
 
     if (profileId) {
-      const saved = await addSupplement(name, dose, form.timing);
+      const saved = await addSupplement(name, dose, form.timing, form.withItemId || null);
       if (saved && form.unitsOnHand.trim()) {
         await setInventoryFor(name, {
           unitsOnHand: Number(form.unitsOnHand),
@@ -168,6 +186,7 @@ export default function SupplementTracker({ authUser, profileId }) {
 
   const customSuppItems = supplements.map((s) => ({
     id: s.id,
+    withItemId: s.with_item_id || null,
     label: supplementLabel(s),
     dose_label: s.dose_label,
     timing: s.timing,
@@ -253,6 +272,20 @@ export default function SupplementTracker({ authUser, profileId }) {
                       onRemove={() => removeCustom(s)}
                       timingColor={t.color}
                     />
+                    {s.source === "custom" && steps.length > 0 && (
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.muted, padding: "2px 4px 6px 34px" }}>
+                        Taken with
+                        <select
+                          aria-label={`What ${s.label} is taken with`}
+                          value={s.withItemId || ""}
+                          onChange={(e) => setWithItem(s.id, e.target.value)}
+                          style={{ fontSize: 13, padding: "4px 8px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.charcoal }}
+                        >
+                          <option value="">nothing (on its own)</option>
+                          {steps.map((st) => <option key={st.id} value={st.id}>{st.name}</option>)}
+                        </select>
+                      </label>
+                    )}
                     {s.source === "custom" && (
                       <StockLine
                         name={s.name}
@@ -311,6 +344,19 @@ export default function SupplementTracker({ authUser, profileId }) {
               >
                 {TIMINGS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
+              {steps.length > 0 && (
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: C.charcoal }}>
+                  Taken with a step? (optional)
+                  <select
+                    value={form.withItemId || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, withItemId: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.surface, fontSize: 14, color: C.charcoal }}
+                  >
+                    <option value="">No, on its own</option>
+                    {steps.map((st) => <option key={st.id} value={st.id}>{st.emoji} {st.name}</option>)}
+                  </select>
+                </label>
+              )}
 
               {profileId && (
                 <>

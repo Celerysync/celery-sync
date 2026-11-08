@@ -4,6 +4,7 @@ import { PLACEHOLDER_NAME } from "../hooks/useProfiles.js";
 import { EVERYDAY_SYMPTOMS } from "../lib/checkinOptions.js";
 import C from "../lib/colors.js";
 import { useRhythm } from "../hooks/useRhythm.js";
+import { supabase } from "../lib/supabase.js";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
 import InstallCard from "./InstallCard.jsx";
@@ -157,6 +158,24 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     const items = parsed?.fields?.scheduleItems?.length
       ? parsed.fields.scheduleItems
       : [{ name: trimmed.slice(0, 60), category: slot.key, fixedTime: null, note: "", frequency: "daily" }];
+
+    // Supplements go on the supplement list, so they have one home. If a time
+    // was given, a "Supplements" step at that time carries the reminder, and
+    // they're linked to it ("with" it).
+    if (slot.key === "supplement" && profile?.id) {
+      const timed = items.find((i) => i.fixedTime)?.fixedTime || null;
+      let step = null;
+      if (timed) step = await addItem({ name: "Supplements", category: "supplement", fixedTime: timed, note: "", frequency: "daily" });
+      const hour = timed ? Number(timed.slice(0, 2)) : 8;
+      const timing = hour < 11 ? "morning_food" : hour < 16 ? "midday" : "evening";
+      const rows = items.map((i) => ({ profile_id: profile.id, name: i.name, dose_label: null, timing, with_item_id: step?.id ?? null }));
+      await supabase.from("user_supplements").insert(rows);
+      setSlotSaving((p) => ({ ...p, [slot.key]: false }));
+      setSlotSaved((p) => ({ ...p, [slot.key]: `${items.map((i) => i.name).join(", ")} (on your supplement list${timed ? `, reminder at ${timed}` : ""})` }));
+      setSlotText((p) => ({ ...p, [slot.key]: "" }));
+      if (step) setSavedItems((prev) => [...prev, step]);
+      return;
+    }
 
     const saved = [];
     for (const item of items) {

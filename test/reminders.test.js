@@ -153,6 +153,15 @@ describe("programs", () => {
   });
 });
 
+describe("supplements taken with a step", () => {
+  it("share its reminder: 'Time for Smoothie — with B12, Zinc'", async () => {
+    db.tables.rhythm_items = [item({ id: "sm", name: "Smoothie", fixed_time: "08:00" })];
+    db.tables.user_supplements = [{ name: "B12", with_item_id: "sm" }, { name: "Zinc", with_item_id: "sm" }];
+    await sendRhythmReminders(at("08:01"));
+    expect(JSON.parse(sendNotification.mock.calls[0][1]).body).toBe("Time for Smoothie — with B12, Zinc");
+  });
+});
+
 describe("items set to run for a number of days", () => {
   it("still remind on the last day, not after", async () => {
     db.tables.rhythm_items = [item({ fixed_time: "07:00", duration_type: "days", duration_days: 7, start_date: "2026-11-03" })];

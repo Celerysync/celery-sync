@@ -295,6 +295,10 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       if (error) throw new Error(error.message);
 
       const status = await todayStatus(profileId);
+      const { data: withRows } = action === "completed"
+        ? await supabase.from("user_supplements").select("name, dose_label").eq("profile_id", profileId).eq("with_item_id", item.id)
+        : { data: [] };
+      const takenWith = (withRows || []).map((s) => s.name);
       const ordered = orderForDay(await todaysItems(profileId)).map((i) => ({
         id: i.id, name: i.name, time: i.fixedTime || undefined,
         minutes_after_previous: !i.fixedTime && i.spacingMinutes ? i.spacingMinutes : undefined,
@@ -308,7 +312,10 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         total_today: status.total,
         program: status.program,
         next_up: action === "completed" ? nextUp(ordered, item.id) : undefined,
-        message: action === "completed" ? nextUpMessage(nextUp(ordered, item.id), status.program) : undefined,
+        taken_with: takenWith.length ? takenWith : undefined,
+        message: action === "completed"
+          ? `${takenWith.length ? `They usually take ${takenWith.join(" and ")} with this. Ask if they had ${takenWith.length > 1 ? "those" : "it"} too; only if they say yes, tick each with mark_activity. ` : ""}${nextUpMessage(nextUp(ordered, item.id), status.program)}`
+          : undefined,
       };
     },
 
@@ -767,16 +774,32 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const name = String(args?.name || "").trim();
       if (!name) return { error: "name_required", message: "Ask which supplement." };
       const timing = ["morning_empty", "morning_food", "midday", "evening"].includes(args?.timing) ? args.timing : "morning_food";
+      // "B12 with my smoothie": link it to that step, so they're reminded and
+      // ticked together.
+      let withItem = null;
+      if (args?.with_item) {
+        const steps = [...(await activeRhythmRows(profileId)), ...(readActiveProgram()?.items || [])];
+        const found = matchByName(steps, args.with_item);
+        if (found.error) return found;
+        withItem = found.match;
+      }
       const { data: list } = await supabase.from("user_supplements").select("id, name").eq("profile_id", profileId);
       const dupe = (list || []).find((s) => s.name.toLowerCase() === name.toLowerCase() && !args?.another_time);
+      if (dupe && withItem) {
+        const { error: linkError } = await supabase.from("user_supplements").update({ with_item_id: withItem.id }).eq("id", dupe.id);
+        if (linkError) throw new Error(linkError.message);
+        window.dispatchEvent(new Event(SUPPLEMENTS_CHANGED_EVENT));
+        return { saved: true, linked: dupe.name, with: withItem.name, message: `${dupe.name} is now taken with ${withItem.name}: one reminder for both, and ticking ${withItem.name} offers to tick ${dupe.name} too.` };
+      }
       if (dupe) return { error: "already_there", message: `"${dupe.name}" is already in their supplements. If they take it at another time of day too, call again with another_time: true.` };
       // The amount is only ever what the user says from their own bottle/book.
       const { error } = await supabase.from("user_supplements").insert({
         profile_id: profileId, name, dose_label: String(args?.dose_label || "").trim() || null, timing,
+        with_item_id: withItem?.id ?? null,
       });
       if (error) throw new Error(error.message);
       window.dispatchEvent(new Event(SUPPLEMENTS_CHANGED_EVENT));
-      return { saved: true, added: name, timing, message: `${name} is in their supplements (${timing.replace("_", " ")}). It's on their Today screen now.` };
+      return { saved: true, added: name, timing, with: withItem?.name, message: `${name} is in their supplements (${timing.replace("_", " ")})${withItem ? `, taken with ${withItem.name}` : ""}. It's on their Today screen now.` };
     },
 
     async remove_supplement(args) {

@@ -84,6 +84,14 @@ export async function sendRhythmReminders(now = new Date()) {
         if (t.status === 'completed') completions[occurrenceId(t.item_id, t.occurrence_slot)] = t.occurred_at
       }
 
+      const { data: linked } = await supabaseAdmin
+        .from('user_supplements')
+        .select('name, with_item_id')
+        .eq('profile_id', profile.id)
+        .not('with_item_id', 'is', null)
+      const withByItem = {}
+      for (const s of linked || []) (withByItem[s.with_item_id] ||= []).push(s.name)
+
       const due = planReminders({
         baseItems: (rows || []).map(rhythmRowToItem), program, completions, today, dow, nowMinutes, minutesOf,
       })
@@ -107,7 +115,11 @@ export async function sendRhythmReminders(now = new Date()) {
           { endpoint: sub.endpoint, keys: sub.keys },
           JSON.stringify({
             title: `${r.emoji || '🌿'} ${r.name}`,
-            body: r.note ? `Time for ${r.name} — ${r.note}` : `Time for ${r.name}`,
+            body: [
+              `Time for ${r.name}`,
+              withByItem[r.itemId]?.length ? `with ${withByItem[r.itemId].join(', ')}` : null,
+              r.note || null,
+            ].filter(Boolean).join(' — '),
             // Distinct per occurrence, so a later one doesn't replace an earlier one in the tray.
             tag: `rhythm-${r.itemId}-${r.time}`,
           })

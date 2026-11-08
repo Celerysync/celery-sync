@@ -34,8 +34,13 @@ export default function RhythmView({
   lastFinishedProgram,
   onAnotherRound,
   onDismissFinished,
+  takenWith = {},
+  onTickTakenWith,
 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [offerFor, setOfferFor] = useState(null); // step just ticked that has supplements with it
+  const [offerError, setOfferError] = useState("");
+  const linkedTo = (item) => takenWith[item.baseItemId ?? item.id] || [];
 
   // Only empty when there are no items. Items with their own time (or none)
   // don't need a wake anchor — useRhythm's calculateSequence handles both —
@@ -231,14 +236,18 @@ export default function RhythmView({
                 border: `1.5px solid ${isNext ? C.sage : C.border}${isDone ? "80" : ""}`,
                 borderRadius: 14,
                 padding: "12px 14px",
-                opacity: isDone ? 0.6 : 1,
+                opacity: isDone && offerFor !== item.id ? 0.6 : 1,
                 transition: "all 0.2s",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {/* Check button */}
                 <button
-                  onClick={() => isDone ? onUncomplete(item.id) : onComplete(item.id)}
+                  onClick={() => {
+                    if (isDone) { onUncomplete(item.id); return; }
+                    onComplete(item.id);
+                    if (linkedTo(item).length) { setOfferFor(item.id); setOfferError(""); }
+                  }}
                   aria-label={isDone ? `Mark ${item.name} as not done` : `Mark ${item.name} as done`}
                   style={{
                     width: 36, height: 36, borderRadius: 10, flexShrink: 0,
@@ -273,6 +282,11 @@ export default function RhythmView({
                   <div style={{ fontSize: 12, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
                     {statusLabel}
                   </div>
+                  {linkedTo(item).length > 0 && (
+                    <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+                      💊 with {linkedTo(item).map((s) => s.name).join(", ")}
+                    </div>
+                  )}
                 </div>
 
                 {/* Category dot + expand */}
@@ -291,6 +305,32 @@ export default function RhythmView({
                   )}
                 </div>
               </div>
+
+              {offerFor === item.id && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 13, color: C.charcoal }}>
+                    Did you have {linkedTo(item).map((s) => s.name).join(" and ")} with it?
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                    <button
+                      onClick={async () => {
+                        try { await onTickTakenWith?.(linkedTo(item)); setOfferFor(null); }
+                        catch { setOfferError("That didn't save. Please try again."); }
+                      }}
+                      style={{ padding: "8px 14px", borderRadius: 30, border: "none", background: C.sage, color: C.white, fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                    >
+                      Tick {linkedTo(item).length > 1 ? "them" : "it"} too
+                    </button>
+                    <button
+                      onClick={() => setOfferFor(null)}
+                      style={{ padding: "8px 14px", borderRadius: 30, border: `1.5px solid ${C.border}`, background: "transparent", color: C.mid, fontFamily: "Georgia,serif", fontSize: 14, cursor: "pointer" }}
+                    >
+                      Not now
+                    </button>
+                  </div>
+                  {offerError && <div role="alert" style={{ fontSize: 13, color: C.terracotta, marginTop: 6 }}>{offerError}</div>}
+                </div>
+              )}
 
               {/* Expanded detail */}
               {expanded && (

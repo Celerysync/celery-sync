@@ -21,7 +21,7 @@ export function useUserSupplements(profileId) {
 
     const { data: existing } = await supabase
       .from("user_supplements")
-      .select("id, name, dose_label, timing")
+      .select("id, name, dose_label, timing, with_item_id")
       .eq("profile_id", profileId)
       .order("created_at", { ascending: true });
 
@@ -44,7 +44,7 @@ export function useUserSupplements(profileId) {
             timing: s.timing || "morning_food",
           };
         });
-        const { data: inserted } = await supabase.from("user_supplements").insert(rows).select("id, name, dose_label, timing");
+        const { data: inserted } = await supabase.from("user_supplements").insert(rows).select("id, name, dose_label, timing, with_item_id");
         localStorage.removeItem("cs_custom_supps");
         setSupplements(inserted || []);
         setLoading(false);
@@ -72,12 +72,12 @@ export function useUserSupplements(profileId) {
     return () => window.removeEventListener(SUPPLEMENTS_CHANGED_EVENT, load);
   }, [load]);
 
-  const addSupplement = useCallback(async (name, doseLabel, timing) => {
+  const addSupplement = useCallback(async (name, doseLabel, timing, withItemId = null) => {
     if (!profileId) return null;
     const { data } = await supabase
       .from("user_supplements")
-      .insert({ profile_id: profileId, name: name.trim(), dose_label: doseLabel?.trim() || null, timing })
-      .select("id, name, dose_label, timing")
+      .insert({ profile_id: profileId, name: name.trim(), dose_label: doseLabel?.trim() || null, timing, with_item_id: withItemId || null })
+      .select("id, name, dose_label, timing, with_item_id")
       .single();
     if (data) {
       setSupplements((prev) => [...prev, data]);
@@ -85,6 +85,14 @@ export function useUserSupplements(profileId) {
     }
     return data;
   }, [profileId]);
+
+  // Which step this supplement is taken with ("B12 with my smoothie"), or none.
+  const setWithItem = useCallback(async (id, withItemId) => {
+    const value = withItemId || null;
+    setSupplements((prev) => prev.map((s) => (s.id === id ? { ...s, with_item_id: value } : s)));
+    await supabase.from("user_supplements").update({ with_item_id: value }).eq("id", id);
+    window.dispatchEvent(new Event(SUPPLEMENTS_CHANGED_EVENT));
+  }, []);
 
   const removeSupplement = useCallback(async (id) => {
     if (!profileId) return;
@@ -155,7 +163,7 @@ export function useUserSupplements(profileId) {
   }, [inventoryFor, dosesPerDayFor]);
 
   return {
-    supplements, loading, addSupplement, removeSupplement,
+    supplements, loading, addSupplement, removeSupplement, setWithItem,
     inventoryFor, setInventoryFor, adjustStockOnDoseChange, runOutInfoFor, dosesPerDayFor,
     reload: load,
   };

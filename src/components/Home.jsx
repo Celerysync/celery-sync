@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { realName } from "../hooks/useProfiles.js";
 import { announceActivity } from "../lib/appActivity.js";
 import C, { alpha } from "../lib/colors.js";
@@ -10,6 +10,8 @@ import { Card } from "./ui.jsx";
 import DailyCheckIn from "./DailyCheckIn.jsx";
 import HealingTrends from "./HealingTrends.jsx";
 import SupplementTracker from "./SupplementTracker.jsx";
+import { useUserSupplements } from "../hooks/useUserSupplements.js";
+import { supplementsByStep, tickSupplements } from "../lib/supplementTicks.js";
 import WeeklyReport from "./WeeklyReport.jsx";
 import RhythmView from "./RhythmView.jsx";
 import MorningCheckIn from "./MorningCheckIn.jsx";
@@ -256,6 +258,10 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     programSyncError,
   } = useRhythm(authUser, profileId);
 
+  // Supplements linked to a step ("B12 with my smoothie"), for Today's rows.
+  const { supplements: userSupplements } = useUserSupplements(profileId);
+  const takenWith = useMemo(() => supplementsByStep(userSupplements), [userSupplements]);
+
   const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
   const [, setNow] = useState(Date.now()); // re-render each minute so the time-of-day card stays current
   const [savingCheckin, setSavingCheckin] = useState(false);
@@ -442,6 +448,8 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         lastFinishedProgram={lastFinishedProgram}
         onAnotherRound={anotherRound}
         onDismissFinished={dismissLastFinished}
+        takenWith={takenWith}
+        onTickTakenWith={(list) => tickSupplements({ userId: authUser?.id, profileId, supplements: list })}
       />
 
       {/* Rhythm builder modal */}
