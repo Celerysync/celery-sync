@@ -87,6 +87,30 @@ router.post('/', async (req, res) => {
   }
 })
 
+// Typed chat's action step: the same tools spoken Fern has. The app runs any
+// tool the model asks for, under the person's own login (RLS), exactly as
+// voice does, then sends the results back here. This route only relays: it
+// never touches data itself. Haiku, with the tool list cached.
+router.post('/tools', async (req, res) => {
+  const { system, messages, tools } = req.body || {}
+  if (!messages?.length) return res.status(400).json({ error: 'messages required' })
+  if (!Array.isArray(tools) || !tools.length || tools.length > 50) return res.status(400).json({ error: 'tools required' })
+  if (messages.length > 40 || JSON.stringify(req.body).length > 200_000) return res.status(413).json({ error: 'too large' })
+  try {
+    const cachedTools = tools.map((t, i) => (i === tools.length - 1 ? { ...t, cache_control: { type: 'ephemeral' } } : t))
+    const response = await anthropic.messages.create({
+      model: MODELS.quick,
+      max_tokens: 1024,
+      system: system || undefined,
+      tools: cachedTools,
+      messages,
+    }, { timeout: 30000 })
+    res.json({ content: response.content, stop_reason: response.stop_reason })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 router.post('/stream', async (req, res) => {
   const { system, staticSystem, dynamicSystem, messages, maxTokens = 900, tier = 'standard' } = req.body
   if (!messages?.length) return res.status(400).json({ error: 'messages required' })

@@ -10,11 +10,11 @@ function BarRow({ label, value, max, display, color }) {
   const pct = value != null && max ? Math.min((value / max) * 100, 100) : 0;
   return (
     <div style={{ display: "grid", gridTemplateColumns: "84px 1fr 44px", alignItems: "center", gap: 10, marginBottom: 5 }}>
-      <div style={{ fontSize: 12, color: C.muted, fontFamily: "Georgia,serif" }}>{label}</div>
+      <div style={{ fontSize: 13.5, color: C.muted, fontFamily: "Georgia,serif" }}>{label}</div>
       <div style={{ height: 8, background: C.mist, borderRadius: 4 }}>
         {value != null && <div style={{ height: 8, borderRadius: 4, background: color, width: `${pct}%`, transition: "width 0.4s" }} />}
       </div>
-      <div style={{ fontSize: 12, color: C.charcoal, textAlign: "right" }}>{value != null ? display : "—"}</div>
+      <div style={{ fontSize: 13.5, color: C.charcoal, textAlign: "right" }}>{value != null ? display : "—"}</div>
     </div>
   );
 }
@@ -23,7 +23,7 @@ function SectionHeader({ title, tag }) {
   return (
     <div style={{ marginBottom: 8 }}>
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13.5, color: C.charcoal }}>
-        {title} <span style={{ fontSize: 12, fontWeight: 400, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{tag}</span>
+        {title} <span style={{ fontSize: 13.5, fontWeight: 400, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{tag}</span>
       </div>
       <div style={{ height: 1, background: C.border, marginTop: 6 }} />
     </div>
@@ -83,12 +83,12 @@ export default function ProgressCharts({ checkins, periodStartDates = [], bucket
       <Card>
         <SectionHeader title="Symptoms" tag="what you logged · frequency" />
         {stats.symptomFrequency.length === 0 ? (
-          <div style={{ color: C.muted, fontSize: 12 }}>No symptoms logged this period.</div>
+          <div style={{ color: C.muted, fontSize: 13.5 }}>No symptoms logged this period.</div>
         ) : (
           stats.symptomFrequency.map((s) => (
             <div key={s.name} style={{ display: "grid", gridTemplateColumns: "1fr 90px", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <div style={{ fontSize: 12, color: C.charcoal }}>{s.name}</div>
-              <div style={{ fontSize: 12, color: C.muted, textAlign: "right" }}>{s.count} of {s.ofDays} days</div>
+              <div style={{ fontSize: 13.5, color: C.charcoal }}>{s.name}</div>
+              <div style={{ fontSize: 13.5, color: C.muted, textAlign: "right" }}>{s.count} of {s.ofDays} days</div>
             </div>
           ))
         )}
@@ -106,7 +106,7 @@ export default function ProgressCharts({ checkins, periodStartDates = [], bucket
       <Card>
         <SectionHeader title="Cycle overlay" tag="what you logged" />
         {!cycleOverlay ? (
-          <div style={{ color: C.muted, fontSize: 12, lineHeight: 1.6 }}>
+          <div style={{ color: C.muted, fontSize: 13.5, lineHeight: 1.6 }}>
             Turn on cycle tracking in Settings and log a period start date to see energy by cycle day here.
           </div>
         ) : (
@@ -122,9 +122,9 @@ export default function ProgressCharts({ checkins, periodStartDates = [], bucket
 function StatTile({ label, value, sub }) {
   return (
     <div style={{ background: C.sageLight, borderRadius: 12, padding: "10px 12px" }}>
-      <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</div>
+      <div style={{ fontSize: 13, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "Georgia,serif", color: C.sageDark, marginTop: 2 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>{sub}</div>}
     </div>
   );
 }

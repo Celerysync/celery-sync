@@ -6,6 +6,7 @@ import { useMealPlan } from "../hooks/useMealPlan.js";
 import { addLines, clearTicked, groupList, linesFromRecipes, removeLines } from "../lib/shopping.js";
 import { localDateStr } from "../lib/rhythmSchedule.js";
 import { KIND_BY_ID } from "../lib/kitchen.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 const btn = (primary) => ({
   padding: "10px 16px", borderRadius: 30, border: primary ? "none" : `1.5px solid ${C.border}`,
@@ -34,7 +35,7 @@ function FromRecipes({ profileId, recipes, onDone }) {
           <label key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", fontSize: 15, color: C.charcoal }}>
             <input type="checkbox" checked={chosen.has(r.id)} onChange={() => flip(r.id)} style={{ width: 20, height: 20 }} />
             {KIND_BY_ID[r.kind]?.emoji} {r.name}
-            <span style={{ fontSize: 12, color: C.muted }}>({(r.ingredients || []).length})</span>
+            <span style={{ fontSize: 13.5, color: C.muted }}>({(r.ingredients || []).length})</span>
           </label>
         ))}
       </div>
@@ -54,6 +55,7 @@ function FromRecipes({ profileId, recipes, onDone }) {
 }
 
 export default function ShoppingList({ profileId, recipes }) {
+  const fern = useCompanionName();
   const { rows, offline, pending, toggle } = useShoppingList(profileId);
   const groups = useMemo(() => groupList(rows), [rows]);
   const [text, setText] = useState("");
@@ -93,7 +95,7 @@ export default function ShoppingList({ profileId, recipes }) {
         <Card style={{ textAlign: "center", padding: "24px 18px" }}>
           <div style={{ fontSize: 32 }}>🛒</div>
           <div style={{ fontSize: 14, color: C.mid, marginTop: 6, lineHeight: 1.6 }}>
-            Your list is empty. Add things above, add a recipe's ingredients, or tell your companion "add lemons to my list".
+            Your list is empty. Add things above, add a recipe's ingredients, or tell {fern} "add lemons to my list".
           </div>
         </Card>
       )}
@@ -128,7 +130,7 @@ export default function ShoppingList({ profileId, recipes }) {
         </button>
       )}
       {rows.length > 0 && (
-        <div style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>
+        <div style={{ fontSize: 13.5, color: C.muted, textAlign: "center" }}>
           Lines are kept as you wrote them. The same line twice shows ×2; nothing is added up or changed.
         </div>
       )}

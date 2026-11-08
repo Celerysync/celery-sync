@@ -126,12 +126,12 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
           {speaking && (
             <button
               onClick={stopSpeaking}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.muted, padding: 0, marginBottom: 4 }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13.5, color: C.muted, padding: 0, marginBottom: 4 }}
             >
               ⏹ Stop audio
             </button>
           )}
-          <div style={{ fontSize: 12, color: C.muted, margin: "10px 0 6px" }}>Energy today</div>
+          <div style={{ fontSize: 13.5, color: C.muted, margin: "10px 0 6px" }}>Energy today</div>
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
             {FEEL_LEVELS.map((lvl) => (
               <button
@@ -149,7 +149,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>One line about today (saved to your journal)</div>
+          <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 6 }}>One line about today (saved to your journal)</div>
           <div style={{ display: "flex", gap: 8 }}>
             <input
               value={reflectionDraft}
@@ -169,7 +169,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
               style={{
                 padding: "9px 16px", borderRadius: 12, border: "none",
                 background: C.sage, color: C.white,
-                fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 cursor: "pointer",
               }}
             >
@@ -191,7 +191,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
                 style={{
                   padding: "9px 16px", borderRadius: 50, border: "none", cursor: "pointer",
                   background: C.sage, color: C.white,
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 🎙 Talk it through
@@ -202,7 +202,7 @@ export default function EveningReflection({ user, sequence, todaysCheckin, saveC
               style={{
                 padding: "9px 16px", borderRadius: 50, cursor: "pointer",
                 border: `1.5px solid ${C.border}`, background: C.surface,
-                fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
+                fontFamily: "Georgia,serif", fontSize: 13.5, color: C.charcoal,
               }}
             >
               Done

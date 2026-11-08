@@ -102,7 +102,7 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
       {connected && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.sage }} />
-          <div style={{ fontSize: 12, color: C.mid }}>Shortcut connected · Last data received: {fmtSync(lastSync)}</div>
+          <div style={{ fontSize: 13.5, color: C.mid }}>Shortcut connected · Last data received: {fmtSync(lastSync)}</div>
         </div>
       )}
       {!ingestToken ? (
@@ -110,7 +110,7 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
           {busy ? "One moment…" : connected ? "Show my setup details again" : "Set up automatic sleep sync →"}
         </Btn>
       ) : (
-        <div style={{ background: C.mist, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: C.charcoal, lineHeight: 1.7 }}>
+        <div style={{ background: C.mist, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, color: C.charcoal, lineHeight: 1.7 }}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Build this Shortcut once on your iPhone (~3 min):</div>
           1. Open the <strong>Shortcuts</strong> app → <strong>+</strong> to create a new shortcut{"\n"}
           2. Add action <strong>Find Health Samples</strong> → type <strong>Sleep</strong>, where <strong>Value is Asleep</strong>, <strong>Start Date is in the last 1 day</strong>{"\n"}
@@ -121,9 +121,9 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
           &nbsp;&nbsp;&nbsp;<strong>token</strong> = your key below · <strong>sleep_hours</strong> = the Calculate result · <strong>date</strong> = the formatted date{"\n"}
           7. In <strong>Automation</strong> → new personal automation → <strong>Time of Day</strong>, e.g. 9:00am daily → <strong>Run Immediately</strong> → pick this shortcut
           <div style={{ marginTop: 10, fontWeight: 700 }}>Your URL:</div>
-          <code style={{ fontSize: 12, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
+          <code style={{ fontSize: 13.5, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestUrl}</code>
           <div style={{ marginTop: 8, fontWeight: 700 }}>Your private key (keep it to yourself):</div>
-          <code style={{ fontSize: 12, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
+          <code style={{ fontSize: 13.5, wordBreak: "break-all", display: "block", background: C.surface, borderRadius: 6, padding: "6px 8px", marginTop: 3 }}>{ingestToken}</code>
           <button
             onClick={() => {
               navigator.clipboard?.writeText(`URL: ${ingestUrl}\nKey: ${ingestToken}`).then(() => {
@@ -135,15 +135,15 @@ function AppleShortcutSetup({ authUser, connected, lastSync, fmtSync, onTokenIss
               marginTop: 10, width: "100%", padding: "9px", borderRadius: 8,
               border: `1.5px solid ${C.sage}`, background: copied ? C.sage : "none",
               color: copied ? C.white : C.sageDark, fontFamily: "Georgia,serif",
-              fontWeight: 700, fontSize: 12, cursor: "pointer",
+              fontWeight: 700, fontSize: 13.5, cursor: "pointer",
             }}
           >
             {copied ? "✓ Copied!" : "📋 Copy URL + key"}
           </button>
         </div>
       )}
-      {err && <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{err}</div>}
-      <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+      {err && <div style={{ fontSize: 13.5, color: C.terracotta, marginTop: 8 }}>{err}</div>}
+      <div style={{ fontSize: 13.5, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
         Once the automation runs each morning, last night's sleep appears in your check-in
         automatically. Prefer to type it in? Manual entry still works below.
       </div>
@@ -190,14 +190,14 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
   return (
     <div style={{ marginTop: 12 }}>
       {wearable.howTo && (
-        <div style={{ background: C.sageLight, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
+        <div style={{ background: C.sageLight, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 13.5, color: C.sageDark, lineHeight: 1.6 }}>
           💡 {wearable.howTo}
         </div>
       )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
         {fields.map(f => (
           <div key={f.key}>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 3 }}>{f.label}</div>
+            <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 3 }}>{f.label}</div>
             <input
               type={f.type}
               step={f.step || "1"}
@@ -213,7 +213,7 @@ function ManualEntryForm({ wearable, authUser, onSaved }) {
           </div>
         ))}
       </div>
-      {error && <div style={{ fontSize: 12, color: C.terracotta, marginBottom: 8 }}>{error}</div>}
+      {error && <div style={{ fontSize: 13.5, color: C.terracotta, marginBottom: 8 }}>{error}</div>}
       <Btn full onClick={save} disabled={saving} color={wearable.color}>
         {saving ? "Saving…" : `Save today's ${wearable.name} data →`}
       </Btn>
@@ -322,17 +322,17 @@ export default function WearableConnect({ authUser }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         💓 Wearable Integration
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>
         Connect your wearable so sleep, HRV, and readiness land in your daily check-ins by themselves. Oura Ring and Apple Watch sync automatically; the others use quick manual entry.
       </div>
 
       {(success || manualSuccess) && (
-        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`, borderRadius: 10, fontSize: 12, color: C.sageDark }}>
+        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`, borderRadius: 10, fontSize: 13.5, color: C.sageDark }}>
           ✓ {success || manualSuccess}
         </div>
       )}
       {error && (
-        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "40")}`, borderRadius: 10, fontSize: 12, color: C.terracotta }}>
+        <div style={{ marginBottom: 12, padding: "10px 12px", background: C.terracottaLight, border: `1px solid ${alpha(C.terracotta, "40")}`, borderRadius: 10, fontSize: 13.5, color: C.terracotta }}>
           {error}
         </div>
       )}
@@ -363,22 +363,22 @@ export default function WearableConnect({ authUser }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{w.name}</div>
                     {isConnected && (
-                      <div style={{ fontSize: 12, background: C.sage, color: "#fff", borderRadius: 10, padding: "1px 7px", fontWeight: 700 }}>
+                      <div style={{ fontSize: 13.5, background: C.sage, color: "#fff", borderRadius: 10, padding: "1px 7px", fontWeight: 700 }}>
                         Connected
                       </div>
                     )}
                     {w.type === "auto" && !isConnected && (
-                      <div style={{ fontSize: 12, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
+                      <div style={{ fontSize: 13.5, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
                         Auto sync
                       </div>
                     )}
                     {w.type === "manual" && (
-                      <div style={{ fontSize: 12, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
+                      <div style={{ fontSize: 13.5, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "1px 7px" }}>
                         Manual
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{w.desc}</div>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>{w.desc}</div>
                 </div>
                 <div style={{ fontSize: 14, color: C.muted, flexShrink: 0 }}>{isExpanded ? "▲" : "▼"}</div>
               </button>
@@ -388,9 +388,9 @@ export default function WearableConnect({ authUser }) {
                 <div style={{ padding: "0 14px 14px", borderTop: `1px solid ${C.border}` }}>
                   {/* What we read */}
                   <div style={{ background: C.mist, borderRadius: 10, padding: "10px 12px", margin: "12px 0 12px" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark, marginBottom: 5 }}>What CelerySync reads:</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: C.sageDark, marginBottom: 5 }}>What CelerySync reads:</div>
                     {w.metrics.map(m => (
-                      <div key={m} style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>• {m}</div>
+                      <div key={m} style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.6 }}>• {m}</div>
                     ))}
                   </div>
 
@@ -400,7 +400,7 @@ export default function WearableConnect({ authUser }) {
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.sage }} />
-                          <div style={{ fontSize: 12, color: C.mid }}>Last sync: {fmtSync(ouraToken.last_sync)} · Auto-syncs daily at 6:30am</div>
+                          <div style={{ fontSize: 13.5, color: C.mid }}>Last sync: {fmtSync(ouraToken.last_sync)} · Auto-syncs daily at 6:30am</div>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
                           <button
@@ -429,7 +429,7 @@ export default function WearableConnect({ authUser }) {
                       </div>
                     ) : (
                       <div>
-                        <div style={{ fontSize: 12, color: C.mid, marginBottom: 10, lineHeight: 1.7 }}>
+                        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 10, lineHeight: 1.7 }}>
                           1. Open <strong>cloud.ouraring.com</strong>{"\n"}
                           2. Go to <strong>Profile → Personal Access Tokens</strong>{"\n"}
                           3. Create a new token → paste it below
@@ -442,7 +442,7 @@ export default function WearableConnect({ authUser }) {
                           style={{
                             width: "100%", boxSizing: "border-box", padding: "10px 12px",
                             borderRadius: 10, border: `1.5px solid ${C.border}`,
-                            fontFamily: "monospace", fontSize: 12, resize: "none", outline: "none", marginBottom: 10,
+                            fontFamily: "monospace", fontSize: 13.5, resize: "none", outline: "none", marginBottom: 10,
                           }}
                         />
                         <Btn full onClick={connectOura} disabled={saving || !token.trim()} color={C.sageDark}>
@@ -482,7 +482,7 @@ export default function WearableConnect({ authUser }) {
         })}
       </div>
 
-      <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 12, color: C.mid, lineHeight: 1.6 }}>
+      <div style={{ marginTop: 14, padding: "10px 12px", background: C.mist, borderRadius: 10, fontSize: 13.5, color: C.mid, lineHeight: 1.6 }}>
         No wearable? You can still manually log sleep, HRV, and heart rate directly in your daily check-in — it all shows up in your trends.
       </div>
     </Card>

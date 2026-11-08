@@ -254,7 +254,7 @@ export default function RhythmBuilder({
                   flex: 1, padding: "8px 4px", border: "none", borderRadius: 20,
                   background: level === t.id ? C.sageDark : C.mist,
                   color: level === t.id ? C.white : C.mid,
-                  fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
+                  fontSize: 13.5, fontFamily: "Georgia,serif", fontWeight: 700, cursor: "pointer",
                   minWidth: "fit-content",
                 }}
               >
@@ -274,7 +274,7 @@ export default function RhythmBuilder({
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 8 }}>
                   ⏰ Your usual wake time
                 </div>
-                <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
+                <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10 }}>
                   Optional. Steps with no set time follow on from this.
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -292,7 +292,7 @@ export default function RhythmBuilder({
                   <Btn small color={C.sage} onClick={saveAnchor}>Save</Btn>
                 </div>
                 {anchorTime && (
-                  <div style={{ fontSize: 12, color: C.sage, marginTop: 6 }}>
+                  <div style={{ fontSize: 13.5, color: C.sage, marginTop: 6 }}>
                     ✓ Currently: {anchorTime}
                   </div>
                 )}
@@ -302,7 +302,7 @@ export default function RhythmBuilder({
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
                 {focused ? "Days you've saved" : "My day templates"}
               </div>
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
                 {focused
                   ? "Save your whole set of steps as a day, and load it again any time (for example a work day and a weekend day)."
                   : <>Build your daily rhythm from your own copy of the books — add each item under
@@ -341,7 +341,7 @@ export default function RhythmBuilder({
                       <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                         {(row.items || []).map((item, i) => (
                           <span key={i} style={{
-                            fontSize: 12, background: `${alpha(C.sage, "15")}`, color: C.sageDark,
+                            fontSize: 13.5, background: `${alpha(C.sage, "15")}`, color: C.sageDark,
                             borderRadius: 20, padding: "2px 7px",
                           }}>
                             {item.emoji} {item.name}
@@ -360,7 +360,7 @@ export default function RhythmBuilder({
                     >✕</button>
                   </div>
                   {confirmDeleteSavedId === row.id && (
-                    <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
+                    <div style={{ fontSize: 13.5, color: C.terracotta, marginTop: 6 }}>
                       Tap ✕ again to delete this template
                     </div>
                   )}
@@ -375,7 +375,7 @@ export default function RhythmBuilder({
                       marginTop: 12, width: "100%",
                       background: C.sageLight, color: C.sageDark,
                       border: `1.5px solid ${alpha(C.sage, "40")}`, borderRadius: 12,
-                      padding: "9px", fontSize: 12, fontFamily: "Georgia,serif",
+                      padding: "9px", fontSize: 13.5, fontFamily: "Georgia,serif",
                       fontWeight: 700, cursor: "pointer",
                     }}
                   >
@@ -398,11 +398,11 @@ export default function RhythmBuilder({
                   <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
                     ✨ Active: {activeProgram.name}
                   </div>
-                  <div style={{ fontSize: 12, color: C.plum, opacity: 0.8, marginTop: 4 }}>
+                  <div style={{ fontSize: 13.5, color: C.plum, opacity: 0.8, marginTop: 4 }}>
                     Started {activeProgram.startDate} · {activeProgram.totalDays} days
                   </div>
                   {Array.isArray(activeProgram.keepEveryday) && (
-                    <div style={{ fontSize: 12, color: C.plum, marginTop: 4 }}>
+                    <div style={{ fontSize: 13.5, color: C.plum, marginTop: 4 }}>
                       Paused until it ends: {baseItems.filter((i) => !activeProgram.keepEveryday.includes(i.id)).map((i) => i.name).join(", ") || "nothing"}
                     </div>
                   )}
@@ -411,7 +411,7 @@ export default function RhythmBuilder({
                     style={{
                       marginTop: 10, background: `${alpha(C.plum, "15")}`, color: C.plum,
                       border: `1.5px solid ${alpha(C.plum, "40")}`, borderRadius: 10,
-                      padding: "7px 14px", fontSize: 12, cursor: "pointer",
+                      padding: "7px 14px", fontSize: 13.5, cursor: "pointer",
                     }}
                   >
                     End program early
@@ -419,7 +419,7 @@ export default function RhythmBuilder({
                 </div>
               )}
 
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
                 Build a multi-day program from your own copy of the books — set which days each
                 item runs, and the app tracks your progress day by day and tells your companion
                 where you are. For what belongs in a cleanse and when, refer to your book.
@@ -459,19 +459,19 @@ export default function RhythmBuilder({
                           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
                             {prog.name}
                           </div>
-                          <span style={{ fontSize: 12, background: `${alpha(C.plum, "15")}`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
+                          <span style={{ fontSize: 13.5, background: `${alpha(C.plum, "15")}`, color: C.plum, borderRadius: 20, padding: "2px 7px" }}>
                             {prog.totalDays} days
                           </span>
                         </div>
                         {row.description && (
-                          <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
+                          <div style={{ fontSize: 13.5, color: C.mid, marginTop: 3, lineHeight: 1.5 }}>
                             {row.description}
                           </div>
                         )}
                         <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
                           {prog.items.map((item, i) => (
                             <span key={i} style={{
-                              fontSize: 12, background: `${alpha(C.plum, "12")}`, color: C.plum,
+                              fontSize: 13.5, background: `${alpha(C.plum, "12")}`, color: C.plum,
                               borderRadius: 20, padding: "2px 7px",
                             }}>
                               {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}{item.fixedTime ? ` · ${formatFixedTime(item.fixedTime)}` : ""}
@@ -508,14 +508,14 @@ export default function RhythmBuilder({
                         >Copy</button>
                     </div>
                     {confirmDeleteSavedId === row.id && (
-                      <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
+                      <div style={{ fontSize: 13.5, color: C.terracotta, marginTop: 6 }}>
                         Tap ✕ again to delete this program
                       </div>
                     )}
 
                     {!isActive && (
                       <div style={{ marginTop: 12 }}>
-                        <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Start date:</div>
+                        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 6 }}>Start date:</div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                           <input
                             type="date"
@@ -533,7 +533,7 @@ export default function RhythmBuilder({
                             <div style={{ fontSize: 13, color: C.charcoal, fontWeight: 700, marginBottom: 2 }}>
                               During this program, keep:
                             </div>
-                            <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>
+                            <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 6 }}>
                               Untick anything to pause it. It comes back by itself when the program ends.
                             </div>
                             {baseItems.map((item) => {
@@ -582,7 +582,7 @@ export default function RhythmBuilder({
                 </button>
               </div>
 
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
                 Enter the program as it appears in your own book — name it, set how many days it
                 runs, and add each item with the days it applies to.
               </div>
@@ -664,7 +664,7 @@ export default function RhythmBuilder({
                         <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>
                           {item.name}
                         </div>
-                        <div style={{ fontSize: 12, color: C.muted }}>
+                        <div style={{ fontSize: 13.5, color: C.muted }}>
                           Days {item.programDayRange[0]}–{item.programDayRange[1]} · +{item.spacingMinutes}min
                         </div>
                       </div>
@@ -673,7 +673,7 @@ export default function RhythmBuilder({
                         style={{
                           background: "none", border: `1px solid ${C.terracotta}`,
                           borderRadius: 8, width: 26, height: 26, cursor: "pointer",
-                          color: C.terracotta, fontSize: 12, flexShrink: 0,
+                          color: C.terracotta, fontSize: 13.5, flexShrink: 0,
                         }}
                       >✕</button>
                     </div>
@@ -683,7 +683,7 @@ export default function RhythmBuilder({
 
               {/* Add an item to the program */}
               <Card>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Add program item
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -711,28 +711,28 @@ export default function RhythmBuilder({
                   />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, color: C.muted }}>Days</span>
+                  <span style={{ fontSize: 13.5, color: C.muted }}>Days</span>
                   <input
                     type="number" min={1} max={progForm.totalDays}
                     value={progItemForm.fromDay}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, fromDay: parseInt(e.target.value) || 1 }))}
                     style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
-                  <span style={{ fontSize: 12, color: C.muted }}>to</span>
+                  <span style={{ fontSize: 13.5, color: C.muted }}>to</span>
                   <input
                     type="number" min={1} max={progForm.totalDays}
                     value={progItemForm.toDay ?? progForm.totalDays}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, toDay: parseInt(e.target.value) || progForm.totalDays }))}
                     style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
-                  <span style={{ fontSize: 12, color: C.muted, marginLeft: 6 }}>· wait</span>
+                  <span style={{ fontSize: 13.5, color: C.muted, marginLeft: 6 }}>· wait</span>
                   <input
                     type="number" min={0} max={480}
                     value={progItemForm.spacingMinutes}
                     onChange={(e) => setProgItemForm((f) => ({ ...f, spacingMinutes: parseInt(e.target.value) || 0 }))}
                     style={{ width: 52, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "5px 8px", fontSize: 13, textAlign: "center", background: C.surface, outline: "none" }}
                   />
-                  <span style={{ fontSize: 12, color: C.muted }}>min</span>
+                  <span style={{ fontSize: 13.5, color: C.muted }}>min</span>
                 </div>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.charcoal, marginBottom: 10 }}>
                   🔔 At a set time (optional)
@@ -750,7 +750,7 @@ export default function RhythmBuilder({
                   placeholder="Your note (optional, e.g. page reference)"
                   style={{
                     width: "100%", boxSizing: "border-box", border: `1.5px solid ${C.border}`,
-                    borderRadius: 10, padding: "8px 12px", fontSize: 12, color: C.charcoal,
+                    borderRadius: 10, padding: "8px 12px", fontSize: 13.5, color: C.charcoal,
                     background: C.surface, outline: "none", marginBottom: 10,
                   }}
                 />
@@ -859,7 +859,7 @@ export default function RhythmBuilder({
                           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
                             {isRelative(item)
                               ? <>⏱ {relativeLabel(item, baseItems)}</>
                               : scheduleTimes(item).length
@@ -870,7 +870,7 @@ export default function RhythmBuilder({
                                   onClick={() => startEdit(item)}
                                   style={{
                                     background: "none", border: "none", padding: 0, cursor: "pointer",
-                                    fontSize: 12, color: C.sage, fontWeight: 700, fontFamily: "inherit",
+                                    fontSize: 13.5, color: C.sage, fontWeight: 700, fontFamily: "inherit",
                                     textDecoration: "underline",
                                   }}
                                 >
@@ -907,7 +907,7 @@ export default function RhythmBuilder({
                             style={{
                               background: `${alpha(C.sage, "15")}`, border: "none",
                               borderRadius: 8, padding: "4px 10px",
-                              fontSize: 12, color: C.sageDark, cursor: "pointer",
+                              fontSize: 13.5, color: C.sageDark, cursor: "pointer",
                             }}
                           >Edit</button>
                           <button
@@ -924,7 +924,7 @@ export default function RhythmBuilder({
                         </div>
                       </div>
                       {confirmClearId === item.id && (
-                        <div style={{ fontSize: 12, color: C.terracotta, marginTop: 6 }}>
+                        <div style={{ fontSize: 13.5, color: C.terracotta, marginTop: 6 }}>
                           Tap ✕ again to confirm removal
                         </div>
                       )}
@@ -940,7 +940,7 @@ export default function RhythmBuilder({
                   style={{
                     background: "none", border: `1.5px solid ${C.sage}`, color: C.sageDark,
                     borderRadius: 20, padding: "9px", width: "100%",
-                    fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700, cursor: "pointer",
                   }}
                 >
                   💾 Save my steps as a day
@@ -988,7 +988,7 @@ export default function RhythmBuilder({
                 </button>
               </div>
 
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
                 Save your current rhythm as a reusable template — so you can reload it any time, or use it as your starting point after a cleanse.
               </div>
 
@@ -1149,7 +1149,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 background: form.category === cat ? C.sageDark : C.mist,
                 color: form.category === cat ? C.white : C.mid,
                 border: "none", borderRadius: 20, padding: "6px 12px",
-                fontSize: 12, cursor: "pointer",
+                fontSize: 13.5, cursor: "pointer",
               }}
             >
               {CATEGORY_EMOJIS[cat]} {cat}
@@ -1158,7 +1158,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
         </div>
         {form.isMedicine && (
           <div style={{
-            marginTop: 8, fontSize: 12, color: C.plum, lineHeight: 1.6,
+            marginTop: 8, fontSize: 13.5, color: C.plum, lineHeight: 1.6,
             background: `${alpha(C.plum, "12")}`, borderRadius: 10, padding: "8px 12px",
           }}>
             ⚕️ This item will be marked as a prescribed medicine. The app will show a standing note to confirm timing with your doctor or pharmacist. The app and AI will never advise on prescribed medication timing or interactions.
@@ -1183,7 +1183,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
               background: !timed && !relative ? C.sage : C.mist,
               color: !timed && !relative ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
-              fontSize: 12, cursor: "pointer",
+              fontSize: 13.5, cursor: "pointer",
             }}
           >
             No set time
@@ -1195,7 +1195,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
               background: timed ? C.sage : C.mist,
               color: timed ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
-              fontSize: 12, cursor: "pointer",
+              fontSize: 13.5, cursor: "pointer",
             }}
           >
             🔔 Remind me at…
@@ -1208,7 +1208,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 background: relative ? C.sage : C.mist,
                 color: relative ? C.white : C.mid,
                 border: "none", borderRadius: 10, padding: "8px 4px",
-                fontSize: 12, cursor: "pointer",
+                fontSize: 13.5, cursor: "pointer",
               }}
             >
               ⏱ After a step…
@@ -1271,7 +1271,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 />
               </div>
             )}
-            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
               🔔 The clock starts when you tick that step, by tap or by voice. You'll get a reminder
               {form.schedule.type === "every_after" ? " each time" : ""}, if background notifications are on in Settings.
               If that step isn't ticked, nothing follows on that day.
@@ -1290,7 +1290,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                     background: sameTimes(times, p.times) ? C.sageDark : C.mist,
                     color: sameTimes(times, p.times) ? C.white : C.mid,
                     border: "none", borderRadius: 20, padding: "6px 12px",
-                    fontSize: 12, cursor: "pointer",
+                    fontSize: 13.5, cursor: "pointer",
                   }}
                 >
                   {p.label}
@@ -1335,7 +1335,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 onClick={() => setTimes([...times, "20:00"])}
                 style={{
                   background: "none", border: `1.5px dashed ${C.border}`,
-                  borderRadius: 10, padding: "8px 12px", fontSize: 12,
+                  borderRadius: 10, padding: "8px 12px", fontSize: 13.5,
                   color: C.muted, cursor: "pointer", width: "fit-content",
                   fontFamily: "Georgia,serif",
                 }}
@@ -1344,7 +1344,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
               </button>
             </div>
 
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 8, lineHeight: 1.6 }}>
               🔔 {times.length === 1
                 ? "You'll get one reminder a day at this time"
                 : `You'll get ${times.length} reminders a day, and this item appears ${times.length} times on your rhythm so you can tick each one off`}
@@ -1369,7 +1369,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
               />
               <span style={{ fontSize: 13, color: C.muted }}>minutes after the previous step</span>
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4 }}>
               How many minutes after the previous item completes (or after your wake time
               for the first item). Tap “🔔 Remind me at…” to get a reminder for this item.
             </div>
@@ -1389,7 +1389,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 background: form.frequency === val ? C.sage : C.mist,
                 color: form.frequency === val ? C.white : C.mid,
                 border: "none", borderRadius: 10, padding: "8px 4px",
-                fontSize: 12, cursor: "pointer",
+                fontSize: 13.5, cursor: "pointer",
               }}
             >
               {label}
@@ -1417,7 +1417,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
                 background: form.durationType === val ? C.sage : C.mist,
                 color: form.durationType === val ? C.white : C.mid,
                 border: "none", borderRadius: 10, padding: "8px 4px",
-                fontSize: 12, cursor: "pointer",
+                fontSize: 13.5, cursor: "pointer",
               }}
             >
               {label}
@@ -1446,7 +1446,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
               onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
               style={{
                 border: `1.5px solid ${C.border}`, borderRadius: 8,
-                padding: "6px 10px", fontSize: 12, color: C.charcoal,
+                padding: "6px 10px", fontSize: 13.5, color: C.charcoal,
                 background: C.surface, outline: "none",
               }}
             />
@@ -1493,7 +1493,7 @@ function ItemForm({ form, setForm, onSave, onCancel, onRemove = null, title, oth
 function FieldGroup({ label, children }) {
   return (
     <div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
         {label}
       </div>
       {children}

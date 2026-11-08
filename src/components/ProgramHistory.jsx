@@ -42,7 +42,7 @@ export default function ProgramHistory({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
         ✨ Your programs
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12 }}>
         Every program you've run, and the days you ticked something from it.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -52,7 +52,7 @@ export default function ProgramHistory({ profileId }) {
               <span style={{ fontWeight: 700 }}>{p.name}</span>
               <span style={{ color: C.mid, whiteSpace: "nowrap" }}>{PROGRAM_STATUS_LABELS[p.status]}</span>
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
               {fmt(p.startDate)} – {fmt(p.endDate)} · {p.totalDays} days · ticked on {p.daysTicked} {p.daysTicked === 1 ? "day" : "days"}
               {p.round ? " · another round" : ""}
             </div>

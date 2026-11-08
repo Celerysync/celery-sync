@@ -16,7 +16,7 @@ function iherbSearchUrl(name) {
 }
 
 const SUB_TABS = [
-  { id: "tracker", label: "📋 Today's" },
+  { id: "tracker", label: "📋 My supplements" },
   { id: "shop",    label: "🛒 Restock" },
 ];
 
@@ -53,7 +53,7 @@ export default function Supplements({ authUser, user, profileId }) {
       </div>
 
       {sub === "tracker" && (
-        <SupplementTracker authUser={authUser} user={user} profileId={profileId} />
+        <SupplementTracker authUser={authUser} user={user} profileId={profileId} startOpen />
       )}
 
       {sub === "shop" && (
@@ -62,7 +62,7 @@ export default function Supplements({ authUser, user, profileId }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: C.charcoal }}>
               🛒 Restock your supplements
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
               Quick links to find the supplements you've added, on iHerb. We don't suggest products — your list is your own.
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function Supplements({ authUser, user, profileId }) {
           {names.length === 0 ? (
             <Card>
               <div style={{ fontSize: 13, color: C.mid, lineHeight: 1.6 }}>
-                Add your supplements under <strong>Today's</strong> and they'll appear here with a restock link.
+                Add your supplements under <strong>My supplements</strong> and they'll appear here with a restock link.
               </div>
             </Card>
           ) : names.map((name) => (
@@ -83,7 +83,7 @@ export default function Supplements({ authUser, user, profileId }) {
                   rel="noopener noreferrer"
                   style={{
                     background: "#16a34a", color: "#fff", borderRadius: 30, padding: "7px 14px",
-                    fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none", flexShrink: 0,
+                    fontSize: 13.5, fontFamily: "Georgia,serif", fontWeight: 700, textDecoration: "none", flexShrink: 0,
                   }}
                 >
                   Find on iHerb →
@@ -92,7 +92,7 @@ export default function Supplements({ authUser, user, profileId }) {
             </Card>
           ))}
 
-          <div style={{ background: C.mist, borderRadius: 12, padding: "12px 14px", fontSize: 12, color: C.mid, lineHeight: 1.7 }}>
+          <div style={{ background: C.mist, borderRadius: 12, padding: "12px 14px", fontSize: 13.5, color: C.mid, lineHeight: 1.7 }}>
             Links use an affiliate code — CelerySync may earn a small commission. This isn't a recommendation of any product, and it isn't medical advice — always work with your doctor or pharmacist.
           </div>
         </div>

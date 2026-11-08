@@ -19,7 +19,7 @@ function MetricCard({ emoji, label, value, display, max, color }) {
       background: C.sageLight, borderRadius: 14, padding: "13px 14px",
       flex: "1 1 calc(50% - 6px)", minWidth: 0,
     }}>
-      <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>
         {emoji} {label}
       </div>
       <div style={{ fontSize: 20, fontWeight: 700, color: color || C.sageDark, fontFamily: "Georgia,serif" }}>
@@ -77,12 +77,12 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
           }}>
             {isLatest ? "🌟 This Week's Summary" : `Week of ${fmtDate(summary.week_start)}`}
           </div>
-          <div style={{ fontSize: 12, color: isLatest ? "rgba(255,255,255,0.75)" : C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 13.5, color: isLatest ? "rgba(255,255,255,0.75)" : C.muted, marginTop: 2 }}>
             {weekRange}
           </div>
         </div>
         <div style={{
-          fontSize: 12, color: isLatest ? "rgba(255,255,255,0.8)" : C.muted,
+          fontSize: 13.5, color: isLatest ? "rgba(255,255,255,0.8)" : C.muted,
           display: "flex", gap: 16, alignItems: "center",
         }}>
           <span>🌿 {summary.protocol_days}/7</span>
@@ -107,7 +107,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
               padding: "14px 16px", marginBottom: 12,
               borderLeft: `4px solid ${C.sage}`,
             }}>
-              <div style={{ fontSize: 12, color: C.sageDark, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, color: C.sageDark, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 Observations from your week
               </div>
               <RichText text={summary.ai_observations} style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.75 }} />
@@ -117,7 +117,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
                   marginTop: 10, background: speaking ? C.sage : "transparent",
                   border: `1px solid ${C.sage}`, color: speaking ? "#fff" : C.sage,
                   borderRadius: 20, padding: "5px 14px",
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700, cursor: "pointer",
                 }}
               >
                 {speaking ? "⏹ Stop" : "🔊 Hear it"}
@@ -128,13 +128,13 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
           {/* Key moments */}
           {milestones.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, color: C.gold, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 ✨ Key moments this week
               </div>
               {milestones.map((m, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5 }}>
                   <span style={{ color: C.sage, fontWeight: 700, flexShrink: 0 }}>•</span>
-                  <span style={{ fontSize: 12.5, color: C.charcoal, lineHeight: 1.6 }}>{m.insight || m}</span>
+                  <span style={{ fontSize: 14, color: C.charcoal, lineHeight: 1.6 }}>{m.insight || m}</span>
                 </div>
               ))}
             </div>
@@ -148,7 +148,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
               style={{
                 background: C.sageDark, color: "#fff", border: "none",
                 borderRadius: 20, padding: "8px 16px",
-                fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 cursor: downloading ? "default" : "pointer", opacity: downloading ? 0.7 : 1,
               }}
             >
@@ -164,7 +164,7 @@ function SummaryCard({ summary, onDownloadPDF, onDownloadDoctor, isLatest }) {
                 style={{
                   background: "transparent", color: C.sageDark,
                   border: `1px solid ${C.sage}`, borderRadius: 20, padding: "8px 16px",
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                   cursor: doctorDownloading ? "default" : "pointer", opacity: doctorDownloading ? 0.7 : 1,
                 }}
               >

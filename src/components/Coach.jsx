@@ -12,8 +12,10 @@ import { useActiveProtocol } from "../hooks/useActiveProtocol.js";
 import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { APP_DELETE_HOWTO, crisisContacts, safetyNumbersLine } from "../lib/voiceTabContext.js";
-import { todayStatus } from "../hooks/useVoiceTools.js";
+import { todayStatus, useVoiceTools } from "../hooks/useVoiceTools.js";
+import { runChatActions, describeActions } from "../lib/chatActions.js";
 import { LANGUAGES } from "../lib/languages.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -298,8 +300,27 @@ function formatFixedTime(t) {
   return new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+
+// This visit's chat, kept while they move between tabs.
+const CHAT_SESSION_MS = 2 * 60 * 60 * 1000;
+const chatKey = (pid) => `cs_chat_session_${pid}`;
+function readChatSession(pid) {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(chatKey(pid)) || "null");
+    if (!v || Date.now() - v.at > CHAT_SESSION_MS || !Array.isArray(v.messages) || v.messages.length < 2) return null;
+    return v.messages;
+  } catch { return null; }
+}
+function writeChatSession(pid, messages) {
+  try { sessionStorage.setItem(chatKey(pid), JSON.stringify({ at: Date.now(), messages: messages.slice(-30).map(({ role, content, via }) => ({ role, content, via })) })); } catch { /* full or blocked */ }
+}
+
 export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext, justOnboarded, onConsumedJustOnboarded }) {
+  const fern = useCompanionName();
+  // The same tools spoken Fern uses, so typed chat can do things too.
+  const chatTools = useVoiceTools(authUser, profileId, (tab, section) => onNavigate?.(section ? `${tab}:${section}` : tab));
   const [messages, setMessages] = useState([]);
+  useEffect(() => { if (profileId && messages.length > 1) writeChatSession(profileId, messages); }, [messages, profileId]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [crisisDetected, setCrisisDetected] = useState(false);
@@ -395,7 +416,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 ? `${justOnboarded.firstItem.name} at ${formatFixedTime(justOnboarded.firstItem.fixedTime)} is on your list.`
                 : `${justOnboarded.firstItem.name} is on your list, and your other steps are on Today.`)
             : "Your rhythm is ready — add to it anytime just by telling me."
-        } I'm your companion — here whenever you need me. How are you feeling right now?`
+        } I'm ${fern}, your helper. I'm here whenever you need me. How are you feeling right now?`
       : null;
 
     const greeting = justOnboardedGreeting
@@ -412,9 +433,13 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             ? "I've been keeping your notes safe and I'm ready to pick up where we left off."
             : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
         } What's on your mind today?`
-      : `Hello${realName(user) ? ", " + realName(user) : ""}! 🌿 I'm your CelerySync companion — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
+      : `Hello${realName(user) ? ", " + realName(user) : ""}! 🌿 I'm ${fern}, your CelerySync helper — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
-    setMessages([{ role: "assistant", content: greeting }]);
+    // Going to another tab and back carries on the same conversation (for a
+    // couple of hours), so "yes, remove it" still makes sense after a peek at
+    // Today.
+    const saved = !justOnboardedGreeting && readChatSession(profileId);
+    setMessages(saved || [{ role: "assistant", content: greeting }]);
     if (justOnboardedGreeting) onConsumedJustOnboarded?.();
     // Autoplay is blocked until a user gesture — queue the greeting and speak it
     // the moment the user first taps/clicks anywhere in the Coach panel.
@@ -459,11 +484,22 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         resetQueue();
         chatAbortRef.current?.abort();
         chatAbortRef.current = new AbortController();
+        // The action step: if they asked to do something, the app does it
+        // first (same tools and rules as voice), and Fern's reply knows.
+        let actionNote = "";
+        if (profileId && !caregiverMode) {
+          const done = await runChatActions({
+            messages: newMsgs,
+            execute: (name, input) => (chatTools[name] ? chatTools[name](input) : { error: "unknown_tool" }),
+            signal: chatAbortRef.current.signal,
+          }).catch((e) => { if (e?.name === "AbortError") throw e; return []; });
+          actionNote = describeActions(done);
+        }
         // Fresh each message, because they may have just ticked something.
         const today = profileId ? await todayStatus(profileId).catch(() => null) : null;
         const reply = await streamClaude({
           staticSystem: systemRef.current.staticSystem,
-          dynamicSystem: systemRef.current.dynamicSystem + todaySection(today),
+          dynamicSystem: systemRef.current.dynamicSystem + todaySection(today) + actionNote,
           messages: newMsgs.slice(-8).map(({ role, content }) => ({ role, content })),
           maxTokens: voiceModeRef.current ? 350 : 700,
           signal: chatAbortRef.current.signal,
@@ -575,7 +611,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         setLoading(false);
       }
     },
-    [messages, loading, speak, saveExchange, user, healingProfile, priorMessages]
+    [messages, loading, speak, saveExchange, user, healingProfile, priorMessages, chatTools, profileId, caregiverMode]
   );
 
   // Voice intake callback — merges voice-captured check-in fields into Supabase.
@@ -609,12 +645,12 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Header */}
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
-          🎙 Your CelerySync helper
+          🎙 {fern}
         </h2>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-          Your CelerySync helper — an AI, not a person · Paraphrased & attributed teachings · Remembers your journey
+        <div style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>
+          {fern} is an AI helper, not a person. She remembers your journey, and shares Anthony William's teachings in her own words, with credit.
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
           Not medical advice — always work with your doctor or licensed practitioner
         </div>
       </div>
@@ -635,10 +671,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <div style={{ fontFamily: "Georgia,serif", fontSize: 13, fontWeight: 700, color: C.sageDark }}>
               🧠 I remember your journey
             </div>
-            <div style={{ fontSize: 12, color: C.muted }}>{showMemory ? "hide ▲" : "show ▼"}</div>
+            <div style={{ fontSize: 13.5, color: C.muted }}>{showMemory ? "hide ▲" : "show ▼"}</div>
           </div>
           {showMemory && (
-            <div style={{ marginTop: 10, fontSize: 12.5, color: C.mid, lineHeight: 1.7 }}>
+            <div style={{ marginTop: 10, fontSize: 14, color: C.mid, lineHeight: 1.7 }}>
               {healingProfile.healing_summary}
               <div style={{ marginTop: 10 }}>
                 <button
@@ -651,7 +687,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     border: `1px solid ${C.border}`,
                     borderRadius: 20,
                     padding: "3px 10px",
-                    fontSize: 12,
+                    fontSize: 13.5,
                     color: C.muted,
                     cursor: "pointer",
                   }}
@@ -681,7 +717,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         <span style={{ fontSize: 15 }}>🌐</span>
         <label
           htmlFor="coach-lang"
-          style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flexShrink: 0 }}
+          style={{ fontFamily: "Georgia,serif", fontSize: 13.5, color: C.mid, flexShrink: 0 }}
         >
           I chat in
         </label>
@@ -692,7 +728,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
           style={{
             flex: 1,
             fontFamily: "Georgia,serif",
-            fontSize: 12.5,
+            fontSize: 14,
             color: C.charcoal,
             background: C.surface,
             border: `1.5px solid ${C.border}`,
@@ -729,7 +765,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         }}
       >
         <span style={{ fontSize: 15 }}>🔊</span>
-        <span style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flex: 1 }}>
+        <span style={{ fontFamily: "Georgia,serif", fontSize: 13.5, color: C.mid, flex: 1 }}>
           Talk to me with the mic and I'll answer out loud. Tap any reply to hear it.
         </span>
       </button>
@@ -744,7 +780,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.sage, animation: "pulse 1.5s infinite", flexShrink: 0 }} />
-            <div style={{ fontSize: 12, color: C.sageDark, fontFamily: "Georgia,serif" }}>
+            <div style={{ fontSize: 13.5, color: C.sageDark, fontFamily: "Georgia,serif" }}>
               Hands-free mode — AI will listen after each response
             </div>
           </div>
@@ -801,7 +837,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               </a>
             ))}
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280", marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13.5, color: "#6B7280", marginTop: 10, lineHeight: 1.5 }}>
             Sometimes the strongest thing is asking for human help. There is no shame in that.
           </div>
           <button
@@ -811,7 +847,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               background: "none",
               border: "none",
               color: "#9CA3AF",
-              fontSize: 12,
+              fontSize: 13.5,
               cursor: "pointer",
             }}
           >
@@ -866,7 +902,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                   }}
                 >
                   {m.via === "voice" && (
-                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
+                    <div style={{ fontSize: 13.5, opacity: 0.75, marginBottom: 2 }}>🎙 said aloud</div>
                   )}
                   {m.role === "assistant" ? <RichText text={m.content} /> : m.content}
                 </div>
@@ -883,7 +919,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     style={{
                       background: copied ? C.sage : C.surface, color: copied ? C.white : C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
-                      padding: "5px 12px", fontSize: 12, cursor: "pointer",
+                      padding: "5px 12px", fontSize: 13.5, cursor: "pointer",
                       fontFamily: "Georgia,serif", transition: "all 0.2s",
                     }}
                   >
@@ -894,7 +930,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                     style={{
                       background: C.surface, color: C.mid,
                       border: `1px solid ${C.border}`, borderRadius: 20,
-                      padding: "5px 12px", fontSize: 12, cursor: "pointer",
+                      padding: "5px 12px", fontSize: 13.5, cursor: "pointer",
                       fontFamily: "Georgia,serif",
                     }}
                   >
@@ -984,7 +1020,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.gold, animation: "pulse 1s infinite", flexShrink: 0 }} />
             <div style={{ fontSize: 13, color: C.charcoal, fontFamily: "Georgia,serif" }}>🔊 Tap to stop speaking</div>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 20, padding: "3px 10px" }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 20, padding: "3px 10px" }}>
             Stop ✕
           </div>
         </button>
@@ -1002,7 +1038,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               border: `1.5px solid ${handsFree ? C.sage : C.border}`,
               background: handsFree ? C.sage : C.surface,
               color: handsFree ? C.white : C.muted,
-              fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+              fontSize: 13.5, fontFamily: "Georgia,serif", fontWeight: 700,
               cursor: "pointer", whiteSpace: "nowrap",
               boxShadow: handsFree ? `0 0 0 3px ${alpha(C.sage, "30")}` : "none",
               transition: "all 0.2s",
@@ -1030,8 +1066,8 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         {companion.enabled && (
           <button
             onClick={startCompanion}
-            title="Talk with your companion"
-            aria-label="Talk with your companion"
+            title={`Talk with ${fern}`}
+            aria-label={`Talk with ${fern}`}
             style={{
               width: 50,
               height: 50,
@@ -1104,7 +1140,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Follow-up suggestions — appear after each AI response */}
       {followUps.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          <div style={{ width: "100%", fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>
+          <div style={{ width: "100%", fontSize: 13.5, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>
             Ask next
           </div>
           {followUps.map((q) => (
@@ -1115,7 +1151,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 padding: "7px 14px",
                 borderRadius: 30,
                 border: `1.5px solid ${alpha(C.sage, "60")}`,
-                fontSize: 12,
+                fontSize: 13.5,
                 cursor: "pointer",
                 color: C.sageDark,
                 fontFamily: "Georgia,serif",
@@ -1135,11 +1171,11 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         const query = encodeURIComponent(lastUser.content.slice(0, 60));
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
-            <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>Go deeper:</span>
+            <span style={{ fontSize: 13.5, color: C.muted, flexShrink: 0 }}>Go deeper:</span>
             <a
               href={`https://www.youtube.com/results?search_query=medical+medium+${query}`}
               target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 12, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+              style={{ fontSize: 13.5, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
             >
               ▶ AW on YouTube
             </a>
@@ -1147,7 +1183,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             <a
               href="https://medicalmedium.com/medical-medium-podcast"
               target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 12, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
+              style={{ fontSize: 13.5, color: C.sage, textDecoration: "none", fontFamily: "Georgia,serif" }}
             >
               🎙 MM Podcast
             </a>
@@ -1166,7 +1202,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 padding: "7px 13px",
                 borderRadius: 30,
                 border: `1.5px solid ${C.border}`,
-                fontSize: 12,
+                fontSize: 13.5,
                 cursor: "pointer",
                 color: C.mid,
                 fontFamily: "Georgia,serif",

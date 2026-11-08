@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 function ordinal(n) {
   const s = ["th", "st", "nd", "rd"];
@@ -58,7 +59,7 @@ function LetterCard({ letter, profileId }) {
           }}>
             {ordinal(letter.year_number)} healing anniversary 💚
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
             {fmtDate(letter.created_at)}
           </div>
         </div>
@@ -66,7 +67,7 @@ function LetterCard({ letter, profileId }) {
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              padding: "5px 12px", borderRadius: 20, fontSize: 12,
+              padding: "5px 12px", borderRadius: 20, fontSize: 13.5,
               fontFamily: "Georgia,serif", fontWeight: 600,
               border: `1px solid ${C.border}`,
               background: expanded ? C.sageLight : C.surface,
@@ -79,7 +80,7 @@ function LetterCard({ letter, profileId }) {
             onClick={handleDownload}
             disabled={downloading}
             style={{
-              padding: "5px 12px", borderRadius: 20, fontSize: 12,
+              padding: "5px 12px", borderRadius: 20, fontSize: 13.5,
               fontFamily: "Georgia,serif", fontWeight: 600,
               border: `1px solid ${done ? C.sage : C.sageDark}`,
               background: done ? C.sage : C.sageDark,
@@ -117,6 +118,7 @@ function LetterCard({ letter, profileId }) {
 }
 
 export default function HealingLetters({ profileId }) {
+  const fern = useCompanionName();
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -136,8 +138,8 @@ export default function HealingLetters({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         💌 Anniversary Letters
       </div>
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-        Each year on your CelerySync anniversary, your AI guide writes you a personal letter — reflecting on how far you've come, what it witnessed in your journey, and its hopes for the year ahead. These are yours to keep forever.
+      <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+        Each year on your CelerySync anniversary, {fern} writes you a personal letter about how far you've come, what she's seen in your journey, and her hopes for the year ahead. These are yours to keep forever.
       </div>
 
       {loading && (
@@ -157,8 +159,8 @@ export default function HealingLetters({ profileId }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
             Your first letter is being written
           </div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            On each anniversary of when you joined CelerySync, your AI guide will write you a personal anniversary letter. Check back on your anniversary date — it will be here waiting.
+          <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
+            On each anniversary of when you joined CelerySync, {fern} will write you a personal anniversary letter. Check back on your anniversary date — it will be here waiting.
           </div>
         </div>
       )}
@@ -173,7 +175,7 @@ export default function HealingLetters({ profileId }) {
           background: C.sageLight, borderRadius: 12,
           border: `1px solid ${alpha(C.sage, "30")}`,
         }}>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
             Letters are generated automatically on your anniversary each year and emailed to you. They're also stored here permanently — you'll never lose them.
           </div>
         </div>

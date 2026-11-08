@@ -42,13 +42,13 @@ export default function DoctorReport({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         🏥 Doctor Report
       </div>
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
         A professional PDF you can hand to any doctor or health practitioner — objective data, symptom notes, supplement list, and energy trends. No AW language unless you choose Extended.
       </div>
 
       {/* Period selector */}
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 8 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 8 }}>
           Report period
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -57,7 +57,7 @@ export default function DoctorReport({ profileId }) {
               key={p.months}
               onClick={() => setMonths(p.months)}
               style={{
-                padding: "7px 16px", borderRadius: 20, fontSize: 12,
+                padding: "7px 16px", borderRadius: 20, fontSize: 13.5,
                 fontFamily: "Georgia,serif", fontWeight: 600, cursor: "pointer",
                 border: `1.5px solid ${months === p.months ? C.sageDark : C.border}`,
                 background: months === p.months ? C.sageDark : C.surface,
@@ -80,7 +80,7 @@ export default function DoctorReport({ profileId }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>
               {extended ? "Extended report" : "Standard report"}
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
               {extended
                 ? "Includes details of your own routine — for naturopaths and integrative practitioners"
                 : "Objective data and clinical language only — suitable for any GP or specialist"}
@@ -107,7 +107,7 @@ export default function DoctorReport({ profileId }) {
 
       {/* What's included */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
           What's included
         </div>
         {[
@@ -120,12 +120,12 @@ export default function DoctorReport({ profileId }) {
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5, alignItems: "flex-start" }}>
             <span style={{ color: C.sage, fontWeight: 700, flexShrink: 0 }}>✓</span>
-            <span style={{ fontSize: 12, color: C.charcoal }}>{item}</span>
+            <span style={{ fontSize: 13.5, color: C.charcoal }}>{item}</span>
           </div>
         ))}
         <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "flex-start" }}>
           <span style={{ color: C.terracotta, fontWeight: 700, flexShrink: 0 }}>!</span>
-          <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+          <span style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.5 }}>
             Self-reported data only. Includes disclaimer on every page. Not a medical record.
           </span>
         </div>

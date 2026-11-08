@@ -30,7 +30,7 @@ const CATEGORY_COLORS = {
 };
 
 function EnergyBar({ value, max = 10 }) {
-  if (!value) return <span style={{ fontSize: 12, color: C.muted }}>No data</span>;
+  if (!value) return <span style={{ fontSize: 13.5, color: C.muted }}>No data</span>;
   const pct = (value / max) * 100;
   const color = value >= 7 ? C.sage : value >= 4 ? C.gold : C.terracotta;
   return (
@@ -38,7 +38,7 @@ function EnergyBar({ value, max = 10 }) {
       <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.border }}>
         <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: color }} />
       </div>
-      <span style={{ fontSize: 12, color, fontWeight: 700 }}>{value}/10</span>
+      <span style={{ fontSize: 13.5, color, fontWeight: 700 }}>{value}/10</span>
     </div>
   );
 }
@@ -65,7 +65,7 @@ export function PlannedRecipe({ recipe }) {
             <ol style={{ margin: 0, paddingLeft: 22 }}>{recipe.steps.map((x, i) => <li key={i}>{x}</li>)}</ol>
           )}
           {recipe.notes && <div style={{ fontSize: 13, color: C.mid, marginTop: 6 }}>📝 {recipe.notes}</div>}
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Their own recipe, as they saved it.</div>
+          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 6 }}>Their own recipe, as they saved it.</div>
         </div>
       )}
     </div>
@@ -105,14 +105,14 @@ function PatientCard({ patient }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
               {patient.name}
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
               Last check-in: {lastCheckinLabel}
             </div>
           </div>
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              padding: "6px 14px", borderRadius: 20, fontSize: 12,
+              padding: "6px 14px", borderRadius: 20, fontSize: 13.5,
               fontFamily: "Georgia,serif", fontWeight: 700,
               border: `1.5px solid ${alpha(C.plum, "40")}`,
               background: expanded ? C.plum : "transparent",
@@ -129,7 +129,7 @@ function PatientCard({ patient }) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {patient.symptoms.slice(0, 4).map(s => (
               <span key={s} style={{
-                padding: "3px 10px", borderRadius: 20, fontSize: 12,
+                padding: "3px 10px", borderRadius: 20, fontSize: 13.5,
                 background: `${alpha(C.plum, "15")}`, color: C.plum,
                 fontFamily: "Georgia,serif",
               }}>
@@ -137,7 +137,7 @@ function PatientCard({ patient }) {
               </span>
             ))}
             {patient.symptoms.length > 4 && (
-              <span style={{ fontSize: 12, color: C.muted, alignSelf: "center" }}>
+              <span style={{ fontSize: 13.5, color: C.muted, alignSelf: "center" }}>
                 +{patient.symptoms.length - 4} more
               </span>
             )}
@@ -155,19 +155,19 @@ function PatientCard({ patient }) {
           <div style={{ fontSize: 20, fontWeight: 700, color: rhythmDays >= 5 ? C.sage : C.gold, fontFamily: "Georgia,serif" }}>
             {rhythmDays}/7
           </div>
-          <div style={{ fontSize: 12, color: C.muted }}>rhythm days</div>
+          <div style={{ fontSize: 13.5, color: C.muted }}>rhythm days</div>
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: avgEnergy >= 7 ? C.sage : avgEnergy >= 4 ? C.gold : C.terracotta, fontFamily: "Georgia,serif" }}>
             {avgEnergy ?? "—"}
           </div>
-          <div style={{ fontSize: 12, color: C.muted }}>avg energy</div>
+          <div style={{ fontSize: 13.5, color: C.muted }}>avg energy</div>
         </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: C.plum, fontFamily: "Georgia,serif" }}>
             {milestones.length}
           </div>
-          <div style={{ fontSize: 12, color: C.muted }}>milestones</div>
+          <div style={{ fontSize: 13.5, color: C.muted }}>milestones</div>
         </div>
       </div>
 
@@ -181,16 +181,16 @@ function PatientCard({ patient }) {
             padding: "12px 14px", marginBottom: 14,
             border: `1px solid ${alpha(C.sage, "30")}`,
           }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif", marginBottom: 4 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif", marginBottom: 4 }}>
               {task.emoji} Right now: {task.label}
             </div>
-            <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6 }}>{task.detail}</div>
+            <div style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.6 }}>{task.detail}</div>
           </div>
 
           {/* Today's planned recipes, in full, so the carer can make them */}
           {(patient.planned_today || []).length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 Planned for today
               </div>
               {patient.planned_today.map((r, i) => <PlannedRecipe key={i} recipe={r} />)}
@@ -207,7 +207,7 @@ function PatientCard({ patient }) {
           {/* What they made this week (their own recipes, counts only) */}
           {(patient.made_week || []).length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 Made this week
               </div>
               {patient.made_week.map((m) => (
@@ -221,7 +221,7 @@ function PatientCard({ patient }) {
           {/* This week's check-ins */}
           {checkins.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 This week
               </div>
               {checkins.map(c => (
@@ -229,18 +229,18 @@ function PatientCard({ patient }) {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "7px 0", borderBottom: `1px solid ${alpha(C.border, "40")}`,
                 }}>
-                  <div style={{ fontSize: 12, color: C.charcoal, fontFamily: "Georgia,serif" }}>
+                  <div style={{ fontSize: 13.5, color: C.charcoal, fontFamily: "Georgia,serif" }}>
                     {new Date(c.check_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     {c.rhythm_total > 0 && (
-                      <span title="Own rhythm items done" style={{ fontSize: 12, color: C.sageDark }}>
+                      <span title="Own rhythm items done" style={{ fontSize: 13.5, color: C.sageDark }}>
                         🌿 {c.rhythm_completed || 0}/{c.rhythm_total}
                       </span>
                     )}
                     {c.energy && (
                       <span style={{
-                        fontSize: 12, fontWeight: 700, padding: "2px 8px",
+                        fontSize: 13.5, fontWeight: 700, padding: "2px 8px",
                         borderRadius: 20, background: C.sageLight, color: C.sageDark,
                       }}>
                         ⚡ {c.energy}
@@ -255,7 +255,7 @@ function PatientCard({ patient }) {
           {/* Recent milestones */}
           {milestones.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 Recent milestones
               </div>
               {milestones.map((m, i) => {
@@ -265,13 +265,13 @@ function PatientCard({ patient }) {
                     display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start",
                   }}>
                     <span style={{
-                      padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      padding: "2px 8px", borderRadius: 20, fontSize: 13, fontWeight: 700,
                       background: cat.bg, color: cat.color, flexShrink: 0, marginTop: 1,
                       textTransform: "uppercase", letterSpacing: 0.3,
                     }}>
                       {m.category}
                     </span>
-                    <span style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>{m.insight}</span>
+                    <span style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.6 }}>{m.insight}</span>
                   </div>
                 );
               })}
@@ -279,7 +279,7 @@ function PatientCard({ patient }) {
           )}
 
           {checkins.length === 0 && milestones.length === 0 && (
-            <div style={{ fontSize: 12, color: C.muted, textAlign: "center", padding: "12px 0", fontStyle: "italic" }}>
+            <div style={{ fontSize: 13.5, color: C.muted, textAlign: "center", padding: "12px 0", fontStyle: "italic" }}>
               No data yet — they may still be getting started
             </div>
           )}
@@ -289,7 +289,7 @@ function PatientCard({ patient }) {
   );
 }
 
-export default function CarerView({ authUser }) {
+export default function CarerView({ authUser, hideWhenEmpty = false }) {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -303,6 +303,8 @@ export default function CarerView({ authUser }) {
       .catch(() => setLoading(false));
   }, [authUser?.id]);
 
+  // In Settings, only people who look after someone see this.
+  if (hideWhenEmpty && (loading || patients.length === 0)) return null;
   if (loading) return (
     <div style={{ textAlign: "center", padding: "48px 0", color: C.muted, fontFamily: "Georgia,serif" }}>
       🌿 Loading…

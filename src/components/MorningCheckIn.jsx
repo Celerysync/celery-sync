@@ -120,7 +120,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
           {speaking && (
             <button
               onClick={stopSpeaking}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.muted, padding: 0, marginBottom: 4 }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13.5, color: C.muted, padding: 0, marginBottom: 4 }}
             >
               ⏹ Stop audio
             </button>
@@ -134,7 +134,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
                 style={{
                   padding: "6px 12px", borderRadius: 50, cursor: "pointer",
                   border: `1.5px solid ${alpha(C.sage, "66")}`, background: C.surface,
-                  fontFamily: "Georgia,serif", fontSize: 12, color: C.sageDark,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, color: C.sageDark,
                 }}
               >
                 {chip}
@@ -160,7 +160,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
               style={{
                 padding: "9px 16px", borderRadius: 12, border: "none",
                 background: intentionDraft.trim() ? C.sage : "#d1d5db", color: C.white,
-                fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 cursor: intentionDraft.trim() ? "pointer" : "default",
               }}
             >
@@ -182,7 +182,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
                 style={{
                   padding: "9px 16px", borderRadius: 50, border: "none", cursor: "pointer",
                   background: C.sage, color: C.white,
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 🎙 Talk it through
@@ -193,7 +193,7 @@ export default function MorningCheckIn({ user, sequence, todaysCheckin, saveChec
               style={{
                 padding: "9px 16px", borderRadius: 50, cursor: "pointer",
                 border: `1.5px solid ${C.border}`, background: C.surface,
-                fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
+                fontFamily: "Georgia,serif", fontSize: 13.5, color: C.charcoal,
               }}
             >
               Done

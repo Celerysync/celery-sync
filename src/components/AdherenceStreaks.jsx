@@ -18,7 +18,7 @@ function StatPill({ label, value, bg, color }) {
   return (
     <div style={{ background: bg, borderRadius: 10, padding: "8px 12px", textAlign: "center", flex: 1, minWidth: 90 }}>
       <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "Georgia,serif", color }}>{value}</div>
-      <div style={{ fontSize: 12, color: C.mid, marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 13.5, color: C.mid, marginTop: 1 }}>{label}</div>
     </div>
   );
 }
@@ -133,7 +133,7 @@ export default function AdherenceStreaks({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
         🔥 Your streaks
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
         From what you've ticked, compared with the {stats.totalItems} {stats.totalItems === 1 ? "item" : "items"} on your rhythm now.
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: totalSourceEvents > 0 ? 12 : 0 }}>
@@ -143,12 +143,6 @@ export default function AdherenceStreaks({ profileId }) {
           <StatPill label="This week" value={`${weekAdherence}%`} bg={alpha("#16a34a", "14")} color={C.sage} />
         )}
       </div>
-      {totalSourceEvents > 0 && (
-        <div style={{ fontSize: 12, color: C.muted }}>
-          Last 7 days: {sourceCounts.tap} tapped · {sourceCounts.voice} by voice
-          {sourceCounts.auto ? ` · ${sourceCounts.auto} auto` : ""}
-        </div>
-      )}
     </Card>
   );
 }

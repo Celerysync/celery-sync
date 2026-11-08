@@ -221,7 +221,7 @@ export default function Auth() {
                     Sign in
                   </button>
                 </span>
-                <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
                   Try free for 7 days, then plans from {price("rhythm")}/month. Cancel anytime.
                 </div>
               </>
@@ -235,7 +235,7 @@ export default function Auth() {
                   </button>
                 </span>
                 <button
-                  style={{ ...linkBtn, color: C.muted, fontSize: 12 }}
+                  style={{ ...linkBtn, color: C.muted, fontSize: 13.5 }}
                   onClick={() => { setMode('reset'); setMsg(null) }}
                 >
                   Forgot password?
@@ -250,7 +250,7 @@ export default function Auth() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
           CelerySync is an independent companion tool, not affiliated with{'\n'}Anthony William or Medical Medium Inc.
         </div>
       </div>

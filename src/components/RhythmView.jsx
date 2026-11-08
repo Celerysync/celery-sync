@@ -89,8 +89,15 @@ export default function RhythmView({
   const now = Date.now();
 
   // Find the current position in the sequence
-  const currentIdx = sequence.findIndex((item) => {
+  // A step with no time that sits before a step whose time has passed
+  // ("Lemon water when I wake" in the evening) happened earlier in the day:
+  // never "Up next" at night.
+  let lastPassedIdx = -1;
+  sequence.forEach((item, i) => { if (item.scheduledMs != null && item.scheduledMs < now) lastPassedIdx = i; });
+  const earlierUntimed = (item, i) => item.scheduledMs == null && !item.waitingFor && i < lastPassedIdx;
+  const currentIdx = sequence.findIndex((item, i) => {
     if (item.completedAt) return false;
+    if (earlierUntimed(item, i)) return false;
     return item.scheduledMs == null || item.scheduledMs >= now;
   });
 
@@ -138,7 +145,7 @@ export default function RhythmView({
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.plum }}>
                 ✨ {activeProgram.name}
               </div>
-              <div style={{ fontSize: 12, color: C.plum, opacity: 0.8, marginTop: 2 }}>
+              <div style={{ fontSize: 13.5, color: C.plum, opacity: 0.8, marginTop: 2 }}>
                 Day {currentProgramDay} of {activeProgram.totalDays}
               </div>
             </div>
@@ -150,7 +157,7 @@ export default function RhythmView({
                   transition: "width 0.3s",
                 }} />
               </div>
-              <div style={{ fontSize: 12, color: C.plum, marginTop: 4 }}>
+              <div style={{ fontSize: 13.5, color: C.plum, marginTop: 4 }}>
                 {activeProgram.totalDays - currentProgramDay} days remaining
               </div>
             </div>
@@ -175,7 +182,7 @@ export default function RhythmView({
           display: "flex", alignItems: "flex-start", gap: 10,
         }}>
           <span style={{ fontSize: 18, flexShrink: 0 }}>⚕️</span>
-          <div style={{ fontSize: 12, color: C.plum, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.plum, lineHeight: 1.6 }}>
             <strong>You have prescribed medicines in your rhythm.</strong> Please confirm timing and any interactions with your doctor or pharmacist.
           </div>
         </div>
@@ -236,12 +243,12 @@ export default function RhythmView({
         )}
       </div>
       {onOpen && (
-        <div style={{ fontSize: 12, color: C.muted, marginTop: -4 }}>Tick a step when it's done. Tap its name to change it.</div>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: -4 }}>Tick a step when it's done. Tap its name to change it.</div>
       )}
 
       {/* Anchor time display */}
       {anchorTime && (
-        <div style={{ fontSize: 12, color: C.muted }}>
+        <div style={{ fontSize: 13.5, color: C.muted }}>
           ⏰ Wake time: <strong style={{ color: C.sageDark }}>{new Date(`2000-01-01T${anchorTime}`).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}</strong>
         </div>
       )}
@@ -250,7 +257,7 @@ export default function RhythmView({
       {sequence.map((item, idx) => {
         const isDone = !!item.completedAt;
         const isNext = idx === currentIdx && !isDone;
-        const isPast = item.scheduledMs != null && item.scheduledMs < now && !isDone;
+        const isPast = !isDone && ((item.scheduledMs != null && item.scheduledMs < now) || earlierUntimed(item, idx));
         const expanded = expandedId === item.id;
         const catColor = CATEGORY_COLORS[item.category] || C.mid;
         const isMed = item.isMedicine;
@@ -266,7 +273,7 @@ export default function RhythmView({
         } else if (isPast) {
           // Never "overdue": many people here are unwell, and a missed time
           // isn't a failing. It simply happened earlier in the day.
-          statusLabel = `Earlier · ${formatTime(item.scheduledMs)}`;
+          statusLabel = item.scheduledMs != null ? `Earlier · ${formatTime(item.scheduledMs)}` : "Earlier today";
           statusColor = C.muted;
         } else if (item.waitingFor) {
           statusLabel = `After ${item.waitingFor}`;
@@ -289,7 +296,7 @@ export default function RhythmView({
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.leaf, flexShrink: 0 }} />
                 <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
-                <div style={{ fontSize: 12, color: C.leaf, fontWeight: 700, letterSpacing: 0.5 }}>UP NEXT</div>
+                <div style={{ fontSize: 13.5, color: C.leaf, fontWeight: 700, letterSpacing: 0.5 }}>UP NEXT</div>
                 <div style={{ flex: 1, height: 1, background: `${alpha(C.leaf, "60")}` }} />
               </div>
             )}
@@ -352,21 +359,21 @@ export default function RhythmView({
                     )}
                     {isMed && (
                       <span style={{
-                        fontSize: 11, background: `${alpha(C.plum, "20")}`, color: C.plum,
+                        fontSize: 13, background: `${alpha(C.plum, "20")}`, color: C.plum,
                         borderRadius: 20, padding: "1px 6px", fontWeight: 700,
                       }}>Rx</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
+                  <div style={{ fontSize: 13.5, color: statusColor, marginTop: 2, fontWeight: isDone || isNext ? 700 : 400 }}>
                     {statusLabel}
                   </div>
                   {recipeFor(item.id)?.planned && recipeFor(item.id).recipeName && (
-                    <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+                    <div style={{ fontSize: 13.5, color: C.mid, marginTop: 2 }}>
                       🍽 {recipeFor(item.id).recipeName}
                     </div>
                   )}
                   {linkedTo(item).length > 0 && (
-                    <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+                    <div style={{ fontSize: 13.5, color: C.mid, marginTop: 2 }}>
                       💊 with {linkedTo(item).map((s) => s.name).join(", ")}
                     </div>
                   )}
@@ -389,7 +396,7 @@ export default function RhythmView({
                       onClick={() => setExpandedId(expanded ? null : item.id)}
                       style={{
                         background: "none", border: "none", color: C.muted,
-                        fontSize: 12, cursor: "pointer", padding: 0,
+                        fontSize: 13.5, cursor: "pointer", padding: 0,
                       }}
                     >
                       {expanded ? "▲" : "▼"}
@@ -428,7 +435,7 @@ export default function RhythmView({
               {expanded && (
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
                   {item.note && (
-                    <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.5 }}>
                       {item.note}
                     </div>
                   )}
@@ -437,7 +444,7 @@ export default function RhythmView({
                     const today = new Date();
                     const dayOn = Math.floor((today - start) / 86_400_000) + 1;
                     return (
-                      <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+                      <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4 }}>
                         Day {dayOn} of {item.durationDays}
                       </div>
                     );
@@ -479,7 +486,7 @@ export default function RhythmView({
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16 }}>
             Rhythm complete today!
           </div>
-          <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}>
+          <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 4 }}>
             Every step done. Nicely done.
           </div>
         </div>

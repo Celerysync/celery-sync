@@ -1,0 +1,984 @@
+[
+ {
+  "name": "add_supplement",
+  "description": "Add a supplement to the user's own supplement list. Only use an amount the user tells you from their own bottle or book — never suggest one.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "dose_label": {
+     "type": "string",
+     "description": "Only what the user said, e.g. '2 capsules'"
+    },
+    "timing": {
+     "type": "string",
+     "enum": [
+      "morning_empty",
+      "morning_food",
+      "midday",
+      "evening"
+     ]
+    },
+    "another_time": {
+     "type": "boolean",
+     "description": "true if they take the same supplement at a second time of day"
+    },
+    "with_item": {
+     "type": "string",
+     "description": "Optional: the step it's taken with, as they said it, e.g. 'smoothie' for 'B12 with my smoothie'. Also links a supplement they already have."
+    }
+   },
+   "required": [
+    "name"
+   ]
+  }
+ },
+ {
+  "name": "add_to_shopping_list",
+  "description": "Add to the user's shopping list exactly as they say it ('add lemons to my list'), and/or the ingredients of their own recipes (recipe_names), and/or everything in this week's plan (this_week: true). Lines are kept as written and sorted by aisle.",
+  "input_schema": {
+   "type": "object",
+   "required": [],
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Things to add, one per entry, in their words"
+    },
+    "recipe_names": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Their recipes whose ingredients to add"
+    },
+    "this_week": {
+     "type": "boolean",
+     "description": "True to add the ingredients of everything planned in the next 7 days"
+    }
+   }
+  }
+ },
+ {
+  "name": "cook_along",
+  "description": "Read one of the user's recipes one step at a time while they cook ('read me the steps', 'cook with me'). start with recipe_name opens cook mode on their screen with the ingredients; then next, repeat, back or stop as they say. Read only the step it returns, word for word, then wait.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "action"
+   ],
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "start",
+      "next",
+      "repeat",
+      "back",
+      "stop"
+     ]
+    },
+    "recipe_name": {
+     "type": "string",
+     "description": "Their recipe, for start"
+    }
+   }
+  }
+ },
+ {
+  "name": "delete_recipe",
+  "description": "Delete one of the user's recipes from their Kitchen. Asks for a yes first (needs_confirmation); it can't be brought back.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "recipe_name"
+   ],
+   "properties": {
+    "recipe_name": {
+     "type": "string"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "Only after they clearly said yes"
+    }
+   }
+  }
+ },
+ {
+  "name": "end_program",
+  "description": "End the program that's running now. Use finished: true when they've finished it; leave it out when they're stopping early. It asks for confirmation first.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    },
+    "finished": {
+     "type": "boolean",
+     "description": "true when the user says they've finished or completed the program, so it's recorded as finished rather than ended early."
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "find_recipe",
+  "description": "Look in the user's own Kitchen: read one recipe out (recipe_name), find which of THEIR recipes use some ingredients (ingredients), or list them (optionally by kind). Never suggest recipes that aren't theirs.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "recipe_name": {
+     "type": "string",
+     "description": "A recipe to read out"
+    },
+    "ingredients": {
+     "type": "string",
+     "description": "e.g. 'potatoes and spinach' for 'what can I make with potatoes and spinach'"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "juice",
+      "smoothie",
+      "meal",
+      "snack",
+      "drink",
+      "other"
+     ],
+     "description": "List only this section"
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "get_meal_plan",
+  "description": "What the user has planned: 'what's for dinner tonight?', 'what have I planned this week?'. Only their own plan.",
+  "input_schema": {
+   "type": "object",
+   "required": [],
+   "properties": {
+    "day": {
+     "type": "string",
+     "description": "today, tomorrow, a weekday or YYYY-MM-DD. Default today."
+    },
+    "whole_week": {
+     "type": "boolean",
+     "description": "True for the 7 days from that day"
+    }
+   }
+  }
+ },
+ {
+  "name": "get_shopping_list",
+  "description": "What's still to get on the user's shopping list, by aisle, and how many are ticked.",
+  "input_schema": {
+   "type": "object",
+   "required": [],
+   "properties": {}
+  }
+ },
+ {
+  "name": "get_today_status",
+  "description": "Get the real, current state of the user's daily rhythm: every item with whether it's done, plus completed/total counts. Call this before answering any question about today's progress, what's left, or how they're doing — never answer from memory.",
+  "input_schema": {
+   "type": "object",
+   "properties": {},
+   "required": []
+  }
+ },
+ {
+  "name": "invite_carer",
+  "description": "Invite someone (by email) to be the user's carer so they can see the user's progress. Call first WITHOUT confirmed; ask the question it returns; call again with confirmed: true after a clear yes.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "email": {
+     "type": "string"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    }
+   },
+   "required": [
+    "email"
+   ]
+  }
+ },
+ {
+  "name": "link_recipe",
+  "description": "Make a step in the user's everyday rhythm open one of their recipes (a 📖 appears on Today), e.g. 'link my green smoothie to my smoothie step'. Leave recipe_name empty to unlink.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "item_name"
+   ],
+   "properties": {
+    "item_name": {
+     "type": "string",
+     "description": "The rhythm step, as they said it"
+    },
+    "recipe_name": {
+     "type": "string",
+     "description": "Their recipe; empty to unlink"
+    }
+   }
+  }
+ },
+ {
+  "name": "list_saved_rhythms",
+  "description": "List the user's saved day templates and multi-day programs, and any program running now.",
+  "input_schema": {
+   "type": "object",
+   "properties": {},
+   "required": []
+  }
+ },
+ {
+  "name": "load_day_template",
+  "description": "Replace the user's current daily rhythm with one of their saved day templates (current items are kept in history). Call first WITHOUT confirmed; ask the question it returns; call again with confirmed: true only after a clear yes.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    }
+   },
+   "required": [
+    "name"
+   ]
+  }
+ },
+ {
+  "name": "log_checkin",
+  "description": "Save today's check-in from what the user tells you about how they feel (energy, feelings, clarity, symptoms). It shows on their Today screen exactly as if they'd tapped it. Things from their routine ('had my juice') are mark_activity instead.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "energy": {
+     "type": "integer",
+     "description": "1-10: exhausted 2, struggling 4, okay 6, good 8, great 10"
+    },
+    "feelings": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "Hopeful",
+       "Grateful",
+       "Calm",
+       "Determined",
+       "Anxious",
+       "Overwhelmed",
+       "Discouraged",
+       "Tearful",
+       "Frustrated",
+       "Numb",
+       "Lonely",
+       "Irritable"
+      ]
+     },
+     "description": "Any of these that match how they say they feel"
+    },
+    "mood": {
+     "type": "string",
+     "description": "Their mood in their own words"
+    },
+    "clarity": {
+     "type": "integer",
+     "description": "Mental clarity 1-5: severe fog 1, foggy 2, patchy 3, mostly clear 4, clear 5"
+    },
+    "symptoms": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "notes": {
+     "type": "string"
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "log_restock",
+  "description": "Record a supplement restock, e.g. \"I bought two more bottles of B12\".",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Supplement name, e.g. 'B12'"
+    },
+    "unitsAdded": {
+     "type": "number",
+     "description": "How many units were added"
+    }
+   },
+   "required": [
+    "name",
+    "unitsAdded"
+   ]
+  }
+ },
+ {
+  "name": "log_rhythm_item",
+  "description": "Add an item to the user's daily rhythm, e.g. 'add zinc at 9am'. Call once per item. fixedTime (24-hour HH:MM) sets its daily reminder. If an item with the same name already exists it updates that item's time instead of adding a copy. To tick something off use mark_activity.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Item name, e.g. 'Zinc'"
+    },
+    "category": {
+     "type": "string",
+     "enum": [
+      "morning",
+      "supplement",
+      "food",
+      "medicine",
+      "other"
+     ],
+     "description": "Item category"
+    },
+    "fixedTime": {
+     "type": "string",
+     "description": "Optional fixed time as HH:MM 24-hour, e.g. '09:00'"
+    },
+    "note": {
+     "type": "string",
+     "description": "Optional note"
+    },
+    "frequency": {
+     "type": "string",
+     "enum": [
+      "daily",
+      "weekdays"
+     ],
+     "description": "How often (default daily)"
+    },
+    "after_item": {
+     "type": "string",
+     "description": "For timing from another step: the name of the step it follows, e.g. 'lemon water'. The reminder comes once they tick that step."
+    },
+    "after_minutes": {
+     "type": "integer",
+     "description": "With after_item: how many minutes after that step, e.g. 30."
+    },
+    "every_minutes": {
+     "type": "integer",
+     "description": "With after_item: repeat every N minutes after that step (at least 15), e.g. 90 for a snack every 90 minutes."
+    },
+    "until": {
+     "type": "string",
+     "description": "With every_minutes: last time of day, 24-hour HH:MM, e.g. '18:00'."
+    }
+   },
+   "required": [
+    "name"
+   ]
+  }
+ },
+ {
+  "name": "log_water",
+  "description": "Log glasses of water the user says they've had ('I've had two glasses of water'). remove: true takes some off if they miscounted. Saved in their history; shows on Today and in Progress.",
+  "input_schema": {
+   "type": "object",
+   "required": [],
+   "properties": {
+    "glasses": {
+     "type": "integer",
+     "description": "How many glasses (default 1)"
+    },
+    "remove": {
+     "type": "boolean",
+     "description": "True to take that many off"
+    }
+   }
+  }
+ },
+ {
+  "name": "mark_activity",
+  "description": "Mark an item in the user's daily rhythm as done (or undo one). Call this whenever the user says they completed something - e.g. \"just had my",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "item_name": {
+     "type": "string",
+     "description": "The item the user says they did, in their words, e.g. 'celery juice'"
+    },
+    "action": {
+     "type": "string",
+     "enum": [
+      "complete",
+      "uncomplete"
+     ],
+     "description": "complete to tick it off (default), uncomplete to undo"
+    }
+   },
+   "required": [
+    "item_name"
+   ]
+  }
+ },
+ {
+  "name": "plan_recipe",
+  "description": "Put one of the user's OWN recipes on a day: 'the potato bake for dinner tonight', 'my liver smoothie tomorrow morning'. It shows on that day's matching step. remove: true takes it off. If it asks which meal, ask them.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "recipe_name"
+   ],
+   "properties": {
+    "recipe_name": {
+     "type": "string",
+     "description": "Their recipe, as they said it"
+    },
+    "day": {
+     "type": "string",
+     "description": "today, tonight, tomorrow, a weekday (e.g. 'friday') or YYYY-MM-DD. Default today."
+    },
+    "slot": {
+     "type": "string",
+     "enum": [
+      "morning",
+      "breakfast",
+      "lunch",
+      "snack",
+      "dinner",
+      "evening"
+     ],
+     "description": "When in the day"
+    },
+    "remove": {
+     "type": "boolean",
+     "description": "True to take it off that day"
+    }
+   }
+  }
+ },
+ {
+  "name": "remove_rhythm_item",
+  "description": "Remove an item from the user's daily rhythm (and its reminders). It's kept in their history and can be restored. Call first WITHOUT confirmed; ask the question it returns; call again with confirmed: true only after a clear yes.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "item_name": {
+     "type": "string"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    }
+   },
+   "required": [
+    "item_name"
+   ]
+  }
+ },
+ {
+  "name": "remove_supplement",
+  "description": "Remove a supplement from the user's list. Call first WITHOUT confirmed; ask; call again with confirmed: true after a clear yes.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    }
+   },
+   "required": [
+    "name"
+   ]
+  }
+ },
+ {
+  "name": "restore_rhythm_item",
+  "description": "Bring back an item the user removed ('undo', 'put my lemon water back'). With no item_name, restores the most recently removed item.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "item_name": {
+     "type": "string"
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "save_day_template",
+  "description": "Save the user's daily rhythm as it is right now as a named day template they can reload later. Same name again updates it.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "emoji": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name"
+   ]
+  }
+ },
+ {
+  "name": "save_program",
+  "description": "Save a multi-day program the user describes from their own book (e.g. their 9-day cleanse): its name, how many days, and each item with the days it applies to. If they already have one with that name, it asks whether to update it (replace: true) or save under a new name.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Program name, e.g. 'My 9-day cleanse'"
+    },
+    "total_days": {
+     "type": "integer",
+     "description": "How many days the program runs (2-90)"
+    },
+    "emoji": {
+     "type": "string",
+     "description": "Optional single emoji for the program"
+    },
+    "items": {
+     "type": "array",
+     "description": "The program's items as the user dictated them",
+     "items": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string",
+        "description": "Item name as the user said it"
+       },
+       "from_day": {
+        "type": "integer",
+        "description": "First day this item applies (1-based). Defaults to 1."
+       },
+       "to_day": {
+        "type": "integer",
+        "description": "Last day this item applies. Defaults to the program's last day."
+       },
+       "category": {
+        "type": "string",
+        "enum": [
+         "morning",
+         "supplement",
+         "food",
+         "medicine",
+         "other"
+        ],
+        "description": "Item category (default other)"
+       },
+       "spacing_minutes": {
+        "type": "integer",
+        "description": "Minutes after the previous item (default 30)"
+       },
+       "note": {
+        "type": "string",
+        "description": "Optional note, e.g. a page reference the user mentions"
+       },
+       "time": {
+        "type": "string",
+        "description": "Optional set time for this step, 24-hour HH:MM, e.g. '12:00'. Gives it a reminder."
+       }
+      },
+      "required": [
+       "name"
+      ]
+     }
+    },
+    "replace": {
+     "type": "boolean",
+     "description": "true ONLY when the user chose to update their existing program of the same name. Without it, an existing name is never overwritten."
+    }
+   },
+   "required": [
+    "name",
+    "total_days",
+    "items"
+   ]
+  }
+ },
+ {
+  "name": "save_recipe",
+  "description": "Save one of the user's OWN recipes into their Kitchen, sorted from what they said: name, kind, ingredients, steps. Use only their words and amounts; never add or suggest anything. The first call returns a read-back: read it to them and call again with confirmed: true only after they say yes. Never overwrites an existing name.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "name",
+    "kind"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Its name as they said it, or a short plain one (e.g. 'Green smoothie')"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "juice",
+      "smoothie",
+      "meal",
+      "snack",
+      "drink",
+      "other"
+     ],
+     "description": "Which section: juice, smoothie, meal, snack, drink or other"
+    },
+    "ingredients": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "One entry per ingredient, in their words with their amounts"
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Their steps in order, one action each, no numbers"
+    },
+    "notes": {
+     "type": "string",
+     "description": "Anything else they said (page number, who it's for, tips)"
+    },
+    "favourite": {
+     "type": "boolean",
+     "description": "True if they say it's a favourite"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "Only after reading it back and hearing yes"
+    }
+   }
+  }
+ },
+ {
+  "name": "save_reflection",
+  "description": "Save a spoken reflection to the user's journal. Use when the user shares how they feel and agrees to save it, in their own words.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "text": {
+     "type": "string",
+     "description": "The reflection to save, in the user's own words"
+    }
+   },
+   "required": [
+    "text"
+   ]
+  }
+ },
+ {
+  "name": "share_report",
+  "description": "Email the user's report as a PDF to someone they name (e.g. their GP or a carer). kind 'doctor' = health summary over recent months; 'progress' = their wellness log. Call first WITHOUT confirmed; it returns a question that spells the address back — ask it, and call again with confirmed: true only after a clear yes.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "doctor",
+      "progress"
+     ]
+    },
+    "email": {
+     "type": "string"
+    },
+    "months": {
+     "type": "integer",
+     "description": "For kind doctor: how many months, 1-12 (default 3)"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    }
+   },
+   "required": [
+    "kind"
+   ]
+  }
+ },
+ {
+  "name": "start_program",
+  "description": "Start one of the user's saved multi-day programs (e.g. their cleanse), today or on a date. Pass name. Optionally pause: everyday items they want paused during it. Or another_round: true to repeat the one that just finished. It asks for confirmation before pausing anything or replacing a running program.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "start_date": {
+     "type": "string",
+     "description": "YYYY-MM-DD, default today"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "true ONLY after the user clearly said yes to the confirmation question this tool gave you"
+    },
+    "pause": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Names of everyday rhythm items the user wants paused while this program runs. Leave out to keep everything (the default). Their own choice: never suggest what to pause."
+    },
+    "another_round": {
+     "type": "boolean",
+     "description": "true when the user wants to repeat the program that just finished, with the same steps and choices, starting today. name is then not needed."
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "switch_tab",
+  "description": "Take the user to a place in the app when they ask, or when it would help (e.g. 'where are my supplements', 'I want to log how I feel', 'show my progress'). The app has five tabs: home (Today), kitchen (their own recipes), companion, progress, settings. Optionally pass a section to land on the exact spot.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "tab": {
+     "type": "string",
+     "enum": [
+      "home",
+      "kitchen",
+      "companion",
+      "progress",
+      "settings"
+     ],
+     "description": "The tab: home = Today"
+    },
+    "section": {
+     "type": "string",
+     "enum": [
+      "rhythm",
+      "checkin",
+      "supplements",
+      "talk",
+      "feelings",
+      "streaks",
+      "history",
+      "reports",
+      "letters",
+      "reminders",
+      "voice",
+      "profiles",
+      "display",
+      "carers",
+      "plan",
+      "preferences",
+      "devices",
+      "sources",
+      "help",
+      "account",
+      "juice",
+      "smoothie",
+      "meal",
+      "snack",
+      "drink",
+      "other",
+      "week",
+      "shopping"
+     ],
+     "description": "Optional spot within the tab. home: rhythm, checkin, supplements. companion: talk, feelings ('How I feel'). progress: streaks, history, reports (incl. GP report), letters (anniversary letters). settings: reminders, voice (companion voice & minutes), profiles, display (dark mode, text size), carers (and caregiver mode), plan (billing, cancelling), preferences (language, units, what the companion remembers), devices (wearables), sources (official Anthony William books, website, podcast, recipes), help (tips, welcome tour), account (sign out, Terms, Privacy, delete account). kitchen: juice, smoothie, meal, snack, drink, other, week (their week plan), shopping (their shopping list)."
+    }
+   },
+   "required": [
+    "tab"
+   ]
+  }
+ },
+ {
+  "name": "tick_shopping_item",
+  "description": "Tick an item off the user's shopping list while they shop ('got the celery'). untick: true puts it back.",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "item"
+   ],
+   "properties": {
+    "item": {
+     "type": "string",
+     "description": "The item, as they said it"
+    },
+    "untick": {
+     "type": "boolean"
+    }
+   }
+  }
+ },
+ {
+  "name": "update_preferences",
+  "description": "Change the user's companion settings: your name (what they call you), and whether the morning check-in and evening reflection prompts appear.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "companion_name": {
+     "type": "string"
+    },
+    "morning_checkin": {
+     "type": "boolean"
+    },
+    "evening_reflection": {
+     "type": "boolean"
+    }
+   },
+   "required": []
+  }
+ },
+ {
+  "name": "update_recipe",
+  "description": "Change one of the user's recipes: rename, move section, add/remove/replace ingredients or steps, notes, favourite. Replacing or removing asks for a yes first (needs_confirmation).",
+  "input_schema": {
+   "type": "object",
+   "required": [
+    "recipe_name"
+   ],
+   "properties": {
+    "recipe_name": {
+     "type": "string",
+     "description": "Which recipe, as they said it"
+    },
+    "new_name": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "juice",
+      "smoothie",
+      "meal",
+      "snack",
+      "drink",
+      "other"
+     ]
+    },
+    "add_ingredients": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Ingredients to add, their words"
+    },
+    "remove_ingredients": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Ingredients to take out"
+    },
+    "ingredients": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "The whole new ingredient list (replaces it)"
+    },
+    "add_steps": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Steps to add at the end"
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "The whole new list of steps (replaces it)"
+    },
+    "notes": {
+     "type": "string"
+    },
+    "favourite": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "Only after they said yes to the change"
+    }
+   }
+  }
+ },
+ {
+  "name": "update_rhythm_item",
+  "description": "Change an item already in the user's daily rhythm: rename it, set or change its reminder time(s), how often, its note or category. E.g. 'move my lemon water to 6', 'remind me about zinc morning and night', 'rename celery juice to celery juice 16oz'.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "item_name": {
+     "type": "string",
+     "description": "The item as the user calls it"
+    },
+    "new_name": {
+     "type": "string"
+    },
+    "times": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Reminder times, 24-hour HH:MM, e.g. ['06:00','20:00']. Empty array removes the time and its reminder."
+    },
+    "frequency": {
+     "type": "string",
+     "enum": [
+      "daily",
+      "weekdays",
+      "as_needed"
+     ]
+    },
+    "note": {
+     "type": "string"
+    },
+    "category": {
+     "type": "string",
+     "enum": [
+      "morning",
+      "supplement",
+      "food",
+      "medicine",
+      "other"
+     ]
+    },
+    "after_item": {
+     "type": "string",
+     "description": "For timing from another step: the name of the step it follows, e.g. 'lemon water'. The reminder comes once they tick that step."
+    },
+    "after_minutes": {
+     "type": "integer",
+     "description": "With after_item: how many minutes after that step, e.g. 30."
+    },
+    "every_minutes": {
+     "type": "integer",
+     "description": "With after_item: repeat every N minutes after that step (at least 15), e.g. 90 for a snack every 90 minutes."
+    },
+    "until": {
+     "type": "string",
+     "description": "With every_minutes: last time of day, 24-hour HH:MM, e.g. '18:00'."
+    }
+   },
+   "required": [
+    "item_name"
+   ]
+  }
+ }
+]

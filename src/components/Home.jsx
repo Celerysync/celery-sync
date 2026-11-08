@@ -85,7 +85,7 @@ function StreakMilestone({ streak }) {
       <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, textAlign: "center" }}>
         {milestone.msg}
       </div>
-      <div style={{ fontSize: 12, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
+      <div style={{ fontSize: 13.5, color: milestone.color, fontWeight: 700, textAlign: "center", marginTop: 8 }}>
         🌿 {streak}-day showed-up streak
       </div>
       <button
@@ -94,13 +94,13 @@ function StreakMilestone({ streak }) {
           display: "block", margin: "12px auto 0",
           background: milestone.color, color: C.white,
           border: "none", borderRadius: 30, padding: "8px 20px",
-          fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+          fontSize: 13.5, fontFamily: "Georgia,serif", fontWeight: 700,
           cursor: "pointer",
         }}
       >
         {shareCopied ? "✓ Copied — paste & share!" : "🌿 Share this milestone"}
       </button>
-      <div style={{ fontSize: 12, color: C.muted, textAlign: "center", marginTop: 6 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, textAlign: "center", marginTop: 6 }}>
         Share it with someone who'd cheer you on
       </div>
     </div>
@@ -327,7 +327,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         padding: "20px 20px 16px",
         color: C.white,
       }}>
-        <div style={{ fontSize: 12, opacity: 0.8, letterSpacing: 1, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 13.5, opacity: 0.8, letterSpacing: 1, textTransform: "uppercase" }}>
           {new Date().toLocaleDateString("en-AU", { weekday: "long", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, marginTop: 4 }}>
@@ -336,12 +336,12 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Your routine, one day at a time</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
           {showedUpStreak > 0 ? (
-            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+            <div style={{ fontSize: 13.5, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
               🌿 {showedUpStreak}-day streak
             </div>
           ) : totalShowedUpDays > 0 && (
             // A broken streak never shows as zero — the total never resets.
-            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+            <div style={{ fontSize: 13.5, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
               🌿 {totalShowedUpDays} {totalShowedUpDays === 1 ? "day" : "days"} shown up
             </div>
           )}
@@ -355,7 +355,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
               border: "1px solid rgba(255,255,255,0.4)",
               borderRadius: 30,
               padding: "7px 14px",
-              fontSize: 12,
+              fontSize: 13.5,
               cursor: "pointer",
               fontFamily: "Georgia,serif",
               fontWeight: 700,
@@ -529,7 +529,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: "#92400E" }}>
               Keep your {showedUpStreak}-day streak going
             </div>
-            <div style={{ fontSize: 12, color: "#B45309", marginTop: 2, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 13.5, color: "#B45309", marginTop: 2, lineHeight: 1.4 }}>
               Tick off any one thing from your rhythm before midnight — one is enough.
             </div>
           </div>
@@ -584,10 +584,10 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
             Water today — {waterCount} {waterCount === 1 ? "glass" : "glasses"}
           </div>
-          <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+          <div style={{ fontSize: 13.5, color: C.mid, marginTop: 2 }}>
             {waterCount < 8 ? `${8 - waterCount} more to reach today's 8-glass goal` : "Beautifully hydrated today ✓"}
           </div>
-          {waterError && <div role="alert" style={{ fontSize: 12, color: C.terracotta, marginTop: 2 }}>{waterError}</div>}
+          {waterError && <div role="alert" style={{ fontSize: 13.5, color: C.terracotta, marginTop: 2 }}>{waterError}</div>}
           <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} style={{
@@ -630,20 +630,20 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             borderRadius: 16,
             padding: 14,
           }}>
-            <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            <div style={{ fontSize: 13.5, color: C.gold, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Today's learning
             </div>
             <div style={{ fontFamily: "Georgia,serif", fontSize: 14, color: C.charcoal, lineHeight: 1.8 }}>
               💛 {teaching}
             </div>
-            <div style={{ fontSize: 12, color: C.gold, marginTop: 8 }}>
+            <div style={{ fontSize: 13.5, color: C.gold, marginTop: 8 }}>
               Paraphrased from Anthony William's publicly shared teachings
             </div>
             <a
               href="https://medicalmedium.com"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: "inline-block", marginTop: 10, color: C.gold, fontSize: 12, fontWeight: 700 }}
+              style={{ display: "inline-block", marginTop: 10, color: C.gold, fontSize: 13.5, fontWeight: 700 }}
             >
               Visit medicalmedium.com →
             </a>

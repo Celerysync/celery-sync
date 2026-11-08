@@ -10,7 +10,7 @@ function Toggle({ on, onChange, label, desc }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
       </div>
       <button
         onClick={() => onChange(!on)}
@@ -121,14 +121,14 @@ export default function ReminderSettings({ authUser }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 4 }}>
           🔔 Background notifications
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
           Get reminders even when the app is closed. Each reminder comes from your own
           Daily Rhythm — set a time on any item and you'll be nudged then. Works best
           when you add CelerySync to your home screen.
         </div>
 
         <div style={{
-          fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 14,
+          fontSize: 13.5, color: C.mid, lineHeight: 1.6, marginBottom: 14,
           background: C.mist, borderRadius: 10, padding: "10px 12px",
         }}>
           💡 To add or change a reminder time: on <strong>Today</strong>, tap the step's
@@ -136,18 +136,18 @@ export default function ReminderSettings({ authUser }) {
         </div>
 
         {!supported ? (
-          <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>
+          <div style={{ fontSize: 13.5, color: C.muted, fontStyle: "italic" }}>
             Push notifications aren't supported in this browser. On iPhone, add CelerySync
             to your Home Screen first (Share → Add to Home Screen), then come back. On
             Android, try Chrome or your browser's latest version.
           </div>
         ) : permission === "denied" ? (
-          <div style={{ fontSize: 12, color: C.terracotta, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13.5, color: C.terracotta, lineHeight: 1.5 }}>
             Notifications are blocked. Open your browser settings and allow notifications for this site, then come back here.
           </div>
         ) : subscribed ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>
+            <div style={{ fontSize: 13.5, color: C.sage, fontWeight: 700 }}>
               ✓ Background notifications active
             </div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -156,7 +156,7 @@ export default function ReminderSettings({ authUser }) {
                 disabled={testSending}
                 style={{
                   background: "none", border: `1px solid ${C.sage}`, borderRadius: 20,
-                  padding: "6px 14px", fontSize: 12, color: C.sageDark, cursor: "pointer",
+                  padding: "6px 14px", fontSize: 13.5, color: C.sageDark, cursor: "pointer",
                   fontFamily: "Georgia,serif", width: "fit-content",
                 }}
               >
@@ -167,7 +167,7 @@ export default function ReminderSettings({ authUser }) {
                 disabled={loading}
                 style={{
                   background: "none", border: `1px solid ${C.border}`, borderRadius: 20,
-                  padding: "6px 14px", fontSize: 12, color: C.muted, cursor: "pointer",
+                  padding: "6px 14px", fontSize: 13.5, color: C.muted, cursor: "pointer",
                   fontFamily: "Georgia,serif", width: "fit-content",
                 }}
               >
@@ -182,7 +182,7 @@ export default function ReminderSettings({ authUser }) {
         )}
 
         {error && (
-          <div style={{ marginTop: 8, fontSize: 12, color: C.terracotta }}>{error}</div>
+          <div style={{ marginTop: 8, fontSize: 13.5, color: C.terracotta }}>{error}</div>
         )}
       </div>
 
@@ -191,7 +191,7 @@ export default function ReminderSettings({ authUser }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 4 }}>
             💬 Gentle check-ins
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
             A short, personal check-in twice a day based on how things are actually going for you — never a task list, always optional.
           </div>
           <EncouragementWindowRow
@@ -213,7 +213,7 @@ export default function ReminderSettings({ authUser }) {
         </div>
       )}
 
-      <div style={{ marginTop: 12, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+      <div style={{ marginTop: 12, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
         In-app reminders appear as banners when the app is open. Background notifications work when the app is closed — best installed as a home screen app.
       </div>
     </Card>

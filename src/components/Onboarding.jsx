@@ -28,7 +28,7 @@ const SUPP_SLOT = { key: "supplement", emoji: "💊", label: "Supplements", plac
 function Footer() {
   return (
     <div style={{ marginTop: 20 }}>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
+      <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
         🌿 Independent app · Not affiliated with Anthony William or Medical Medium LLC
       </div>
       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", textAlign: "center", marginTop: 10, lineHeight: 1.8 }}>
@@ -517,9 +517,9 @@ function SlotInput({ slot, text, onTextChange, onSubmit, saving, savedLabel, hid
           </button>
         )}
       </div>
-      {saving && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Saving…</div>}
+      {saving && <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4 }}>Saving…</div>}
       {savedLabel && !saving && (
-        <div style={{ fontSize: 12, color: C.sage, marginTop: 4 }}>✓ {savedLabel} — added to your rhythm</div>
+        <div style={{ fontSize: 13.5, color: C.sage, marginTop: 4 }}>✓ {savedLabel} — added to your rhythm</div>
       )}
     </div>
   );

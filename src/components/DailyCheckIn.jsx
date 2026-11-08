@@ -4,6 +4,7 @@ import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { useAnalytics } from "../hooks/useAnalytics.js";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 const ENERGY_OPTS = [
   { val: 2,  emoji: "😴", label: "Exhausted" },
@@ -57,6 +58,7 @@ const COMMON_SYMPTOMS = [
 ];
 
 export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave, saving, authUser, profileId, cycleEnabled }) {
+  const fern = useCompanionName();
   // Period-start logging moved here from the old Track tab, so the one
   // check-in is the one place to log how today is going.
   const { loggedToday: periodLoggedToday, logPeriodStart, undoToday: undoPeriodToday } = useCycleTracking(profileId);
@@ -133,7 +135,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
           </div>
           <button
             onClick={() => setEditing(true)}
-            style={{ background: "none", border: "none", color: C.sage, fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}
+            style={{ background: "none", border: "none", color: C.sage, fontSize: 13.5, cursor: "pointer", fontFamily: "Georgia,serif" }}
           >
             Edit
           </button>
@@ -142,18 +144,18 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
           {e && (
             <div style={{ textAlign: "center", minWidth: 44 }}>
               <div style={{ fontSize: 26 }}>{e.emoji}</div>
-              <div style={{ fontSize: 12, color: C.mid, fontFamily: "Georgia,serif" }}>{e.label}</div>
+              <div style={{ fontSize: 13.5, color: C.mid, fontFamily: "Georgia,serif" }}>{e.label}</div>
             </div>
           )}
           {c && (
             <div style={{ textAlign: "center", minWidth: 44 }}>
               <div style={{ fontSize: 26 }}>{c.emoji}</div>
-              <div style={{ fontSize: 12, color: C.mid, fontFamily: "Georgia,serif" }}>
+              <div style={{ fontSize: 13.5, color: C.mid, fontFamily: "Georgia,serif" }}>
                 {c.val <= 2 ? "Brain fog" : "Clarity"}
               </div>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: C.mid }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 13.5, color: C.mid }}>
             {todaysCheckin.healing_reaction && <div>🌀 Rough day noted</div>}
             {todaysCheckin.win_today && <div>✨ {todaysCheckin.win_today}</div>}
             {todaysCheckin.emotional_state?.length > 0 && (
@@ -173,8 +175,8 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         📋 How are you today?
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>
-        Quick daily check-in — tracks how you're going over time and helps your companion understand you
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 16 }}>
+        A quick daily check-in. It shows how you're going over time and helps {fern} understand you.
       </div>
 
       {/* ── CORE: Energy ── */}
@@ -188,7 +190,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 color: energy === o.val ? C.white : C.charcoal, transition: "all 0.15s",
               }}>
               <div style={{ fontSize: 22 }}>{o.emoji}</div>
-              <div style={{ fontSize: 11, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
+              <div style={{ fontSize: 13, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
             </button>
           ))}
         </div>
@@ -205,7 +207,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 color: mentalClarity === o.val ? C.white : C.charcoal, transition: "all 0.15s",
               }}>
               <div style={{ fontSize: 22 }}>{o.emoji}</div>
-              <div style={{ fontSize: 11, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
+              <div style={{ fontSize: 13, marginTop: 2, fontFamily: "Georgia,serif" }}>{o.label}</div>
             </button>
           ))}
         </div>
@@ -219,7 +221,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
             border: `1.5px solid ${periodLoggedToday ? C.plum : C.border}`,
             background: periodLoggedToday ? C.plumLight : "transparent",
             color: periodLoggedToday ? C.plum : C.mid,
-            fontSize: 12.5, fontFamily: "Georgia,serif", fontWeight: periodLoggedToday ? 700 : 400,
+            fontSize: 14, fontFamily: "Georgia,serif", fontWeight: periodLoggedToday ? 700 : 400,
             cursor: "pointer",
           }}
         >
@@ -237,7 +239,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 <button key={s} onClick={() => toggleEmotional(s)}
                   style={{
                     padding: "5px 11px", borderRadius: 20, border: "none", cursor: "pointer",
-                    fontFamily: "Georgia,serif", fontSize: 12,
+                    fontFamily: "Georgia,serif", fontSize: 13.5,
                     background: emotionalState.includes(s)
                       ? (["Hopeful","Grateful","Calm","Determined"].includes(s) ? C.sage : C.plum)
                       : C.mist,
@@ -288,7 +290,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               <div style={{ fontSize: 13, color: C.charcoal }}>
                 🌀 I'm having a rough day — feeling worse than usual
               </div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
                 This goes in your log. If you're worried or feeling much worse, please talk to your doctor.
               </div>
             </div>
@@ -303,7 +305,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
               style={{
                 width: "100%", boxSizing: "border-box", padding: "10px 12px",
                 borderRadius: 10, border: `1.5px solid ${alpha(C.gold, "60")}`,
-                fontFamily: "Georgia,serif", fontSize: 12, color: C.charcoal,
+                fontFamily: "Georgia,serif", fontSize: 13.5, color: C.charcoal,
                 background: alpha("#C9963A", "1F"), resize: "none", outline: "none", marginBottom: 12,
               }}
             />
@@ -316,7 +318,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 <button key={s} onClick={() => toggleSymptom(s)}
                   style={{
                     padding: "5px 10px", borderRadius: 20, border: "none", cursor: "pointer",
-                    fontFamily: "Georgia,serif", fontSize: 12,
+                    fontFamily: "Georgia,serif", fontSize: 13.5,
                     background: symptoms.includes(s) ? C.terracotta : C.mist,
                     color: symptoms.includes(s) ? C.white : C.charcoal,
                     transition: "all 0.15s",
@@ -336,11 +338,11 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                 border: "none", cursor: "pointer", width: "100%", padding: "2px 0",
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.mid }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid }}>
                 {showVitals ? "▼" : "▶"} Sleep, water & vitals <span style={{ fontWeight: 400 }}>(optional)</span>
               </div>
               {!showVitals && (sleepHours || waterOz || hrv || painLevel) && (
-                <div style={{ fontSize: 12, color: C.sage, marginLeft: 4 }}>✓ filled</div>
+                <div style={{ fontSize: 13.5, color: C.sage, marginLeft: 4 }}>✓ filled</div>
               )}
             </button>
 
@@ -349,13 +351,13 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* Water */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>💧 Water intake</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>💧 Water intake</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {WATER_OPTS.map((o) => (
                       <button key={o.val} onClick={() => setWaterOz(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                          fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                           background: waterOz === o.val ? C.sage : C.mist,
                           color: waterOz === o.val ? C.white : C.charcoal,
                         }}>
@@ -367,13 +369,13 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* Pain */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>🩹 Overall pain level</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>🩹 Overall pain level</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {PAIN_OPTS.map((o) => (
                       <button key={o.val} onClick={() => setPainLevel(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 12,
+                          fontFamily: "Georgia,serif", fontSize: 13.5,
                           background: painLevel === o.val ? C.terracotta : C.mist,
                           color: painLevel === o.val ? C.white : C.charcoal,
                         }}>
@@ -385,13 +387,13 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* Sleep */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>🌙 Hours of sleep</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>🌙 Hours of sleep</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {SLEEP_OPTS.map((o) => (
                       <button key={o.val} onClick={() => setSleepHours(o.val)}
                         style={{
                           flex: 1, padding: "7px 2px", borderRadius: 10, border: "none", cursor: "pointer",
-                          fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                          fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                           background: sleepHours === o.val ? C.plum : C.mist,
                           color: sleepHours === o.val ? C.white : C.charcoal,
                         }}>
@@ -403,7 +405,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* Sleep quality */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>💤 Sleep quality</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>💤 Sleep quality</div>
                   <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
                     {SLEEP_QUALITY_OPTS.map((o) => (
                       <button key={o.val} onClick={() => setSleepQuality(o.val)}
@@ -421,7 +423,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* Bowel movements */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>
                     🌿 Bowel movements today
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -441,7 +443,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 
                 {/* HRV */}
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 6 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 6 }}>
                     💓 Morning HRV <span style={{ fontWeight: 400 }}>(from Oura, Garmin, Apple Watch)</span>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -453,7 +455,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
                         fontSize: 14, color: C.charcoal, outline: "none",
                       }}
                     />
-                    <div style={{ fontSize: 12, color: C.muted }}>ms</div>
+                    <div style={{ fontSize: 13.5, color: C.muted }}>ms</div>
                   </div>
                 </div>
               </div>
@@ -481,7 +483,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
           onClick={() => setShowMore(true)}
           style={{
             background: "none", border: "none", color: C.sage,
-            fontFamily: "Georgia,serif", fontSize: 12, cursor: "pointer",
+            fontFamily: "Georgia,serif", fontSize: 13.5, cursor: "pointer",
             padding: "4px 0", marginBottom: 10,
           }}
         >
@@ -499,7 +501,7 @@ export default function DailyCheckIn({ todaysCheckin, userSymptoms = [], onSave,
 function Section({ label, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );

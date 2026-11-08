@@ -44,7 +44,7 @@ const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) =>
 const TABS = [
   { id: "home",      label: "Today",     emoji: "🏠", free: true  },
   { id: "kitchen",   label: "Kitchen",   emoji: "🥬", free: false },
-  { id: "companion", label: "Companion", emoji: "🎙", free: false },
+  { id: "companion", label: "Fern", emoji: "🎙", free: false },
   { id: "progress",  label: "Progress",  emoji: "📋", free: false },
   { id: "settings",  label: "Settings",  emoji: "⚙️", free: true  },
   { id: "admin",     label: "Admin",     emoji: "📊", free: true, adminOnly: true },
@@ -84,7 +84,7 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
         border: `1px solid ${C.border}`,
         zIndex: 20, minWidth: 200, overflow: "hidden",
       }}>
-        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 12, color: C.muted, fontFamily: "Georgia,serif" }}>
+        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 13.5, color: C.muted, fontFamily: "Georgia,serif" }}>
           Switch profile
         </div>
         {profiles.map((p) => (
@@ -105,12 +105,12 @@ function ProfileDropdown({ profiles, activeProfileId, onSwitch, onClose }) {
                 {p.name}
               </div>
               {p.id === activeProfileId && (
-                <div style={{ fontSize: 12, color: C.sage }}>● active</div>
+                <div style={{ fontSize: 13.5, color: C.sage }}>● active</div>
               )}
             </div>
           </button>
         ))}
-        <div style={{ padding: "10px 14px", fontSize: 12, color: C.muted, textAlign: "center", borderTop: `1px solid ${C.border}` }}>
+        <div style={{ padding: "10px 14px", fontSize: 13.5, color: C.muted, textAlign: "center", borderTop: `1px solid ${C.border}` }}>
           Manage profiles in Settings
         </div>
       </div>
@@ -451,7 +451,7 @@ export default function App() {
             {!subLoading && isSubscribed && (
               <div style={{
                 background: "rgba(255,255,255,0.2)", borderRadius: 20,
-                padding: "3px 10px", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+                padding: "3px 10px", fontSize: 13.5, fontWeight: 700, letterSpacing: 0.5,
                 whiteSpace: "nowrap",
               }}>
                 {isInTrial
@@ -474,13 +474,13 @@ export default function App() {
                 >
                   <span style={{ fontSize: 16, flexShrink: 0 }}>{activeProfile.avatar_emoji}</span>
                   <span style={{
-                    fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 600,
+                    fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 600,
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
                     {activeProfile.name}
                   </span>
                   {profiles.length > 1 && (
-                    <span style={{ fontSize: 11, opacity: 0.8, flexShrink: 0 }}>▼</span>
+                    <span style={{ fontSize: 13, opacity: 0.8, flexShrink: 0 }}>▼</span>
                   )}
                 </button>
 
@@ -572,7 +572,7 @@ export default function App() {
                   )}
                 </div>
                 <div style={{
-                  fontSize: 12, fontFamily: "Georgia,serif",
+                  fontSize: 13.5, fontFamily: "Georgia,serif",
                   color: active ? C.sage : C.muted,
                   fontWeight: active ? 700 : 400,
                 }}>
@@ -594,7 +594,7 @@ export default function App() {
       )}
       {isRhythm
         ? <Suspense fallback={null}><UpsellOrb onTap={() => setTab("companion")} /></Suspense>
-        : <VoiceOrb />}
+        : <VoiceOrb hideButton={tabOf(tab) === "companion"} />}
     </div>
     </HumeVoiceProvider>
     </VoiceProvider>

@@ -102,3 +102,19 @@ describe("water in the history", () => {
     expect(isRhythmCategory("morning")).toBe(true);
   });
 });
+
+describe("'Up next' makes sense at night", () => {
+  afterEach(cleanup);
+  it("an untimed morning step before passed steps shows as earlier, not up next", () => {
+    const now = Date.now();
+    const seq2 = [
+      { id: "a", baseItemId: "a", name: "Lemon water when I wake", emoji: "🌿", category: "morning", scheduledMs: null },
+      { id: "b", baseItemId: "b", name: "Celery juice", emoji: "🌿", category: "morning", scheduledMs: now - 10 * 3600_000 },
+      { id: "c", baseItemId: "c", name: "Herbal tea", emoji: "🌿", category: "other", scheduledMs: now + 3600_000 },
+    ];
+    render(<RhythmView sequence={seq2} onComplete={() => {}} onUncomplete={() => {}} onOpen={() => {}} />);
+    expect(screen.getByText("Earlier today")).toBeTruthy();
+    expect(screen.getByText(/Up next ·/).textContent).toMatch(/Up next/);
+    expect(screen.getAllByText(/Up next/).length).toBeGreaterThan(0);
+  });
+});

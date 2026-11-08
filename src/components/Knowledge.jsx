@@ -64,12 +64,12 @@ export default function Knowledge({ authUser }) {
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
           🔗 Resources
         </h2>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4 }}>
           Official Anthony William content — links to his work so you can go to the source
         </div>
       </div>
 
-      <div style={{ padding: "10px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${alpha(C.sage, "40")}`, fontSize: 12, color: C.sageDark, lineHeight: 1.6 }}>
+      <div style={{ padding: "10px 14px", background: C.sageLight, borderRadius: 12, border: `1px solid ${alpha(C.sage, "40")}`, fontSize: 13.5, color: C.sageDark, lineHeight: 1.6 }}>
         <strong>Independent app notice:</strong> CelerySync paraphrases and attributes Anthony William's publicly shared teachings. For complete protocols, exact wording, and full plans, always refer to his official books and content below.
       </div>
 
@@ -96,10 +96,10 @@ export default function Knowledge({ authUser }) {
               <span style={{ fontSize: 22, flexShrink: 0 }}>{l.emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>{l.label}</div>
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{l.desc}</div>
+                <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>{l.desc}</div>
               </div>
               <span style={{
-                fontSize: 11, fontWeight: 700, color: C.sage, letterSpacing: 0.4,
+                fontSize: 13, fontWeight: 700, color: C.sage, letterSpacing: 0.4,
                 textTransform: "uppercase", flexShrink: 0, whiteSpace: "nowrap",
               }}>
                 Official ↗
@@ -114,7 +114,7 @@ export default function Knowledge({ authUser }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
           Anthony William's Books
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
           For full protocols, exact supplement amounts, and complete plans — the books are the authoritative source.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -134,7 +134,7 @@ export default function Knowledge({ authUser }) {
             >
               <span style={{ fontSize: 18 }}>{b.emoji}</span>
               <span style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, flex: 1 }}>{b.title}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.sage, letterSpacing: 0.4, textTransform: "uppercase" }}>Official ↗</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.sage, letterSpacing: 0.4, textTransform: "uppercase" }}>Official ↗</span>
             </a>
           ))}
         </div>
@@ -145,13 +145,13 @@ export default function Knowledge({ authUser }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
           ▶️ Save an AW Video Link
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
           Save links to official Anthony William YouTube videos for quick access. Links only — no content is downloaded or stored.
         </div>
 
         {status && (
           <div style={{
-            padding: "9px 12px", borderRadius: 10, fontSize: 12, marginBottom: 10,
+            padding: "9px 12px", borderRadius: 10, fontSize: 13.5, marginBottom: 10,
             background: status.ok ? C.sageLight : "#fef2f2",
             border: `1px solid ${status.ok ? C.sage : "#fca5a5"}40`,
             color: status.ok ? C.sageDark : "#dc2626",
@@ -161,7 +161,7 @@ export default function Knowledge({ authUser }) {
         )}
 
         <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 12, color: C.mid, marginBottom: 5, fontFamily: "Georgia,serif" }}>Label (optional)</div>
+          <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 5, fontFamily: "Georgia,serif" }}>Label (optional)</div>
           <input
             value={ytTitle}
             onChange={(e) => setYtTitle(e.target.value)}
@@ -170,7 +170,7 @@ export default function Knowledge({ authUser }) {
           />
         </div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: C.mid, marginBottom: 5, fontFamily: "Georgia,serif" }}>YouTube URL</div>
+          <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 5, fontFamily: "Georgia,serif" }}>YouTube URL</div>
           <input
             value={ytUrl}
             onChange={(e) => setYtUrl(e.target.value)}
@@ -197,12 +197,12 @@ export default function Knowledge({ authUser }) {
               }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>▶️</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <a href={v.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.sageDark, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <a href={v.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "Georgia,serif", fontSize: 13.5, color: C.sageDark, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {v.title}
                   </a>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{v.savedAt}</div>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>{v.savedAt}</div>
                 </div>
-                <button onClick={() => removeVideo(v.id)} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "3px 8px", fontSize: 12, color: C.muted, cursor: "pointer", flexShrink: 0 }}>✕</button>
+                <button onClick={() => removeVideo(v.id)} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "3px 8px", fontSize: 13.5, color: C.muted, cursor: "pointer", flexShrink: 0 }}>✕</button>
               </div>
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function Knowledge({ authUser }) {
       </Card>
 
       {/* Disclaimer */}
-      <div style={{ padding: "10px 14px", background: C.mist, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 12, color: C.muted, lineHeight: 1.7, textAlign: "center" }}>
+      <div style={{ padding: "10px 14px", background: C.mist, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13.5, color: C.muted, lineHeight: 1.7, textAlign: "center" }}>
         CelerySync is an <strong>independent</strong> app — not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc.
       </div>
     </div>

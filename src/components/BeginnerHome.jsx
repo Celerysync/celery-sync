@@ -29,12 +29,12 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 3 }}>
           {title}
         </div>
-        <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>{desc}</div>
+        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{desc}</div>
         {cta && (
           <button
             onClick={onClick}
             style={{
-              background: "none", border: "none", color: C.sageDark, fontSize: 12.5,
+              background: "none", border: "none", color: C.sageDark, fontSize: 14,
               cursor: "pointer", padding: "8px 0 0", textAlign: "left",
               fontFamily: "Georgia,serif", fontWeight: 700,
             }}
@@ -54,7 +54,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`,
         borderRadius: 20, padding: "20px 22px", color: "#fff",
       }}>
-        <div style={{ fontSize: 12, letterSpacing: 0.6, opacity: 0.75, textTransform: "uppercase", marginBottom: 4 }}>
+        <div style={{ fontSize: 13.5, letterSpacing: 0.6, opacity: 0.75, textTransform: "uppercase", marginBottom: 4 }}>
           Your wellness journey
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, marginBottom: 6 }}>
@@ -72,7 +72,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, color: C.charcoal, marginBottom: 4 }}>
           Getting started
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
           CelerySync is an independent companion for the routine <em>you</em> choose to follow.
           It never supplies the protocol itself — that stays between you and your books.
         </div>
@@ -130,7 +130,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
           Ready for the full app?
         </div>
-        <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.65, marginBottom: 14 }}>
+        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 14 }}>
           The full experience adds your Daily Rhythm builder, multi-day program tracking,
           progress reports, and the voice companion — all built around the routine you enter
           from your own books.
@@ -148,7 +148,7 @@ export default function BeginnerHome({ onGraduate, onNavigate }) {
         </button>
       </div>
 
-      <div style={{ fontSize: 12, color: C.muted, textAlign: "center", lineHeight: 1.6, paddingBottom: 4 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, textAlign: "center", lineHeight: 1.6, paddingBottom: 4 }}>
         🌿 Independent app · Not affiliated with Anthony William or Medical Medium<br />
         Not affiliated with or endorsed by Medical Medium LLC
       </div>

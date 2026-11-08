@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { micHelp } from "../lib/micPermission.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 // Voice can fail to connect for ordinary reasons — Hume allows only so many
 // conversations at the same moment on our plan, or the signal drops. Its own
@@ -26,7 +27,8 @@ function fmtElapsed(ms) {
 // GlobalVoice.jsx, every VoiceIntakeButton mount, and WelcomeVoice's/
 // Onboarding's bespoke mic logic once cs_voiceProvider === "hume". One
 // session, one button, available on every tab.
-export default function VoiceOrb() {
+export default function VoiceOrb({ hideButton = false }) {
+  const fern = useCompanionName();
   const {
     isConnected, isConnecting, speaking, listening, isMuted,
     connect, disconnect, mute, unmute, error, lastUserMessage, lastVoiceMessage,
@@ -86,9 +88,10 @@ export default function VoiceOrb() {
 
   return (
     <>
-      <button
+      {/* Fern's own tab has its own mic: hide this one there unless a talk is on. */}
+      {!(hideButton && !isConnected && !open) && <button
         onClick={handleTap}
-        aria-label="Voice companion"
+        aria-label={`Talk to ${fern}`}
         style={{
           position: "fixed",
           bottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
@@ -112,7 +115,7 @@ export default function VoiceOrb() {
         }}
       >
         {icon}
-      </button>
+      </button>}
 
       {open && (
         <div style={{
@@ -129,15 +132,15 @@ export default function VoiceOrb() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark }}>
-                🌿 CelerySync Companion
+                🌿 {fern}
               </div>
               {/* Required in several places (EU AI Act, California, New York) —
                   and simply honest: people should always know it's an AI. */}
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>An AI helper — not a person</div>
+              <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>An AI helper — not a person</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {isConnected && sessionStartedAt && (
-                <span style={{ fontSize: 12, color: C.muted, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontSize: 13.5, color: C.muted, fontVariantNumeric: "tabular-nums" }}>
                   {fmtElapsed(elapsedMs)}
                 </span>
               )}
@@ -150,7 +153,7 @@ export default function VoiceOrb() {
               Turns into a gentle warning when running low — no surprises. */}
           {meterSecondsRemaining != null && meterSecondsRemaining > 0 && (
             <div style={{
-              fontSize: 12, marginBottom: 8,
+              fontSize: 13.5, marginBottom: 8,
               color: meterSecondsRemaining <= 300 ? C.terracotta : C.muted,
               fontWeight: meterSecondsRemaining <= 300 ? 700 : 400,
             }}>
@@ -160,14 +163,14 @@ export default function VoiceOrb() {
           )}
 
           {capReached && (
-            <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 12, color: C.charcoal, lineHeight: 1.5 }}>
+            <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 13.5, color: C.charcoal, lineHeight: 1.5 }}>
               🌿 That's all your voice minutes for now — they refresh monthly, or you can add a
               top-up in Settings → Companion Voice. I'm still right here in text chat.
             </div>
           )}
 
           {silenceWarning && isConnected && (
-            <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 12, color: C.charcoal, lineHeight: 1.5 }}>
+            <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 13.5, color: C.charcoal, lineHeight: 1.5 }}>
               🌙 Still there? I'll close in a moment to save your minutes — just speak to keep going.
             </div>
           )}
@@ -185,7 +188,7 @@ export default function VoiceOrb() {
             <div style={{
               background: C.sageLight, borderRadius: 10,
               padding: "10px 12px", marginBottom: 8,
-              fontSize: 12, color: C.mid, lineHeight: 1.7,
+              fontSize: 13.5, color: C.mid, lineHeight: 1.7,
             }}>
               <div style={{ fontWeight: 700, color: C.charcoal, marginBottom: 4 }}>
                 Things you can say
@@ -211,7 +214,7 @@ export default function VoiceOrb() {
                 }}>
                   🎙 {help.title}
                 </div>
-                <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: C.mid, lineHeight: 1.8 }}>
+                <ol style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: C.mid, lineHeight: 1.8 }}>
                   {help.steps.map((s) => <li key={s}>{s}</li>)}
                 </ol>
               </div>
@@ -245,7 +248,7 @@ export default function VoiceOrb() {
           )}
           {lastUserMessage?.message?.content && (
             <div style={{ background: C.cream, borderRadius: 10, padding: "8px 12px", marginBottom: 8, fontSize: 13, color: C.charcoal }}>
-              <span style={{ fontSize: 12, color: C.muted, display: "block", marginBottom: 2 }}>You said</span>
+              <span style={{ fontSize: 13.5, color: C.muted, display: "block", marginBottom: 2 }}>You said</span>
               {lastUserMessage.message.content}
             </div>
           )}
@@ -262,7 +265,7 @@ export default function VoiceOrb() {
                 style={{
                   flex: 1, padding: "8px 0", borderRadius: 50, border: "none", cursor: "pointer",
                   background: C.sage, color: C.white,
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 🎙 Start talking
@@ -274,7 +277,7 @@ export default function VoiceOrb() {
                 style={{
                   flex: 1, padding: "8px 0", borderRadius: 50, border: "none", cursor: "pointer",
                   background: isMuted ? C.sage : "#e57373", color: C.white,
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 {isMuted ? "🎙 Unmute" : "🔇 Mute"}
@@ -286,7 +289,7 @@ export default function VoiceOrb() {
                 style={{
                   flex: 1, padding: "8px 0", borderRadius: 50, border: "none", cursor: "pointer",
                   background: C.muted, color: C.white,
-                  fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+                  fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 ⏹ End

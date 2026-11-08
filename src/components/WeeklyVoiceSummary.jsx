@@ -2,6 +2,7 @@ import C, { alpha } from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoice } from "../hooks/useVoice.js";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 // Spec §5 Sunday voice summary — the user's week read back in their
 // companion's voice. Strictly descriptive (TGA rail): it recounts what the
@@ -29,6 +30,7 @@ function buildScript(userName, week) {
 }
 
 export default function WeeklyVoiceSummary({ user, weeklies }) {
+  const fern = useCompanionName();
   const { voiceName, voicePrefsLoaded } = useVoicePrefs();
   const { speak, speaking, stopSpeaking } = useVoice(voiceName);
 
@@ -46,8 +48,8 @@ export default function WeeklyVoiceSummary({ user, weeklies }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>
             🔊 Your week, out loud
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
-            Your Sunday summary, read in your companion's voice — just your own logged numbers.
+          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>
+            Your Sunday summary, read by {fern}. Just your own logged numbers.
           </div>
         </div>
         <button
@@ -55,7 +57,7 @@ export default function WeeklyVoiceSummary({ user, weeklies }) {
           style={{
             padding: "9px 16px", borderRadius: 50, border: "none", cursor: "pointer",
             background: speaking ? C.muted : C.sage, color: C.white,
-            fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700, flexShrink: 0,
+            fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700, flexShrink: 0,
           }}
         >
           {speaking ? "⏹ Stop" : "▶ Listen"}

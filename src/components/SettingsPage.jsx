@@ -1,5 +1,5 @@
-import { useState } from "react";
-import C, { alpha } from "../lib/colors.js";
+import { useEffect, useState } from "react";
+import C from "../lib/colors.js";
 import Account from "./Account.jsx";
 import ReminderSettings from "./ReminderSettings.jsx";
 import CompanionVoiceSettings from "./CompanionVoiceSettings.jsx";
@@ -9,169 +9,131 @@ import CarerView from "./CarerView.jsx";
 import OfficialSources from "./OfficialSources.jsx";
 import GettingTheMostCard from "./GettingTheMostCard.jsx";
 import PractitionerPortal from "./PractitionerPortal.jsx";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
-// Settings, ordered by how often people actually reach for things: the
-// everyday controls first (reminders, voice, who you're looking after),
-// comfort next, then people, plan, preferences, devices, help, and the
-// account housekeeping last. The section ids are destinations the voice
-// companion can take people to (lib/voiceTabContext.js) — keep them stable.
+// Settings is a short menu; each line opens its own page with a way back.
+// The voice companion and links can open a page directly by its section id
+// (lib/voiceTabContext.js SECTIONS.settings) — keep those ids working.
+const SECTION_TO_PAGE = {
+  reminders: "reminders", voice: "fern", profiles: "profiles", display: "display",
+  carers: "people", plan: "plan", preferences: "preferences", devices: "devices",
+  sources: "help", help: "help", account: "account",
+};
 
-const JUMPS = [
-  ["section-reminders", "⏰ Reminders"],
-  ["section-voice", "🎙 Voice"],
-  ["section-display", "🌙 Display"],
-  ["section-people", "💜 People"],
-  ["section-plan", "✨ Plan"],
-  ["section-help", "📚 Help"],
-];
-
-function Group({ id, label, children }) {
-  return (
-    <section id={id} style={{ scrollMarginTop: 80, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{
-        fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
-        color: C.muted, fontFamily: "Georgia,serif", padding: "10px 4px 0",
-      }}>
-        {label}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-// For things set once and rarely touched again — kept to one line until opened.
-function Folded({ title, hint, startOpen = false, children }) {
-  const [open, setOpen] = useState(startOpen);
-  if (open) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {children}
-        <button onClick={() => setOpen(false)} style={linkStyle}>Hide</button>
-      </div>
-    );
-  }
+function Row({ emoji, title, hint, onClick }) {
   return (
     <button
-      onClick={() => setOpen(true)}
+      onClick={onClick}
       style={{
-        display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
+        display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
         background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: 16,
-        padding: "14px 16px", cursor: "pointer", fontFamily: "Georgia,serif", color: C.charcoal,
+        padding: "15px 16px", cursor: "pointer", fontFamily: "Georgia,serif", color: C.charcoal,
       }}
     >
-      <span style={{ flex: 1 }}>
-        <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>{title}</span>
-        {hint && <span style={{ display: "block", fontSize: 12.5, color: C.muted, marginTop: 2 }}>{hint}</span>}
+      <span style={{ fontSize: 24, width: 30, textAlign: "center" }} aria-hidden="true">{emoji}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontWeight: 700, fontSize: 17 }}>{title}</span>
+        {hint && <span style={{ display: "block", fontSize: 14, color: C.muted, marginTop: 2 }}>{hint}</span>}
       </span>
-      <span style={{ fontSize: 18, color: C.muted }}>›</span>
+      <span style={{ fontSize: 22, color: C.muted }} aria-hidden="true">›</span>
     </button>
   );
 }
 
-const linkStyle = {
-  alignSelf: "center", background: "none", border: "none", cursor: "pointer",
-  fontSize: 13, color: C.muted, textDecoration: "underline", fontFamily: "Georgia,serif",
-};
+function Folded({ title, hint, startOpen = false, children }) {
+  const [open, setOpen] = useState(startOpen);
+  if (open) return <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>;
+  return <Row emoji="" title={title} hint={hint} onClick={() => setOpen(true)} />;
+}
 
 export default function SettingsPage({
   accountProps, isRhythm, isSubscribed, isPractitioner, authUser, activeProfileId,
   profiles, onSwitchProfile, onCreateProfile, onUpdateProfile, onDeleteProfile, onReplayWelcome, section,
 }) {
-  // Sent here for the sources ("take me to the books") — open them, don't make people hunt.
-  const openSources = section === "sources";
-  const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const fern = useCompanionName();
+  const [page, setPage] = useState(SECTION_TO_PAGE[section] || null);
+  // Sent here again for a different setting: open that one.
+  const [seenSection, setSeenSection] = useState(section);
+  if (seenSection !== section) { setSeenSection(section); setPage(SECTION_TO_PAGE[section] || null); }
+  useEffect(() => { window.scrollTo(0, 0); document.querySelector("[data-scroll-root]")?.scrollTo?.(0, 0); }, [page]);
+
+  const pages = [
+    { id: "reminders", emoji: "⏰", title: "Reminders", hint: "Gentle nudges for your steps" },
+    { id: "fern", emoji: "🎙", title: isRhythm ? "Voice" : `${fern} & voice`, hint: isRhythm ? "Voice settings" : `${fern}'s voice, name, and voice minutes` },
+    { id: "profiles", emoji: "👨‍👩‍👧", title: "Profiles", hint: "You, and anyone you look after" },
+    { id: "display", emoji: "🌙", title: "Display & text size", hint: "Dark mode and bigger text" },
+    { id: "people", emoji: "💜", title: "Carers", hint: "Let someone see how you're going" },
+    { id: "plan", emoji: "✨", title: "My plan", hint: "Your plan and billing" },
+    { id: "preferences", emoji: "🌍", title: "Language & units", hint: `The language ${fern} replies in` },
+    ...(isSubscribed ? [{ id: "devices", emoji: "💓", title: "Wearables", hint: "Optional: Oura, Apple Health, Garmin and more" }] : []),
+    { id: "help", emoji: "📚", title: "Help & official sources", hint: "Tips, the welcome tour, Anthony William's books" },
+    { id: "account", emoji: "🔑", title: "Account", hint: "Sign out, your data, terms and privacy" },
+  ];
+
+  if (!page) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: C.charcoal, marginBottom: 4 }}>⚙️ Settings</div>
+        {pages.map((p) => <Row key={p.id} emoji={p.emoji} title={p.title} hint={p.hint} onClick={() => setPage(p.id)} />)}
+      </div>
+    );
+  }
+
+  const current = pages.find((p) => p.id === page) || pages[0];
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Quick jumps — the page is long, nobody should have to scroll to find a thing */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {JUMPS.map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => jump(id)}
-            style={{
-              padding: "8px 13px", borderRadius: 20, cursor: "pointer",
-              border: `1.5px solid ${alpha(C.sage, "55")}`, background: C.surface,
-              fontFamily: "Georgia,serif", fontSize: 13, color: C.sageDark,
-            }}
-          >
-            {label}
-          </button>
-        ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <button
+        onClick={() => setPage(null)}
+        style={{ alignSelf: "flex-start", background: "none", border: "none", color: C.sageDark, fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, cursor: "pointer", padding: "4px 0" }}
+      >
+        ← Settings
+      </button>
+      <div id={`section-${page}`} style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: C.charcoal }}>
+        {current.emoji} {current.title}
       </div>
 
-      <Group id="section-everyday" label="Everyday">
-        <div id="section-reminders" style={{ scrollMarginTop: 80 }}><ReminderSettings authUser={authUser} /></div>
-        <div id="section-voice" style={{ scrollMarginTop: 80 }}><CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} /></div>
-        <div id="section-profiles" style={{ scrollMarginTop: 80 }}>
-          <ProfileManager
-            profiles={profiles}
-            activeProfileId={activeProfileId}
-            onSwitch={onSwitchProfile}
-            onCreate={onCreateProfile}
-            onUpdate={onUpdateProfile}
-            onDelete={onDeleteProfile}
-          />
-        </div>
-      </Group>
-
-      <Group id="section-display" label="Comfort">
-        <Account {...accountProps} part="display" />
-      </Group>
-
-      <Group id="section-people" label="People who help">
-        {activeProfileId && (
-          <div id="section-carers" style={{ scrollMarginTop: 80 }}>
-            <CarerInviteManager authUser={authUser} profileId={activeProfileId} />
-          </div>
-        )}
-        <CarerView authUser={authUser} />
-        <Account {...accountProps} part="people" />
-      </Group>
-
-      <Group id="section-plan" label="Your plan">
-        <Account {...accountProps} part="plan" />
-        {isPractitioner && <PractitionerPortal authUser={authUser} />}
-      </Group>
-
-      <Group id="section-preferences" label="Preferences">
-        <Account {...accountProps} part="preferences" />
-      </Group>
-
-      {isSubscribed && (
-        <Group id="section-devices" label="Devices">
-          <Folded title="💓 Connect a wearable" hint="Optional — Oura, Apple Health, Garmin and more">
-            <Account {...accountProps} part="devices" />
-          </Folded>
-        </Group>
+      {page === "reminders" && <ReminderSettings authUser={authUser} />}
+      {page === "fern" && <CompanionVoiceSettings authUser={authUser} isRhythm={isRhythm} />}
+      {page === "profiles" && (
+        <ProfileManager
+          profiles={profiles}
+          activeProfileId={activeProfileId}
+          onSwitch={onSwitchProfile}
+          onCreate={onCreateProfile}
+          onUpdate={onUpdateProfile}
+          onDelete={onDeleteProfile}
+        />
       )}
-
-      <Group id="section-help" label="Help & official sources">
-        <Folded title="💡 Tips for getting the most out of CelerySync" hint="Five small things that make the biggest difference">
-          <GettingTheMostCard />
-        </Folded>
-        {onReplayWelcome && (
-          <button
-            onClick={onReplayWelcome}
-            style={{
-              display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
-              background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: 16,
-              padding: "14px 16px", cursor: "pointer", fontFamily: "Georgia,serif", color: C.charcoal,
-            }}
-          >
-            <span style={{ flex: 1, fontWeight: 700, fontSize: 15 }}>🎙 Replay the welcome tour</span>
-            <span style={{ fontSize: 18, color: C.muted }}>›</span>
-          </button>
-        )}
-        <div id="section-sources" style={{ scrollMarginTop: 80 }}>
-          <Folded title="📚 Official Anthony William sources" hint="His books, website, podcast and recipes" startOpen={openSources}>
-            <OfficialSources />
+      {page === "display" && <Account {...accountProps} part="display" />}
+      {page === "people" && (
+        <>
+          {activeProfileId && <CarerInviteManager authUser={authUser} profileId={activeProfileId} />}
+          <CarerView authUser={authUser} hideWhenEmpty />
+          <Account {...accountProps} part="people" />
+        </>
+      )}
+      {page === "plan" && (
+        <>
+          <Account {...accountProps} part="plan" />
+          {isPractitioner && <PractitionerPortal authUser={authUser} />}
+        </>
+      )}
+      {page === "preferences" && <Account {...accountProps} part="preferences" />}
+      {page === "devices" && <Account {...accountProps} part="devices" />}
+      {page === "help" && (
+        <>
+          <Folded title="💡 Tips for getting the most out of CelerySync" hint="Five small things that make the biggest difference">
+            <GettingTheMostCard />
           </Folded>
-        </div>
-      </Group>
-
-      <Group id="section-account" label="Account">
-        <Account {...accountProps} part="account" />
-      </Group>
+          {onReplayWelcome && <Row emoji="🎙" title="Replay the welcome tour" onClick={onReplayWelcome} />}
+          <div id="section-sources">
+            <Folded title="📚 Official Anthony William sources" hint="His books, website, podcast and recipes" startOpen={section === "sources"}>
+              <OfficialSources />
+            </Folded>
+          </div>
+        </>
+      )}
+      {page === "account" && <Account {...accountProps} part="account" />}
     </div>
   );
 }

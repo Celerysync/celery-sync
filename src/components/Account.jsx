@@ -8,11 +8,12 @@ import WearableConnect from './WearableConnect.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import { LANGUAGES } from '../lib/languages.js'
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 function MemoryField({ label, value }) {
   return (
     <div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
         {label}
       </div>
       <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.6, background: C.sageLight, borderRadius: 8, padding: "8px 10px" }}>
@@ -78,7 +79,7 @@ function DeleteAccount() {
       <div style={{ textAlign: "center" }}>
         <button
           onClick={() => setOpen(true)}
-          style={{ background: "none", border: "none", fontSize: 12, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
+          style={{ background: "none", border: "none", fontSize: 13.5, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
         >
           Delete my account
         </button>
@@ -117,6 +118,7 @@ function DeleteAccount() {
 }
 
 export default function Account({ authUser, isSubscribed, isPractitioner, isRhythm, subData, subLoading, isInTrial, trialDaysLeft, onSignOut, onReplayWelcome, onRefetchSub, profileId, part }) {
+  const fern = useCompanionName();
   // Settings shows the account screen in groups (SettingsPage.jsx): `part`
   // picks one group — plan, devices, people, preferences, display, account.
   // Without it, everything renders in one go as before.
@@ -237,17 +239,17 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{
               position: 'absolute', top: -11, left: 18,
               background: C.sageDark, color: C.white, borderRadius: 20,
-              padding: '3px 12px', fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+              padding: '3px 12px', fontSize: 13.5, fontWeight: 700, letterSpacing: 0.5,
             }}>
               MOST LOVED
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4, marginBottom: 4 }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>✨ Rhythm + Voice</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
-                {price("voice")}<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
+                {price("voice")}<span style={{ fontSize: 13.5, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
               Everything in Rhythm, plus the AI companion you met in your trial:
             </div>
             {COMPANION_FEATURES.map(f => (
@@ -255,11 +257,11 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 <div style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{f.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, color: C.charcoal }}>{f.label}</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{f.desc}</div>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{f.desc}</div>
                 </div>
               </div>
             ))}
-            <div style={{ fontSize: 12, color: C.muted, margin: '8px 0 10px' }}>
+            <div style={{ fontSize: 13.5, color: C.muted, margin: '8px 0 10px' }}>
               Includes 100 voice minutes a month — top-ups available if you're chatty.
             </div>
             <button
@@ -282,18 +284,18 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, color: C.charcoal }}>🌱 Rhythm</div>
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 20, color: C.sageDark, marginLeft: 'auto' }}>
-                {price("rhythm")}<span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
+                {price("rhythm")}<span style={{ fontSize: 13.5, fontWeight: 400, color: C.muted }}>/mo {CURRENCY_CODE}</span>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>
               The full engine for your own routine — without the AI companion:
             </div>
             {ENGINE_FEATURES.map(f => (
               <div key={f.label} style={{ display: 'flex', gap: 10, padding: '7px 0', borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
                 <div style={{ fontSize: 16, flexShrink: 0 }}>{f.emoji}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 12.5, color: C.charcoal }}>{f.label}</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{f.desc}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: C.charcoal }}>{f.label}</div>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{f.desc}</div>
                 </div>
                 <div style={{ color: C.sage, fontSize: 14, flexShrink: 0, fontWeight: 700 }}>✓</div>
               </div>
@@ -332,13 +334,13 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             </div>
           )}
 
-          <div style={{ textAlign: 'center', fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
+          <div style={{ textAlign: 'center', fontSize: 13.5, color: C.muted, lineHeight: 1.7 }}>
             Billed when you subscribe. Cancel anytime — you keep access until the end of your billing period.{'\n'}
             Secure payment powered by Stripe.
           </div>
 
           <div style={{
-            textAlign: 'center', fontSize: 12, color: C.muted,
+            textAlign: 'center', fontSize: 13.5, color: C.muted,
             borderTop: `1px solid ${C.border}`, paddingTop: 12, lineHeight: 1.8,
           }}>
             If you're in crisis, please reach out:{' '}
@@ -382,7 +384,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
                 {trialDaysLeft > 3 ? 'Choose your plan whenever you like' : trialDaysLeft === 0 ? 'Your trial ends today' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`}
               </div>
-              <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+              <div style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
                 Keep everything you've been using — companion, rhythm, reports and all — or keep just the engine with the Rhythm plan.
                 {trialDaysLeft > 3 && " No rush — choosing a plan starts it (and billing) straight away, so you can also wait until your free days are up."}
               </div>
@@ -461,7 +463,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 {error}
               </div>
             )}
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
               Update your card, see invoices, or cancel — on Stripe's secure page.
             </div>
           </Card>
@@ -547,7 +549,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 }}
                 disabled={loading}
                 style={{
-                  background: 'none', border: 'none', fontSize: 12, color: C.muted,
+                  background: 'none', border: 'none', fontSize: 13.5, color: C.muted,
                   textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Georgia,serif',
                 }}
               >
@@ -592,7 +594,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal }}>
               💜 Caregiver Mode
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
               Switches the app to a carer's perspective — care prep dashboard, AI guidance addressed to you as the carer, and practical daily support for looking after a loved one following their own routine.
             </div>
           </div>
@@ -615,8 +617,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           </button>
         </div>
         {caregiver && (
-          <div style={{ marginTop: 10, fontSize: 12, color: C.plum, fontWeight: 700 }}>
-            💜 Caregiver Mode is active — the Today tab and AI Guide are now in carer mode
+          <div style={{ marginTop: 10, fontSize: 13.5, color: C.plum, fontWeight: 700 }}>
+            💜 Caregiver Mode is active — the Today tab and {fern} are now in carer mode
           </div>
         )}
       </Card>
@@ -628,8 +630,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
           🌍 Language
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-          The AI Guide will respond in your chosen language. More languages available — ask the AI Guide to switch.
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+          {fern} will reply in the language you choose. For others, just ask her to switch.
         </div>
         <select
           value={lang}
@@ -647,8 +649,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           ))}
         </select>
         {lang !== 'en' && (
-          <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
-            ✓ AI Guide will respond in {LANGUAGES.find(l => l.code === lang)?.label}
+          <div style={{ marginTop: 8, fontSize: 13.5, color: C.sage }}>
+            ✓ {fern} will reply in {LANGUAGES.find(l => l.code === lang)?.label}
           </div>
         )}
       </Card>
@@ -658,8 +660,8 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 10 }}>
           📏 Measurement Units
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
-          The AI Guide and voice will use your preferred units for all dosages and quantities.
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
+          {fern} will use these units for amounts and quantities.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {[
@@ -679,12 +681,12 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 13, color: units === opt.val ? C.sageDark : C.charcoal }}>
                 {opt.label}
               </div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{opt.sub}</div>
+              <div style={{ fontSize: 13.5, color: C.muted, marginTop: 3 }}>{opt.sub}</div>
             </button>
           ))}
         </div>
         {units === 'metric' && (
-          <div style={{ marginTop: 8, fontSize: 12, color: C.sage }}>
+          <div style={{ marginTop: 8, fontSize: 13.5, color: C.sage }}>
             ✓ "500ml" · "half a litre" · "milligrams"
           </div>
         )}
@@ -696,7 +698,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           🎙 Voice on Every Page
         </div>
         <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
-          A floating mic button lets you ask the AI Guide anything from any page, and the companion briefly introduces each tab the first time you visit it each session.
+          A floating mic button lets you ask {fern} anything from any page, and she briefly introduces each tab the first time you visit it each session.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn
@@ -761,7 +763,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                 🧠 What the companion remembers
               </div>
               {memoryData?.memory_updated_at && (
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
                   Last updated {new Date(memoryData.memory_updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
                 </div>
               )}
@@ -802,7 +804,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
               )}
 
               <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
                   The companion builds this automatically from your conversations. Clear it to start fresh — this cannot be undone.
                 </div>
                 <button
@@ -824,7 +826,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
                   }}
                   style={{
                     background: "none", border: `1px solid ${C.border}`, borderRadius: 30,
-                    padding: "8px 16px", fontSize: 12, color: C.muted,
+                    padding: "8px 16px", fontSize: 13.5, color: C.muted,
                     cursor: memoryClearing ? "default" : "pointer", fontFamily: "Georgia,serif",
                     touchAction: "manipulation",
                   }}
@@ -865,7 +867,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
             a.href = url; a.download = `celerysync-my-data-${new Date().toISOString().slice(0, 10)}.json`; a.click();
             URL.revokeObjectURL(url);
           }}
-          style={{ background: "none", border: "none", fontSize: 12, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
+          style={{ background: "none", border: "none", fontSize: 13.5, color: C.muted, textDecoration: "underline", cursor: "pointer", fontFamily: "Georgia,serif" }}
         >
           Download my data
         </button>
@@ -878,10 +880,10 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         borderRadius: 16, padding: "14px 16px",
         textAlign: "center",
       }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 5, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.charcoal, marginBottom: 5, fontFamily: "Georgia,serif" }}>
           Independent App — Not Affiliated with Anthony William
         </div>
-        <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.75 }}>
+        <div style={{ fontSize: 13.5, color: C.mid, lineHeight: 1.75 }}>
           CelerySync is an independent app created by a Medical Medium community member. It is not affiliated with, endorsed by, or connected to Anthony William or Medical Medium LLC. "Medical Medium" is a registered trademark of Anthony William, Inc. All content is for educational and personal reference only — not a substitute for medical advice.
           <div style={{ marginTop: 8 }}>
             <a href="/terms.html" target="_blank" rel="noopener" style={{ color: C.sageDark }}>Terms of Use</a>{" · "}

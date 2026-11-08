@@ -72,7 +72,7 @@ export default function CaregiverDashboard({ patient }) {
         background: `linear-gradient(135deg,${C.plum},#5c3f6b)`,
         borderRadius: 20, padding: "20px 20px 16px", color: C.white,
       }}>
-        <div style={{ fontSize: 12, opacity: 0.8, letterSpacing: 1, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 13.5, opacity: 0.8, letterSpacing: 1, textTransform: "uppercase" }}>
           {new Date().toLocaleDateString("en-AU", { weekday: "long", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 22, fontWeight: 700, marginTop: 4 }}>
@@ -87,7 +87,7 @@ export default function CaregiverDashboard({ patient }) {
             style={{
               background: "rgba(255,255,255,0.2)", color: C.white,
               border: "1px solid rgba(255,255,255,0.4)", borderRadius: 30,
-              padding: "7px 14px", fontSize: 12, cursor: "pointer",
+              padding: "7px 14px", fontSize: 13.5, cursor: "pointer",
               fontFamily: "Georgia,serif", fontWeight: 700,
             }}
           >
@@ -112,11 +112,11 @@ export default function CaregiverDashboard({ patient }) {
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
               {task.emoji} {task.label}
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>What to prepare right now</div>
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>What to prepare right now</div>
           </div>
           <div style={{
             background: `${alpha(C.plum, "18")}`, borderRadius: 20, padding: "3px 10px",
-            fontSize: 12, color: C.plum, fontWeight: 700, flexShrink: 0,
+            fontSize: 13.5, color: C.plum, fontWeight: 700, flexShrink: 0,
           }}>
             {new Date().toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}
           </div>
@@ -133,10 +133,10 @@ export default function CaregiverDashboard({ patient }) {
           background: `${alpha(C.plum, "10")}`, border: `1px solid ${alpha(C.plum, "25")}`,
           borderRadius: 10, padding: "10px 12px", marginBottom: 10,
         }}>
-          <div style={{ fontSize: 12, color: C.plum, fontWeight: 700, marginBottom: 2 }}>When to offer it</div>
-          <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>{task.offer}</div>
+          <div style={{ fontSize: 13.5, color: C.plum, fontWeight: 700, marginBottom: 2 }}>When to offer it</div>
+          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.6 }}>{task.offer}</div>
         </div>
-        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, fontStyle: "italic" }}>
+        <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, fontStyle: "italic" }}>
           {task.tip}
         </div>
       </Card>
@@ -150,7 +150,7 @@ export default function CaregiverDashboard({ patient }) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
             {patient.symptoms.map((s) => (
               <div key={s} style={{
-                padding: "5px 12px", borderRadius: 20, fontSize: 12,
+                padding: "5px 12px", borderRadius: 20, fontSize: 13.5,
                 background: C.plumLight, color: C.plum,
                 border: `1px solid ${alpha(C.plum, "30")}`, fontFamily: "Georgia,serif",
               }}>
@@ -158,7 +158,7 @@ export default function CaregiverDashboard({ patient }) {
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
             These are the areas {patient?.name ? `${patient.name} has` : "they've"} chosen to focus on. For what Anthony
             William says about them, go to their copy of his books — the companion can help you
             with their rhythm, reminders, and keeping their log up to date.
@@ -183,7 +183,7 @@ export default function CaregiverDashboard({ patient }) {
         </div>
         {/* Descriptive only (TGA rail): the app never interprets symptoms —
             it encourages noting changes and leaves judgement to the doctor. */}
-        <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.7, marginBottom: 10 }}>
+        <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.7, marginBottom: 10 }}>
           You know {patient?.name || "your loved one"} best. Note any changes you observe — energy,
           appetite, mood, sleep — in their daily check-in, so their own record builds over time and
           they can share it with their doctor.
@@ -192,15 +192,15 @@ export default function CaregiverDashboard({ patient }) {
           background: `${alpha(C.terracotta, "10")}`, border: `1px solid ${alpha(C.terracotta, "30")}`,
           borderRadius: 10, padding: "10px 12px", marginBottom: 10,
         }}>
-          <div style={{ fontSize: 12, color: C.terracotta, fontWeight: 700, marginBottom: 2 }}>
+          <div style={{ fontSize: 13.5, color: C.terracotta, fontWeight: 700, marginBottom: 2 }}>
             If something feels seriously wrong
           </div>
-          <div style={{ fontSize: 12, color: C.charcoal, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.6 }}>
             High fever, severe pain, trouble breathing, can't keep fluids down, or anything that
             frightens you — don't wait. Contact their doctor or emergency services straight away.
           </div>
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>
           If they're feeling worse than usual, don't assume it's part of their routine —
           for anything that concerns you, always check with their doctor first.
         </div>

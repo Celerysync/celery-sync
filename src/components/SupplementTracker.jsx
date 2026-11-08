@@ -33,11 +33,11 @@ function formatRunOutDate(date) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export default function SupplementTracker({ authUser, profileId }) {
+export default function SupplementTracker({ authUser, profileId, startOpen = false }) {
   const [checked, setChecked] = useState({});
   const [saveError, setSaveError] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(startOpen);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(BLANK_CUSTOM);
   const [editingStockFor, setEditingStockFor] = useState(null); // supplement name being edited
@@ -220,7 +220,7 @@ export default function SupplementTracker({ authUser, profileId }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>
             💊 Today's Supplements
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
             {allSupps.length ? `${doneCount}/${allSupps.length} taken · ${pct}% done` : "None listed yet. Tap to add yours."}
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function SupplementTracker({ authUser, profileId }) {
             return (
               <div key={t.id}>
                 <div style={{
-                  fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8,
+                  fontSize: 13.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8,
                   marginBottom: 6, marginTop: 10, color: t.color,
                 }}>
                   {t.label}
@@ -273,7 +273,7 @@ export default function SupplementTracker({ authUser, profileId }) {
                       timingColor={t.color}
                     />
                     {s.source === "custom" && steps.length > 0 && (
-                      <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.muted, padding: "2px 4px 6px 34px" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, color: C.muted, padding: "2px 4px 6px 34px" }}>
                         Taken with
                         <select
                           aria-label={`What ${s.label} is taken with`}
@@ -305,8 +305,8 @@ export default function SupplementTracker({ authUser, profileId }) {
           })}
 
           {customSuppItems.length === 0 && (
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
-              Add your own supplements below — enter exactly what you're following, including dose and timing.
+            <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4, lineHeight: 1.5 }}>
+              Add your supplements below, exactly as you take them.
             </div>
           )}
 
@@ -315,16 +315,16 @@ export default function SupplementTracker({ authUser, profileId }) {
             <button
               onClick={() => setAdding(true)}
               style={{
-                marginTop: 12, background: "none", border: `1.5px dashed ${C.border}`,
-                borderRadius: 10, padding: "8px 12px", fontSize: 12, color: C.muted,
+                marginTop: 12, background: C.sageDark, border: "none",
+                borderRadius: 30, padding: "12px 14px", fontSize: 15, color: C.white, fontWeight: 700,
                 cursor: "pointer", width: "100%", fontFamily: "Georgia,serif",
               }}
             >
-              + Add your own supplement
+              + Add a supplement
             </button>
           ) : (
             <div style={{ marginTop: 12, padding: "12px", background: `${alpha(C.sageLight, "60")}`, borderRadius: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>Add supplement</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif" }}>Add supplement</div>
               <input
                 placeholder="Supplement name (e.g. Zinc)"
                 value={form.name}
@@ -360,7 +360,7 @@ export default function SupplementTracker({ authUser, profileId }) {
 
               {profileId && (
                 <>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
                     Optional — track inventory so we can remind you before you run out
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -439,31 +439,31 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
             type="number"
             value={stockForm.unitsOnHand}
             onChange={(e) => setStockForm((f) => ({ ...f, unitsOnHand: e.target.value }))}
-            style={{ ...inputStyle, flex: 1, fontSize: 12, padding: "5px 8px" }}
+            style={{ ...inputStyle, flex: 1, fontSize: 13.5, padding: "5px 8px" }}
           />
           <input
             placeholder="Per dose"
             type="number"
             value={stockForm.unitsPerDose}
             onChange={(e) => setStockForm((f) => ({ ...f, unitsPerDose: e.target.value }))}
-            style={{ ...inputStyle, flex: 1, fontSize: 12, padding: "5px 8px" }}
+            style={{ ...inputStyle, flex: 1, fontSize: 13.5, padding: "5px 8px" }}
           />
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <label style={{ fontSize: 12, color: C.muted, flex: 1 }}>
+          <label style={{ fontSize: 13.5, color: C.muted, flex: 1 }}>
             Alert when
             <input
               type="number"
               value={stockForm.restockThresholdDays}
               onChange={(e) => setStockForm((f) => ({ ...f, restockThresholdDays: e.target.value }))}
-              style={{ width: 40, margin: "0 4px", border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 4px", fontSize: 12 }}
+              style={{ width: 40, margin: "0 4px", border: `1px solid ${C.border}`, borderRadius: 6, padding: "2px 4px", fontSize: 13.5 }}
             />
             days left
           </label>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={onSave} style={{ flex: 1, background: C.sage, color: "#fff", border: "none", borderRadius: 16, padding: "6px", fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}>Save</button>
-          <button onClick={onCancel} style={{ flex: 1, background: "none", color: C.muted, border: `1px solid ${C.border}`, borderRadius: 16, padding: "6px", fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}>Cancel</button>
+          <button onClick={onSave} style={{ flex: 1, background: C.sage, color: "#fff", border: "none", borderRadius: 16, padding: "6px", fontSize: 13.5, cursor: "pointer", fontFamily: "Georgia,serif" }}>Save</button>
+          <button onClick={onCancel} style={{ flex: 1, background: "none", color: C.muted, border: `1px solid ${C.border}`, borderRadius: 16, padding: "6px", fontSize: 13.5, cursor: "pointer", fontFamily: "Georgia,serif" }}>Cancel</button>
         </div>
       </div>
     );
@@ -473,7 +473,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
     return (
       <button
         onClick={onOpen}
-        style={{ marginLeft: 30, marginBottom: 8, background: "none", border: "none", color: C.muted, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+        style={{ marginLeft: 30, marginBottom: 8, background: "none", border: "none", color: C.muted, fontSize: 13.5, cursor: "pointer", padding: 0, textDecoration: "underline" }}
       >
         + track inventory for {name}
       </button>
@@ -486,7 +486,7 @@ function StockLine({ name, runOutInfo, editing, onOpen, onCancel, onSave, stockF
       onClick={onOpen}
       style={{
         marginLeft: 30, marginBottom: 8, background: "none", border: "none",
-        color: low ? C.terracotta : C.muted, fontSize: 12, cursor: "pointer", padding: 0,
+        color: low ? C.terracotta : C.muted, fontSize: 13.5, cursor: "pointer", padding: 0,
       }}
     >
       {runOutInfo.unitsOnHand} left · runs out ~{formatRunOutDate(runOutInfo.runOutDate)}{low ? " · reorder soon" : ""}
@@ -510,13 +510,13 @@ function SuppRow({ label, checked, onToggle, isCustom, onRemove, timingColor }) 
           background: checked ? C.sage : "transparent",
           border: `2px solid ${checked ? C.sage : C.border}`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: C.white, fontSize: 12, fontWeight: 700,
+          color: C.white, fontSize: 13.5, fontWeight: 700,
           transition: "all 0.15s",
         }}>
           {checked ? "✓" : ""}
         </div>
         <div style={{
-          fontSize: 12, color: checked ? C.muted : C.charcoal,
+          fontSize: 13.5, color: checked ? C.muted : C.charcoal,
           textDecoration: checked ? "line-through" : "none",
           lineHeight: 1.4, transition: "all 0.15s",
         }}>

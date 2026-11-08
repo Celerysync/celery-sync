@@ -17,7 +17,7 @@ function Row({ item }) {
           {item.ofDays ? `${item.days} of ${item.ofDays} days` : `${item.days} ${item.days === 1 ? "day" : "days"}`}
         </span>
       </div>
-      {item.timingLabel && <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{item.timingLabel}</div>}
+      {item.timingLabel && <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>{item.timingLabel}</div>}
       {item.ofDays && (
         <div style={{ height: 6, borderRadius: 3, background: C.border, marginTop: 5, overflow: "hidden" }}>
           <div style={{ width: `${pct}%`, height: "100%", background: C.sage }} />
@@ -60,7 +60,7 @@ export default function SupplementSummary({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
         💊 Your supplements
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12 }}>
         What you ticked in the last {summary.periodDays} days.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -68,7 +68,7 @@ export default function SupplementSummary({ profileId }) {
       </div>
       {summary.previous.length > 0 && (
         <>
-          <div style={{ fontSize: 12, color: C.muted, margin: "14px 0 8px" }}>No longer on your list</div>
+          <div style={{ fontSize: 13.5, color: C.muted, margin: "14px 0 8px" }}>No longer on your list</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {summary.previous.map((item) => <Row key={item.id} item={item} />)}
           </div>

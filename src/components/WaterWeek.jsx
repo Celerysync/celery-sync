@@ -30,14 +30,14 @@ export default function WaterWeek({ profileId }) {
           const n = byDay[d] || 0;
           return (
             <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{ fontSize: 12, color: C.mid }}>{n || ""}</div>
+              <div style={{ fontSize: 13.5, color: C.mid }}>{n || ""}</div>
               <div style={{ width: "100%", height: `${Math.max(4, (n / max) * 60)}px`, background: n ? "#3b82f6" : alpha("#3b82f6", "25"), borderRadius: 6 }} />
-              <div style={{ fontSize: 11, color: C.muted }}>{new Date(`${d}T12:00:00`).toLocaleDateString("en-AU", { weekday: "short" }).slice(0, 2)}</div>
+              <div style={{ fontSize: 13, color: C.muted }}>{new Date(`${d}T12:00:00`).toLocaleDateString("en-AU", { weekday: "short" }).slice(0, 2)}</div>
             </div>
           );
         })}
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>Glasses you logged each day.</div>
+      <div style={{ fontSize: 13.5, color: C.muted, marginTop: 8 }}>Glasses you logged each day.</div>
     </Card>
   );
 }

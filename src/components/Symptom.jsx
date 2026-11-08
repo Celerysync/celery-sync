@@ -175,7 +175,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
 
       {/* Quick feeling chips */}
       <div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 8, fontFamily: "Georgia,serif" }}>
           Tap what applies to you:
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -204,7 +204,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
 
       {/* Free text */}
       <div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 6, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 6, fontFamily: "Georgia,serif" }}>
           Or describe in your own words:
         </div>
         <textarea
@@ -258,7 +258,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark, marginBottom: 8 }}>
                 🩺 Doctor / Practitioner Summary
               </div>
-              <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+              <div style={{ fontSize: 14, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
                 Creates a printable wellness summary with the AI companion's response — perfect to share with your GP or naturopath.
               </div>
               <Btn full color={C.sageDark} onClick={() => printDoctorSummary({ user, result })}>
@@ -275,7 +275,7 @@ End with: ⚠️ This is not medical advice — always work with your healthcare
 
       <div style={{
         background: C.sageLight, border: `1px solid ${alpha(C.sage, "40")}`,
-        borderRadius: 12, padding: 10, fontSize: 12, color: C.sageDark,
+        borderRadius: 12, padding: 10, fontSize: 13.5, color: C.sageDark,
       }}>
         📖 Descriptive only — this screen reflects what you share, it never interprets it. Not medical advice — always work with your healthcare provider. Your own copy of Anthony William's books (linked in <strong>Settings → Official sources</strong>) is the source for anything you follow.
       </div>

@@ -20,12 +20,12 @@ function Row({ title, then, now, direction, sub }) {
         </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexShrink: 0 }}>
           <span style={{ fontFamily: "Georgia,serif", fontSize: 14, color: C.muted }}>{then}</span>
-          <span style={{ fontSize: 12, color: C.muted }}>→</span>
+          <span style={{ fontSize: 13.5, color: C.muted }}>→</span>
           <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: C.charcoal }}>{now}</span>
           <span style={{ fontSize: 13, color: C.mid, width: 14, textAlign: "center" }}>{MARK[direction]}</span>
         </div>
       </div>
-      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 13.5, color: C.muted, marginTop: 3 }}>{sub}</div>}
     </div>
   );
 }
@@ -48,10 +48,10 @@ export default function ThenAndNow({ checkins }) {
             monthly view fetches 180 days), so for someone with longer history
             this is the start of that range, not the day they joined. The exact
             dates are printed below so there is no ambiguity either way. */}
-        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 2 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 2 }}>
           what you logged · earliest {data.windowDays} days vs most recent {data.windowDays}
         </div>
-        <div style={{ fontSize: 12, color: C.mid, marginTop: 6 }}>
+        <div style={{ fontSize: 13.5, color: C.mid, marginTop: 6 }}>
           {fmt(data.then.start)} – {fmt(data.then.end)}
           <span style={{ color: C.muted }}>  vs  </span>
           {fmt(data.now.start)} – {fmt(data.now.end)}
@@ -82,7 +82,7 @@ export default function ThenAndNow({ checkins }) {
         ))}
       </div>
 
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
         These are averages of what you logged yourself. They don't say why anything
         changed, and they aren't a medical assessment — bring them to your doctor if
         they're useful.

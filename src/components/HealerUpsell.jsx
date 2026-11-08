@@ -50,7 +50,7 @@ export default function HealerUpsell({ onUpgrade }) {
             <div style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{emoji}</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, color: C.charcoal }}>{label}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
             </div>
           </div>
         ))}
@@ -74,7 +74,7 @@ export default function HealerUpsell({ onUpgrade }) {
       >
         {busy ? "🌿 One moment…" : `Upgrade to Rhythm + Voice — ${price("voice")}/month →`}
       </button>
-      <div style={{ textAlign: "center", fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+      <div style={{ textAlign: "center", fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
         Upgrades apply to your existing subscription straight away — no second
         subscription, just the difference for the rest of the month.
       </div>

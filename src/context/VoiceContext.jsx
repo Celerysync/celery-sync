@@ -100,6 +100,12 @@ export const useVoicePrefs = () => {
   };
 };
 
+// The helper's name everywhere on screen: the one they chose, or Fern.
+export const useCompanionName = () => {
+  const ctx = useContext(VoiceContext);
+  return String(ctx?.voicePrefs?.companion_name || "").trim() || "Fern";
+};
+
 // Safe no-op fallback if a component ever renders without a VoiceProvider
 // ancestor — destructuring straight from a null context throws and takes
 // down the whole tree with no error boundary to catch it in time. Better to

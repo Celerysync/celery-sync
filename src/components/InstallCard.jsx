@@ -40,14 +40,14 @@ export default function InstallCard({ onDismiss, compact = false }) {
         📲 Add CelerySync to your home screen
       </div>
 
-      <div style={{ fontSize: 12.5, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
+      <div style={{ fontSize: 14, color: C.mid, lineHeight: 1.6, marginBottom: 12 }}>
         {isIOS
           ? "On iPhone, reminders can only reach you once CelerySync is on your home screen. It takes about ten seconds:"
           : "It opens full screen like a normal app, works offline, and makes your reminders far more reliable."}
       </div>
 
       {isIOS ? (
-        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: C.charcoal, lineHeight: 1.9 }}>
+        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: C.charcoal, lineHeight: 1.9 }}>
           <li>Tap the <strong>Share</strong> button at the bottom of Safari</li>
           <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
           <li>Tap <strong>Add</strong>, then open CelerySync from your home screen</li>

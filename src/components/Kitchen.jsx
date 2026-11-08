@@ -11,6 +11,7 @@ import ShoppingList from "./ShoppingList.jsx";
 import { useMealPlan } from "../hooks/useMealPlan.js";
 import { PLAN_SLOTS, SLOT_LABEL, dayLabel, defaultSlot, planRecipe, unplan } from "../lib/mealPlan.js";
 import { localDateStr } from "../lib/rhythmSchedule.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const nextDays = (n = 7) => Array.from({ length: n }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return localDateStr(d); });
@@ -205,7 +206,7 @@ function RecipeEditor({ initial, onSave, onCancel }) {
           <button style={{ ...btn(true), marginTop: 8 }} disabled={!paste.trim() || sorting} onClick={sortIt}>
             {sorting ? "Sorting…" : "Sort it for me"}
           </button>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Only what you write is used. Nothing is added or changed.</div>
+          <div style={{ fontSize: 13.5, color: C.muted, marginTop: 6 }}>Only what you write is used. Nothing is added or changed.</div>
         </Card>
       )}
 
@@ -248,6 +249,7 @@ function RecipeEditor({ initial, onSave, onCancel }) {
 }
 
 export default function Kitchen({ profileId, section }) {
+  const fern = useCompanionName();
   const { recipes, loading, offline, save, remove, toggleFavourite, setPhoto } = useKitchen(profileId);
   const [kind, setKind] = useState(KIND_BY_ID[section] ? section : "all");
   const [query, setQuery] = useState("");
@@ -354,7 +356,7 @@ export default function Kitchen({ profileId, section }) {
           <div style={{ fontSize: 34 }}>🥬</div>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal, marginTop: 6 }}>Your Kitchen is empty</div>
           <div style={{ fontSize: 14, color: C.mid, marginTop: 6, lineHeight: 1.6 }}>
-            Add your own juices, smoothies and meals: tap <strong>+ Add</strong>, paste one in, or tell your companion
+            Add your own juices, smoothies and meals: tap <strong>+ Add</strong>, paste one in, or tell {fern}
             "save a new smoothie…" and read it out. Only your own recipes live here.
           </div>
         </Card>

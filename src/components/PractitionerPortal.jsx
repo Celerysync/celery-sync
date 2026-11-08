@@ -70,12 +70,12 @@ function ClientModal({ client, onSave, onClose }) {
           style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 14, marginBottom: 10, outline: "none" }} />
 
         {/* Conditions */}
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 6 }}>What they want support with</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 6 }}>What they want support with</div>
         {conditions.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
             {conditions.map(c => (
               <div key={c} onClick={() => toggleCond(c)} style={{
-                padding: "4px 10px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+                padding: "4px 10px", borderRadius: 20, fontSize: 13.5, cursor: "pointer",
                 background: C.plumLight, color: C.plum, border: `1px solid ${alpha(C.plum, "30")}`, fontFamily: "Georgia,serif",
               }}>
                 {c} ✕
@@ -88,7 +88,7 @@ function ClientModal({ client, onSave, onClose }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
           {filtered.map(c => (
             <div key={c} onClick={() => toggleCond(c)} style={{
-              padding: "4px 10px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+              padding: "4px 10px", borderRadius: 20, fontSize: 13.5, cursor: "pointer",
               background: C.mist, color: C.charcoal, fontFamily: "Georgia,serif",
             }}>{c}</div>
           ))}
@@ -132,27 +132,27 @@ function SessionModal({ client, session, onSave, onClose }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, color: C.charcoal, marginBottom: 4 }}>
           Session — {client.name}
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Record this appointment or check-in</div>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 16 }}>Record this appointment or check-in</div>
 
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
           style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif", fontSize: 13, marginBottom: 14, outline: "none" }} />
 
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Client's energy today (1–10)</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Client's energy today (1–10)</div>
         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
           {[2,4,6,8,10].map(v => (
             <button key={v} onClick={() => setEnergy(energy === v ? null : v)} style={{
               flex: 1, padding: "8px 4px", borderRadius: 10, border: "none", cursor: "pointer",
               background: energy === v ? C.leaf : C.mist, color: energy === v ? C.white : C.charcoal,
-              fontSize: 12, fontFamily: "Georgia,serif", fontWeight: 700,
+              fontSize: 13.5, fontFamily: "Georgia,serif", fontWeight: 700,
             }}>{v}</button>
           ))}
         </div>
 
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Symptoms reported</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.mid, marginBottom: 8 }}>Symptoms reported</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
           {(client.conditions?.length > 0 ? client.conditions : ["Fatigue","Brain fog","Anxiety","Bloating","Insomnia"]).map(s => (
             <div key={s} onClick={() => toggleSym(s)} style={{
-              padding: "5px 10px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+              padding: "5px 10px", borderRadius: 20, fontSize: 13.5, cursor: "pointer",
               background: symptoms.includes(s) ? C.terracotta : C.mist,
               color: symptoms.includes(s) ? C.white : C.charcoal, fontFamily: "Georgia,serif",
             }}>{s}</div>
@@ -261,17 +261,17 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
           <div style={{ fontSize: 40 }}>{client.avatar_emoji}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20 }}>{client.name}</div>
-            {client.age && <div style={{ fontSize: 12, opacity: 0.85 }}>Age {client.age}</div>}
-            {client.goal && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>{client.goal}</div>}
+            {client.age && <div style={{ fontSize: 13.5, opacity: 0.85 }}>Age {client.age}</div>}
+            {client.goal && <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 2 }}>{client.goal}</div>}
           </div>
-          <button onClick={onEdit} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 20, padding: "6px 14px", color: C.white, fontSize: 12, cursor: "pointer", fontFamily: "Georgia,serif" }}>
+          <button onClick={onEdit} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 20, padding: "6px 14px", color: C.white, fontSize: 13.5, cursor: "pointer", fontFamily: "Georgia,serif" }}>
             Edit
           </button>
         </div>
         {client.conditions?.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
             {client.conditions.map(c => (
-              <div key={c} style={{ background: "rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 10px", fontSize: 12, fontFamily: "Georgia,serif" }}>{c}</div>
+              <div key={c} style={{ background: "rgba(255,255,255,0.2)", borderRadius: 20, padding: "3px 10px", fontSize: 13.5, fontFamily: "Georgia,serif" }}>{c}</div>
             ))}
           </div>
         )}
@@ -305,7 +305,7 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
 
           {protocol ? (
             <Card>
-              <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10 }}>
                 Generated {new Date(protocol.generated_at).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
               </div>
               <div style={{ fontSize: 13.5, color: C.charcoal, lineHeight: 1.85, whiteSpace: "pre-wrap" }}>
@@ -339,14 +339,14 @@ footer{margin-top:36px;padding-top:14px;border-top:1px solid #dde8dd;font-size:1
                   {new Date(s.session_date + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  {s.energy && <div style={{ fontSize: 12, background: C.sageLight, color: C.sageDark, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>⚡ {s.energy}/10</div>}
+                  {s.energy && <div style={{ fontSize: 13.5, background: C.sageLight, color: C.sageDark, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>⚡ {s.energy}/10</div>}
                 </div>
               </div>
-              {s.client_notes && <div style={{ fontSize: 12, color: C.mid, marginBottom: 4, lineHeight: 1.5 }}>Client: {s.client_notes.slice(0, 120)}{s.client_notes.length > 120 ? "…" : ""}</div>}
-              {s.practitioner_notes && <div style={{ fontSize: 12, color: C.sageDark, lineHeight: 1.5 }}>Notes: {s.practitioner_notes.slice(0, 120)}{s.practitioner_notes.length > 120 ? "…" : ""}</div>}
+              {s.client_notes && <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 4, lineHeight: 1.5 }}>Client: {s.client_notes.slice(0, 120)}{s.client_notes.length > 120 ? "…" : ""}</div>}
+              {s.practitioner_notes && <div style={{ fontSize: 13.5, color: C.sageDark, lineHeight: 1.5 }}>Notes: {s.practitioner_notes.slice(0, 120)}{s.practitioner_notes.length > 120 ? "…" : ""}</div>}
               {s.symptoms?.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                  {s.symptoms.slice(0, 4).map(sym => <div key={sym} style={{ fontSize: 12, background: C.terracottaLight, color: C.terracotta, borderRadius: 20, padding: "2px 8px" }}>{sym}</div>)}
+                  {s.symptoms.slice(0, 4).map(sym => <div key={sym} style={{ fontSize: 13.5, background: C.terracottaLight, color: C.terracotta, borderRadius: 20, padding: "2px 8px" }}>{sym}</div>)}
                 </div>
               )}
             </Card>
@@ -394,13 +394,13 @@ export default function PractitionerPortal({ authUser }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 22, color: C.charcoal }}>🏥 My Practice</h2>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Your client notes</div>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 4 }}>Your client notes</div>
       </div>
 
       <Card style={{ background: `linear-gradient(135deg,${C.sageDark},${C.leaf})`, border: "none" }}>
         <div style={{ color: C.white }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Practitioner Plan ✨</div>
-          <div style={{ fontSize: 12, opacity: 0.9, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, opacity: 0.9, lineHeight: 1.6 }}>
             {clients.length} client{clients.length !== 1 ? "s" : ""} · Generate AI protocols · Session notes · Printable reports
           </div>
         </div>
@@ -427,11 +427,11 @@ export default function PractitionerPortal({ authUser }) {
               <div style={{ fontSize: 34, flexShrink: 0 }}>{client.avatar_emoji}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal }}>{client.name}</div>
-                {client.age && <div style={{ fontSize: 12, color: C.muted }}>{client.age} years old</div>}
+                {client.age && <div style={{ fontSize: 13.5, color: C.muted }}>{client.age} years old</div>}
                 {client.conditions?.length > 0 && (
-                  <div style={{ fontSize: 12, color: C.mid, marginTop: 3 }}>{client.conditions.slice(0, 3).join(", ")}{client.conditions.length > 3 ? ` +${client.conditions.length - 3}` : ""}</div>
+                  <div style={{ fontSize: 13.5, color: C.mid, marginTop: 3 }}>{client.conditions.slice(0, 3).join(", ")}{client.conditions.length > 3 ? ` +${client.conditions.length - 3}` : ""}</div>
                 )}
-                {client.goal && <div style={{ fontSize: 12, color: C.muted, marginTop: 2, fontStyle: "italic" }}>{client.goal}</div>}
+                {client.goal && <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, fontStyle: "italic" }}>{client.goal}</div>}
               </div>
               <div style={{ color: C.sage, fontSize: 20, flexShrink: 0 }}>›</div>
             </div>

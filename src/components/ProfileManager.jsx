@@ -42,7 +42,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* Avatar picker */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>Choose an avatar</div>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>Choose an avatar</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {AVATAR_OPTIONS.map((e) => (
             <button
@@ -64,7 +64,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Name */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 6, fontFamily: "Georgia,serif" }}>Name</div>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 6, fontFamily: "Georgia,serif" }}>Name</div>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -80,7 +80,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Goal */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>What you're working on</div>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>What you're working on</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {GOALS.map((g) => (
             <button
@@ -103,7 +103,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Gender + age — both optional, "prefer not to say" just leaves them blank */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
           Gender <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -116,7 +116,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
                 border: `1.5px solid ${gender === g.value ? C.sage : C.border}`,
                 background: gender === g.value ? C.sageLight : "transparent",
                 color: gender === g.value ? C.sageDark : C.mid,
-                fontSize: 12, fontFamily: "Georgia,serif",
+                fontSize: 13.5, fontFamily: "Georgia,serif",
                 cursor: "pointer", fontWeight: gender === g.value ? 700 : 400,
               }}
             >
@@ -127,7 +127,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
       </div>
 
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
           Age range <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -140,7 +140,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
                 border: `1.5px solid ${ageBand === a.value ? C.sage : C.border}`,
                 background: ageBand === a.value ? C.sageLight : "transparent",
                 color: ageBand === a.value ? C.sageDark : C.mid,
-                fontSize: 12, fontFamily: "Georgia,serif",
+                fontSize: 13.5, fontFamily: "Georgia,serif",
                 cursor: "pointer", fontWeight: ageBand === a.value ? 700 : 400,
               }}
             >
@@ -153,8 +153,8 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
       {gender === "female" && (
         <div style={{ background: C.sageLight, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif" }}>Track my cycle</div>
-            <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>Adds a cycle-day overlay to your Progress reports</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.sageDark, fontFamily: "Georgia,serif" }}>Track my cycle</div>
+            <div style={{ fontSize: 13.5, color: C.mid, marginTop: 2 }}>Adds a cycle-day overlay to your Progress reports</div>
           </div>
           <button
             onClick={() => setCycleTracking((v) => !v)}
@@ -170,7 +170,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
 
       {/* Symptoms */}
       <div>
-        <div style={{ fontSize: 12, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
+        <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 8, fontFamily: "Georgia,serif" }}>
           Main symptoms (select all that apply) {symptoms.length > 0 && `· ${symptoms.length} selected`}
         </div>
         <input
@@ -185,7 +185,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
             width: "100%", boxSizing: "border-box",
             padding: "8px 14px", borderRadius: 30,
             border: `1.5px solid ${C.border}`,
-            fontFamily: "Georgia,serif", fontSize: 12,
+            fontFamily: "Georgia,serif", fontSize: 13.5,
             outline: "none", background: C.mist, marginBottom: 8,
           }}
         />
@@ -200,7 +200,7 @@ function ProfileForm({ initial = {}, onSave, onCancel, saving }) {
                   border: `1.5px solid ${symptoms.includes(s) ? C.sage : C.border}`,
                   background: symptoms.includes(s) ? C.sageLight : "transparent",
                   color: symptoms.includes(s) ? C.sageDark : C.mid,
-                  fontSize: 12, fontFamily: "Georgia,serif",
+                  fontSize: 13.5, fontFamily: "Georgia,serif",
                   cursor: "pointer", fontWeight: symptoms.includes(s) ? 700 : 400,
                 }}
               >
@@ -257,7 +257,7 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>
           Add Family Member
         </div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>
           Profiles are for adults (18+). For supporting a loved one, use Carer mode in Account settings.
         </div>
         <ProfileForm onSave={handleCreate} onCancel={() => setMode(null)} saving={saving} />
@@ -301,15 +301,15 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontWeight: isActive ? 700 : 400, fontSize: 14, color: C.charcoal }}>
                   {p.name}
-                  {isActive && <span style={{ fontSize: 12, color: C.sage, marginLeft: 8 }}>● active</span>}
+                  {isActive && <span style={{ fontSize: 13.5, color: C.sage, marginLeft: 8 }}>● active</span>}
                 </div>
                 {p.goal && (
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.goal}
                   </div>
                 )}
                 {p.symptoms?.length > 0 && (
-                  <div style={{ fontSize: 12, color: C.mid, marginTop: 2 }}>
+                  <div style={{ fontSize: 13.5, color: C.mid, marginTop: 2 }}>
                     {p.symptoms.slice(0, 3).join(", ")}{p.symptoms.length > 3 ? ` +${p.symptoms.length - 3} more` : ""}
                   </div>
                 )}
@@ -317,14 +317,14 @@ export default function ProfileManager({ profiles, activeProfileId, onSwitch, on
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); setMode({ editing: p }); }}
-                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 8px", fontSize: 12, color: C.mid, cursor: "pointer" }}
+                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 8px", fontSize: 13.5, color: C.mid, cursor: "pointer" }}
                 >
                   Edit
                 </button>
                 {profiles.length > 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }}
-                    style={{ background: "none", border: `1px solid #fca5a5`, borderRadius: 8, padding: "4px 8px", fontSize: 12, color: "#ef4444", cursor: "pointer" }}
+                    style={{ background: "none", border: `1px solid #fca5a5`, borderRadius: 8, padding: "4px 8px", fontSize: 13.5, color: "#ef4444", cursor: "pointer" }}
                   >
                     ✕
                   </button>

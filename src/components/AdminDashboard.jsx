@@ -21,7 +21,7 @@ function StatCard({ value, label, color = C.leaf, bg = C.sageLight }) {
   return (
     <div style={{ flex: "1 0 80px", textAlign: "center", padding: "12px 8px", background: bg, borderRadius: 14 }}>
       <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "Georgia,serif", color }}>{value}</div>
-      <div style={{ fontSize: 12, color: C.mid, marginTop: 3, lineHeight: 1.3 }}>{label}</div>
+      <div style={{ fontSize: 13.5, color: C.mid, marginTop: 3, lineHeight: 1.3 }}>{label}</div>
     </div>
   );
 }
@@ -31,8 +31,8 @@ function BarRow({ label, value, max, color = C.sage }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-        <div style={{ fontSize: 12, color: C.charcoal }}>{label}</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color }}>{value}</div>
+        <div style={{ fontSize: 13.5, color: C.charcoal }}>{label}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{value}</div>
       </div>
       <div style={{ height: 6, background: C.mist, borderRadius: 3 }}>
         <div style={{ height: 6, width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.4s" }} />
@@ -93,11 +93,11 @@ export default function AdminDashboard({ authUser }) {
         background: `linear-gradient(135deg,${C.charcoal},#2d4a2d)`,
         borderRadius: 22, padding: "20px 22px", color: C.white,
       }}>
-        <div style={{ fontSize: 12, opacity: 0.6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+        <div style={{ fontSize: 13.5, opacity: 0.6, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
           Admin Dashboard
         </div>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20 }}>CelerySync Overview</div>
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 4 }}>Last 7 days · Live data from Supabase</div>
+        <div style={{ fontSize: 13.5, opacity: 0.6, marginTop: 4 }}>Last 7 days · Live data from Supabase</div>
       </div>
 
 
@@ -148,7 +148,7 @@ export default function AdminDashboard({ authUser }) {
               />
             ))}
           {Object.keys(data.events7d || {}).length === 0 && (
-            <div style={{ fontSize: 12, color: C.muted }}>No events tracked yet — analytics will populate as users engage.</div>
+            <div style={{ fontSize: 13.5, color: C.muted }}>No events tracked yet — analytics will populate as users engage.</div>
           )}
         </div>
       </Card>
@@ -183,7 +183,7 @@ export default function AdminDashboard({ authUser }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 6 }}>
             ✨ Weekly AI Digest
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+          <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 8 }}>
             Generated {new Date(latestDigest.generatedAt).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}
           </div>
           <div style={{ fontSize: 13, color: C.charcoal, lineHeight: 1.7, fontStyle: "italic" }}>{latestDigest.digest}</div>
@@ -196,16 +196,16 @@ export default function AdminDashboard({ authUser }) {
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
             💜 Healing Access Fund
           </div>
-          <div style={{ fontSize: 12, opacity: 0.9, lineHeight: 1.6, marginBottom: 10 }}>
+          <div style={{ fontSize: 13.5, opacity: 0.9, lineHeight: 1.6, marginBottom: 10 }}>
             Estimated monthly revenue: <strong>${data.revenue?.monthly}</strong>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, opacity: 0.75, lineHeight: 1.6 }}>
             Remember to allocate a generous portion to buying MM books and supplements for people who can't afford them. Contact healing@celerysync.com requests come here.
           </div>
         </div>
       </Card>
 
-      <div style={{ fontSize: 12, color: C.muted, textAlign: "center" }}>
+      <div style={{ fontSize: 13.5, color: C.muted, textAlign: "center" }}>
         This dashboard is only visible to allij@live.com.au
       </div>
     </div>

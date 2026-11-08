@@ -10,7 +10,7 @@ function StatusBadge({ status }) {
   const s = map[status] || map.pending;
   return (
     <span style={{
-      padding: "3px 10px", borderRadius: 20, fontSize: 12,
+      padding: "3px 10px", borderRadius: 20, fontSize: 13.5,
       fontWeight: 700, background: s.bg, color: s.color,
     }}>
       {s.label}
@@ -75,7 +75,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 4 }}>
         💜 Carers
       </div>
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
         Invite a friend or family member to see your progress. They'll get a read-only view of your energy, check-ins, and milestones — so they can support you better.
       </div>
 
@@ -92,12 +92,12 @@ export default function CarerInviteManager({ authUser, profileId }) {
                 <div style={{ marginTop: 4 }}>
                   <StatusBadge status={c.status} />
                   {c.status === "pending" && (
-                    <span style={{ fontSize: 12, color: C.muted, marginLeft: 8 }}>
+                    <span style={{ fontSize: 13.5, color: C.muted, marginLeft: 8 }}>
                       Invite not yet accepted
                     </span>
                   )}
                   {c.status === "active" && c.accepted_at && (
-                    <span style={{ fontSize: 12, color: C.muted, marginLeft: 8 }}>
+                    <span style={{ fontSize: 13.5, color: C.muted, marginLeft: 8 }}>
                       Joined {new Date(c.accepted_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
                     </span>
                   )}
@@ -107,7 +107,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
                 onClick={() => handleRevoke(c.id)}
                 disabled={revoking === c.id}
                 style={{
-                  padding: "5px 12px", borderRadius: 20, fontSize: 12,
+                  padding: "5px 12px", borderRadius: 20, fontSize: 13.5,
                   border: `1px solid ${alpha(C.terracotta, "40")}`,
                   background: "transparent", color: C.terracotta,
                   cursor: revoking === c.id ? "default" : "pointer",
@@ -123,7 +123,7 @@ export default function CarerInviteManager({ authUser, profileId }) {
 
       {/* Invite form */}
       <div style={{ marginBottom: inviteLink ? 14 : 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 8 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 8 }}>
           Invite someone
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -165,12 +165,12 @@ export default function CarerInviteManager({ authUser, profileId }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: C.plum, fontFamily: "Georgia,serif", marginBottom: 6 }}>
             💜 Invite link ready
           </div>
-          <div style={{ fontSize: 12, color: C.mid, marginBottom: 10, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.mid, marginBottom: 10, lineHeight: 1.6 }}>
             Copy this link and send it via WhatsApp, text, or email. They'll need to sign in to CelerySync (free) to accept.
           </div>
           <div style={{
             background: C.surface, borderRadius: 10, padding: "9px 12px",
-            fontSize: 12, color: C.charcoal, wordBreak: "break-all",
+            fontSize: 13.5, color: C.charcoal, wordBreak: "break-all",
             border: `1px solid ${C.border}`, marginBottom: 10,
             fontFamily: "monospace",
           }}>

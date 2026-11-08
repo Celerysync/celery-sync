@@ -4,6 +4,7 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useVoicePrefs } from "../context/VoiceContext.jsx";
 import { useVoice } from "../hooks/useVoice.js";
+import { useCompanionName } from "../context/VoiceContext.jsx";
 
 const PREVIEW_LINE =
   "Hello — I'm your CelerySync companion. I'm here whenever you'd like a hand with your day.";
@@ -15,7 +16,7 @@ function Toggle({ on, onChange, label, desc }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "Georgia,serif", fontSize: 13, color: C.charcoal, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+        <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
       </div>
       <button
         onClick={() => onChange(!on)}
@@ -49,6 +50,7 @@ function Toggle({ on, onChange, label, desc }) {
 // morning/evening TTS nudge toggles. Voice options are the curated CelerySync
 // set from /api/hume/voices (Octave) — the app is Hume-only since 2026-07-19.
 export default function CompanionVoiceSettings({ authUser, isRhythm }) {
+  const fern = useCompanionName();
   const [showAllVoices, setShowAllVoices] = useState(false);
   const { voicePrefs: prefs, voicePrefsLoaded: loaded, saveVoicePrefs: savePrefs } = useVoicePrefs();
   const [topupBusy, setTopupBusy] = useState(false);
@@ -80,7 +82,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
           🎙 Companion voice
         </div>
-        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
           The voice companion is part of the Rhythm + Voice plan — the Companion tab has
           the details if you'd like it back.
         </div>
@@ -99,8 +101,8 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.sageDark, marginBottom: 4 }}>
         🎙 Companion voice
       </div>
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5, marginBottom: 12 }}>
-        Choose the voice you'll hear when you talk with your companion, and for your morning greeting, reminders and evening wrap-up. Tap ▶ to hear it first.
+      <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.5, marginBottom: 12 }}>
+        Choose the voice you'll hear when you talk with {fern}, and for your morning greeting, reminders and evening wrap-up. Tap ▶ to hear it first.
       </div>
 
       {/* Voice picker */}
@@ -135,7 +137,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           style={{
             padding: "10px 14px", borderRadius: 12, border: "none",
             background: hasVoice ? C.sage : "#d1d5db", color: C.white,
-            fontFamily: "Georgia,serif", fontSize: 12, fontWeight: 700,
+            fontFamily: "Georgia,serif", fontSize: 13.5, fontWeight: 700,
             cursor: hasVoice ? "pointer" : "default", flexShrink: 0,
           }}
         >
@@ -197,7 +199,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, fontFamily: "Georgia,serif", marginBottom: 4 }}>
           Voice minutes
         </div>
-        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 10 }}>
+        <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginBottom: 10 }}>
           Your plan's voice minutes refresh each month. Running low? Add a one-off top-up —
           it's applied as soon as payment completes, and any top-up minutes you don't use
           carry over to next month.
@@ -223,7 +225,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           style={{
             background: C.sageDark, color: "#fff", border: "none", borderRadius: 20,
             padding: "9px 18px", fontFamily: "Georgia,serif", fontWeight: 700,
-            fontSize: 12.5, cursor: "pointer", opacity: topupBusy ? 0.6 : 1,
+            fontSize: 14, cursor: "pointer", opacity: topupBusy ? 0.6 : 1,
           }}
         >
           {topupBusy
@@ -233,7 +235,7 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
             : "＋ Top up voice minutes"}
         </button>
         {topupMsg && (
-          <div style={{ fontSize: 12, color: C.terracotta, marginTop: 8 }}>{topupMsg}</div>
+          <div style={{ fontSize: 13.5, color: C.terracotta, marginTop: 8 }}>{topupMsg}</div>
         )}
       </div>
     </Card>

@@ -48,7 +48,7 @@ export default function RhythmChanges({ profileId }) {
       <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 4 }}>
         Changes to your rhythm
       </div>
-      <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12 }}>
         What you added, changed or removed, and when.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -57,7 +57,7 @@ export default function RhythmChanges({ profileId }) {
           return (
             <div key={row.id}>
               <div style={{ fontSize: 14, color: C.charcoal }}>{describeRhythmChange(row)}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+              <div style={{ fontSize: 13.5, color: C.muted, marginTop: 1 }}>
                 {fmtDay(row.occurred_at)}{source ? ` · ${source}` : ""}
               </div>
             </div>

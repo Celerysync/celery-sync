@@ -49,7 +49,7 @@ export default function WhatYouMade({ profileId }) {
             <span style={{ color: C.mid }}>{timesText(r.count)}</span>
           </div>
         ))}
-      <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>
+      <div style={{ fontSize: 13.5, color: C.muted, marginTop: 8 }}>
         From the steps you ticked that had one of your recipes on them.
       </div>
     </Card>
