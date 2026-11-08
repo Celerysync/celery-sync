@@ -26,14 +26,11 @@ const Supplements = lazy(() => import("./Supplements.jsx"));
 // Compliance (CLAUDE.md rails / LEGAL_CONSTRAINTS.md): paraphrase + attribute
 // only, wellbeing language, no named conditions, no protocol specifics or
 // recipes — the books/site are always the pointer for those.
+// Only teachings about rest, consistency and kindness to yourself. Ones that
+// named foods, drinks or organs were the app serving protocol content, which
+// the rails don't allow; the person's own rhythm and books cover those.
 const DAILY_TEACHINGS = [
-  "Anthony William teaches that the body is always working on your behalf, quietly doing its repair work every day. Consistent, gentle routines are a way of supporting it.",
-  "Anthony William has long shared his view that fresh celery juice, taken on its own, is deeply supportive for general wellbeing — his books explain exactly how he suggests preparing and enjoying it.",
-  "Anthony William often speaks of the liver as a hardworking, protective organ, and encourages simple morning habits as a way of gently supporting it.",
-  "Anthony William encourages starting the day with hydration — he associates lemon water first thing with gently supporting the body's natural morning rhythm.",
-  "Anthony William teaches that rest is never a luxury. Sleep is when the body does some of its most important quiet work, and protecting it matters.",
-  "Anthony William speaks warmly of wild blueberries, counting them among the foods he considers most supportive — his books share how he recommends enjoying them.",
-  "Anthony William encourages eating steadily through the day, with regular gentle snacks, as a way of supporting even energy.",
+  "Anthony William teaches that rest is never a luxury, and that protecting your sleep matters.",
   "Anthony William reminds his readers that consistency matters more than perfection — showing up for your routine, even imperfectly, is what builds momentum.",
   "Anthony William encourages self-compassion on the hard days. Your effort counts, and tomorrow is always a fresh start.",
   "Anthony William's books, podcast, and medicalmedium.com are the home of his teachings — for the specifics of any protocol, go straight to the source.",
@@ -284,11 +281,6 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   // list renders (spec §1 single source of truth) — no private checklist copy.
   const rhythmDoneCount = sequence.filter((i) => i.completedAt).length;
 
-  // Day score (0–100): the person's own rhythm 75pts + check-in 25pts.
-  // (A 15pt share used to come from an app-supplied adrenal-snack tracker.)
-  const protocolScore = sequence.length ? Math.round((rhythmDoneCount / sequence.length) * 75) : 0;
-  const checkinScore = todaysCheckin ? 25 : 0;
-  const healingScore = protocolScore + checkinScore;
 
   // Streak protection — evening, a streak worth keeping, nothing ticked yet today
   const streakAtRisk = h >= 19 && showedUpStreak > 2 && sequence.length > 0 && rhythmDoneCount === 0;
@@ -357,11 +349,6 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             // A broken streak never shows as zero — the total never resets.
             <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
               🌿 {totalShowedUpDays} {totalShowedUpDays === 1 ? "day" : "days"} shown up
-            </div>
-          )}
-          {healingScore > 0 && (
-            <div style={{ fontSize: 12, opacity: 0.9, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
-              ✨ Today: {healingScore}/100
             </div>
           )}
         </div>

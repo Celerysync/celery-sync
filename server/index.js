@@ -10,6 +10,7 @@ import { runEncouragementTick } from './routes/encouragement.js'
 import { sendRhythmReminders } from './routes/rhythm.js'
 import { checkRestockAlerts } from './routes/supplements.js'
 import { purgeOldVoiceTurns } from './routes/hume.js'
+import { sendTrialEndingEmails } from './routes/trialEmails.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -90,6 +91,11 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   });
   console.log('🧠 Nightly healing profile refresh scheduler active')
 }
+
+// Trial ending in 2 days: one friendly email. 11pm UTC = 9-10am in Australia.
+cron.schedule('0 23 * * *', async () => {
+  try { await sendTrialEndingEmails() } catch (err) { console.warn('Trial reminder error:', err.message) }
+})
 
 // Privacy: voice transcript log older than 90 days is deleted nightly (3am UTC).
 // Outside the push-notification block on purpose — it must run regardless.

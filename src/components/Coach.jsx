@@ -416,13 +416,8 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     if (justOnboardedGreeting) onConsumedJustOnboarded?.();
     // Autoplay is blocked until a user gesture — queue the greeting and speak it
     // the moment the user first taps/clicks anywhere in the Coach panel.
-    pendingGreetingRef.current = greeting;
-    setTimeout(() => {
-      if (audioUnlockedRef.current) {
-        speak(greeting);
-        pendingGreetingRef.current = null;
-      }
-    }, 600);
+    // The greeting isn't read aloud on its own any more: opening a tab shouldn't
+    // start talking. Tapping it plays it, like any other reply.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryLoading, lang]);
 
@@ -438,8 +433,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
     return () => chatAbortRef.current?.abort();
   }, []);
 
+  // Replies are read aloud only when they spoke to us. Typing means they may be
+  // somewhere quiet; any reply can still be tapped to hear it.
   const send = useCallback(
-    async (text) => {
+    async (text, { spoken = false } = {}) => {
       if (!text.trim() || loading) return;
       if (hasCrisisWords(text)) setCrisisDetected(true);
       track("ai_query", { chars: text.length });
@@ -456,7 +453,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
         let firstToken = true;
         let streamBuffer = "";
         let sentenceBuffer = "";
-        const isElVoice = selectedVoiceName.startsWith("hume:");
+        const isElVoice = spoken && selectedVoiceName.startsWith("hume:");
         resetQueue();
         chatAbortRef.current?.abort();
         chatAbortRef.current = new AbortController();
@@ -509,7 +506,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
               if (!last || last.role !== "assistant") return m;
               return [...m.slice(0, -1), { role: "assistant", content: clean }];
             });
-            const autoListen = voiceModeRef.current ? () => {
+            const autoListen = spoken && voiceModeRef.current ? () => {
               // Session timeout — if user goes silent for SESSION_TIMEOUT_MS, close politely
               sessionTimerRef.current = setTimeout(() => {
                 stopListening();
@@ -525,7 +522,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
                   stopSpeaking();
                 } else {
-                  send(t);
+                  send(t, { spoken: true });
                 }
               }, { silenceMs: 1200 });
             } : undefined;
@@ -537,7 +534,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 .trim();
               if (rem) queueSentence(rem);
               endQueue(autoListen);
-            } else {
+            } else if (spoken) {
               speak(clean, autoListen);
             }
             saveExchange(text, clean);
@@ -731,7 +728,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       >
         <span style={{ fontSize: 15 }}>🔊</span>
         <span style={{ fontFamily: "Georgia,serif", fontSize: 12, color: C.mid, flex: 1 }}>
-          I speak in your companion voice — change it in Settings → Companion voice
+          Talk to me with the mic and I'll answer out loud. Tap any reply to hear it.
         </span>
       </button>
 
@@ -1062,7 +1059,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                   if (lower === "stop" || lower === "stop." || lower === "stop talking" || lower === "be quiet") {
                     stopSpeaking();
                   } else {
-                    send(t);
+                    send(t, { spoken: true });
                   }
                 });
               }

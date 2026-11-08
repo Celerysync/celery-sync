@@ -49,6 +49,7 @@ function Toggle({ on, onChange, label, desc }) {
 // morning/evening TTS nudge toggles. Voice options are the curated CelerySync
 // set from /api/hume/voices (Octave) — the app is Hume-only since 2026-07-19.
 export default function CompanionVoiceSettings({ authUser, isRhythm }) {
+  const [showAllVoices, setShowAllVoices] = useState(false);
   const { voicePrefs: prefs, voicePrefsLoaded: loaded, saveVoicePrefs: savePrefs } = useVoicePrefs();
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupMsg, setTopupMsg] = useState("");
@@ -90,6 +91,8 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
   if (!loaded) return null;
 
   const hasVoice = !!prefs.voice_id;
+  const isChosen = (v) => prefs.voice_id === `hume:${v.provider}:${v.id}`;
+  const moreVoices = humeVoices.filter((v) => !v.recommended).length;
 
   return (
     <Card>
@@ -114,8 +117,8 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           <option value="">Default (Australian male)</option>
           {[
             ["Recommended", humeVoices.filter((v) => v.recommended)],
-            ["Women's voices", humeVoices.filter((v) => !v.recommended && v.gender === "Female")],
-            ["Men's voices", humeVoices.filter((v) => !v.recommended && v.gender !== "Female")],
+            ["Women's voices", humeVoices.filter((v) => !v.recommended && v.gender === "Female" && (showAllVoices || isChosen(v)))],
+            ["Men's voices", humeVoices.filter((v) => !v.recommended && v.gender !== "Female" && (showAllVoices || isChosen(v)))],
           ].filter(([, list]) => list.length > 0).map(([label, list]) => (
             <optgroup key={label} label={label}>
               {list.map((v) => (
@@ -139,6 +142,17 @@ export default function CompanionVoiceSettings({ authUser, isRhythm }) {
           {speaking ? "⏹ Stop" : "▶ Preview"}
         </button>
       </div>
+      {moreVoices > 0 && (
+        <button
+          onClick={() => setShowAllVoices((v) => !v)}
+          style={{
+            background: "none", border: "none", padding: "4px 0 12px", cursor: "pointer",
+            color: C.sageDark, fontFamily: "Georgia,serif", fontSize: 14, fontWeight: 700,
+          }}
+        >
+          {showAllVoices ? "Show fewer voices" : `Show ${moreVoices} more voices`}
+        </button>
+      )}
 
       {/* Companion name */}
       <div style={{ marginBottom: 4 }}>

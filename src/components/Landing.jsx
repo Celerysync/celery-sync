@@ -183,7 +183,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           maxWidth: 340, margin: "0 auto 10px",
           opacity: 0.92,
         }}>
-          CelerySync is the only companion built for Medical Medium followers — an AI that speaks your language, remembers your journey, and guides you through every single day.
+          CelerySync is a companion made for people following Anthony William's work — an AI that speaks your language, remembers your journey, and guides you through every single day.
         </p>
 
         <div style={{
