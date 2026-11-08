@@ -51,6 +51,10 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     } catch (err) {
       console.warn('Restock check error:', err.message);
     }
+  });
+  // Rhythm reminders every 5 minutes, so "30 minutes after" lands on time and a
+  // 7:30 step isn't reminded at 7:00.
+  cron.schedule('*/5 * * * *', async () => {
     try {
       await sendRhythmReminders();
     } catch (err) {

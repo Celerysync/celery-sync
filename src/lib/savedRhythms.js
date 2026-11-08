@@ -27,12 +27,16 @@ export function buildProgramItem(raw, totalDays, sortOrder) {
   const from = Math.max(1, Math.min(Number(raw.fromDay ?? raw.from_day) || 1, totalDays));
   const to = Math.max(from, Math.min(Number(raw.toDay ?? raw.to_day) || totalDays, totalDays));
   const spacing = Number(raw.spacingMinutes ?? raw.spacing_minutes);
+  const rawTime = String(raw.fixedTime ?? raw.time ?? "").trim();
+  const time = /^\d{1,2}:\d{2}$/.test(rawTime) ? rawTime.padStart(5, "0") : null;
   return {
     id: crypto.randomUUID(),
     name: String(raw.name || "").trim(),
     emoji: raw.emoji || "✨",
     category: raw.category || "other",
     spacingMinutes: Number.isFinite(spacing) ? spacing : 30,
+    fixedTime: time,
+    schedule: time ? { type: "times", times: [time] } : null,
     frequency: "daily",
     durationType: "cleanse",
     note: raw.note || "",

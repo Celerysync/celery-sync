@@ -3,7 +3,7 @@ import { useLocalStorage } from "./useLocalStorage.js";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
 import { ACTIVE_PROGRAM_KEY, endProgramInAccount, fetchLastFinishedProgram, reconcileRunningProgram, startAnotherRound, startProgramInAccount } from "../lib/activeProgram.js";
-import { programPhase, orderForDay,
+import { isRelative, doneMinutesFrom, programPhase, orderForDay,
   TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
   expandOccurrences, occurrenceId, parseOccurrenceId, RHYTHM_CHANGED_EVENT,
 } from "../lib/rhythmSchedule.js";
@@ -221,7 +221,13 @@ export function useRhythm(authUser, profileId) {
     const todaysItems = filterTodaysItems(baseItems, activeProgram);
     // Expanded before sequencing so an item scheduled twice a day is two
     // separate tickable rows, each with its own id.
-    return calculateSequence(orderForDay(expandOccurrences(todaysItems)), anchorTime, completions);
+    // Steps timed from another step get their real time once that step is done.
+    const ctx = { doneMinutes: doneMinutesFrom(completions) };
+    const names = Object.fromEntries([...baseItems, ...(activeProgram?.items ?? [])].map((i) => [i.id, i.name]));
+    const occs = expandOccurrences(todaysItems, ctx).map((o) => (
+      isRelative(o) && !o.fixedTime ? { ...o, waitingFor: names[o.schedule.after] ?? null } : o
+    ));
+    return calculateSequence(orderForDay(occs), anchorTime, completions);
   }, [baseItems, activeProgram, anchorTime, completions]);
 
   const hasMedicine = useMemo(() => baseItems.some((i) => i.isMedicine), [baseItems]);
@@ -283,7 +289,7 @@ export function useRhythm(authUser, profileId) {
     setCompletions((latest) => {
       // Counted per occurrence, so an item due twice a day counts twice —
       // "3 of 5" rather than "1 of 2" when two of the five are the same item.
-      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram));
+      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram), { doneMinutes: doneMinutesFrom(latest) });
       const total = occs.length;
       const completed = occs.filter((o) => latest[o.id]).length;
       syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);
@@ -335,7 +341,7 @@ export function useRhythm(authUser, profileId) {
     setCompletions((latest) => {
       // Counted per occurrence, so an item due twice a day counts twice —
       // "3 of 5" rather than "1 of 2" when two of the five are the same item.
-      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram));
+      const occs = expandOccurrences(filterTodaysItems(baseItems, activeProgram), { doneMinutes: doneMinutesFrom(latest) });
       const total = occs.length;
       const completed = occs.filter((o) => latest[o.id]).length;
       syncRhythmCountsToCheckin(profileId, authUser.id, completed, total, activeProgram, currentProgramDay);

@@ -87,14 +87,12 @@ export function orderForDay(items) {
     .flatMap((block) => block.items);
 }
 
-export function filterTodaysItems(baseItems, activeProgram) {
-  const today = TODAY();
-  const dow = new Date().getDay();
+export function filterTodaysItems(baseItems, activeProgram, today = TODAY(), dow = new Date().getDay()) {
   const isWeekday = dow >= 1 && dow <= 5;
 
   let programDay = null;
   if (activeProgram) {
-    programDay = programDayNumber(activeProgram.startDate, activeProgram.totalDays);
+    programDay = programDayNumber(activeProgram.startDate, activeProgram.totalDays, today);
   }
 
   const programItems = [];
@@ -116,7 +114,7 @@ export function filterTodaysItems(baseItems, activeProgram) {
     return !itemIsOver(item, today);
   };
   return [
-    ...everydayItemsDuring(baseItems, activeProgram).filter(keep).sort(bySort),
+    ...everydayItemsDuring(baseItems, activeProgram, today).filter(keep).sort(bySort),
     ...programItems.filter(keep).sort(bySort),
   ];
 }
@@ -179,8 +177,34 @@ const toHHMM = (mins) =>
 // Guards a malformed or hostile schedule from generating an unbounded list.
 const MAX_OCCURRENCES = 24;
 
-export function scheduleTimes(item) {
+// Steps timed from another step being done: "30 minutes after lemon water", or
+// "every 90 minutes after celery juice, until 6pm". The clock starts at the real
+// tick. ctx.doneMinutes maps an item id to when it was first done today, as
+// minutes after midnight in the person's own time; until then there's no time.
+export function relativeTimes(item, ctx) {
   const s = item?.schedule;
+  const started = ctx?.doneMinutes?.[s?.after];
+  if (started == null) return [];
+  if (s.type === "after") {
+    const t = started + Number(s.minutes || 0);
+    return t < 24 * 60 ? [toHHMM(t)] : [];
+  }
+  if (s.type === "every_after") {
+    const every = Number(s.everyMinutes);
+    const until = s.until ? toMinutes(s.until) : 24 * 60 - 1;
+    if (!Number.isFinite(every) || every < 15 || until === null) return [];
+    const out = [];
+    for (let t = started + every; t <= until && t < 24 * 60 && out.length < MAX_OCCURRENCES; t += every) out.push(toHHMM(t));
+    return out;
+  }
+  return [];
+}
+
+export const isRelative = (item) => item?.schedule?.type === "after" || item?.schedule?.type === "every_after";
+
+export function scheduleTimes(item, ctx) {
+  const s = item?.schedule;
+  if (isRelative(item)) return relativeTimes(item, ctx);
   if (s?.type === "times" && Array.isArray(s.times)) {
     return [...new Set(s.times.filter((t) => toMinutes(t) !== null))].sort();
   }
@@ -201,8 +225,8 @@ export function scheduleTimes(item) {
 // day. Single-occurrence items keep slot === null, which is exactly what every
 // pre-existing ledger row and every single-time item already uses — so this
 // change is invisible to them.
-export function occurrencesFor(item) {
-  const times = scheduleTimes(item);
+export function occurrencesFor(item, ctx) {
+  const times = scheduleTimes(item, ctx);
   if (times.length <= 1) return [{ slot: null, time: times[0] ?? null }];
   return times.map((t) => ({ slot: t, time: t }));
 }
@@ -218,9 +242,9 @@ export function parseOccurrenceId(occId) {
 }
 
 // Expands today's items into the tickable occurrences the screen shows.
-export function expandOccurrences(items) {
+export function expandOccurrences(items, ctx) {
   return items.flatMap((item) =>
-    occurrencesFor(item).map((occ) => ({
+    occurrencesFor(item, ctx).map((occ) => ({
       ...item,
       id: occurrenceId(item.id, occ.slot),
       baseItemId: item.id,
@@ -228,6 +252,20 @@ export function expandOccurrences(items) {
       fixedTime: occ.time ?? item.fixedTime ?? null,
     }))
   );
+}
+
+// When each step was first done today, as minutes after midnight, from a map
+// of occurrence id → ISO time. minutesOf turns a Date into local minutes (the
+// server passes one for the person's time zone).
+export function doneMinutesFrom(completions, minutesOf = (d) => d.getHours() * 60 + d.getMinutes()) {
+  const out = {};
+  for (const [occId, iso] of Object.entries(completions || {})) {
+    if (!iso) continue;
+    const { itemId } = parseOccurrenceId(occId);
+    const m = minutesOf(new Date(iso));
+    if (out[itemId] == null || m < out[itemId]) out[itemId] = m;
+  }
+  return out;
 }
 
 // Fired on window whenever rhythm_items change outside useRhythm (the voice

@@ -199,6 +199,9 @@ export default function RhythmView({
           // isn't a failing. It simply happened earlier in the day.
           statusLabel = `Earlier · ${formatTime(item.scheduledMs)}`;
           statusColor = C.muted;
+        } else if (item.waitingFor) {
+          statusLabel = `After ${item.waitingFor}`;
+          statusColor = C.muted;
         } else if (item.scheduledMs != null) {
           const minsTillScheduled = Math.round((item.scheduledMs - now) / 60_000);
           statusLabel = minsTillScheduled > 0

@@ -1,6 +1,7 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
-import { everydayItemsDuring, itemIsOver, localDateInZone, occurrencesFor, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
+import { localDateInZone, occurrenceId, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
+import { minutesInZone, planReminders } from '../../src/lib/reminderPlan.js'
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -15,19 +16,16 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   )
 }
 
-// Hourly tick — sends a push for each scheduled occurrence of a rhythm item
-// whose hour matches the subscriber's current local hour.
+// Runs every 5 minutes. For each person with notifications on, works out what's
+// due right now in their own time zone (planReminders: set times, steps timed
+// from another step being ticked, and "N minutes after the previous step"),
+// including the running program's steps for today, skipping anything done or
+// paused. The rules are the same ones Today uses, so the two always agree.
 //
-// Dedupe is per occurrence, not per day. last_reminded_on alone could only
-// say "reminded today", which would swallow the second and later reminders
-// of an item scheduled more than once (supplements morning and night).
-// reminded_slots holds the slots already sent, and is reset whenever
-// last_reminded_on rolls over to a new date — same self-resetting pattern as
-// the restock alert's low_stock_alerted_on, no separate reset job.
-//
-// Occurrence derivation is imported from the client lib so the screen, the
-// voice tools and this cron cannot disagree about what is due.
-export async function sendRhythmReminders() {
+// Dedupe is per occurrence: reminded_slots holds the times already sent today
+// and resets when the date rolls over (rhythm_items for everyday steps,
+// active_protocols for program steps).
+export async function sendRhythmReminders(now = new Date()) {
   const { data: subs } = await supabaseAdmin.from('push_subscriptions').select('user_id, endpoint, keys, timezone')
   if (!subs?.length) return
 
@@ -36,11 +34,10 @@ export async function sendRhythmReminders() {
   for (const sub of subs) {
     try {
       const tz = sub.timezone || 'UTC'
-      const today = localDateInZone(tz)
-      const localHour = parseInt(
-        new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }),
-        10
-      )
+      const today = localDateInZone(tz, now)
+      const minutesOf = minutesInZone(tz)
+      const nowMinutes = minutesOf(now)
+      const dow = new Date(`${today}T12:00:00Z`).getUTCDay()
 
       const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -51,20 +48,15 @@ export async function sendRhythmReminders() {
         .maybeSingle()
       if (!profile?.id) continue
 
-      // An item qualifies on either shape: the new schedule, or a legacy
-      // fixed_time for rows written before the schedule column existed.
-      const { data: items } = await supabaseAdmin
+      const { data: rows } = await supabaseAdmin
         .from('rhythm_items')
         .select('*')
         .eq('profile_id', profile.id)
         .is('archived_at', null) // removed items never remind
-        .or('schedule.not.is.null,fixed_time.not.is.null')
-      if (!items?.length) continue
 
-      // Everyday items the person paused for a running program stay quiet.
-      const { data: program } = await supabaseAdmin
+      const { data: programRow } = await supabaseAdmin
         .from('active_protocols')
-        .select('start_date, total_days, keep_everyday')
+        .select('id, program_id, start_date, total_days, items, keep_everyday, reminded_on, reminded_slots')
         .eq('profile_id', profile.id)
         .eq('completed', false)
         .eq('abandoned', false)
@@ -72,59 +64,85 @@ export async function sendRhythmReminders() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-      const running = program && { startDate: program.start_date, totalDays: program.total_days, keepEveryday: program.keep_everyday }
-      const keptIds = new Set(everydayItemsDuring(items, running, today).map((i) => i.id))
+      if (!rows?.length && !programRow) continue
 
-      const weekday = new Date().toLocaleDateString('en-US', { timeZone: tz, weekday: 'short' })
-      const isWeekend = weekday === 'Sat' || weekday === 'Sun'
+      const program = programRow && {
+        id: programRow.program_id,
+        startDate: programRow.start_date,
+        totalDays: programRow.total_days,
+        keepEveryday: programRow.keep_everyday,
+        items: (programRow.items || []).map((it) => ({ ...it, programId: it.programId ?? programRow.program_id })),
+      }
 
-      for (const item of items) {
-        if (item.frequency === 'weekdays' && isWeekend) continue
-        if (!keptIds.has(item.id)) continue
-        if (itemIsOver(rhythmRowToItem(item), today)) continue
+      const { data: ticks } = await supabaseAdmin
+        .from('v_daily_status')
+        .select('item_id, occurrence_slot, status, occurred_at')
+        .eq('profile_id', profile.id)
+        .eq('local_date', today)
+      const completions = {}
+      for (const t of ticks || []) {
+        if (t.status === 'completed') completions[occurrenceId(t.item_id, t.occurrence_slot)] = t.occurred_at
+      }
 
-        // A new day clears the per-slot record, so slots can fire again.
-        const rolledOver = item.last_reminded_on !== today
-        const alreadySent = rolledOver ? [] : (Array.isArray(item.reminded_slots) ? item.reminded_slots : [])
+      const due = planReminders({
+        baseItems: (rows || []).map(rhythmRowToItem), program, completions, today, dow, nowMinutes, minutesOf,
+      })
+      if (!due.length) continue
 
-        const due = occurrencesFor(rhythmRowToItem(item))
-          .filter((occ) => occ.time && parseInt(occ.time.split(':')[0], 10) === localHour)
-          // Key by the occurrence's own time; null-slot items use their time
-          // so a single-occurrence item still dedupes correctly.
-          .filter((occ) => !alreadySent.includes(occ.time))
+      const rowById = new Map((rows || []).map((r) => [r.id, r]))
+      const sentBefore = (slots, on) => (on === today && Array.isArray(slots) ? slots : [])
+      const newSlots = new Map() // item id → times sent now
+      let programSlots = sentBefore(programRow?.reminded_slots, programRow?.reminded_on)
+      let programChanged = false
 
-        if (!due.length) continue
+      for (const r of due) {
+        const key = r.inProgram ? `${r.itemId}@${r.time}` : r.time
+        const already = r.inProgram
+          ? programSlots.includes(key)
+          : sentBefore(rowById.get(r.itemId)?.reminded_slots, rowById.get(r.itemId)?.last_reminded_on).includes(key)
+            || (newSlots.get(r.itemId) || []).includes(key)
+        if (already) continue
 
-        for (const occ of due) {
-          await webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: sub.keys },
-            JSON.stringify({
-              title: `${item.emoji || '🌿'} ${item.name}`,
-              body: item.note ? `Time for ${item.name} — ${item.note}` : `Time for ${item.name}`,
-              // Distinct per occurrence, otherwise the evening reminder would
-              // silently replace the morning one still sitting in the tray.
-              tag: `rhythm-${item.id}-${occ.time}`,
-            })
-          ).catch(async (err) => {
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
-            }
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          JSON.stringify({
+            title: `${r.emoji || '🌿'} ${r.name}`,
+            body: r.note ? `Time for ${r.name} — ${r.note}` : `Time for ${r.name}`,
+            // Distinct per occurrence, so a later one doesn't replace an earlier one in the tray.
+            tag: `rhythm-${r.itemId}-${r.time}`,
           })
-          sent++
-        }
+        ).catch(async (err) => {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+          }
+        })
+        sent++
 
+        if (r.inProgram) {
+          programSlots = [...programSlots, key]
+          programChanged = true
+        } else {
+          newSlots.set(r.itemId, [...(newSlots.get(r.itemId) || []), key])
+        }
+      }
+
+      for (const [itemId, times] of newSlots) {
+        const row = rowById.get(itemId)
         await supabaseAdmin
           .from('rhythm_items')
-          .update({
-            last_reminded_on: today,
-            reminded_slots: [...alreadySent, ...due.map((o) => o.time)],
-          })
-          .eq('id', item.id)
+          .update({ last_reminded_on: today, reminded_slots: [...sentBefore(row?.reminded_slots, row?.last_reminded_on), ...times] })
+          .eq('id', itemId)
+      }
+      if (programChanged) {
+        await supabaseAdmin
+          .from('active_protocols')
+          .update({ reminded_on: today, reminded_slots: programSlots })
+          .eq('id', programRow.id)
       }
     } catch (err) {
       console.warn(`Rhythm reminder failed for subscription ${sub.endpoint?.slice(-12)}:`, err.message)
     }
   }
 
-  if (sent > 0) console.log(`🕐 Rhythm item reminders sent: ${sent}`)
+  if (sent > 0) console.log(`🕐 Rhythm reminders sent: ${sent}`)
 }

@@ -31,6 +31,24 @@ function matchByName(rows, query, nameOf = (r) => r.name) {
 // tool itself enforces it: without confirmed=true it changes nothing and
 // tells the companion exactly what to ask. A misheard word alone can't
 // remove anything.
+// Timing from another step, by voice: after_item (the step's name, as they
+// said it), with after_minutes for "30 minutes after", or every_minutes and
+// until for "every 90 minutes after, until 6pm". Returns { schedule } or an
+// error to ask about.
+function relativeScheduleFrom(args, rows, selfId = null) {
+  if (!args?.after_item) return null;
+  const found = matchByName(rows.filter((r) => r.id !== selfId), args.after_item);
+  if (found.error) return found;
+  const every = Number(args.every_minutes);
+  if (Number.isFinite(every) && every > 0) {
+    if (every < 15) return { error: "too_often", message: "Repeating reminders need at least 15 minutes between them. Ask how often they'd like it." };
+    const until = cleanTime(args.until) || "18:00";
+    return { schedule: { type: "every_after", after: found.match.id, everyMinutes: every, until }, anchor: found.match.name, said: `every ${every} minutes after ${found.match.name}, until ${until}` };
+  }
+  const minutes = Math.max(0, Number(args.after_minutes) || 0);
+  return { schedule: { type: "after", after: found.match.id, minutes }, anchor: found.match.name, said: `${minutes} minutes after ${found.match.name}` };
+}
+
 // Program names we've asked "update or save as new?" about, and when.
 const pendingReplace = new Map();
 
@@ -484,7 +502,11 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const existing = rows.find((r) => r.name.trim().toLowerCase() === name.toLowerCase());
       // A set time is what makes the server send a reminder for the item
       // (server/routes/rhythm.js) — schedule is the source of truth, fixed_time mirrors it.
-      const timing = time ? { fixed_time: time, schedule: { type: "times", times: [time] } } : {};
+      const relative = relativeScheduleFrom(args, rows, existing?.id);
+      if (relative?.error) return relative;
+      const timing = relative
+        ? { fixed_time: null, schedule: relative.schedule }
+        : time ? { fixed_time: time, schedule: { type: "times", times: [time] } } : {};
       let error;
       if (existing) {
         const patch = { ...timing, ...(args.note ? { note: args.note } : {}), ...(args.frequency ? { frequency: args.frequency } : {}), changed_via: "voice" };
@@ -510,11 +532,12 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         saved: true,
         action: existing ? "updated_existing_item" : "added_new_item",
         item: existing ? existing.name : name,
-        reminder_time: time,
+        reminder_time: relative ? undefined : time,
+        timed_from: relative?.said,
         rhythm_now: names,
         message: existing
-          ? `"${existing.name}" was already in their rhythm, so it was updated${time ? ` with a reminder at ${time}` : ""} — no duplicate added.`
-          : `"${name}" is now in their rhythm${time ? ` with a reminder at ${time}` : ""}. It's on their screen now.`,
+          ? `"${existing.name}" was already in their rhythm, so it was updated${relative ? `: ${relative.said}` : time ? ` with a reminder at ${time}` : ""} — no duplicate added.`
+          : `"${name}" is now in their rhythm${relative ? `, ${relative.said}` : time ? ` with a reminder at ${time}` : ""}. It's on their screen now.${relative ? ` The reminder comes once they tick ${relative.anchor}.` : ""}`,
       };
     },
 
@@ -536,6 +559,9 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         patch.fixed_time = times[0] ?? null;
         said.push(times.length ? `reminder${times.length > 1 ? "s" : ""} at ${times.join(", ")}` : "time and reminder removed");
       }
+      const relative = relativeScheduleFrom(args, rows, item.id);
+      if (relative?.error) return relative;
+      if (relative) { patch.schedule = relative.schedule; patch.fixed_time = null; said.push(relative.said); }
       if (["daily", "weekdays", "as_needed"].includes(args.frequency)) { patch.frequency = args.frequency; said.push(`frequency ${args.frequency}`); }
       if (typeof args.note === "string") { patch.note = args.note; said.push("note updated"); }
       if (["morning", "supplement", "food", "medicine", "other"].includes(args.category)) { patch.category = args.category; said.push(`category ${args.category}`); }

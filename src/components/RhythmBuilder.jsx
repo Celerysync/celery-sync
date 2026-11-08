@@ -3,7 +3,7 @@ import C, { alpha } from "../lib/colors.js";
 import { Card, Btn } from "./ui.jsx";
 import { supabase } from "../lib/supabase.js";
 import { isProgramRow, programDescription, buildProgramItem, savedRowToProgram, rowTotalDays } from "../lib/savedRhythms.js";
-import { localDateStr, scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
+import { isRelative, localDateStr, scheduleTimes, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 
 const CATEGORIES = ["morning", "supplement", "food", "medicine", "other"];
 const CATEGORY_EMOJIS = { morning: "🌅", supplement: "💊", food: "🍽", medicine: "⚕️", other: "✨" };
@@ -30,6 +30,7 @@ const BLANK_ITEM = {
 };
 
 const BLANK_PROGRAM_ITEM = {
+  fixedTime: "",
   name: "",
   emoji: "✨",
   category: "other",
@@ -424,7 +425,7 @@ export default function RhythmBuilder({
                               fontSize: 12, background: `${alpha(C.plum, "12")}`, color: C.plum,
                               borderRadius: 20, padding: "2px 7px",
                             }}>
-                              {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}
+                              {item.emoji} {item.name} · d{item.programDayRange?.[0]}–{item.programDayRange?.[1]}{item.fixedTime ? ` · ${formatFixedTime(item.fixedTime)}` : ""}
                             </span>
                           ))}
                         </div>
@@ -684,6 +685,15 @@ export default function RhythmBuilder({
                   />
                   <span style={{ fontSize: 12, color: C.muted }}>min</span>
                 </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.charcoal, marginBottom: 10 }}>
+                  🔔 At a set time (optional)
+                  <input
+                    type="time"
+                    value={progItemForm.fixedTime || ""}
+                    onChange={(e) => setProgItemForm((f) => ({ ...f, fixedTime: e.target.value }))}
+                    style={{ border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "6px 10px", fontSize: 14, background: C.surface, outline: "none" }}
+                  />
+                </label>
                 <input
                   type="text"
                   value={progItemForm.note}
@@ -798,7 +808,9 @@ export default function RhythmBuilder({
                             {item.name}
                           </div>
                           <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-                            {scheduleTimes(item).length
+                            {isRelative(item)
+                              ? <>⏱ {relativeLabel(item, baseItems)}</>
+                              : scheduleTimes(item).length
                               ? <span style={{ color: C.sageDark, fontWeight: 700 }}>
                                   🔔 {scheduleTimes(item).map(formatFixedTime).join(" · ")}
                                 </span>
@@ -893,6 +905,7 @@ export default function RhythmBuilder({
               onSave={saveEditedItem}
               onCancel={() => setEditingId(null)}
               title="Edit item"
+              otherItems={baseItems}
             />
           )}
 
@@ -904,6 +917,7 @@ export default function RhythmBuilder({
               onSave={saveNewItem}
               onCancel={() => setLevel("edit")}
               title="Add new item"
+              otherItems={baseItems}
             />
           )}
 
@@ -991,7 +1005,16 @@ const TIME_PRESETS = [
 
 const sameTimes = (a, b) => a.length === b.length && a.every((t, i) => t === b[i]);
 
-function ItemForm({ form, setForm, onSave, onCancel, title }) {
+// "30 min after Lemon water" / "every 90 min after Celery juice, until 6pm".
+function relativeLabel(item, items) {
+  const s = item?.schedule;
+  const anchor = items.find((i) => i.id === s?.after)?.name || "another step";
+  if (s?.type === "after") return `${s.minutes} min after ${anchor}`;
+  if (s?.type === "every_after") return `every ${s.everyMinutes} min after ${anchor}${s.until ? `, until ${formatFixedTime(s.until)}` : ""}`;
+  return "";
+}
+
+function ItemForm({ form, setForm, onSave, onCancel, title, otherItems = [] }) {
   const TODAY = localDateStr();
 
   // The schedule is the source of truth; fixedTime is kept in step with the
@@ -1002,7 +1025,17 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
       : form.fixedTime
         ? [form.fixedTime]
         : [];
-  const timed = times.length > 0;
+  const relative = isRelative(form);
+  const timed = !relative && times.length > 0;
+  const anchors = otherItems.filter((i) => i.id !== form.id);
+  const setRelative = (patch) => setForm((f) => {
+    const prev = isRelative(f) ? f.schedule : { type: "after", after: anchors[0]?.id ?? null, minutes: 30 };
+    const next = { ...prev, ...patch };
+    const schedule = next.type === "every_after"
+      ? { type: "every_after", after: next.after, everyMinutes: Number(next.everyMinutes) || 90, until: next.until || "18:00" }
+      : { type: "after", after: next.after, minutes: Number(next.minutes) || 0 };
+    return { ...f, schedule, fixedTime: null };
+  });
 
   const setTimes = (next) => {
     const clean = [...new Set(next.filter(Boolean))].sort();
@@ -1086,13 +1119,13 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
           Presets first, free-form second: the people who most need reminders
           are the least able to spend executive function assembling a schedule. */}
       <FieldGroup label="When & reminder">
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button
             onClick={() => setTimes([])}
             style={{
               flex: 1,
-              background: !timed ? C.sage : C.mist,
-              color: !timed ? C.white : C.mid,
+              background: !timed && !relative ? C.sage : C.mist,
+              color: !timed && !relative ? C.white : C.mid,
               border: "none", borderRadius: 10, padding: "8px 4px",
               fontSize: 12, cursor: "pointer",
             }}
@@ -1111,9 +1144,86 @@ function ItemForm({ form, setForm, onSave, onCancel, title }) {
           >
             🔔 Remind me at…
           </button>
+          {anchors.length > 0 && (
+            <button
+              onClick={() => setRelative({})}
+              style={{
+                flex: 1,
+                background: relative ? C.sage : C.mist,
+                color: relative ? C.white : C.mid,
+                border: "none", borderRadius: 10, padding: "8px 4px",
+                fontSize: 12, cursor: "pointer",
+              }}
+            >
+              ⏱ After a step…
+            </button>
+          )}
         </div>
 
-        {timed ? (
+        {relative && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13, color: C.charcoal }}>
+              Timed from
+              <select
+                value={form.schedule.after || ""}
+                onChange={(e) => setRelative({ after: e.target.value })}
+                style={{ padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.surface, fontSize: 14, color: C.charcoal }}
+              >
+                {anchors.map((i) => <option key={i.id} value={i.id}>{i.emoji} {i.name}</option>)}
+              </select>
+            </label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {[["after", "Once"], ["every_after", "Again and again"]].map(([type, label]) => (
+                <button
+                  key={type}
+                  onClick={() => setRelative({ type })}
+                  style={{
+                    flex: 1, background: form.schedule.type === type ? C.sageDark : C.mist,
+                    color: form.schedule.type === type ? C.white : C.mid,
+                    border: "none", borderRadius: 20, padding: "8px 10px", fontSize: 13, cursor: "pointer",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {form.schedule.type === "after" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: C.charcoal }}>
+                <input
+                  type="number" min={0} max={720}
+                  value={form.schedule.minutes}
+                  onChange={(e) => setRelative({ minutes: parseInt(e.target.value) || 0 })}
+                  style={{ width: 70, border: `2px solid ${C.border}`, borderRadius: 10, padding: "8px 10px", fontSize: 16, textAlign: "center", background: C.surface }}
+                />
+                minutes after it's ticked
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14, color: C.charcoal }}>
+                Every
+                <input
+                  type="number" min={15} max={720}
+                  value={form.schedule.everyMinutes}
+                  onChange={(e) => setRelative({ everyMinutes: parseInt(e.target.value) || 90 })}
+                  style={{ width: 70, border: `2px solid ${C.border}`, borderRadius: 10, padding: "8px 10px", fontSize: 16, textAlign: "center", background: C.surface }}
+                />
+                minutes, until
+                <input
+                  type="time"
+                  value={form.schedule.until}
+                  onChange={(e) => setRelative({ until: e.target.value })}
+                  style={{ border: `2px solid ${C.border}`, borderRadius: 10, padding: "8px 10px", fontSize: 16, background: C.surface }}
+                />
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              🔔 The clock starts when you tick that step, by tap or by voice. You'll get a reminder
+              {form.schedule.type === "every_after" ? " each time" : ""}, if background notifications are on in Settings.
+              If that step isn't ticked, nothing follows on that day.
+            </div>
+          </div>
+        )}
+
+        {relative ? null : timed ? (
           <>
             <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
               {TIME_PRESETS.map((p) => (
