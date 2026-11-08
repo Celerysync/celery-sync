@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
+import { ACTIVE_PROGRAM_KEY, endProgramInAccount, reconcileRunningProgram, startProgramInAccount } from "../lib/activeProgram.js";
 import { orderForDay,
   TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
   expandOccurrences, occurrenceId, parseOccurrenceId, RHYTHM_CHANGED_EVENT,
@@ -57,7 +58,34 @@ export function useRhythm(authUser, profileId) {
   const [baseItems, setBaseItems] = useState([]);
   const [anchorTime, setAnchorTimeState] = useState("");
   const [rhythmLoaded, setRhythmLoaded] = useState(false);
-  const [activeProgram, setActiveProgram] = useLocalStorage("cs_active_program", null);
+  const [activeProgram, setActiveProgram] = useLocalStorage(ACTIVE_PROGRAM_KEY, null);
+  const [programSyncError, setProgramSyncError] = useState(null);
+
+  // Bring this device in line with the account: the running program may have
+  // been started, ended or replaced on another device, or by voice. Rechecked
+  // whenever the rhythm changes and when the app comes back into view.
+  useEffect(() => {
+    if (!authUser?.id || !profileId) return;
+    let cancelled = false;
+    const sync = async () => {
+      try {
+        const local = JSON.parse(localStorage.getItem(ACTIVE_PROGRAM_KEY) || "null");
+        const program = await reconcileRunningProgram(profileId, local);
+        if (!cancelled) { setActiveProgram(program); setProgramSyncError(null); }
+      } catch (err) {
+        if (!cancelled) setProgramSyncError(err.message);
+      }
+    };
+    sync();
+    const onVisible = () => { if (document.visibilityState === "visible") sync(); };
+    window.addEventListener(RHYTHM_CHANGED_EVENT, sync);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(RHYTHM_CHANGED_EVENT, sync);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [authUser?.id, profileId, setActiveProgram]);
   // localStorage completions as instant-response cache; Supabase is source of truth
   const [completions, setCompletions] = useLocalStorage(`cs_completions_${TODAY()}`, {});
   const [syncError, setSyncError] = useState(null);
@@ -390,43 +418,34 @@ export function useRhythm(authUser, profileId) {
   // { id, name, emoji, totalDays, items } — items carry programDayRange.
   // Items are denormalized into activeProgram so the day filter and voice
   // tools never need a shipped program library to resolve them.
+  // Started in the account first; the screen follows only once it's saved, so
+  // a failed save can't leave a program showing on one phone only.
   const startProgram = useCallback(async (program, startDate) => {
-    if (!program?.items?.length || !program.totalDays) return;
-    const start = startDate || TODAY();
-
-    let dbId = null;
-    if (authUser?.id && profileId) {
-      const { data } = await supabase.from("active_protocols").insert({
-        profile_id: profileId,
-        program_id: program.id,
-        program_name: program.name,
-        start_date: start,
-        total_days: program.totalDays,
-      }).select().single();
-      dbId = data?.id ?? null;
+    if (!program?.items?.length || !program.totalDays || !authUser?.id || !profileId) return false;
+    try {
+      if (activeProgram?.dbId) await endProgramInAccount(activeProgram.dbId);
+      const started = await startProgramInAccount({ profileId, program, startDate: startDate || TODAY() });
+      setActiveProgram(started);
+      setProgramSyncError(null);
+      announceActivity(`started the program "${program.name}" (${program.totalDays} days)`);
+      return true;
+    } catch (err) {
+      setProgramSyncError(err.message);
+      return false;
     }
+  }, [authUser?.id, profileId, activeProgram?.dbId, setActiveProgram]);
 
-    announceActivity(`started the program "${program.name}" (${program.totalDays} days)`);
-    setActiveProgram({
-      id: program.id,
-      name: program.name,
-      startDate: start,
-      totalDays: program.totalDays,
-      items: program.items,
-      dbId,
-    });
-  }, [authUser?.id, profileId, setActiveProgram]);
-
-  const cancelProgram = useCallback(() => {
-    if (authUser?.id && activeProgram?.dbId) {
-      supabase.from("active_protocols")
-        .update({ abandoned: true, end_date: TODAY() })
-        .eq("id", activeProgram.dbId)
-        .then(() => {});
+  const cancelProgram = useCallback(async () => {
+    if (!activeProgram) return;
+    try {
+      await endProgramInAccount(activeProgram.dbId);
+      announceActivity(`ended the program "${activeProgram.name}" early`);
+      setActiveProgram(null);
+      setProgramSyncError(null);
+    } catch (err) {
+      setProgramSyncError(err.message);
     }
-    if (activeProgram) announceActivity(`ended the program "${activeProgram.name}" early`);
-    setActiveProgram(null);
-  }, [authUser?.id, activeProgram, setActiveProgram]);
+  }, [activeProgram, setActiveProgram]);
 
   return {
     sequence,
@@ -449,5 +468,6 @@ export function useRhythm(authUser, profileId) {
     cancelProgram,
     completions,
     syncError,
+    programSyncError,
   };
 }

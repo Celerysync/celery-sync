@@ -250,6 +250,7 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     startProgram,
     cancelProgram,
     syncError,
+    programSyncError,
   } = useRhythm(authUser, profileId);
 
   const [waterCount, setWaterCount] = useLocalStorage("cs_water_" + TODAY, 0);
@@ -404,6 +405,18 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
           color: C.charcoal,
         }}>
           ⚠️ {syncError}
+        </div>
+      )}
+      {programSyncError && (
+        <div role="alert" style={{
+          background: `${alpha(C.plum, "18")}`,
+          border: `1.5px solid ${alpha(C.plum, "60")}`,
+          borderRadius: 12,
+          padding: "10px 14px",
+          fontSize: 13,
+          color: C.charcoal,
+        }}>
+          ⚠️ Your program couldn't be saved to your account just now, so it may not show on your other devices. Please try again in a moment.
         </div>
       )}
       {othersToday != null && (

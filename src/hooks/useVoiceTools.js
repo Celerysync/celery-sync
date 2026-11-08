@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
+import { ACTIVE_PROGRAM_KEY, endProgramInAccount, startProgramInAccount } from "../lib/activeProgram.js";
 import { TODAY, filterTodaysItems, rhythmRowToItem, rhythmItemToRow, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { buildProgramItem, programDescription, isProgramRow, savedRowToProgram } from "../lib/savedRhythms.js";
 import { setLocalStorageValue } from "./useLocalStorage.js";
@@ -53,7 +54,7 @@ const cleanTime = (t) => (/^\d{1,2}:\d{2}$/.test(String(t || "").trim()) ? Strin
 // it directly since voice tools run client-side on the same page.
 function readActiveProgram() {
   try {
-    const raw = localStorage.getItem("cs_active_program");
+    const raw = localStorage.getItem(ACTIVE_PROGRAM_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -619,13 +620,9 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const running = readActiveProgram();
       if (running && args?.confirmed !== true) return needsYes(`You're on day-by-day "${running.name}" right now. Stop that and start "${program.name}"?`);
       const start = /^\d{4}-\d{2}-\d{2}$/.test(args?.start_date || "") ? args.start_date : todayStr();
-      if (running?.dbId) await supabase.from("active_protocols").update({ abandoned: true, end_date: todayStr() }).eq("id", running.dbId);
-      const { data: row } = await supabase.from("active_protocols").insert({
-        profile_id: profileId, program_id: program.id, program_name: program.name, start_date: start, total_days: program.totalDays,
-      }).select().single();
-      setLocalStorageValue("cs_active_program", {
-        id: program.id, name: program.name, startDate: start, totalDays: program.totalDays, items: program.items, dbId: row?.id ?? null,
-      });
+      if (running?.dbId) await endProgramInAccount(running.dbId);
+      const started = await startProgramInAccount({ profileId, program, startDate: start });
+      setLocalStorageValue(ACTIVE_PROGRAM_KEY, started);
       rhythmChanged();
       return { saved: true, started: program.name, start_date: start, total_days: program.totalDays, message: `"${program.name}" starts ${start === todayStr() ? "today" : start} — ${program.totalDays} days. Each day's items will show on their rhythm.` };
     },
@@ -634,8 +631,8 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const running = readActiveProgram();
       if (!running) return { error: "none_running", message: "No program is running right now." };
       if (args?.confirmed !== true) return needsYes(`End "${running.name}" now?`);
-      if (running.dbId) await supabase.from("active_protocols").update({ abandoned: true, end_date: todayStr() }).eq("id", running.dbId);
-      setLocalStorageValue("cs_active_program", null);
+      await endProgramInAccount(running.dbId);
+      setLocalStorageValue(ACTIVE_PROGRAM_KEY, null);
       rhythmChanged();
       return { saved: true, ended: running.name, message: `"${running.name}" has ended. Their everyday rhythm carries on as normal.` };
     },

@@ -422,9 +422,9 @@ export default function RhythmBuilder({
                               background: C.surface, outline: "none",
                             }}
                           />
-                          <Btn small color={C.plum} onClick={() => {
-                            onStartProgram(prog, programStartDate);
-                            setLevel("edit");
+                          <Btn small color={C.plum} onClick={async () => {
+                            // Only move on once it's saved to the account.
+                            if (await onStartProgram(prog, programStartDate)) setLevel("edit");
                           }}>
                             Start →
                           </Btn>
