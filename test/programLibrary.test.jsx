@@ -54,6 +54,10 @@ describe("Fern and programs", () => {
   it("never overwrites a saved program without asking", async () => {
     saved = [{ id: "s1" }];
     const args = { name: "Mono cleanse", total_days: 3, items: [{ name: "Steamed potatoes" }] };
+    // Saying replace: true before being asked doesn't count.
+    const early = await tools.save_program({ ...args, replace: true });
+    expect(early.needs_choice).toBe(true);
+    expect(writes).toHaveLength(0);
     const res = await tools.save_program(args);
     expect(res.needs_choice).toBe(true);
     expect(writes).toHaveLength(0);

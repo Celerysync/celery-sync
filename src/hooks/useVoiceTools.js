@@ -31,6 +31,9 @@ function matchByName(rows, query, nameOf = (r) => r.name) {
 // tool itself enforces it: without confirmed=true it changes nothing and
 // tells the companion exactly what to ask. A misheard word alone can't
 // remove anything.
+// Program names we've asked "update or save as new?" about, and when.
+const pendingReplace = new Map();
+
 const needsYes = (question) => ({
   needs_confirmation: true,
   changed_nothing: true,
@@ -434,7 +437,13 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         .eq("name", name)
         .limit(1)
         .maybeSingle();
-      if (existing && args?.replace !== true) {
+      // A replace only counts if we asked "update or new?" about this name in
+      // the last few minutes. Otherwise the model could set replace: true on its
+      // own and quietly overwrite a protocol they've kept for months.
+      const askedAt = pendingReplace.get(name.toLowerCase());
+      const askedRecently = askedAt && Date.now() - askedAt < 10 * 60_000;
+      if (existing && !(args?.replace === true && askedRecently)) {
+        pendingReplace.set(name.toLowerCase(), Date.now());
         return {
           needs_choice: true,
           changed_nothing: true,
@@ -450,7 +459,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         items,
       };
       const { error } = existing
-        ? await supabase.from("saved_rhythms").update(row).eq("id", existing.id)
+        ? (pendingReplace.delete(name.toLowerCase()), await supabase.from("saved_rhythms").update(row).eq("id", existing.id))
         : await supabase.from("saved_rhythms").insert(row);
       if (error) throw new Error(error.message);
       rhythmChanged();
