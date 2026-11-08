@@ -65,6 +65,7 @@ export default function RhythmBuilder({
     localDateStr()
   );
   const [confirmClearId, setConfirmClearId] = useState(null);
+  const [pausedIds, setPausedIds] = useState([]); // everyday items to pause during a program
   const [saveTemplateName, setSaveTemplateName] = useState("");
   const [saveTemplateEmoji, setSaveTemplateEmoji] = useState("✨");
   const [savingTemplate, setSavingTemplate] = useState(false);
@@ -321,6 +322,11 @@ export default function RhythmBuilder({
                   <div style={{ fontSize: 12, color: C.plum, opacity: 0.8, marginTop: 4 }}>
                     Started {activeProgram.startDate} · {activeProgram.totalDays} days
                   </div>
+                  {Array.isArray(activeProgram.keepEveryday) && (
+                    <div style={{ fontSize: 12, color: C.plum, marginTop: 4 }}>
+                      Paused until it ends: {baseItems.filter((i) => !activeProgram.keepEveryday.includes(i.id)).map((i) => i.name).join(", ") || "nothing"}
+                    </div>
+                  )}
                   <button
                     onClick={onCancelProgram}
                     style={{
@@ -422,9 +428,37 @@ export default function RhythmBuilder({
                               background: C.surface, outline: "none",
                             }}
                           />
+                        </div>
+                        {baseItems.length > 0 && (
+                          <div style={{ marginTop: 12 }}>
+                            <div style={{ fontSize: 13, color: C.charcoal, fontWeight: 700, marginBottom: 2 }}>
+                              During this program, keep:
+                            </div>
+                            <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>
+                              Untick anything to pause it. It comes back by itself when the program ends.
+                            </div>
+                            {baseItems.map((item) => {
+                              const kept = !pausedIds.includes(item.id);
+                              return (
+                                <label key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", fontSize: 14, color: C.charcoal, cursor: "pointer" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={kept}
+                                    onChange={() => setPausedIds((p) => (kept ? [...p, item.id] : p.filter((x) => x !== item.id)))}
+                                    style={{ width: 20, height: 20, accentColor: C.plum }}
+                                  />
+                                  {item.emoji} {item.name}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <div style={{ marginTop: 10 }}>
                           <Btn small color={C.plum} onClick={async () => {
+                            // null = keep everything (the default); otherwise the kept ids.
+                            const keep = pausedIds.length ? baseItems.map((i) => i.id).filter((id) => !pausedIds.includes(id)) : null;
                             // Only move on once it's saved to the account.
-                            if (await onStartProgram(prog, programStartDate)) setLevel("edit");
+                            if (await onStartProgram(prog, programStartDate, keep)) { setPausedIds([]); setLevel("edit"); }
                           }}>
                             Start →
                           </Btn>

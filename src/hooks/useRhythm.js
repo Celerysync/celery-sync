@@ -2,8 +2,8 @@ import { useEffect, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "./useLocalStorage.js";
 import { announceActivity } from "../lib/appActivity.js";
 import { supabase } from "../lib/supabase.js";
-import { ACTIVE_PROGRAM_KEY, endProgramInAccount, reconcileRunningProgram, startProgramInAccount } from "../lib/activeProgram.js";
-import { orderForDay,
+import { ACTIVE_PROGRAM_KEY, endProgramInAccount, fetchLastFinishedProgram, reconcileRunningProgram, startAnotherRound, startProgramInAccount } from "../lib/activeProgram.js";
+import { programPhase, orderForDay,
   TODAY, programDayNumber, filterTodaysItems, rhythmRowToItem, rhythmItemToRow,
   expandOccurrences, occurrenceId, parseOccurrenceId, RHYTHM_CHANGED_EVENT,
 } from "../lib/rhythmSchedule.js";
@@ -60,6 +60,7 @@ export function useRhythm(authUser, profileId) {
   const [rhythmLoaded, setRhythmLoaded] = useState(false);
   const [activeProgram, setActiveProgram] = useLocalStorage(ACTIVE_PROGRAM_KEY, null);
   const [programSyncError, setProgramSyncError] = useState(null);
+  const [lastFinishedProgram, setLastFinishedProgram] = useState(null);
 
   // Bring this device in line with the account: the running program may have
   // been started, ended or replaced on another device, or by voice. Rechecked
@@ -71,7 +72,8 @@ export function useRhythm(authUser, profileId) {
       try {
         const local = JSON.parse(localStorage.getItem(ACTIVE_PROGRAM_KEY) || "null");
         const program = await reconcileRunningProgram(profileId, local);
-        if (!cancelled) { setActiveProgram(program); setProgramSyncError(null); }
+        const finished = program ? null : await fetchLastFinishedProgram(profileId);
+        if (!cancelled) { setActiveProgram(program); setLastFinishedProgram(finished); setProgramSyncError(null); }
       } catch (err) {
         if (!cancelled) setProgramSyncError(err.message);
       }
@@ -224,18 +226,16 @@ export function useRhythm(authUser, profileId) {
 
   const hasMedicine = useMemo(() => baseItems.some((i) => i.isMedicine), [baseItems]);
 
-  // Auto-complete program when it ends
+  // Mark a program complete once its last day has passed (not before it starts),
+  // and offer another round.
   useEffect(() => {
-    if (!activeProgram || currentProgramDay !== null) return;
-    // Program has ended — mark complete in Supabase
+    if (!activeProgram || programPhase(activeProgram.startDate, activeProgram.totalDays) !== "finished") return;
     if (authUser?.id && activeProgram.dbId) {
-      supabase.from("active_protocols")
-        .update({ completed: true, end_date: TODAY() })
-        .eq("id", activeProgram.dbId)
-        .then(() => {});
+      endProgramInAccount(activeProgram.dbId, { completed: true }).catch(() => {});
     }
+    setLastFinishedProgram(activeProgram);
     setActiveProgram(null);
-  }, [activeProgram, currentProgramDay, authUser?.id, setActiveProgram]);
+  }, [activeProgram, authUser?.id, setActiveProgram]);
 
   // Takes an OCCURRENCE id — plain item id for a once-a-day item, or
   // "<itemId>@HH:MM" for one slot of a multi-time item.
@@ -420,12 +420,13 @@ export function useRhythm(authUser, profileId) {
   // tools never need a shipped program library to resolve them.
   // Started in the account first; the screen follows only once it's saved, so
   // a failed save can't leave a program showing on one phone only.
-  const startProgram = useCallback(async (program, startDate) => {
+  const startProgram = useCallback(async (program, startDate, keepEveryday = null) => {
     if (!program?.items?.length || !program.totalDays || !authUser?.id || !profileId) return false;
     try {
       if (activeProgram?.dbId) await endProgramInAccount(activeProgram.dbId);
-      const started = await startProgramInAccount({ profileId, program, startDate: startDate || TODAY() });
+      const started = await startProgramInAccount({ profileId, program, startDate: startDate || TODAY(), keepEveryday });
       setActiveProgram(started);
+      setLastFinishedProgram(null);
       setProgramSyncError(null);
       announceActivity(`started the program "${program.name}" (${program.totalDays} days)`);
       return true;
@@ -434,6 +435,21 @@ export function useRhythm(authUser, profileId) {
       return false;
     }
   }, [authUser?.id, profileId, activeProgram, setActiveProgram]);
+
+  const anotherRound = useCallback(async () => {
+    if (!lastFinishedProgram || !profileId) return false;
+    try {
+      const started = await startAnotherRound(profileId, lastFinishedProgram);
+      setActiveProgram(started);
+      setLastFinishedProgram(null);
+      setProgramSyncError(null);
+      announceActivity(`started another round of "${started.name}"`);
+      return true;
+    } catch (err) {
+      setProgramSyncError(err.message);
+      return false;
+    }
+  }, [lastFinishedProgram, profileId, setActiveProgram]);
 
   const cancelProgram = useCallback(async () => {
     if (!activeProgram) return;
@@ -466,6 +482,9 @@ export function useRhythm(authUser, profileId) {
     applyTemplate,
     startProgram,
     cancelProgram,
+    anotherRound,
+    lastFinishedProgram,
+    dismissLastFinished: () => setLastFinishedProgram(null),
     completions,
     syncError,
     programSyncError,

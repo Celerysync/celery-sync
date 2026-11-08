@@ -53,6 +53,27 @@ describe("items set to run for a number of days", () => {
   });
 });
 
+describe("programs", () => {
+  const program = (keepEveryday, startDate = "2026-11-08", totalDays = 3) => ({ startDate, totalDays, keepEveryday });
+  const base = [{ id: "dinner", name: "Dinner" }, { id: "mag", name: "Magnesium" }];
+
+  it("knows a program due tomorrow hasn't started, rather than finished", async () => {
+    const { programPhase } = await import("../src/lib/rhythmSchedule.js");
+    expect(programPhase("2026-11-09", 3, "2026-11-08")).toBe("upcoming");
+    expect(programPhase("2026-11-08", 3, "2026-11-10")).toBe("running");
+    expect(programPhase("2026-11-08", 3, "2026-11-11")).toBe("finished");
+  });
+
+  it("pauses only the everyday items the person chose, only while it runs", async () => {
+    const { everydayItemsDuring } = await import("../src/lib/rhythmSchedule.js");
+    expect(everydayItemsDuring(base, program(["mag"]), "2026-11-09").map((i) => i.id)).toEqual(["mag"]);
+    expect(everydayItemsDuring(base, program(null), "2026-11-09")).toHaveLength(2);
+    expect(everydayItemsDuring(base, program(["mag"]), "2026-11-12")).toHaveLength(2);
+    expect(everydayItemsDuring(base, program(["mag"], "2026-11-10"), "2026-11-09")).toHaveLength(2);
+    expect(everydayItemsDuring(base, null, "2026-11-09")).toHaveLength(2);
+  });
+});
+
 describe("the showed-up streak", () => {
   const day = (check_date, rhythm_completed = 1) => ({ check_date, rhythm_completed });
 

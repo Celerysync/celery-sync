@@ -31,6 +31,9 @@ export default function RhythmView({
   onComplete,
   onUncomplete,
   onEdit,
+  lastFinishedProgram,
+  onAnotherRound,
+  onDismissFinished,
 }) {
   const [expandedId, setExpandedId] = useState(null);
 
@@ -73,6 +76,36 @@ export default function RhythmView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* A program just finished: offer the same again */}
+      {!activeProgram && lastFinishedProgram && (
+        <div style={{
+          background: `linear-gradient(135deg,${alpha(C.plum, "22")},${C.plumLight})`,
+          border: `1.5px solid ${alpha(C.plum, "40")}`,
+          borderRadius: 14, padding: "12px 16px",
+        }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: C.plum }}>
+            ✨ You finished {lastFinishedProgram.name}
+          </div>
+          <div style={{ fontSize: 13, color: C.plum, marginTop: 4 }}>
+            Would you like to do another round, starting today?
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <button onClick={onAnotherRound} style={{
+              padding: "9px 16px", borderRadius: 30, border: "none", background: C.plum, color: C.white,
+              fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, cursor: "pointer",
+            }}>
+              Do another round
+            </button>
+            <button onClick={onDismissFinished} style={{
+              padding: "9px 16px", borderRadius: 30, border: `1.5px solid ${alpha(C.plum, "50")}`, background: "transparent",
+              color: C.plum, fontFamily: "Georgia,serif", fontSize: 14, cursor: "pointer",
+            }}>
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Program progress banner */}
       {activeProgram && currentProgramDay !== null && (
         <div style={{

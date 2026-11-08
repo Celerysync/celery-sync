@@ -71,6 +71,34 @@ export async function startProgramInAccount({ profileId, program, startDate, kee
   return programFromRow(data);
 }
 
+// The most recent program that finished in the last few days, if nothing has
+// started since: what "Do another round" offers to repeat.
+export async function fetchLastFinishedProgram(profileId, withinDays = 3) {
+  const since = new Date(Date.now() - withinDays * 86_400_000).toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("active_protocols")
+    .select(COLUMNS + ", end_date, created_at")
+    .eq("profile_id", profileId)
+    .not("items", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data?.completed || (data.end_date && data.end_date < since)) return null;
+  return programFromRow(data);
+}
+
+// The same steps and the same choices again, starting today, linked to the last.
+export async function startAnotherRound(profileId, previous, startDate = TODAY()) {
+  return startProgramInAccount({
+    profileId,
+    program: previous,
+    startDate,
+    keepEveryday: previous.keepEveryday ?? null,
+    chainedFromId: previous.dbId,
+  });
+}
+
 export async function endProgramInAccount(dbId, { completed = false } = {}) {
   if (!dbId) return;
   const { error } = await supabase.from("active_protocols")

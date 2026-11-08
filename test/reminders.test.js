@@ -10,7 +10,7 @@ vi.mock("@supabase/supabase-js", () => ({
     from: (table) => {
       const result = () => ({ data: db.tables[table] ?? [], error: null });
       const chain = {
-        select: () => chain, eq: () => chain, is: () => chain, or: () => chain,
+        select: () => chain, eq: () => chain, is: () => chain, or: () => chain, not: () => chain,
         order: () => chain, limit: () => chain,
         maybeSingle: async () => ({ data: (db.tables[table] ?? [])[0] ?? null, error: null }),
         update: (values) => { db.updates.push(values); return chain; },
@@ -67,6 +67,21 @@ describe("rhythm reminders", () => {
     db.tables.rhythm_items = [item({ duration_type: "days", duration_days: 7, start_date: "2026-11-02" })];
     await sendRhythmReminders();
     expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("stays quiet for an everyday item paused during a running program", async () => {
+    db.tables.rhythm_items = [item({ id: "dinner" }), item({ id: "magnesium", name: "Magnesium" })];
+    db.tables.active_protocols = [{ start_date: "2026-11-08", total_days: 3, keep_everyday: ["magnesium"] }];
+    await sendRhythmReminders();
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(sendNotification.mock.calls[0][1]).title).toContain("Magnesium");
+  });
+
+  it("reminds about everything again once the program is over", async () => {
+    db.tables.rhythm_items = [item({ id: "dinner" }), item({ id: "magnesium", name: "Magnesium" })];
+    db.tables.active_protocols = [{ start_date: "2026-11-01", total_days: 3, keep_everyday: ["magnesium"] }];
+    await sendRhythmReminders();
+    expect(sendNotification).toHaveBeenCalledTimes(2);
   });
 
   it("doesn't send the same reminder twice in a day", async () => {

@@ -249,6 +249,9 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     applyTemplate,
     startProgram,
     cancelProgram,
+    anotherRound,
+    lastFinishedProgram,
+    dismissLastFinished,
     syncError,
     programSyncError,
   } = useRhythm(authUser, profileId);
@@ -436,6 +439,9 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
         onComplete={completeItem}
         onUncomplete={uncompleteItem}
         onEdit={() => setShowRhythmBuilder(true)}
+        lastFinishedProgram={lastFinishedProgram}
+        onAnotherRound={anotherRound}
+        onDismissFinished={dismissLastFinished}
       />
 
       {/* Rhythm builder modal */}

@@ -1,6 +1,6 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
-import { itemIsOver, localDateInZone, occurrencesFor, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
+import { everydayItemsDuring, itemIsOver, localDateInZone, occurrencesFor, rhythmRowToItem } from '../../src/lib/rhythmSchedule.js'
 
 const supabaseAdmin = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -61,11 +61,26 @@ export async function sendRhythmReminders() {
         .or('schedule.not.is.null,fixed_time.not.is.null')
       if (!items?.length) continue
 
+      // Everyday items the person paused for a running program stay quiet.
+      const { data: program } = await supabaseAdmin
+        .from('active_protocols')
+        .select('start_date, total_days, keep_everyday')
+        .eq('profile_id', profile.id)
+        .eq('completed', false)
+        .eq('abandoned', false)
+        .not('items', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const running = program && { startDate: program.start_date, totalDays: program.total_days, keepEveryday: program.keep_everyday }
+      const keptIds = new Set(everydayItemsDuring(items, running, today).map((i) => i.id))
+
       const weekday = new Date().toLocaleDateString('en-US', { timeZone: tz, weekday: 'short' })
       const isWeekend = weekday === 'Sat' || weekday === 'Sun'
 
       for (const item of items) {
         if (item.frequency === 'weekdays' && isWeekend) continue
+        if (!keptIds.has(item.id)) continue
         if (itemIsOver(rhythmRowToItem(item), today)) continue
 
         // A new day clears the per-slot record, so slots can fire again.

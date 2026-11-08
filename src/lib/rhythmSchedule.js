@@ -32,13 +32,33 @@ export function addDays(dateStr, n) {
   return localDateStr(d); // toISOString() here lands a day early east of UTC
 }
 
-export function programDayNumber(startDate, totalDays) {
+// Which day of a program a date is (1-based), counted from its start.
+function programDayIndex(startDate, dateStr) {
+  return Math.round((Date.parse(`${dateStr}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86_400_000) + 1;
+}
+
+export function programDayNumber(startDate, totalDays, dateStr = TODAY()) {
   if (!startDate) return null;
-  const start = new Date(startDate + "T00:00:00");
-  const today = new Date(TODAY() + "T00:00:00");
-  const diff = Math.floor((today - start) / 86_400_000) + 1;
-  if (diff < 1 || diff > totalDays) return null;
-  return diff;
+  const day = programDayIndex(startDate, dateStr);
+  if (day < 1 || day > totalDays) return null;
+  return day;
+}
+
+// "upcoming" before its first day, "running", then "finished". A program set to
+// start tomorrow used to count as finished the moment it was saved.
+export function programPhase(startDate, totalDays, dateStr = TODAY()) {
+  if (!startDate) return "finished";
+  const day = programDayIndex(startDate, dateStr);
+  return day < 1 ? "upcoming" : day > totalDays ? "finished" : "running";
+}
+
+// During a running program, everyday items carry on unless the person chose to
+// pause them: keepEveryday lists the ones kept, and null means keep them all.
+export function everydayItemsDuring(baseItems, activeProgram, dateStr = TODAY()) {
+  const keep = activeProgram?.keepEveryday;
+  if (!Array.isArray(keep)) return baseItems;
+  if (programPhase(activeProgram.startDate, activeProgram.totalDays, dateStr) !== "running") return baseItems;
+  return baseItems.filter((item) => keep.includes(item.id));
 }
 
 // True once an item shouldn't appear any more: its "for N days" run has
@@ -87,7 +107,7 @@ export function filterTodaysItems(baseItems, activeProgram) {
     }
   }
 
-  return [...baseItems, ...programItems].filter((item) => {
+  return [...everydayItemsDuring(baseItems, activeProgram), ...programItems].filter((item) => {
     if (item.frequency === "weekdays" && !isWeekday) return false;
     return !itemIsOver(item, today);
   }).sort((a, b) => a.sortOrder - b.sortOrder);

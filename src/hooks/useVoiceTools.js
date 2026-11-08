@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
-import { ACTIVE_PROGRAM_KEY, endProgramInAccount, startProgramInAccount } from "../lib/activeProgram.js";
+import { ACTIVE_PROGRAM_KEY, endProgramInAccount, fetchLastFinishedProgram, startAnotherRound, startProgramInAccount } from "../lib/activeProgram.js";
 import { TODAY, filterTodaysItems, rhythmRowToItem, rhythmItemToRow, RHYTHM_CHANGED_EVENT } from "../lib/rhythmSchedule.js";
 import { buildProgramItem, programDescription, isProgramRow, savedRowToProgram } from "../lib/savedRhythms.js";
 import { setLocalStorageValue } from "./useLocalStorage.js";
@@ -611,6 +611,16 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
 
     async start_program(args) {
       if (!profileId || !userId) throw new Error("No active profile");
+      // "Start another round": the program that just finished, same steps and choices.
+      if (args?.another_round === true) {
+        const previous = await fetchLastFinishedProgram(profileId, 14);
+        if (!previous) return { error: "nothing_finished", message: "No program has finished recently. Ask which saved program they'd like to start." };
+        if (args?.confirmed !== true) return needsYes(`Start another round of "${previous.name}", beginning today?`);
+        const started = await startAnotherRound(profileId, previous);
+        setLocalStorageValue(ACTIVE_PROGRAM_KEY, started);
+        rhythmChanged();
+        return { saved: true, started: started.name, another_round: true, message: `Another round of "${started.name}" starts today, with the same steps and choices as last time.` };
+      }
       const { data } = await supabase.from("saved_rhythms").select("*").eq("profile_id", profileId);
       const programs = (data || []).filter(isProgramRow);
       if (!programs.length) return { error: "none_saved", message: "They have no saved programs yet. Offer to save one with save_program — they read it to you from their own book." };
@@ -620,8 +630,21 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
       const running = readActiveProgram();
       if (running && args?.confirmed !== true) return needsYes(`You're on day-by-day "${running.name}" right now. Stop that and start "${program.name}"?`);
       const start = /^\d{4}-\d{2}-\d{2}$/.test(args?.start_date || "") ? args.start_date : todayStr();
+      // What to pause during it, by the names they said. Everything else carries on.
+      const base = await activeRhythmRows(profileId);
+      const pause = Array.isArray(args?.pause) ? args.pause.filter(Boolean) : [];
+      const paused = [];
+      for (const name of pause) {
+        const found = matchByName(base, name);
+        if (found.error) return found;
+        paused.push(found.match);
+      }
+      if (paused.length && args?.confirmed !== true) {
+        return needsYes(`Start "${program.name}" and pause ${paused.map((r) => r.name).join(", ")} until it ends?`);
+      }
+      const keepEveryday = paused.length ? base.filter((r) => !paused.some((p) => p.id === r.id)).map((r) => r.id) : null;
       if (running?.dbId) await endProgramInAccount(running.dbId);
-      const started = await startProgramInAccount({ profileId, program, startDate: start });
+      const started = await startProgramInAccount({ profileId, program, startDate: start, keepEveryday });
       setLocalStorageValue(ACTIVE_PROGRAM_KEY, started);
       rhythmChanged();
       return { saved: true, started: program.name, start_date: start, total_days: program.totalDays, message: `"${program.name}" starts ${start === todayStr() ? "today" : start} — ${program.totalDays} days. Each day's items will show on their rhythm.` };
