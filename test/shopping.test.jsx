@@ -81,6 +81,15 @@ describe("Fern and the shopping list", () => {
     expect(inserts[1]).toMatchObject({ profile_id: "profile-1", from_recipe_id: "bake", aisle: "produce", checked: false });
   });
 
+  it("a repeated request doesn't add everything twice", async () => {
+    await tools.add_to_shopping_list({ items: ["lemons"], recipe_names: ["potato bake"] });
+    const again = await tools.add_to_shopping_list({ recipe_names: ["Potato Bake"], items: ["Lemons"] });
+    expect(again.already_added).toBe(true);
+    expect(inserts).toHaveLength(3);
+    const other = await tools.add_to_shopping_list({ items: ["celery"] });
+    expect(other.added).toBe(1);
+  });
+
   it("won't add a recipe they don't have", async () => {
     expect((await tools.add_to_shopping_list({ recipe_names: ["lasagne"] })).error).toBe("not_found");
     expect(inserts).toHaveLength(0);
@@ -88,7 +97,8 @@ describe("Fern and the shopping list", () => {
 
   it("reads what's still to get, with counts", async () => {
     const res = await tools.get_shopping_list();
-    expect(res.still_to_get).toEqual([{ aisle: "Fruit & veg", items: ["Celery", "Lemons (x2)"] }]);
+    expect(res.still_to_get).toEqual([{ aisle: "Fruit & veg", items: ["Celery", "Lemons, twice"] }]);
+    expect(res.message).toMatch(/twice/);
   });
 
   it("ticks a line off in the shop (both copies of a merged line)", async () => {

@@ -26,7 +26,15 @@ const kitchenChanged = () => window.dispatchEvent(new Event(KITCHEN_CHANGED_EVEN
 const readBack = new Map(); // key → time
 const keyOf = (r) => JSON.stringify([r.name.toLowerCase(), r.kind, r.ingredients.map((i) => i.text), r.steps]);
 const recentlyRead = (key) => { const t = readBack.get(key); return t && Date.now() - t < 10 * 60_000; };
-export const _resetKitchenVoice = () => { readBack.clear(); cooking = null; };
+// Shopping adds we've just made, so a repeated request (voice often repeats)
+// doesn't put everything on the list twice.
+const recentAdds = new Map(); // key → time
+const addKey = (args) => JSON.stringify([
+  [...(args?.items || [])].map((x) => String(x).trim().toLowerCase()).sort(),
+  [...(args?.recipe_names || [])].map((x) => String(x).trim().toLowerCase()).sort(),
+  args?.this_week === true,
+]);
+export const _resetKitchenVoice = () => { readBack.clear(); recentAdds.clear(); cooking = null; };
 
 async function loadRecipes(profileId) {
   const { data, error } = await supabase.from("kitchen_items").select(COLUMNS).eq("profile_id", profileId).order("name");
@@ -276,18 +284,25 @@ export function kitchenVoiceTools(profileId) {
       }
       const all = [...lines, ...linesFromRecipes(from)];
       if (!all.length) return { error: "nothing_to_add", changed_nothing: true, message: "Ask what they'd like on their list." };
+      const key = addKey(args);
+      const at = recentAdds.get(key);
+      if (at && Date.now() - at < 2 * 60_000) {
+        return { already_added: true, changed_nothing: true, message: "That was already added a moment ago, so nothing was added again. Tell them it's on the list. If they really want it on twice, they can add it again in Kitchen, Shopping list." };
+      }
       const n = await addLines(profileId, all);
+      recentAdds.set(key, Date.now());
       return { saved: true, added: n, message: `Added ${n} item${n === 1 ? "" : "s"} to their shopping list, as written. It's in Kitchen, Shopping list, grouped by aisle.` };
     },
 
     async get_shopping_list() {
       if (!profileId) throw new Error("No active profile");
       const groups = groupList(await loadList(profileId));
-      const still = groups.map((g) => ({ aisle: g.label, items: g.lines.filter((l) => !l.checked).map((l) => (l.count > 1 ? `${l.text} (x${l.count})` : l.text)) })).filter((g) => g.items.length);
+      const times = (n) => (n === 2 ? "twice" : `${n} times`);
+      const still = groups.map((g) => ({ aisle: g.label, items: g.lines.filter((l) => !l.checked).map((l) => (l.count > 1 ? `${l.text}, ${times(l.count)}` : l.text)) })).filter((g) => g.items.length);
       const done = groups.reduce((n, g) => n + g.lines.filter((l) => l.checked).length, 0);
       return {
         still_to_get: still, ticked: done,
-        message: still.length ? "Read it aisle by aisle if they want the whole list; keep it short." : (done ? "Everything on their list is ticked." : "Their shopping list is empty."),
+        message: still.length ? "Read it aisle by aisle if they want the whole list; keep it short. Always say the 'twice' / 'three times' where a line has it — it means that line is on the list more than once (e.g. from two recipes)." : (done ? "Everything on their list is ticked." : "Their shopping list is empty."),
       };
     },
 
