@@ -182,6 +182,9 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
     setShowSupplements(false);
   }
   const [welcomeBackDismissed, setWelcomeBackDismissed] = useLocalStorage("cs_welcomeBackDismissed", null);
+  const monthKey = TODAY.slice(0, 7);
+  const lastMonthName = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString("en-AU", { month: "long" });
+  const [monthNoteSeen, setMonthNoteSeen] = useLocalStorage(`cs_monthNoteSeen_${profileId}`, null);
 
   // "You're not alone": an anonymous count of people who showed up for their
   // own rhythm today (server returns null below 5, so nothing shows until
@@ -385,6 +388,25 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
             prefs={voicePrefs}
           />
         </>
+      )}
+
+      {/* First week of a month: last month's summary is ready */}
+      {new Date().getDate() <= 7 && monthNoteSeen !== monthKey && onNavigate && user?.created_at && String(user.created_at).slice(0, 7) < monthKey && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, background: C.sageLight, borderRadius: 16, padding: "12px 14px",
+          border: `1.5px solid ${alpha(C.sage, "55")}`,
+        }}>
+          <span style={{ fontSize: 26 }} aria-hidden="true">📅</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal }}>Your {lastMonthName} is ready</div>
+            <div style={{ fontSize: 14, color: C.mid }}>A look back at what you kept up last month.</div>
+          </div>
+          <button onClick={() => { setMonthNoteSeen(monthKey); onNavigate("progress:month"); }} style={{
+            padding: "9px 14px", borderRadius: 30, border: "none", background: C.sageDark, color: C.white,
+            fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap",
+          }}>See it</button>
+          <button onClick={() => setMonthNoteSeen(monthKey)} aria-label="Hide this" style={{ background: "none", border: "none", color: C.muted, fontSize: 18, cursor: "pointer" }}>✕</button>
+        </div>
       )}
 
       {/* For someone new: one thing at a time */}

@@ -41,6 +41,7 @@ export const SECTIONS = {
     feelings: "'How I feel' — describe how they're feeling",
   },
   progress: {
+    month: "'Your month': a summary of what they logged this month or last",
     streaks: "streaks and adherence",
     history: "check-in history and trends",
     reports: "weekly/monthly summaries and the GP report",

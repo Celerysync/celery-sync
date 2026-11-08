@@ -10,6 +10,7 @@ import SupplementSummary from "./SupplementSummary.jsx";
 import ProgramHistory from "./ProgramHistory.jsx";
 import WhatYouMade from "./WhatYouMade.jsx";
 import WaterWeek from "./WaterWeek.jsx";
+import MonthSummary from "./MonthSummary.jsx";
 import WeeklyVoiceSummary from "./WeeklyVoiceSummary.jsx";
 import { useCycleTracking } from "../hooks/useCycleTracking.js";
 import { countShowedUpStreak } from "../hooks/useDailyCheckins.js";
@@ -284,6 +285,8 @@ export default function Reports({ authUser, profileId, user }) {
           How you're going over time, from what you've ticked and logged. At the bottom you can make a report for your GP.
         </div>
       </Card>
+
+      <MonthSummary profileId={profileId} user={user} />
 
       <div id="section-streaks" style={{ scrollMarginTop: 80 }} />
       <AdherenceStreaks profileId={profileId} />
