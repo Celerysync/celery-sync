@@ -15,7 +15,7 @@ import { APP_DELETE_HOWTO, crisisContacts, safetyNumbersLine } from "../lib/voic
 import { todayStatus, useVoiceTools } from "../hooks/useVoiceTools.js";
 import { runChatActions, describeActions } from "../lib/chatActions.js";
 import { LANGUAGES } from "../lib/languages.js";
-import { useCompanionName } from "../context/VoiceContext.jsx";
+import { useCompanionName, useCompanionNamed } from "../context/VoiceContext.jsx";
 
 const CRISIS_KEYWORDS = [
   "suicide", "kill myself", "end my life", "want to die", "not worth living",
@@ -317,6 +317,7 @@ function writeChatSession(pid, messages) {
 
 export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext, justOnboarded, onConsumedJustOnboarded }) {
   const fern = useCompanionName();
+  const named = useCompanionNamed();
   // The same tools spoken Fern uses, so typed chat can do things too.
   const chatTools = useVoiceTools(authUser, profileId, (tab, section) => onNavigate?.(section ? `${tab}:${section}` : tab));
   const [messages, setMessages] = useState([]);
@@ -416,7 +417,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
                 ? `${justOnboarded.firstItem.name} at ${formatFixedTime(justOnboarded.firstItem.fixedTime)} is on your list.`
                 : `${justOnboarded.firstItem.name} is on your list, and your other steps are on Today.`)
             : "Your rhythm is ready — add to it anytime just by telling me."
-        } I'm ${fern}, your helper. I'm here whenever you need me. How are you feeling right now?`
+        } ${named ? `I'm ${named}, your helper.` : "I'm your AI helper."} I'm here whenever you need me. How are you feeling right now?`
       : null;
 
     const greeting = justOnboardedGreeting
@@ -433,7 +434,7 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             ? "I've been keeping your notes safe and I'm ready to pick up where we left off."
             : `We've talked ${Math.ceil(priorMessages.length / 2)} times before — I remember your journey.`
         } What's on your mind today?`
-      : `Hello${realName(user) ? ", " + realName(user) : ""}! 🌿 I'm ${fern}, your CelerySync helper — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
+      : `Hello${realName(user) ? ", " + realName(user) : ""}! 🌿 I'm ${named ? `${named}, your CelerySync helper` : "your CelerySync AI helper"} — here to help you keep your routine on track. I can speak to you too — press the microphone button anytime. I'm not a medical professional, and I always point you to the official source for full detail. I'm here for you. What would you like to explore today?`;
 
     // Going to another tab and back carries on the same conversation (for a
     // couple of hours), so "yes, remove it" still makes sense after a peek at
@@ -645,10 +646,10 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
       {/* Header */}
       <div>
         <h2 style={{ margin: 0, fontFamily: "Georgia,serif", fontSize: 20, color: C.charcoal }}>
-          🎙 {fern}
+          🎙 {named || "Your AI helper"}
         </h2>
         <div style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>
-          {fern} is an AI helper, not a person. She remembers your journey, and shares Anthony William's teachings in her own words, with credit.
+          {named ? `${named} is an AI helper, not a person.` : "An AI helper, not a person."} Remembers your journey, and shares Anthony William's teachings in its own words, with credit. You can give it a name in Settings.
         </div>
         <div style={{ fontSize: 13.5, color: C.muted, marginTop: 2 }}>
           Not medical advice — always work with your doctor or licensed practitioner

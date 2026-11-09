@@ -8,7 +8,7 @@ import WearableConnect from './WearableConnect.jsx'
 import { supabase } from '../lib/supabase.js'
 
 import { LANGUAGES } from '../lib/languages.js'
-import { useCompanionName } from "../context/VoiceContext.jsx";
+import { useCompanionName, capFirst } from "../context/VoiceContext.jsx";
 
 function MemoryField({ label, value }) {
   return (
@@ -631,7 +631,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           🌍 Language
         </div>
         <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-          {fern} will reply in the language you choose. For others, just ask her to switch.
+          {capFirst(fern)} will reply in the language you choose. For others, just ask to switch.
         </div>
         <select
           value={lang}
@@ -650,7 +650,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
         </select>
         {lang !== 'en' && (
           <div style={{ marginTop: 8, fontSize: 13.5, color: C.sage }}>
-            ✓ {fern} will reply in {LANGUAGES.find(l => l.code === lang)?.label}
+            ✓ {capFirst(fern)} will reply in {LANGUAGES.find(l => l.code === lang)?.label}
           </div>
         )}
       </Card>
@@ -661,7 +661,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           📏 Measurement Units
         </div>
         <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 12, lineHeight: 1.5 }}>
-          {fern} will use these units for amounts and quantities.
+          {capFirst(fern)} will use these units for amounts and quantities.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {[
@@ -698,7 +698,7 @@ export default function Account({ authUser, isSubscribed, isPractitioner, isRhyt
           🎙 Voice on Every Page
         </div>
         <div style={{ fontSize: 13, color: C.mid, marginBottom: 12 }}>
-          A floating mic button lets you ask {fern} anything from any page, and she briefly introduces each tab the first time you visit it each session.
+          A floating mic button lets you ask {fern} anything from any page. Each tab gets a short introduction the first time you visit it each session.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Btn

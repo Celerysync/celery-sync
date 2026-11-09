@@ -3,6 +3,7 @@ import C from "../lib/colors.js";
 import { Card } from "./ui.jsx";
 import { useWebPush } from "../hooks/useWebPush.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
+import { useCompanionNamed } from "../context/VoiceContext.jsx";
 
 const key = (pid) => `cs_getting_started_${pid}`;
 const read = (pid) => { try { return JSON.parse(localStorage.getItem(key(pid)) || "{}"); } catch { return {}; } };
@@ -20,6 +21,7 @@ export default function GettingStarted({
   const [saved, setSaved] = useState(() => read(profileId));
   const { supported: pushSupported, subscribed, subscribe } = useWebPush(authUser);
   const companion = useHumeVoiceOrchestrator();
+  const named = useCompanionNamed();
 
   // Remember things they've done once (a tick, a check-in), so the item stays
   // done on later days.
@@ -44,7 +46,7 @@ export default function GettingStarted({
     { id: "supps", label: "Add your supplements", done: supplementsCount > 0 || !!saved.noSupps, action: "Add them", onClick: onOpenSupplements, skip: () => set({ noSupps: true }) },
     ...(pushSupported ? [{ id: "remind", label: "Turn on gentle reminders", done: subscribed, action: "Turn on", onClick: () => subscribe().catch(() => {}) }] : []),
     { id: "recipe", label: "Save one of your recipes in the Kitchen", done: recipesCount > 0 || !!saved.noRecipe, action: "Go to Kitchen", onClick: onOpenKitchen, skip: () => set({ noRecipe: true }) },
-    ...(hasVoice ? [{ id: "fern", label: "Try talking to Fern, your helper", done: !!saved.fern, action: "Try it", hint: "For example, say: \"I've had my celery juice\"", onClick: () => { set({ fern: true }); companion.openSheet?.(); } }] : []),
+    ...(hasVoice ? [{ id: "fern", label: named ? `Try talking to ${named}, your helper` : "Try talking to your AI helper", done: !!saved.fern, action: "Try it", hint: "For example, say: \"I've had my celery juice\"", onClick: () => { set({ fern: true }); companion.openSheet?.(); } }] : []),
   ];
   const doneCount = items.filter((i) => i.done).length;
   if (doneCount === items.length) return null;

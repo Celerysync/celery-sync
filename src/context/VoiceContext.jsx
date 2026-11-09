@@ -100,11 +100,20 @@ export const useVoicePrefs = () => {
   };
 };
 
-// The helper's name everywhere on screen: the one they chose, or Fern.
-export const useCompanionName = () => {
+// The helper's name on screen: the name they chose, or (until they choose
+// one) "your AI helper". useCompanionNamed() is the chosen name or null, for
+// places that read better without a stand-in (the tab says "AI").
+export const useCompanionNamed = () => {
   const ctx = useContext(VoiceContext);
-  return String(ctx?.voicePrefs?.companion_name || "").trim() || "Fern";
+  return String(ctx?.voicePrefs?.companion_name || "").trim() || null;
 };
+export const useCompanionName = () => useCompanionNamed() || "your AI helper";
+export const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// The bottom tab's label: their helper's name, or "AI".
+export function CompanionTabLabel() {
+  return useCompanionNamed() || "AI";
+}
 
 // Safe no-op fallback if a component ever renders without a VoiceProvider
 // ancestor — destructuring straight from a null context throws and takes

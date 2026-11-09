@@ -268,7 +268,7 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
               ["📝", "Put in what you do each day, from your own books or protocol."],
               ["✅", "Tick things off, and get gentle reminders."],
               ["📈", "See how you're going over time."],
-              ["🎙", "Talk to Fern, your helper, if you'd rather not tap."],
+              ["🎙", "Talk to your AI helper if you'd rather not tap. You can give it a name."],
             ].map(([emoji, text]) => (
               <div key={text} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <span style={{ fontSize: 22, lineHeight: 1.2 }} aria-hidden="true">{emoji}</span>

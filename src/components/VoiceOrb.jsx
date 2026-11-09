@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import C, { alpha } from "../lib/colors.js";
 import { useHumeVoiceOrchestrator } from "../context/HumeVoiceContext.jsx";
 import { micHelp } from "../lib/micPermission.js";
-import { useCompanionName } from "../context/VoiceContext.jsx";
+import { useCompanionName, useCompanionNamed } from "../context/VoiceContext.jsx";
 
 // Voice can fail to connect for ordinary reasons — Hume allows only so many
 // conversations at the same moment on our plan, or the signal drops. Its own
@@ -29,6 +29,7 @@ function fmtElapsed(ms) {
 // session, one button, available on every tab.
 export default function VoiceOrb({ hideButton = false }) {
   const fern = useCompanionName();
+  const named = useCompanionNamed();
   const {
     isConnected, isConnecting, speaking, listening, isMuted,
     connect, disconnect, mute, unmute, error, lastUserMessage, lastVoiceMessage,
@@ -88,7 +89,7 @@ export default function VoiceOrb({ hideButton = false }) {
 
   return (
     <>
-      {/* Fern's own tab has its own mic: hide this one there unless a talk is on. */}
+      {/* The helper's own tab has its own mic: hide this one there unless a talk is on. */}
       {!(hideButton && !isConnected && !open) && <button
         onClick={handleTap}
         aria-label={`Talk to ${fern}`}
@@ -132,7 +133,7 @@ export default function VoiceOrb({ hideButton = false }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div>
               <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.sageDark }}>
-                🌿 {fern}
+                🌿 {named || "Your AI helper"}
               </div>
               {/* Required in several places (EU AI Act, California, New York) —
                   and simply honest: people should always know it's an AI. */}

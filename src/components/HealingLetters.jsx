@@ -139,7 +139,7 @@ export default function HealingLetters({ profileId }) {
         💌 Anniversary Letters
       </div>
       <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-        Each year on your CelerySync anniversary, {fern} writes you a personal letter about how far you've come, what she's seen in your journey, and her hopes for the year ahead. These are yours to keep forever.
+        Each year on your CelerySync anniversary, {fern} writes you a personal letter about how far you've come, your journey so far, and hopes for the year ahead. These are yours to keep forever.
       </div>
 
       {loading && (

@@ -9,7 +9,7 @@ import CarerView from "./CarerView.jsx";
 import OfficialSources from "./OfficialSources.jsx";
 import GettingTheMostCard from "./GettingTheMostCard.jsx";
 import PractitionerPortal from "./PractitionerPortal.jsx";
-import { useCompanionName } from "../context/VoiceContext.jsx";
+import { useCompanionName, useCompanionNamed } from "../context/VoiceContext.jsx";
 
 // Settings is a short menu; each line opens its own page with a way back.
 // The voice companion and links can open a page directly by its section id
@@ -51,6 +51,7 @@ export default function SettingsPage({
   profiles, onSwitchProfile, onCreateProfile, onUpdateProfile, onDeleteProfile, onReplayWelcome, section,
 }) {
   const fern = useCompanionName();
+  const named = useCompanionNamed();
   const [page, setPage] = useState(SECTION_TO_PAGE[section] || null);
   // Sent here again for a different setting: open that one.
   const [seenSection, setSeenSection] = useState(section);
@@ -59,7 +60,7 @@ export default function SettingsPage({
 
   const pages = [
     { id: "reminders", emoji: "⏰", title: "Reminders", hint: "Gentle nudges for your steps" },
-    { id: "fern", emoji: "🎙", title: isRhythm ? "Voice" : `${fern} & voice`, hint: isRhythm ? "Voice settings" : `${fern}'s voice, name, and voice minutes` },
+    { id: "fern", emoji: "🎙", title: isRhythm ? "Voice" : named ? `${named} & voice` : "AI helper & voice", hint: isRhythm ? "Voice settings" : named ? `${named}'s voice, name, and voice minutes` : "Its voice, giving it a name, and voice minutes" },
     { id: "profiles", emoji: "👨‍👩‍👧", title: "Profiles", hint: "You, and anyone you look after" },
     { id: "display", emoji: "🌙", title: "Display & text size", hint: "Dark mode and bigger text" },
     { id: "people", emoji: "💜", title: "Carers", hint: "Let someone see how you're going" },

@@ -57,7 +57,7 @@ export function offLinkFor(userId) {
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
-export function monthlyEmailContent({ summary, name, offUrl, fern = 'Fern' }) {
+export function monthlyEmailContent({ summary, name, offUrl, fern = null }) {
   const lines = monthSentences(summary, name || '')
   const subject = `Your ${summary.range.label} with CelerySync 🌿`
   const tile = (value, label) => `<td style="padding:6px;width:33%"><div style="background:#eef5ec;border-radius:12px;padding:12px 6px;text-align:center">
@@ -79,7 +79,7 @@ export function monthlyEmailContent({ summary, name, offUrl, fern = 'Fern' }) {
   </div>
   <div style="padding:8px 26px 4px;font-size:17px;line-height:1.7">
     ${lines.map((l) => `<p style="margin:0 0 12px">${esc(l)}</p>`).join('')}
-    <p style="margin:0 0 12px">Here's to ${esc(nextMonthLabel(summary.range))}. 🌿 ${esc(fern)}</p>
+    <p style="margin:0 0 12px">Here's to ${esc(nextMonthLabel(summary.range))}. 🌿${fern ? ` ${esc(fern)}` : ''}</p>
   </div>
   <div style="padding:8px 26px 26px;text-align:center">
     <a href="${SITE}" style="display:inline-block;background:#3D6B44;color:#fff;border-radius:30px;padding:14px 30px;font-weight:700;font-size:16px;text-decoration:none">Open CelerySync</a>
@@ -156,7 +156,7 @@ export async function sendMonthlySummaries(now = new Date()) {
         user.user_metadata = { ...user.user_metadata, monthly_sent }
         if (summary.empty) continue // nothing logged: no email
         const name = profile.name && profile.name !== PLACEHOLDER_NAME ? profile.name : ''
-        const { subject, html, text } = monthlyEmailContent({ summary, name, offUrl: offLinkFor(user.id), fern: prefs?.companion_name || 'Fern' })
+        const { subject, html, text } = monthlyEmailContent({ summary, name, offUrl: offLinkFor(user.id), fern: prefs?.companion_name || null })
         const { error } = await resend.emails.send({ from: 'CelerySync <healing@celerysync.com>', to: user.email, subject, html, text })
         if (error) throw new Error(error.message)
         sent++

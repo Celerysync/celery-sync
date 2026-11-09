@@ -8,7 +8,7 @@ import { isAdminEmail } from "./lib/admin.js";
 import { useProfiles } from "./hooks/useProfiles.js";
 import { useReminders } from "./hooks/useReminders.js";
 import { useAnalytics } from "./hooks/useAnalytics.js";
-import { VoiceProvider } from "./context/VoiceContext.jsx";
+import { VoiceProvider, CompanionTabLabel } from "./context/VoiceContext.jsx";
 import { HumeVoiceProvider } from "./context/HumeVoiceContext.jsx";
 import VoiceOrb from "./components/VoiceOrb.jsx";
 import { resolveDestination } from "./lib/voiceTabContext.js";
@@ -44,7 +44,7 @@ const UpsellOrb = lazy(() => import("./components/HealerUpsell.jsx").then((m) =>
 const TABS = [
   { id: "home",      label: "Today",     emoji: "🏠", free: true  },
   { id: "kitchen",   label: "Kitchen",   emoji: "🥬", free: false },
-  { id: "companion", label: "Fern", emoji: "🎙", free: false },
+  { id: "companion", label: "AI", emoji: "🎙", free: false }, // shows their helper's name once they choose one
   { id: "progress",  label: "Progress",  emoji: "📋", free: false },
   { id: "settings",  label: "Settings",  emoji: "⚙️", free: true  },
   { id: "admin",     label: "Admin",     emoji: "📊", free: true, adminOnly: true },
@@ -576,7 +576,7 @@ export default function App() {
                   color: active ? C.sage : C.muted,
                   fontWeight: active ? 700 : 400,
                 }}>
-                  {t.label}
+                  {t.id === "companion" ? <CompanionTabLabel /> : t.label}
                 </div>
                 {active && (
                   <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.sage }} />
