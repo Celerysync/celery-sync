@@ -4,7 +4,7 @@
 const RULES = [
   [/lemon|lime/, "🍋"],
   [/celery/, "🥬"],
-  [/smoothie/, "🍓"],
+  [/smoothie/, "🫐"],
   [/juice/, "🥤"],
   [/\bwater\b/, "💧"],
   [/\btea\b|tisane/, "🍵"],

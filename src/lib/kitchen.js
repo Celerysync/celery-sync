@@ -6,7 +6,7 @@ import { callClaude } from "./api.js";
 
 export const KITCHEN_KINDS = [
   { id: "juice", label: "Juices", one: "juice", emoji: "🥤" },
-  { id: "smoothie", label: "Smoothies", one: "smoothie", emoji: "🍓" },
+  { id: "smoothie", label: "Smoothies", one: "smoothie", emoji: "🫐" },
   { id: "meal", label: "Meals", one: "meal", emoji: "🍽" },
   { id: "snack", label: "Snacks", one: "snack", emoji: "🍎" },
   { id: "drink", label: "Drinks", one: "drink", emoji: "🍵" },
