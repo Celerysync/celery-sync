@@ -10,7 +10,7 @@ import { useWebPush } from "../hooks/useWebPush.js";
 import { useInstallPrompt } from "../hooks/useInstallPrompt.js";
 import InstallCard from "./InstallCard.jsx";
 import { parseVoiceTranscript } from "../lib/voiceIntake.js";
-import { useVoiceOrchestrator } from "../context/VoiceContext.jsx";
+import { useVoiceOrchestrator, useVoicePrefs } from "../context/VoiceContext.jsx";
 import { srSupported } from "../hooks/useVoice.js";
 
 // The wizard asks for the day in one box, and supplements in a second,
@@ -114,6 +114,8 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   const { supported: pushSupported, subscribe } = useWebPush(authUser);
   const { shouldOfferInstall, isIOS } = useInstallPrompt();
   const [notifChoice, setNotifChoice] = useState(null); // 'yes' | 'no' | null
+  const { voicePrefs, saveVoicePrefs } = useVoicePrefs();
+  const [aiName, setAiName] = useState(voicePrefs?.companion_name || "");
 
   const handleCreateProfile = async () => {
     if (!name.trim() || creating) return;
@@ -227,9 +229,9 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
       await saveSlot(slots[i], slotText[slots[i].key], parsing[i]);
     }
     setSavingAll(false);
-    setStep(3);
+    setStep(4);
   };
-  const skipFromSlots = () => setStep(3);
+  const skipFromSlots = () => setStep(4);
 
   const finish = async () => {
     if (profile?.id) {
@@ -243,8 +245,8 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
   };
 
   // ── The setup wizard: four short steps, one question each ─────────────────
-  // 0 What this is for · 1 Your name · 2 Your day · 3 Reminders · 4 All set
-  const TOTAL = 4;
+  // 0 What this is for · 1 Your name · 2 A name for your AI helper · 3 Your day · 4 Reminders · 5 All set
+  const TOTAL = 5;
   const back = (to) => (
     <button style={{ ...skipBtn, marginTop: 2 }} onClick={() => setStep(to)}>← Back</button>
   );
@@ -314,12 +316,60 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
     );
   }
 
-  // ── Step 2: your day, in your own words ──────────────────────────────────
+  // ── Step 2: a name for their AI helper (optional) ───────────────────────
   if (step === 2) {
+    const saveAiName = async () => {
+      const n = aiName.trim().slice(0, 30);
+      if (n) await saveVoicePrefs({ companion_name: n });
+      setStep(3);
+    };
     return (
       <Shell step={2} total={TOTAL}>
         <div style={cardStyle}>
           <StepLabel n={2} total={TOTAL} />
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20, color: C.charcoal, marginBottom: 6 }}>
+            Would you like to give your AI helper a name?
+          </div>
+          <div style={{ fontSize: 15, color: C.mid, marginBottom: 14, lineHeight: 1.6 }}>
+            It helps with your routine, and you can talk or type to it. Pick a name, or skip for now.
+          </div>
+          <input
+            value={aiName}
+            onChange={(e) => setAiName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveAiName()}
+            placeholder="e.g. Sage"
+            aria-label="A name for your AI helper"
+            maxLength={30}
+            style={{
+              width: "100%", padding: "14px 16px", borderRadius: 12,
+              border: `1.5px solid ${C.border}`, fontFamily: "Georgia,serif",
+              fontSize: 18, outline: "none", background: C.mist, boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            {["Sage", "Willow", "Juniper", "Rosie"].map((n) => (
+              <button key={n} onClick={() => setAiName(n)} style={{
+                padding: "8px 14px", borderRadius: 30, cursor: "pointer", fontFamily: "Georgia,serif", fontSize: 15,
+                border: `1.5px solid ${aiName === n ? C.sage : C.border}`, background: aiName === n ? C.sageLight : "transparent",
+                color: aiName === n ? C.sageDark : C.mid,
+              }}>{n}</button>
+            ))}
+          </div>
+          <button style={primaryBtn} onClick={saveAiName} disabled={!aiName.trim()}>Next →</button>
+          <button style={skipBtn} onClick={() => setStep(3)}>Skip for now</button>
+          <div style={{ fontSize: 13, color: C.muted, textAlign: "center", marginTop: 4 }}>You can change it any time in Settings.</div>
+          {back(hasRealName ? 0 : 1)}
+        </div>
+      </Shell>
+    );
+  }
+
+  // ── Step 3: your day, in your own words ──────────────────────────────────
+  if (step === 3) {
+    return (
+      <Shell step={3} total={TOTAL}>
+        <div style={cardStyle}>
+          <StepLabel n={3} total={TOTAL} />
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20, color: C.charcoal, marginBottom: 6 }}>
             What do you do each day?
           </div>
@@ -349,26 +399,26 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
             {savingAll ? "Setting up your day…" : "Next →"}
           </button>
           <button style={skipBtn} onClick={skipFromSlots}>I'll do this later</button>
-          {back(hasRealName ? 0 : 1)}
+          {back(2)}
         </div>
       </Shell>
     );
   }
 
-  // ── Step 3: reminders ─────────────────────────────────────────────────────
+  // ── Step 4: reminders ─────────────────────────────────────────────────────
   // Install comes first when it's still available: on iOS, push cannot work
   // from a Safari tab at all, so asking for notifications before offering the
   // install would dead-end the user with "not available" and no way forward.
-  if (step === 3) {
+  if (step === 4) {
     const handleYes = async () => {
       setNotifChoice("yes");
       if (pushSupported) await subscribe().catch(() => {});
-      setStep(4);
+      setStep(5);
     };
     return (
-      <Shell step={3} total={TOTAL}>
+      <Shell step={4} total={TOTAL}>
         <div style={cardStyle}>
-          <StepLabel n={3} total={TOTAL} />
+          <StepLabel n={4} total={TOTAL} />
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 20, color: C.charcoal, marginBottom: 8 }}>
             Would you like gentle reminders?
           </div>
@@ -393,19 +443,19 @@ export default function Onboarding({ authUser, existingProfile, createProfile, s
           <button style={primaryBtn} onClick={handleYes} disabled={!pushSupported}>
             🔔 Yes, remind me
           </button>
-          <button style={skipBtn} onClick={() => { setNotifChoice("no"); setStep(4); }}>
+          <button style={skipBtn} onClick={() => { setNotifChoice("no"); setStep(5); }}>
             Not right now
           </button>
-          {back(2)}
+          {back(3)}
         </div>
       </Shell>
     );
   }
 
-  // ── Step 4: all set ───────────────────────────────────────────────────────
+  // ── Step 5: all set ───────────────────────────────────────────────────────
   const first = savedItems[0];
   return (
-    <Shell step={4} total={TOTAL}>
+    <Shell step={5} total={TOTAL}>
       <div style={cardStyle}>
         <div style={{ textAlign: "center", fontSize: 44, marginBottom: 8 }}>✨</div>
         <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: C.charcoal, textAlign: "center", marginBottom: 10 }}>
