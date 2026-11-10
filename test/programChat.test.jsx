@@ -14,6 +14,7 @@ describe("typed chat knows the program they're running", () => {
     expect(text).toMatch(/RUNNING A PROGRAM: 3-day mono cleanse, day 2 of 3/);
     expect(text).toMatch(/not yet: Steamed potatoes \[program step\]/);
     expect(text).toMatch(/never add steps of your own/);
+    expect(text).toMatch(/THEIR LOCAL TIME RIGHT NOW: \w+day/);
   });
 
   it("says nothing about a program when none is running", () => {

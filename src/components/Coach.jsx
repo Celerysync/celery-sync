@@ -144,7 +144,9 @@ export function todaySection(today) {
   const supplements = today.supplements?.length
     ? `\nTheir supplements today:\n${today.supplements.map((s) => `• ${s.taken ? "ticked" : "not ticked"}: ${s.name}`).join("\n")}`
     : "";
-  return `\nTODAY'S RHYTHM (their own items, right now):\n${rhythm}${program}${supplements}\nReport this only if asked. Never tell them to take or skip anything.\n`;
+  // The time now, so "what's left this afternoon?" means the same as on Today.
+  const now = `\nTHEIR LOCAL TIME RIGHT NOW: ${new Date().toLocaleString("en-AU", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" })}. Steps with a time before now that aren't ticked happened earlier (never "overdue"); what's next is the first unticked step from now on.`;
+  return `\nTODAY'S RHYTHM (their own items, right now):\n${rhythm}${program}${supplements}${now}\nReport this only if asked. Never tell them to take or skip anything. You may gently encourage them about what's next on their own list, with no pressure.\n`;
 }
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)
