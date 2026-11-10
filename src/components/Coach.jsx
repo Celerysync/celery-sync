@@ -131,15 +131,20 @@ const GREETINGS = {
 // What's on their own rhythm and supplement list today, ticked or not. Their
 // own wording only. Without this the chat offered "What's left in my rhythm
 // today?" and then said it couldn't see anything.
-function todaySection(today) {
+export function todaySection(today) {
   if (!today) return "";
   const rhythm = today.items.length
-    ? today.items.map((i) => `• ${i.done ? "done" : "not yet"}: ${i.name}${i.time ? ` (${String(i.time).slice(0, 5)})` : ""}`).join("\n")
+    ? today.items.map((i) => `• ${i.done ? "done" : "not yet"}: ${i.name}${i.time ? ` (${String(i.time).slice(0, 5)})` : ""}${i.in_program ? " [program step]" : ""}`).join("\n")
     : "Nothing on their rhythm yet.";
+  // A program (cleanse or protocol) they're running: name and which day, so
+  // the chat can say "you're on day 2 of 3" like voice does.
+  const program = today.program
+    ? `\nTHEY'RE RUNNING A PROGRAM: ${today.program.name}, day ${today.program.day} of ${today.program.total_days}. Its steps for today are in the list above (marked [program step]). Mention the day gently when it helps; never add steps of your own.`
+    : "";
   const supplements = today.supplements?.length
     ? `\nTheir supplements today:\n${today.supplements.map((s) => `• ${s.taken ? "ticked" : "not ticked"}: ${s.name}`).join("\n")}`
     : "";
-  return `\nTODAY'S RHYTHM (their own items, right now):\n${rhythm}${supplements}\nReport this only if asked. Never tell them to take or skip anything.\n`;
+  return `\nTODAY'S RHYTHM (their own items, right now):\n${rhythm}${program}${supplements}\nReport this only if asked. Never tell them to take or skip anything.\n`;
 }
 
 // Dynamic section only — user profile, check-in, history, lang, units (~200–600 tokens)

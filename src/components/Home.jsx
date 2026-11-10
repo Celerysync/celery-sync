@@ -287,8 +287,11 @@ export default function Home({ user, authUser, profileId, onNavigate, navSeq = 0
   // Spoken plan comes ONLY from the user's own item titles (compliance:
   // the app never supplies protocol steps or quantities of its own).
   const remainingNames = sequence.filter((i) => !i.completedAt).map((i) => i.name);
+  const programLine = activeProgram && currentProgramDay
+    ? ` It's day ${currentProgramDay} of ${activeProgram.totalDays} of ${activeProgram.name}.`
+    : "";
   const morningScript = remainingNames.length > 0
-    ? `${greeting}${realName(user) ? ", " + realName(user) : ""}. Here's what's on your rhythm today: ${remainingNames.slice(0, 6).join(", ")}${remainingNames.length > 6 ? `, and ${remainingNames.length - 6} more` : ""}. One thing at a time — you're doing something good for yourself today.`
+    ? `${greeting}${realName(user) ? ", " + realName(user) : ""}.${programLine} Here's what's on your rhythm today: ${remainingNames.slice(0, 6).join(", ")}${remainingNames.length > 6 ? `, and ${remainingNames.length - 6} more` : ""}. One thing at a time — you're doing something good for yourself today.`
     : sequence.length > 0
     ? `${greeting}${realName(user) ? ", " + realName(user) : ""}. Everything on your rhythm is done — beautiful work today.`
     : `${greeting}${realName(user) ? ", " + realName(user) : ""}. Your rhythm is empty today. Add your own items whenever you're ready, and I'll read them back to you.`;

@@ -542,7 +542,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         updated_existing: !!existing,
         total_days: totalDays,
         items: items.map((i) => `${i.name} (days ${i.programDayRange[0]}–${i.programDayRange[1]})`),
-        message: `Program "${name}" saved. The user can start it from the Programs tab of their Rhythm builder — offer to take them there with switch_tab("home").`,
+        message: `Program "${name}" saved. It is saved, not started. Offer to start it now or on a day they choose (start_program). They can also start it themselves: on Today, tap "Start a program".`,
       };
     },
 
@@ -729,7 +729,7 @@ export function useVoiceTools(authUser, profileId, onSwitchTab) {
         : await supabase.from("saved_rhythms").insert(row);
       if (error) throw new Error(error.message);
       rhythmChanged();
-      return { saved: true, template: name, updated_existing: !!existing, items: items.map((i) => i.name), message: `Day template "${name}" saved with ${items.length} items. They'll see it under Day Templates.` };
+      return { saved: true, template: name, updated_existing: !!existing, items: items.map((i) => i.name), message: `Day template "${name}" saved with ${items.length} items. They'll find it on Today under ⋯ More, then My saved days.` };
     },
 
     // Swaps today's whole rhythm for a saved template. The current items are
