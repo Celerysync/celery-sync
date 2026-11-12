@@ -1,6 +1,6 @@
 -- Check-in moments: allow morning and midday check-ins as well as afternoon
--- and evening. NOT RUN YET — paste into the Supabase SQL editor once Alli
--- approves.
+-- and evening. RUN by Alli 2026-11-13 (Success).
+
 --
 -- What it does: only widens the list of allowed times on one table
 -- (encouragement_messages.time_window). No data is changed or removed.
