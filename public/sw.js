@@ -107,7 +107,11 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       const existing = list.find((c) => c.url.includes(self.location.origin));
-      if (existing) return existing.focus();
+      if (existing) {
+        // Go to where the notification points (e.g. a check-in opens the helper).
+        if (url !== "/" && "navigate" in existing) return existing.navigate(url).then((c) => (c || existing).focus());
+        return existing.focus();
+      }
       return clients.openWindow(url);
     })
   );

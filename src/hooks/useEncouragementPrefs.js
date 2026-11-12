@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
-const DEFAULT_PREFS = { afternoon: { enabled: true, hour: 15 }, evening: { enabled: true, hour: 20 } };
+const DEFAULT_PREFS = {
+  morning: { enabled: false, hour: 10 },
+  midday: { enabled: false, hour: 12 },
+  afternoon: { enabled: true, hour: 15 },
+  evening: { enabled: true, hour: 20 },
+};
 
 export function useEncouragementPrefs(authUser, subscribed) {
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
@@ -10,7 +15,7 @@ export function useEncouragementPrefs(authUser, subscribed) {
     if (!authUser || !subscribed) return;
     fetch(`/api/encouragement/preferences?userId=${authUser.id}`)
       .then((res) => res.json())
-      .then((data) => { if (data.encouragementPrefs) setPrefs(data.encouragementPrefs); })
+      .then((data) => { if (data.encouragementPrefs) setPrefs({ ...DEFAULT_PREFS, ...data.encouragementPrefs }); })
       .catch(() => {});
   }, [authUser, subscribed]);
 

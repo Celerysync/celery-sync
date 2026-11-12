@@ -42,6 +42,17 @@ function Toggle({ on, onChange, label, desc }) {
 }
 
 // Kept to sensible daytime/evening ranges — no scheduling into quiet hours
+const MORNING_HOURS = [
+  { value: 8, label: "8:00 am" },
+  { value: 9, label: "9:00 am" },
+  { value: 10, label: "10:00 am (default)" },
+  { value: 11, label: "11:00 am" },
+];
+const MIDDAY_HOURS = [
+  { value: 11, label: "11:00 am" },
+  { value: 12, label: "12:00 pm (default)" },
+  { value: 13, label: "1:00 pm" },
+];
 const AFTERNOON_HOURS = [
   { value: 13, label: "1:00 pm" },
   { value: 14, label: "2:00 pm" },
@@ -202,11 +213,27 @@ export default function ReminderSettings({ authUser }) {
       {subscribed && (
         <div style={{ paddingTop: 14, marginTop: 14, borderTop: `1px solid ${C.border}` }}>
           <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 13, color: C.charcoal, marginBottom: 4 }}>
-            💬 Gentle check-ins
+            💬 Check-in moments
           </div>
           <div style={{ fontSize: 13.5, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-            A short, personal check-in twice a day based on how things are actually going for you — never a task list, always optional.
+            A short note from your AI helper, written from your own day: what's next, how you're going, a hand with your snack or tonight's meal. Tap it to get help straight away. Choose as many or as few as you like.
           </div>
+          <EncouragementWindowRow
+            label="Morning check-in"
+            desc="A soft start to the day"
+            window="morning"
+            hourOptions={MORNING_HOURS}
+            prefs={encouragementPrefs}
+            updateWindow={updateEncouragementWindow}
+          />
+          <EncouragementWindowRow
+            label="Midday check-in"
+            desc="A light check-in around lunch"
+            window="midday"
+            hourOptions={MIDDAY_HOURS}
+            prefs={encouragementPrefs}
+            updateWindow={updateEncouragementWindow}
+          />
           <EncouragementWindowRow
             label="Afternoon check-in"
             desc="A gentle mid-afternoon nudge"

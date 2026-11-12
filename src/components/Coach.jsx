@@ -322,7 +322,7 @@ function writeChatSession(pid, messages) {
   try { sessionStorage.setItem(chatKey(pid), JSON.stringify({ at: Date.now(), messages: messages.slice(-30).map(({ role, content, via }) => ({ role, content, via })) })); } catch { /* full or blocked */ }
 }
 
-export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext, justOnboarded, onConsumedJustOnboarded }) {
+export default function Coach({ authUser, user, profileId, onNavigate, caregiverMode, units = 'metric', pageContext, justOnboarded, onConsumedJustOnboarded, checkIn = null, onCheckInDone }) {
   const fern = useCompanionName();
   const named = useCompanionNamed();
   // The same tools spoken Fern uses, so typed chat can do things too.
@@ -1032,6 +1032,31 @@ export default function Coach({ authUser, user, profileId, onNavigate, caregiver
             Stop ✕
           </div>
         </button>
+      )}
+
+      {/* Opened from a check-in notification: quick ways to help right now */}
+      {checkIn && (
+        <div style={{ background: C.sageLight, border: `1.5px solid ${alpha(C.sage, "55")}`, borderRadius: 16, padding: "12px 14px" }}>
+          <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: C.charcoal, marginBottom: 8 }}>
+            How can I help right now?
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              ["🍎 What's my next snack?", "What's my next snack, from my own list?"],
+              ["🍽 Help me with tonight's meal", "Can you help me with tonight's meal? I'd like to get it ready."],
+              ["💚 I'm finding today hard", "I'm finding today hard."],
+              ["✅ All good, just checking in", "All good, thanks for checking in."],
+            ].map(([label, text]) => (
+              <button key={label} onClick={() => { onCheckInDone?.(); send(text); }} style={{
+                textAlign: "left", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`,
+                background: C.surface, color: C.charcoal, fontFamily: "Georgia,serif", fontSize: 15, cursor: "pointer",
+              }}>{label}</button>
+            ))}
+          </div>
+          <button onClick={() => onCheckInDone?.()} style={{ marginTop: 8, background: "none", border: "none", color: C.mid, fontFamily: "Georgia,serif", fontSize: 14, textDecoration: "underline", cursor: "pointer", padding: 0 }}>
+            Not now
+          </button>
+        </div>
       )}
 
       {/* Input row */}

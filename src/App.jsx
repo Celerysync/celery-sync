@@ -127,6 +127,10 @@ export default function App() {
     createProfile, updateProfile, deleteProfile, switchProfile,
   } = useProfiles(authUser);
   const [tab, setTab] = useLocalStorage("cs_tab", "home");
+  // Opened from a check-in notification (/?checkin=afternoon): go to the
+  // helper with "How can I help right now?" showing.
+  const [checkIn, setCheckIn] = useState(() => new URLSearchParams(window.location.search).get("checkin"));
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [pageContext, setPageContext] = useState(null);
   // The first-run voice welcome. This was a useState initialiser reading
@@ -180,6 +184,15 @@ export default function App() {
   // stack is removed. Rhythm-plan subscribers get the engine without the
   // companion, so the voice layer never mounts for them (orb included).
   const humeEnabled = !isRhythm;
+  // A tapped check-in opens the helper (or Today on the plan without it),
+  // once the plan is known.
+  useEffect(() => {
+    if (!checkIn || subLoading) return;
+    setTab(isRhythm ? "home" : "companion");
+    if (isRhythm) setCheckIn(null);
+    window.history.replaceState(null, "", window.location.pathname);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkIn, subLoading, isRhythm]);
 
   // Rhythm → Healer upgrade modifies the live Stripe subscription in place
   // (prorated) — never a second checkout, which would double-bill.
@@ -364,6 +377,8 @@ export default function App() {
         if (isRhythm) return <HealerUpsell onUpgrade={upgradeToHealer} />;
         return (
           <CompanionTab
+            checkIn={checkIn}
+            onCheckInDone={() => setCheckIn(null)}
             section={navSection}
             navQuery={navQuery}
             onPageContext={setPageContext}
