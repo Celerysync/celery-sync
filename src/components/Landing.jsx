@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { price, CURRENCY_CODE } from "../lib/pricing.js";
 import C, { alpha } from "../lib/colors.js";
 
@@ -6,10 +6,6 @@ import C, { alpha } from "../lib/colors.js";
 // When Alli records the 20–30s phone demo (say it → it ticks), put the file in
 // /public and set its path here — it replaces the animated demo in the hero.
 const DEMO_VIDEO_URL = null; // e.g. "/demo.mp4"
-// A short pre-recorded clip of the helper's voice explaining the app (fixed,
-// approved wording — never a live AI call from this public page). Set the path
-// to show the "Hear it" button.
-const HEAR_IT_URL = null; // e.g. "/hear-it.mp3"
 
 // ─── Copy ────────────────────────────────────────────────────────────────────
 // Compliance: this is marketing copy, so the same rails apply as in-app —
@@ -59,14 +55,14 @@ const GROUPS = [
     ],
   },
   {
-    emoji: "🎙",
+    emoji: "💬",
     title: "Your helper",
     badge: "Rhythm + Voice",
-    line: "Talk or type — it does the ticking for you.",
+    line: "Just tell it what you've done — it does the ticking for you.",
     points: [
-      "“Just finished my celery juice” — and it ticks on screen",
+      "Type “just finished my celery juice” — and it ticks on screen",
       "Add to your shopping list, log water and how you're feeling",
-      "Cook along with it, hands-free",
+      "Ask what's next, or for help with today's plan",
       "Remembers your journey — and you can give it a name",
       "Chats in 15 languages",
     ],
@@ -96,13 +92,13 @@ const FAQ = [
       <>
         <strong>Rhythm ({price("rhythm")}/month)</strong> — your day, programs, kitchen, reminders, streaks and reports. You tick things off yourself.
         <br /><br />
-        <strong>Rhythm + Voice ({price("voice")}/month)</strong> — everything in Rhythm, plus the AI helper you can talk or type to. Includes 100 voice minutes a month; typed chat as much as you like. Extra voice minutes are {price("topup")} for 30.
+        <strong>Rhythm + Voice ({price("voice")}/month)</strong> — everything in Rhythm, plus the AI helper you chat with, as much as you like. (Voice chat is paused for now while we move to a new voice service.)
       </>
     ),
   },
   {
     q: "What happens after the 7 free days?",
-    a: "Your free week includes everything, with 20 voice minutes to try the helper. No card needed to start. When it ends you choose a plan — or simply stop. Plans are monthly and you can cancel anytime.",
+    a: "Your free week includes everything, including the AI helper. No card needed to start. When it ends you choose a plan — or simply stop. Plans are monthly and you can cancel anytime.",
   },
   {
     q: "Is my information private?",
@@ -159,7 +155,7 @@ function TickDemo() {
   ];
 
   return (
-    <div aria-label="Example: saying 'just finished my celery juice' ticks it off on screen" style={{
+    <div aria-label="Example: telling the helper 'just finished my celery juice' ticks it off on screen" style={{
       background: C.surface, color: C.charcoal, borderRadius: 22,
       padding: "16px 14px 14px", maxWidth: 320, margin: "0 auto 26px",
       boxShadow: "0 10px 36px #00000030", textAlign: "left",
@@ -184,7 +180,7 @@ function TickDemo() {
       <div style={{ minHeight: 112, marginTop: 10 }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, ...show(said) }}>
           <div style={{ background: C.sage, color: "#fff", borderRadius: 14, padding: "8px 12px", fontSize: 13.5, maxWidth: "85%" }}>
-            🎙 “Just finished my celery juice”
+            “Just finished my celery juice”
           </div>
         </div>
         <div style={{ display: "flex", gap: 6, ...show(replied) }}>
@@ -195,30 +191,6 @@ function TickDemo() {
         </div>
       </div>
     </div>
-  );
-}
-
-function HearIt() {
-  const audio = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  if (!HEAR_IT_URL) return null;
-  const toggle = () => {
-    if (!audio.current) {
-      audio.current = new Audio(HEAR_IT_URL);
-      audio.current.onended = () => setPlaying(false);
-    }
-    if (playing) { audio.current.pause(); setPlaying(false); }
-    else { audio.current.currentTime = 0; audio.current.play().catch(() => {}); setPlaying(true); }
-  };
-  return (
-    <button onClick={toggle} style={{
-      background: "rgba(255,255,255,0.15)", color: "#fff",
-      border: "1px solid rgba(255,255,255,0.45)", borderRadius: 30,
-      padding: "9px 18px", fontFamily: "Georgia,serif", fontSize: 14, fontWeight: 700,
-      cursor: "pointer", margin: "0 auto 22px", display: "block",
-    }}>
-      {playing ? "⏸ Pause" : "🔊 Hear it explain itself (20s)"}
-    </button>
   );
 }
 
@@ -318,7 +290,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           maxWidth: 350, margin: "0 auto 26px",
           opacity: 0.95,
         }}>
-          Your daily routine, programs, recipes and reminders — in one app, with a helper you can simply talk to.
+          Your daily routine, programs, recipes and reminders — in one app, with a helper you can simply chat to.
         </p>
 
         {DEMO_VIDEO_URL ? (
@@ -330,8 +302,6 @@ export default function Landing({ onGetStarted, onSignIn }) {
         ) : (
           <TickDemo />
         )}
-
-        <HearIt />
 
         <button
           onClick={onGetStarted}
@@ -567,7 +537,7 @@ export default function Landing({ onGetStarted, onSignIn }) {
           <div style={{ display: "flex", gap: 10, marginBottom: 20, textAlign: "left" }}>
             {[
               { name: "Rhythm", p: price("rhythm"), d: "Your day, programs, kitchen, reminders and reports" },
-              { name: "Rhythm + Voice", p: price("voice"), d: "Everything, plus the helper you talk or type to" },
+              { name: "Rhythm + Voice", p: price("voice"), d: "Everything, plus the AI helper you chat with" },
             ].map((pl) => (
               <div key={pl.name} style={{ flex: 1, background: "rgba(255,255,255,0.13)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 14, padding: "12px 12px" }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700, opacity: 0.95 }}>{pl.name}</div>
